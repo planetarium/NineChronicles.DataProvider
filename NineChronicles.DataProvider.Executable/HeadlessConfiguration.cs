@@ -1,0 +1,89 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+
+namespace NineChronicles.DataProvider.Executable
+{
+  public class HeadlessConfiguration
+  {
+#nullable enable
+      public string? AppProtocolVersionToken { get; set; }
+
+      public bool NoMiner { get; set; }
+
+      public string? GenesisBlockPath { get; set; }
+
+      public string? Host { get; set; }
+
+      public ushort? Port { get; set; }
+
+      public string? SwarmPrivateKeyString { get; set; }
+
+      public int MinimumDifficulty { get; set; }
+
+      public string? MinerPrivateKeyString { get; set; }
+
+      public string? StoreType { get; set; }
+
+      public string? StorePath { get; set; }
+
+      public string[]? IceServerStrings { get; set; }
+
+      public string[]? PeerStrings { get; set; }
+
+      public string[]? TrustedAppProtocolVersionSigners { get; set; }
+
+      public bool RpcServer { get; set; }
+
+      public string RpcListenHost { get; set; }
+
+      public int? RpcListenPort { get; set; }
+
+      public bool GraphQLServer { get; set; }
+
+      public string GraphQLHost { get; set; }
+
+      public int? GraphQLPort { get; set; }
+
+      public string? GraphQLSecretTokenPath { get; set; }
+
+      public bool NoCors { get; set; }
+
+      public int Workers { get; set; }
+
+      public int Confirmations { get; set; }
+
+      public int MaximumTransactions { get; set; }
+
+      public bool StrictRendering { get; set; }
+
+      public bool IsDev { get; set; }
+
+      public int BlockInterval { get; set; }
+
+      public int ReorgInterval { get; set; }
+
+      public bool LogActionRenders { get; set; }
+
+      public string? AwsCognitoIdentity { get; set; }
+
+      public string? AwsAccessKey { get; set; }
+
+      public string? AwsSecretKey { get; set; }
+
+      public string? AwsRegion { get; set; }
+
+      public bool AuthorizedMiner { get; set; }
+
+      public int TxLifeTime { get; set; }
+
+      public int MessageTimeout { get; set; }
+
+      public int TipTimeout { get; set; }
+
+      public int DemandBuffer { get; set; }
+
+      public string[]? StaticPeerStrings { get; set; }
+  }
+}
