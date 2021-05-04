@@ -23,7 +23,6 @@ CREATE TABLE IF NOT EXISTS `hack_and_slash` (
   `agents_address` VARCHAR NOT NULL,
   `stage_id` VARCHAR NOT NULL,
   `cleared` BOOLEAN NOT NULL,
-  `succeed` BOOLEAN NOT NULL,
 
   INDEX `fk_hack_and_slash_avatars1_idx` (`avatars_address`),
   INDEX `fk_hack_and_slash_agents1_idx` (`agents_address`),
