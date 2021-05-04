@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,6 @@ namespace NineChronicles.DataProvider.Executable
 {
   public class HeadlessConfiguration
   {
-#nullable enable
       public string? AppProtocolVersionToken { get; set; }
 
       public bool NoMiner { get; set; }
