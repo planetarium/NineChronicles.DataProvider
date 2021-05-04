@@ -1,22 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-using Libplanet;
-using Libplanet.KeyStore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using NineChronicles.Headless;
-using NineChronicles.Headless.Properties;
-using Org.BouncyCastle.Security;
-using Serilog;
-
-namespace NineChronicles.DataProvider.Executable
+﻿namespace NineChronicles.DataProvider.Executable
 {
-    public class Program
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Net;
+    using System.Net.Http;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Libplanet.KeyStore;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Hosting;
+    using NineChronicles.Headless;
+    using NineChronicles.Headless.Properties;
+    using Org.BouncyCastle.Security;
+    using Serilog;
+
+    public static class Program
     {
         public static async Task Main()
         {
