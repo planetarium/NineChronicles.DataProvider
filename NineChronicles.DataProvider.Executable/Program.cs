@@ -1,22 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-using Libplanet;
-using Libplanet.KeyStore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using NineChronicles.Headless;
-using NineChronicles.Headless.Properties;
-using Org.BouncyCastle.Security;
-using Serilog;
-
-namespace NineChronicles.DataProvider.Executable
+﻿namespace NineChronicles.DataProvider.Executable
 {
-    public class Program
+    using System;
+    using System.IO;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Libplanet.KeyStore;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
+    using Microsoft.Extensions.Hosting;
+    using NineChronicles.DataProvider.GraphTypes;
+    using NineChronicles.Headless;
+    using NineChronicles.Headless.Properties;
+    using Org.BouncyCastle.Security;
+    using Serilog;
+
+    public static class Program
     {
         public static async Task Main()
         {
@@ -33,43 +31,36 @@ namespace NineChronicles.DataProvider.Executable
 
             Log.Logger = loggerConf.CreateLogger();
 
-            var tasks = new List<Task>();
-            var standaloneContext = new StandaloneContext
+            var context = new StandaloneContext
             {
                 KeyStore = Web3KeyStore.DefaultKeyStore,
             };
 
+            IHostBuilder hostBuilder = Host.CreateDefaultBuilder();
+
             CancellationTokenSource source = new CancellationTokenSource();
             CancellationToken token = source.Token;
 
-            if (config.GraphQLServer)
+            string? secretToken = null;
+            if (config.GraphQLSecretTokenPath is { })
             {
-                IHostBuilder graphQLHostBuilder = Host.CreateDefaultBuilder();
-                string? secretToken = null;
-                if (config.GraphQLSecretTokenPath is { })
-                {
-                    var buffer = new byte[40];
-                    new SecureRandom().NextBytes(buffer);
-                    secretToken = Convert.ToBase64String(buffer);
-                    await File.WriteAllTextAsync(config.GraphQLSecretTokenPath, secretToken);
-                }
-
-                var graphQLNodeServiceProperties = new GraphQLNodeServiceProperties
-                {
-                    GraphQLServer = config.GraphQLServer,
-                    GraphQLListenHost = config.GraphQLHost,
-                    GraphQLListenPort = config.GraphQLPort,
-                    SecretToken = secretToken,
-                    NoCors = config.NoCors,
-                };
-
-                var graphQLService = new GraphQLService(graphQLNodeServiceProperties);
-                graphQLHostBuilder =
-                    graphQLService.Configure(graphQLHostBuilder, standaloneContext);
-
-                tasks.Add(graphQLHostBuilder.RunConsoleAsync(token));
-                await WaitForGraphQLService(graphQLNodeServiceProperties, source.Token);
+                var buffer = new byte[40];
+                new SecureRandom().NextBytes(buffer);
+                secretToken = Convert.ToBase64String(buffer);
+                await File.WriteAllTextAsync(config.GraphQLSecretTokenPath, secretToken);
             }
+
+            var graphQLNodeServiceProperties = new GraphQLNodeServiceProperties
+            {
+                GraphQLServer = config.GraphQLServer,
+                GraphQLListenHost = config.GraphQLHost,
+                GraphQLListenPort = config.GraphQLPort,
+                SecretToken = secretToken,
+                NoCors = config.NoCors,
+            };
+
+            var graphQLService = new GraphQLService(graphQLNodeServiceProperties);
+            hostBuilder = graphQLService.Configure(hostBuilder, context);
 
             var properties = NineChroniclesNodeServiceProperties
                 .GenerateLibplanetNodeServiceProperties(
@@ -92,8 +83,7 @@ namespace NineChronicles.DataProvider.Executable
                     messageTimeout: config.MessageTimeout,
                     tipTimeout: config.TipTimeout,
                     demandBuffer: config.DemandBuffer,
-                    staticPeerStrings: config.StaticPeerStrings
-                    );
+                    staticPeerStrings: config.StaticPeerStrings);
 
             var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
             {
@@ -110,40 +100,15 @@ namespace NineChronicles.DataProvider.Executable
             NineChroniclesNodeService nineChroniclesNodeService =
                StandaloneServices.CreateHeadless(
                    nineChroniclesProperties,
-                   standaloneContext,
+                   context,
                    blockInterval: config.BlockInterval,
                    reorgInterval: config.ReorgInterval,
                    authorizedMiner: config.AuthorizedMiner,
                    txLifeTime: TimeSpan.FromMinutes(config.TxLifeTime));
+            hostBuilder =
+                   nineChroniclesNodeService.Configure(hostBuilder);
 
-            IHostBuilder nineChroniclesNodeHostBuilder = Host.CreateDefaultBuilder();
-            nineChroniclesNodeHostBuilder =
-                   nineChroniclesNodeService.Configure(nineChroniclesNodeHostBuilder);
-            tasks.Add(nineChroniclesNodeHostBuilder.RunConsoleAsync(token));
-
-            await Task.WhenAll(tasks);
-        }
-
-        private static async Task WaitForGraphQLService(
-            GraphQLNodeServiceProperties properties,
-            CancellationToken cancellationToken)
-        {
-            using var httpClient = new HttpClient();
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                Log.Debug("Trying to check GraphQL server started...");
-                try
-                {
-                    await httpClient.GetAsync($"http://{IPAddress.Loopback}:{properties.GraphQLListenPort}/health-check", cancellationToken);
-                    break;
-                }
-                catch (HttpRequestException e)
-                {
-                    Log.Error(e, "An exception occurred during connecting to GraphQL server. {e}", e);
-                }
-
-                await Task.Delay(1000, cancellationToken);
-            }
+            await hostBuilder.RunConsoleAsync(token);
         }
     }
 }
