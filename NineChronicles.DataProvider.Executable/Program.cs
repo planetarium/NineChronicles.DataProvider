@@ -2,7 +2,6 @@
 {
     using System;
     using System.IO;
-    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
     using Libplanet.KeyStore;
@@ -116,10 +115,7 @@
                             nineChroniclesNodeService.BlockRenderer,
                             nineChroniclesNodeService.ActionRenderer,
                             nineChroniclesNodeService.ExceptionRenderer,
-                            nineChroniclesNodeService.NodeStatusRenderer,
-                            IPAddress.Loopback.ToString(),
-                            1234,
-                            rpcContext));
+                            nineChroniclesNodeService.NodeStatusRenderer));
                 });
             hostBuilder =
                    nineChroniclesNodeService.Configure(hostBuilder);
