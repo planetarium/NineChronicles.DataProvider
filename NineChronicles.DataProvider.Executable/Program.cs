@@ -2,13 +2,13 @@
 {
     using System;
     using System.IO;
+    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
     using Libplanet.KeyStore;
     using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.DependencyInjection.Extensions;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using NineChronicles.DataProvider.GraphTypes;
     using NineChronicles.Headless;
     using NineChronicles.Headless.Properties;
     using Org.BouncyCastle.Security;
@@ -97,14 +97,30 @@
                 properties.LogActionRenders = true;
             }
 
+            RpcContext rpcContext = new RpcContext();
             NineChroniclesNodeService nineChroniclesNodeService =
-               StandaloneServices.CreateHeadless(
-                   nineChroniclesProperties,
-                   context,
-                   blockInterval: config.BlockInterval,
-                   reorgInterval: config.ReorgInterval,
-                   authorizedMiner: config.AuthorizedMiner,
-                   txLifeTime: TimeSpan.FromMinutes(config.TxLifeTime));
+                StandaloneServices.CreateHeadless(
+                    nineChroniclesProperties,
+                    context,
+                    blockInterval: config.BlockInterval,
+                    reorgInterval: config.ReorgInterval,
+                    authorizedMiner: config.AuthorizedMiner,
+                    txLifeTime: TimeSpan.FromMinutes(config.TxLifeTime));
+
+            // ConfigureServices must come before Configure for now
+            hostBuilder = hostBuilder
+                .ConfigureServices((ctx, services) =>
+                {
+                    services.AddHostedService(provider =>
+                        new NineChronicles.DataProvider.ActionEvaluationPublisher(
+                            nineChroniclesNodeService.BlockRenderer,
+                            nineChroniclesNodeService.ActionRenderer,
+                            nineChroniclesNodeService.ExceptionRenderer,
+                            nineChroniclesNodeService.NodeStatusRenderer,
+                            IPAddress.Loopback.ToString(),
+                            1234,
+                            rpcContext));
+                });
             hostBuilder =
                    nineChroniclesNodeService.Configure(hostBuilder);
 
