@@ -61,7 +61,7 @@ namespace NineChronicles.DataProvider
                         {
                             foreach (var j in i.Actions)
                             {
-                                Log.Error("***********EVERY BLOCK: {0}", j.PlainValue.ToString());
+                                Log.Debug("***********EVERY BLOCK: {0}", j.PlainValue.ToString());
                             }
                         }
                     }
@@ -116,7 +116,7 @@ namespace NineChronicles.DataProvider
 
                     try
                     {
-                        Log.Error("***********ACTION: {0}", ev.Action.PlainValue.ToString());
+                        Log.Debug("***********ACTION: {0}", ev.Action.PlainValue.ToString());
                     }
                     catch (SerializationException se)
                     {
