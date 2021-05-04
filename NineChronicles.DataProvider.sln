@@ -7,7 +7,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NineChronicles.Headless", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NineChronicles.DataProvider", "NineChronicles.DataProvider\NineChronicles.DataProvider.csproj", "{777CE21B-4E96-4D4A-923B-B4DFB8504EBA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NineChronicles.DataProvider.Executable", "NineChronicles.DataProvider.Executable\NineChronicles.DataProvider.Executable.csproj", "{B7F9CF53-4D6A-42A9-8C41-D2AF5B4AE2EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NineChronicles.DataProvider.Executable", "NineChronicles.DataProvider.Executable\NineChronicles.DataProvider.Executable.csproj", "{B7F9CF53-4D6A-42A9-8C41-D2AF5B4AE2EB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D0435E58-7273-4365-A5E6-F48774FCD25E}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
