@@ -1,15 +1,14 @@
-﻿using GraphQL.Types;
-
-namespace NineChronicles.DataProvider.GraphQL.Types
+﻿namespace NineChronicles.DataProvider.GraphQL.Types
 {
+    using global::GraphQL.Types;
+
     internal class NineChroniclesSummaryQuery : ObjectGraphType
     {
         public NineChroniclesSummaryQuery()
         {
-            Field<StringGraphType>(
+            this.Field<StringGraphType>(
                 name: "test",
-                resolve: context => "Should be done."
-            );
+                resolve: context => "Should be done.");
         }
     }
 }

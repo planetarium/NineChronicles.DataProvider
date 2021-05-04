@@ -1,0 +1,9 @@
+# NOTE: Requires **VS2019 16.3** or later
+# Code files
+[*.{cs,vb}]
+
+# TODO: Copyright
+dotnet_diagnostic.SA1633.severity = suggestion
+
+# TODO: Documentation
+dotnet_diagnostic.SA1600.severity = suggestion

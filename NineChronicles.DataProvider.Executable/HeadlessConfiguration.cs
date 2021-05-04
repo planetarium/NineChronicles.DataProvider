@@ -1,12 +1,8 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 
 namespace NineChronicles.DataProvider.Executable
 {
-  public class HeadlessConfiguration
+    public class HeadlessConfiguration
   {
       public string? AppProtocolVersionToken { get; set; }
 
@@ -28,6 +24,7 @@ namespace NineChronicles.DataProvider.Executable
 
       public string? StorePath { get; set; }
 
+#pragma warning disable SA1011 // Closing square brackets should be spaced correctly
       public string[]? IceServerStrings { get; set; }
 
       public string[]? PeerStrings { get; set; }
@@ -36,13 +33,13 @@ namespace NineChronicles.DataProvider.Executable
 
       public bool RpcServer { get; set; }
 
-      public string RpcListenHost { get; set; }
+      public string? RpcListenHost { get; set; }
 
       public int? RpcListenPort { get; set; }
 
       public bool GraphQLServer { get; set; }
 
-      public string GraphQLHost { get; set; }
+      public string? GraphQLHost { get; set; }
 
       public int? GraphQLPort { get; set; }
 
@@ -85,5 +82,6 @@ namespace NineChronicles.DataProvider.Executable
       public int DemandBuffer { get; set; }
 
       public string[]? StaticPeerStrings { get; set; }
+#pragma warning restore SA1011 // Closing square brackets should be spaced correctly
   }
 }
