@@ -5,12 +5,12 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Libplanet.KeyStore;
+    using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using NineChronicles.Headless;
     using NineChronicles.Headless.Properties;
-    using Org.BouncyCastle.Security;
     using Serilog;
 
     public static class Program
@@ -40,26 +40,11 @@
             CancellationTokenSource source = new CancellationTokenSource();
             CancellationToken token = source.Token;
 
-            string? secretToken = null;
-            if (config.GraphQLSecretTokenPath is { })
+            hostBuilder.ConfigureWebHostDefaults(builder =>
             {
-                var buffer = new byte[40];
-                new SecureRandom().NextBytes(buffer);
-                secretToken = Convert.ToBase64String(buffer);
-                await File.WriteAllTextAsync(config.GraphQLSecretTokenPath, secretToken);
-            }
-
-            var graphQLNodeServiceProperties = new GraphQLNodeServiceProperties
-            {
-                GraphQLServer = config.GraphQLServer,
-                GraphQLListenHost = config.GraphQLHost,
-                GraphQLListenPort = config.GraphQLPort,
-                SecretToken = secretToken,
-                NoCors = config.NoCors,
-            };
-
-            var graphQLService = new GraphQLService(graphQLNodeServiceProperties);
-            hostBuilder = graphQLService.Configure(hostBuilder, context);
+                builder.UseStartup<GraphQL.GraphQLStartup>();
+                builder.UseUrls($"http://{config.GraphQLHost}:{config.GraphQLPort}/");
+            });
 
             var properties = NineChroniclesNodeServiceProperties
                 .GenerateLibplanetNodeServiceProperties(
