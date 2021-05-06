@@ -6,6 +6,7 @@ namespace NineChronicles.DataProvider
     using Lib9c.Renderer;
     using Microsoft.Extensions.Hosting;
     using Nekoyume.Action;
+    using NineChronicles.DataProvider.Store;
     using NineChronicles.Headless;
     using Serilog;
 
@@ -20,14 +21,18 @@ namespace NineChronicles.DataProvider
             BlockRenderer blockRenderer,
             ActionRenderer actionRenderer,
             ExceptionRenderer exceptionRenderer,
-            NodeStatusRenderer nodeStatusRenderer
+            NodeStatusRenderer nodeStatusRenderer,
+            MySqlStore mySqlStore
         )
         {
             _blockRenderer = blockRenderer;
             _actionRenderer = actionRenderer;
             _exceptionRenderer = exceptionRenderer;
             _nodeStatusRenderer = nodeStatusRenderer;
+            MySqlStore = mySqlStore;
         }
+
+        internal MySqlStore MySqlStore { get; }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -35,7 +40,10 @@ namespace NineChronicles.DataProvider
                 .Subscribe(
                     ev =>
                     {
-                        Log.Debug("***********ACTION: {0}", ev.Action.PlainValue.ToString());
+                        if (ev.Action is HackAndSlash4)
+                        {
+                            Log.Debug("***********ACTION: {0}", ev.Action.PlainValue.ToString());
+                        }
                     },
                     stoppingToken
                 );
