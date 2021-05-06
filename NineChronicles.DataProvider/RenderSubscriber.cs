@@ -9,7 +9,6 @@ namespace NineChronicles.DataProvider
     using NineChronicles.DataProvider.Store;
     using NineChronicles.Headless;
     using Serilog;
-    using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     public class RenderSubscriber : BackgroundService
     {
