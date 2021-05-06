@@ -81,7 +81,7 @@
                 properties.LogActionRenders = true;
             }
 
-            var mySqlStore = new MySqlStore(config.MySqlConnectionString);
+            var mySqlStore = new MySqlStore(headlessConfig.MySqlConnectionString);
 
             NineChroniclesNodeService nineChroniclesNodeService =
                 StandaloneServices.CreateHeadless(
