@@ -67,7 +67,8 @@
                     messageTimeout: config.MessageTimeout,
                     tipTimeout: config.TipTimeout,
                     demandBuffer: config.DemandBuffer,
-                    staticPeerStrings: config.StaticPeerStrings);
+                    staticPeerStrings: config.StaticPeerStrings,
+                    render: true);
 
             var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
             {
@@ -95,7 +96,7 @@
                 .ConfigureServices((ctx, services) =>
                 {
                     services.AddHostedService(provider =>
-                        new DataProvider.ActionEvaluationPublisher(
+                        new DataProvider.RenderSubscriber(
                             nineChroniclesNodeService.BlockRenderer,
                             nineChroniclesNodeService.ActionRenderer,
                             nineChroniclesNodeService.ExceptionRenderer,

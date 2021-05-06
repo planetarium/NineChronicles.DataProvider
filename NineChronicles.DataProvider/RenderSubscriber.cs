@@ -9,14 +9,14 @@ namespace NineChronicles.DataProvider
     using NineChronicles.Headless;
     using Serilog;
 
-    public class ActionEvaluationPublisher : BackgroundService
+    public class RenderSubscriber : BackgroundService
     {
         private readonly BlockRenderer _blockRenderer;
         private readonly ActionRenderer _actionRenderer;
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
 
-        public ActionEvaluationPublisher(
+        public RenderSubscriber(
             BlockRenderer blockRenderer,
             ActionRenderer actionRenderer,
             ExceptionRenderer exceptionRenderer,
