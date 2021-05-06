@@ -1,35 +1,35 @@
-CREATE TABLE IF NOT EXISTS `agents` (
-  `address` VARCHAR NOT NULL,
+CREATE TABLE IF NOT EXISTS `data_provider`.`agent` (
+   `address` VARCHAR NOT NULL,
 
-  PRIMARY KEY (`address`),
-  UNIQUE INDEX `address_UNIQUE` (`address`)
+   PRIMARY KEY (`address`),
+   UNIQUE INDEX `address_UNIQUE` (`address`)
 );
 
-CREATE TABLE IF NOT EXISTS `avatars` (
-  `address` VARCHAR NOT NULL,
-  `agents_address` VARCHAR NOT NULL,
-
-  PRIMARY KEY (`address`),
-  INDEX `fk_avatars_agents_idx` (`agents_address`),
-  UNIQUE INDEX `address_UNIQUE` (`address`)
-  UNIQUE INDEX `agents_address_UNIQUE` (`agents_address`),
-  CONSTRAINT `fk_avatars_agents`
-    FOREIGN KEY (`agents_address`)
-    REFERENCES `agents` (`address`)
+CREATE TABLE IF NOT EXISTS `data_provider`.`avatar` (
+    `address` VARCHAR NOT NULL,
+    `agent_address` VARCHAR NOT NULL,
+    
+    PRIMARY KEY (`address`),
+    INDEX `fk_avatar_agent_idx` (`agent_address`),
+    UNIQUE INDEX `address_UNIQUE` (`address`),
+    UNIQUE INDEX `agent_address_UNIQUE` (`agent_address`),
+    CONSTRAINT `fk_avatar_agent`
+        FOREIGN KEY (`agent_address`)
+            REFERENCES `agent` (`address`)
 );
 
-CREATE TABLE IF NOT EXISTS `hack_and_slash` (
-  `avatars_address` VARCHAR NOT NULL,
-  `agents_address` VARCHAR NOT NULL,
-  `stage_id` VARCHAR NOT NULL,
-  `cleared` BOOLEAN NOT NULL,
-
-  INDEX `fk_hack_and_slash_avatars1_idx` (`avatars_address`),
-  INDEX `fk_hack_and_slash_agents1_idx` (`agents_address`),
-  CONSTRAINT `fk_hack_and_slash_avatars1`
-    FOREIGN KEY (`avatars_address`)
-    REFERENCES `avatars` (`address`),
-  CONSTRAINT `fk_hack_and_slash_agents1`
-    FOREIGN KEY (`agents_address`)
-    REFERENCES `agents` (`address`)
+CREATE TABLE IF NOT EXISTS `data_provider`.`hack_and_slash` (
+    `avatar_address` VARCHAR NOT NULL,
+    `agent_address` VARCHAR NOT NULL,
+    `stage_id` INT NOT NULL,
+    `cleared` BOOLEAN NOT NULL,
+    
+    INDEX `fk_hack_and_slash_avatar1_idx` (`avatar_address`),
+    INDEX `fk_hack_and_slash_agent1_idx` (`agent_address`),
+    CONSTRAINT `fk_hack_and_slash_avatar1`
+        FOREIGN KEY (`avatar_address`)
+            REFERENCES `avatar` (`address`),
+    CONSTRAINT `fk_hack_and_slash_agent1`
+        FOREIGN KEY (`agent_address`)
+            REFERENCES `agent` (`address`)
 );

@@ -82,6 +82,9 @@ namespace NineChronicles.DataProvider.Executable
       public int DemandBuffer { get; set; }
 
       public string[]? StaticPeerStrings { get; set; }
+
 #pragma warning restore SA1011 // Closing square brackets should be spaced correctly
+#nullable disable
+      public string MySqlConnectionString { get; set; }
   }
 }

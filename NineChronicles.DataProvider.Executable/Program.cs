@@ -9,6 +9,7 @@
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using NineChronicles.DataProvider.Store;
     using NineChronicles.Headless;
     using NineChronicles.Headless.Properties;
     using Serilog;
@@ -82,6 +83,8 @@
                 properties.LogActionRenders = true;
             }
 
+            var mySqlStore = new MySqlStore(config.MySqlConnectionString);
+
             NineChroniclesNodeService nineChroniclesNodeService =
                 StandaloneServices.CreateHeadless(
                     nineChroniclesProperties,
@@ -100,7 +103,8 @@
                             nineChroniclesNodeService.BlockRenderer,
                             nineChroniclesNodeService.ActionRenderer,
                             nineChroniclesNodeService.ExceptionRenderer,
-                            nineChroniclesNodeService.NodeStatusRenderer));
+                            nineChroniclesNodeService.NodeStatusRenderer,
+                            mySqlStore));
                 });
             hostBuilder =
                    nineChroniclesNodeService.Configure(hostBuilder);
