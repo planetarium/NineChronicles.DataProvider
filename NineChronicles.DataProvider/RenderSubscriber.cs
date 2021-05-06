@@ -9,6 +9,7 @@ namespace NineChronicles.DataProvider
     using NineChronicles.DataProvider.Store;
     using NineChronicles.Headless;
     using Serilog;
+    using NineChroniclesActionType = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     public class RenderSubscriber : BackgroundService
     {
@@ -36,16 +37,24 @@ namespace NineChronicles.DataProvider
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _actionRenderer.EveryRender<ActionBase>()
+            _actionRenderer.EveryRender<HackAndSlash4>()
                 .Subscribe(
-                    ev =>
+                     ev =>
                     {
-                        if (ev.Action is HackAndSlash4)
-                        {
-                            Log.Debug("***********ACTION: {0}", ev.Action.PlainValue.ToString());
-                        }
+                        Log.Debug("Storing HackAndSlash Action in Block #{0}", ev.BlockIndex);
+                        MySqlStore.StoreAgent(ev.Signer.ToString());
+                        MySqlStore.StoreAvatar(
+                            ev.Action.avatarAddress.ToString(),
+                            ev.Signer.ToString());
+                        MySqlStore.StoreHackAndSlash(
+                            ev.Signer.ToString(),
+                            ev.Action.avatarAddress.ToString(),
+                            ev.Action.stageId,
+                            ev.Action.Result.IsClear
+                        );
+                        Log.Debug("Stored HackAndSlash Action in Block #{0}", ev.BlockIndex);
                     },
-                    stoppingToken
+                     stoppingToken
                 );
             return Task.CompletedTask;
         }
