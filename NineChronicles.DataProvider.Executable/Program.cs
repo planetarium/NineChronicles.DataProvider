@@ -81,7 +81,6 @@
                 properties.LogActionRenders = true;
             }
 
-            RpcContext rpcContext = new RpcContext();
             NineChroniclesNodeService nineChroniclesNodeService =
                 StandaloneServices.CreateHeadless(
                     nineChroniclesProperties,
@@ -96,7 +95,7 @@
                 .ConfigureServices((ctx, services) =>
                 {
                     services.AddHostedService(provider =>
-                        new NineChronicles.DataProvider.ActionEvaluationPublisher(
+                        new DataProvider.ActionEvaluationPublisher(
                             nineChroniclesNodeService.BlockRenderer,
                             nineChroniclesNodeService.ActionRenderer,
                             nineChroniclesNodeService.ExceptionRenderer,
