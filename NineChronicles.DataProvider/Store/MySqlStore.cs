@@ -8,33 +8,27 @@ namespace NineChronicles.DataProvider.Store
 
     public class MySqlStore
     {
-        private const string AgentsDbName = "agents";
-        private const string AvatarsDbName = "avatars";
+        private const string AgentsDbName = "agent";
+        private const string AvatarsDbName = "avatar";
         private const string HackAndSlashDbName = "hack_and_slash";
 
         private readonly MySqlCompiler _compiler;
         private readonly string _connectionString;
 
-        public MySqlStore(MySqlStoreOptions options)
+        public MySqlStore(string connectionString)
         {
-            var builder = new MySqlConnectionStringBuilder
-            {
-                Database = options.Database,
-                UserID = options.Username,
-                Password = options.Password,
-                Server = options.Server,
-                Port = options.Port,
-            };
-
-            _connectionString = builder.ConnectionString;
+            _connectionString = connectionString;
             _compiler = new MySqlCompiler();
         }
 
-        public void StoreAvatar(string address)
+        public void StoreAvatar(
+            string address,
+            string agentAddress)
         {
             Insert(AvatarsDbName, new Dictionary<string, object>
             {
                 ["address"] = address,
+                ["agent_address"] = agentAddress,
             });
         }
 
@@ -47,16 +41,16 @@ namespace NineChronicles.DataProvider.Store
         }
 
         public void StoreHackAndSlash(
-            string avatarAddress,
             string agentAddress,
-            string stageId,
+            string avatarAddress,
+            int stageId,
             bool cleared)
         {
             Insert(HackAndSlashDbName, new Dictionary<string, object>
             {
-                ["avatar_address"] = avatarAddress,
                 ["agent_address"] = agentAddress,
-                ["staged_id"] = stageId,
+                ["avatar_address"] = avatarAddress,
+                ["stage_id"] = stageId,
                 ["cleared"] = cleared,
             });
         }
