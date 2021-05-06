@@ -22,7 +22,7 @@
                 .AddJsonFile("appsettings.json")
                 .AddEnvironmentVariables("NC_");
             IConfiguration config = configurationBuilder.Build();
-            var headlessConfig = new HeadlessConfiguration();
+            var headlessConfig = new Configuration();
             config.Bind(headlessConfig);
 
             var loggerConf = new LoggerConfiguration()
@@ -81,8 +81,6 @@
                 properties.LogActionRenders = true;
             }
 
-            var mySqlStore = new MySqlStore(headlessConfig.MySqlConnectionString);
-
             NineChroniclesNodeService nineChroniclesNodeService =
                 StandaloneServices.CreateHeadless(
                     nineChroniclesProperties,
@@ -96,13 +94,10 @@
             hostBuilder = hostBuilder
                 .ConfigureServices((ctx, services) =>
                 {
-                    services.AddHostedService(provider =>
-                        new DataProvider.RenderSubscriber(
-                            nineChroniclesNodeService.BlockRenderer,
-                            nineChroniclesNodeService.ActionRenderer,
-                            nineChroniclesNodeService.ExceptionRenderer,
-                            nineChroniclesNodeService.NodeStatusRenderer,
-                            mySqlStore));
+                    services.AddHostedService<RenderSubscriber>();
+                    services.AddSingleton(nineChroniclesNodeService);
+                    services.AddSingleton<MySqlStore>();
+                    services.Configure<Configuration>(config);
                 });
             hostBuilder =
                    nineChroniclesNodeService.Configure(hostBuilder);

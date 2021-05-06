@@ -1,8 +1,8 @@
 #nullable enable
 
-namespace NineChronicles.DataProvider.Executable
+namespace NineChronicles.DataProvider
 {
-    public class HeadlessConfiguration
+  public class Configuration
   {
       public string? AppProtocolVersionToken { get; set; }
 
