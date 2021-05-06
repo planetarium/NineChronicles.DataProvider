@@ -1,7 +1,6 @@
 ﻿namespace NineChronicles.DataProvider.Executable
 {
     using System;
-    using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
     using Libplanet.KeyStore;
@@ -19,16 +18,15 @@
         public static async Task Main()
         {
             // Get configuration
-            var configurationBuilder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
-            var configuration = configurationBuilder.Build();
+            var configurationBuilder = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .AddEnvironmentVariables("NC_");
+            IConfiguration config = configurationBuilder.Build();
+            var headlessConfig = new HeadlessConfiguration();
+            config.Bind(headlessConfig);
+
             var loggerConf = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration);
-
-            // Get headless configuration
-            var path = Path.GetFullPath("appsettings.json");
-            var jsonString = File.ReadAllText(path);
-            HeadlessConfiguration config = Newtonsoft.Json.JsonConvert.DeserializeObject<HeadlessConfiguration>(jsonString);
-
+                .ReadFrom.Configuration(config);
             Log.Logger = loggerConf.CreateLogger();
 
             var context = new StandaloneContext
@@ -44,31 +42,31 @@
             hostBuilder.ConfigureWebHostDefaults(builder =>
             {
                 builder.UseStartup<GraphQL.GraphQLStartup>();
-                builder.UseUrls($"http://{config.GraphQLHost}:{config.GraphQLPort}/");
+                builder.UseUrls($"http://{headlessConfig.GraphQLHost}:{headlessConfig.GraphQLPort}/");
             });
 
             var properties = NineChroniclesNodeServiceProperties
                 .GenerateLibplanetNodeServiceProperties(
-                    config.AppProtocolVersionToken,
-                    config.GenesisBlockPath,
-                    config.Host,
-                    config.Port,
-                    config.SwarmPrivateKeyString,
-                    config.MinimumDifficulty,
-                    config.StoreType,
-                    config.StorePath,
+                    headlessConfig.AppProtocolVersionToken,
+                    headlessConfig.GenesisBlockPath,
+                    headlessConfig.Host,
+                    headlessConfig.Port,
+                    headlessConfig.SwarmPrivateKeyString,
+                    headlessConfig.MinimumDifficulty,
+                    headlessConfig.StoreType,
+                    headlessConfig.StorePath,
                     100,
-                    config.IceServerStrings,
-                    config.PeerStrings,
-                    config.TrustedAppProtocolVersionSigners,
+                    headlessConfig.IceServerStrings,
+                    headlessConfig.PeerStrings,
+                    headlessConfig.TrustedAppProtocolVersionSigners,
                     noMiner: true,
-                    workers: config.Workers,
-                    confirmations: config.Confirmations,
-                    maximumTransactions: config.MaximumTransactions,
-                    messageTimeout: config.MessageTimeout,
-                    tipTimeout: config.TipTimeout,
-                    demandBuffer: config.DemandBuffer,
-                    staticPeerStrings: config.StaticPeerStrings,
+                    workers: headlessConfig.Workers,
+                    confirmations: headlessConfig.Confirmations,
+                    maximumTransactions: headlessConfig.MaximumTransactions,
+                    messageTimeout: headlessConfig.MessageTimeout,
+                    tipTimeout: headlessConfig.TipTimeout,
+                    demandBuffer: headlessConfig.DemandBuffer,
+                    staticPeerStrings: headlessConfig.StaticPeerStrings,
                     render: true);
 
             var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
@@ -78,7 +76,7 @@
                Libplanet = properties,
             };
 
-            if (config.LogActionRenders)
+            if (headlessConfig.LogActionRenders)
             {
                 properties.LogActionRenders = true;
             }
@@ -89,10 +87,10 @@
                 StandaloneServices.CreateHeadless(
                     nineChroniclesProperties,
                     context,
-                    blockInterval: config.BlockInterval,
-                    reorgInterval: config.ReorgInterval,
-                    authorizedMiner: config.AuthorizedMiner,
-                    txLifeTime: TimeSpan.FromMinutes(config.TxLifeTime));
+                    blockInterval: headlessConfig.BlockInterval,
+                    reorgInterval: headlessConfig.ReorgInterval,
+                    authorizedMiner: headlessConfig.AuthorizedMiner,
+                    txLifeTime: TimeSpan.FromMinutes(headlessConfig.TxLifeTime));
 
             // ConfigureServices must come before Configure for now
             hostBuilder = hostBuilder
