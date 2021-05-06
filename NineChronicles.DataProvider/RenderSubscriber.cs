@@ -38,7 +38,7 @@ namespace NineChronicles.DataProvider
         {
             _actionRenderer.EveryRender<HackAndSlash4>()
                 .Subscribe(
-                     ev =>
+                    ev =>
                     {
                         Log.Debug("Storing HackAndSlash Action in Block #{0}", ev.BlockIndex);
                         MySqlStore.StoreAgent(ev.Signer.ToString());
@@ -53,7 +53,7 @@ namespace NineChronicles.DataProvider
                         );
                         Log.Debug("Stored HackAndSlash Action in Block #{0}", ev.BlockIndex);
                     },
-                     stoppingToken
+                    stoppingToken
                 );
             return Task.CompletedTask;
         }
