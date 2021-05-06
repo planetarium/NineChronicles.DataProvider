@@ -6,7 +6,7 @@
     {
         public NineChroniclesSummaryQuery()
         {
-            this.Field<StringGraphType>(
+            Field<StringGraphType>(
                 name: "test",
                 resolve: context => "Should be done.");
         }
