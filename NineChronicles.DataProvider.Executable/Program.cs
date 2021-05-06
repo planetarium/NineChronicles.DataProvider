@@ -95,7 +95,7 @@
                 .ConfigureServices((ctx, services) =>
                 {
                     services.AddHostedService(provider =>
-                        new DataProvider.ActionEvaluationPublisher(
+                        new DataProvider.RenderSubscriber(
                             nineChroniclesNodeService.BlockRenderer,
                             nineChroniclesNodeService.ActionRenderer,
                             nineChroniclesNodeService.ExceptionRenderer,
