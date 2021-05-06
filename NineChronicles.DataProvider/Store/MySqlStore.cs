@@ -1,10 +1,6 @@
 namespace NineChronicles.DataProvider.Store
 {
     using System.Collections.Generic;
-    using System.Linq;
-    using Libplanet.Action;
-    using Libplanet.Blocks;
-    using Libplanet.Tx;
     using MySqlConnector;
     using Serilog;
     using SqlKata.Compilers;
@@ -34,46 +30,34 @@ namespace NineChronicles.DataProvider.Store
             _compiler = new MySqlCompiler();
         }
 
-        public void PutTransaction<T>(Transaction<T> tx)
-            where T : IAction, new()
+        public void StoreAvatar(string address)
         {
-            InsertMany(
-                "updated_address_references",
-                new[] { "updated_address", "tx_id", "tx_nonce" },
-                tx.UpdatedAddresses.Select(
-                    addr => new object[]
-                    {
-                        addr.ToByteArray(), tx.Id.ToByteArray(), tx.Nonce,
-                    }));
-        }
-
-        public void StoreTxReferences(TxId txId, in BlockHash blockHash,  long txNonce)
-        {
-            Insert("tx_references", new Dictionary<string, object>
+            Insert(AvatarsDbName, new Dictionary<string, object>
             {
-                ["tx_id"] = string.Empty,
-                ["tx_nonce"] = string.Empty,
-                ["block_hash"] = string.Empty,
+                ["address"] = address,
             });
         }
 
-        public void StoreSignerReferences()
+        public void StoreAgent(string address)
         {
-            Insert("signer_references", new Dictionary<string, object>
+            Insert(AgentsDbName, new Dictionary<string, object>
             {
-                ["signer"] = string.Empty,
-                ["tx_id"] = string.Empty,
-                ["tx_nonce"] = string.Empty,
+                ["address"] = address,
             });
         }
 
-        public void StoreUpdatedAddressReferences()
+        public void StoreHackAndSlash(
+            string avatarAddress,
+            string agentAddress,
+            string stageId,
+            bool cleared)
         {
-            Insert("updated_address_references", new Dictionary<string, object>
+            Insert(HackAndSlashDbName, new Dictionary<string, object>
             {
-                ["updated_address"] = string.Empty,
-                ["tx_id"] = string.Empty,
-                ["tx_nonce"] = string.Empty,
+                ["avatar_address"] = avatarAddress,
+                ["agent_address"] = agentAddress,
+                ["staged_id"] = stageId,
+                ["cleared"] = cleared,
             });
         }
 
@@ -90,29 +74,6 @@ namespace NineChronicles.DataProvider.Store
             catch (MySqlException e)
             {
                 Log.Debug(e.ErrorCode.ToString());
-                if (e.ErrorCode == MySqlErrorCode.DuplicateKeyEntry)
-                {
-                    Log.Debug("Ignore DuplicateKeyEntry");
-                }
-                else
-                {
-                    throw;
-                }
-            }
-        }
-
-        private void InsertMany(
-            string tableName,
-            string[] columns,
-            IEnumerable<object[]> data)
-        {
-            using QueryFactory db = OpenDb();
-            try
-            {
-                db.Query(tableName).Insert(columns, data);
-            }
-            catch (MySqlException e)
-            {
                 if (e.ErrorCode == MySqlErrorCode.DuplicateKeyEntry)
                 {
                     Log.Debug("Ignore DuplicateKeyEntry");
