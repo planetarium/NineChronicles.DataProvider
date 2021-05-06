@@ -67,7 +67,8 @@
                     messageTimeout: config.MessageTimeout,
                     tipTimeout: config.TipTimeout,
                     demandBuffer: config.DemandBuffer,
-                    staticPeerStrings: config.StaticPeerStrings);
+                    staticPeerStrings: config.StaticPeerStrings,
+                    render: true);
 
             var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
             {
