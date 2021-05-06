@@ -9,6 +9,7 @@
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using NineChronicles.DataProvider.Store;
     using NineChronicles.Headless;
     using NineChronicles.Headless.Properties;
     using Serilog;
@@ -82,6 +83,25 @@
                 properties.LogActionRenders = true;
             }
 
+            Console.WriteLine(
+                "Server: {0}\n" +
+                "Port: {1}\n" +
+                "Username: {2}\n" +
+                "Password: {3}\n" +
+                "Database: {4}",
+                config.MySqlServer,
+                config.MySqlPort,
+                config.MySqlUsername,
+                config.MySqlPassword,
+                config.MySqlDatabase);
+            var mySqlOptions = new MySqlStoreOptions(
+                config.MySqlDatabase,
+                config.MySqlServer,
+                config.MySqlPort,
+                config.MySqlUsername,
+                config.MySqlPassword);
+            var mySqlStore = new MySqlStore(mySqlOptions);
+
             NineChroniclesNodeService nineChroniclesNodeService =
                 StandaloneServices.CreateHeadless(
                     nineChroniclesProperties,
@@ -100,7 +120,8 @@
                             nineChroniclesNodeService.BlockRenderer,
                             nineChroniclesNodeService.ActionRenderer,
                             nineChroniclesNodeService.ExceptionRenderer,
-                            nineChroniclesNodeService.NodeStatusRenderer));
+                            nineChroniclesNodeService.NodeStatusRenderer,
+                            mySqlStore));
                 });
             hostBuilder =
                    nineChroniclesNodeService.Configure(hostBuilder);
