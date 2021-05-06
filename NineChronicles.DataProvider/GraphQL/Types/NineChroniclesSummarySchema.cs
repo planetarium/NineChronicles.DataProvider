@@ -9,7 +9,7 @@
         public NineChroniclesSummarySchema(IServiceProvider serviceProvider)
             : base(serviceProvider)
         {
-            this.Query = serviceProvider.GetRequiredService<NineChroniclesSummaryQuery>();
+            Query = serviceProvider.GetRequiredService<NineChroniclesSummaryQuery>();
         }
     }
 }
