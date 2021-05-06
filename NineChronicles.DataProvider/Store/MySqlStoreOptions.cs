@@ -1,8 +1,8 @@
-namespace Libplanet.Explorer.Store
+namespace NineChronicles.DataProvider.Store
 {
-    public readonly struct MySQLRichStoreOptions
+    public readonly struct MySqlStoreOptions
     {
-        public MySQLRichStoreOptions(
+        public MySqlStoreOptions(
             string database, string server, uint port, string username, string password)
         {
             Database = database;
