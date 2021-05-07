@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS `data_provider`.`agent` (
-   `address` VARCHAR NOT NULL,
+    `address` VARCHAR NOT NULL,
 
-   PRIMARY KEY (`address`),
-   UNIQUE INDEX `address_UNIQUE` (`address`)
+    PRIMARY KEY (`address`),
+    UNIQUE INDEX `address_UNIQUE` (`address`)
 );
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`avatar` (
@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`avatar` (
     PRIMARY KEY (`address`),
     INDEX `fk_avatar_agent_idx` (`agent_address`),
     UNIQUE INDEX `address_UNIQUE` (`address`),
-    UNIQUE INDEX `agent_address_UNIQUE` (`agent_address`),
     CONSTRAINT `fk_avatar_agent`
         FOREIGN KEY (`agent_address`)
             REFERENCES `agent` (`address`)
