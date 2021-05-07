@@ -1,6 +1,7 @@
 namespace NineChronicles.DataProvider.Store
 {
     using System.Collections.Generic;
+    using Microsoft.Extensions.Options;
     using MySqlConnector;
     using Serilog;
     using SqlKata.Compilers;
@@ -14,6 +15,11 @@ namespace NineChronicles.DataProvider.Store
 
         private readonly MySqlCompiler _compiler;
         private readonly string _connectionString;
+
+        public MySqlStore(IOptions<Configuration> option)
+            : this(option.Value.MySqlConnectionString)
+        {
+        }
 
         public MySqlStore(string connectionString)
         {
