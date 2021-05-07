@@ -33,25 +33,31 @@ namespace NineChronicles.DataProvider
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _actionRenderer.EveryRender<HackAndSlash4>()
+            _actionRenderer.EveryRender<ActionBase>()
                 .Subscribe(
                     ev =>
                     {
-                        Log.Debug("Storing HackAndSlash Action in Block #{0}", ev.BlockIndex);
-                        MySqlStore.StoreAgent(ev.Signer.ToString());
-                        MySqlStore.StoreAvatar(
-                            ev.Action.avatarAddress.ToString(),
-                            ev.Signer.ToString());
-                        MySqlStore.StoreHackAndSlash(
-                            ev.Signer.ToString(),
-                            ev.Action.avatarAddress.ToString(),
-                            ev.Action.stageId,
-                            ev.Action.Result.IsClear
-                        );
-                        Log.Debug("Stored HackAndSlash Action in Block #{0}", ev.BlockIndex);
-                    },
-                    stoppingToken
-                );
+                        if (ev.Exception != null)
+                        {
+                            return;
+                        }
+
+                        if (ev.Action is HackAndSlash4 action)
+                        {
+                            Log.Debug("Storing HackAndSlash action in block #{0}", ev.BlockIndex);
+                            MySqlStore.StoreAgent(ev.Signer.ToString());
+                            MySqlStore.StoreAvatar(
+                                action.avatarAddress.ToString(),
+                                ev.Signer.ToString());
+                            MySqlStore.StoreHackAndSlash(
+                                ev.Signer.ToString(),
+                                action.avatarAddress.ToString(),
+                                action.stageId,
+                                action.Result.IsClear
+                            );
+                            Log.Debug("Stored HackAndSlash action in block #{0}", ev.BlockIndex);
+                        }
+                    });
             return Task.CompletedTask;
         }
     }
