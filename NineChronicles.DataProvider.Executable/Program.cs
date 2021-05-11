@@ -29,6 +29,13 @@
                 .ReadFrom.Configuration(config);
             Log.Logger = loggerConf.CreateLogger();
 
+            // FIXME: quick and dirty workaround.
+            // Please remove it after fixing Libplanet.Net.Swarm<T> and NetMQTransport...
+            if (string.IsNullOrEmpty(headlessConfig.Host))
+            {
+                headlessConfig.Host = null;
+            }
+
             var context = new StandaloneContext
             {
                 KeyStore = Web3KeyStore.DefaultKeyStore,
