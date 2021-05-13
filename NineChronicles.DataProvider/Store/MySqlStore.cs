@@ -51,7 +51,8 @@ namespace NineChronicles.DataProvider.Store
             string agentAddress,
             string avatarAddress,
             int stageId,
-            bool cleared)
+            bool cleared,
+            string blockHash)
         {
             Insert(HackAndSlashDbName, new Dictionary<string, object>
             {
@@ -59,6 +60,7 @@ namespace NineChronicles.DataProvider.Store
                 ["avatar_address"] = avatarAddress,
                 ["stage_id"] = stageId,
                 ["cleared"] = cleared,
+                ["block_hash"] = blockHash,
             });
         }
 

@@ -9,5 +9,7 @@
         public int Stage_Id { get; set; }
 
         public bool Cleared { get; set; }
+
+        public string Block_Hash { get; set; }
     }
 }

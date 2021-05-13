@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`hack_and_slash` (
     `agent_address` VARCHAR NOT NULL,
     `stage_id` INT NOT NULL,
     `cleared` BOOLEAN NOT NULL,
+    `block_hash` VARCHAR NOT NULL,
     
     INDEX `fk_hack_and_slash_avatar1_idx` (`avatar_address`),
     INDEX `fk_hack_and_slash_agent1_idx` (`agent_address`),
