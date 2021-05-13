@@ -58,6 +58,28 @@ namespace NineChronicles.DataProvider
                             Log.Debug("Stored HackAndSlash action in block #{0}", ev.BlockIndex);
                         }
                     });
+
+            _actionRenderer.EveryUnrender<ActionBase>()
+                .Subscribe(
+                    ev =>
+                    {
+                        if (ev.Exception != null)
+                        {
+                            return;
+                        }
+
+                        if (ev.Action is HackAndSlash4 action)
+                        {
+                            Log.Debug("Deleting HackAndSlash action in block #{0}", ev.BlockIndex);
+                            MySqlStore.DeleteHackAndSlash(
+                                ev.Signer.ToString(),
+                                action.avatarAddress.ToString(),
+                                action.stageId,
+                                action.Result.IsClear
+                            );
+                            Log.Debug("Deleted HackAndSlash action in block #{0}", ev.BlockIndex);
+                        }
+                    });
             return Task.CompletedTask;
         }
     }
