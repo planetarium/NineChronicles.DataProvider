@@ -1,10 +1,10 @@
 ﻿namespace NineChronicles.DataProvider.Store.Models
 {
-    public class HackAndSlashModel
+    public struct HackAndSlashModel
     {
-        public string Agent_Address { get; set; } = null!;
+        public string Agent_Address { get; set; }
 
-        public string Avatar_Address { get; set; } = null!;
+        public string Avatar_Address { get; set; }
 
         public int Stage_Id { get; set; }
 

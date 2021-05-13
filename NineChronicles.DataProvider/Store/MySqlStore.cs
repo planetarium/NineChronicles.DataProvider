@@ -67,21 +67,18 @@ namespace NineChronicles.DataProvider.Store
             int? limit = null)
         {
             using QueryFactory db = OpenDb();
-            if (limit != null)
+            var query = db.Query(HackAndSlashDbName);
+            if (agentAddress is { })
             {
-                var query = agentAddress != null ? db.Query(HackAndSlashDbName)
-                        .Where("agent_address", agentAddress)
-                        : db.Query(HackAndSlashDbName);
-                return query.Limit((int)limit)
-                    .Get<HackAndSlashModel>();
+                query = query.Where("agent_address", agentAddress);
             }
-            else
+
+            if (limit is int limitNotNull)
             {
-                var query = agentAddress != null ? db.Query(HackAndSlashDbName)
-                        .Where("agent_address", agentAddress)
-                        : db.Query(HackAndSlashDbName);
-                return query.Get<HackAndSlashModel>();
+                query = query.Limit(limitNotNull);
             }
+
+            return query.Get<HackAndSlashModel>();
         }
 
         private QueryFactory OpenDb() =>
