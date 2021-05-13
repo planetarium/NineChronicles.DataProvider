@@ -3,6 +3,7 @@ namespace NineChronicles.DataProvider.Store
     using System.Collections.Generic;
     using Microsoft.Extensions.Options;
     using MySqlConnector;
+    using NineChronicles.DataProvider.Store.Models;
     using Serilog;
     using SqlKata.Compilers;
     using SqlKata.Execution;
@@ -59,6 +60,25 @@ namespace NineChronicles.DataProvider.Store
                 ["stage_id"] = stageId,
                 ["cleared"] = cleared,
             });
+        }
+
+        public IEnumerable<HackAndSlashModel> GetHackAndSlash(
+            string? agentAddress = null,
+            int? limit = null)
+        {
+            using QueryFactory db = OpenDb();
+            var query = db.Query(HackAndSlashDbName);
+            if (agentAddress is { })
+            {
+                query = query.Where("agent_address", agentAddress);
+            }
+
+            if (limit is int limitNotNull)
+            {
+                query = query.Limit(limitNotNull);
+            }
+
+            return query.Get<HackAndSlashModel>();
         }
 
         private QueryFactory OpenDb() =>
