@@ -128,7 +128,7 @@ namespace NineChronicles.DataProvider.Store
             {
                 foreach (KeyValuePair<string, object> pair in data)
                 {
-                    query.Where(pair.Key, pair.Value);
+                    query = query.Where(pair.Key, pair.Value);
                 }
 
                 query.Delete();
