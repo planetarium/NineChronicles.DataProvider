@@ -1,5 +1,3 @@
-using System.Reactive;
-
 namespace NineChronicles.DataProvider
 {
     using System;
