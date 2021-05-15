@@ -24,6 +24,16 @@
                     int? limit = context.GetArgument<int?>("limit", null);
                     return Store.GetHackAndSlash(agentAddress, limit);
                 });
+            Field<ListGraphType<StageRankingType>>(
+                name: "StageRanking",
+                arguments: new QueryArguments(
+                    new QueryArgument<IntGraphType> { Name = "limit" }
+                ),
+                resolve: context =>
+                {
+                    int? limit = context.GetArgument<int?>("limit", null);
+                    return Store.GetStageRanking(limit);
+                });
         }
 
         private MySqlStore Store { get; }
