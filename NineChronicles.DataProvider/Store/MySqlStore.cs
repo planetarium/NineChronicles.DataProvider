@@ -1,5 +1,6 @@
 namespace NineChronicles.DataProvider.Store
 {
+    using System;
     using System.Collections.Generic;
     using Microsoft.Extensions.Options;
     using MySqlConnector;
@@ -30,12 +31,14 @@ namespace NineChronicles.DataProvider.Store
 
         public void StoreAvatar(
             string address,
-            string agentAddress)
+            string agentAddress,
+            string name)
         {
             Insert(AvatarsDbName, new Dictionary<string, object>
             {
                 ["address"] = address,
                 ["agent_address"] = agentAddress,
+                ["name"] = name,
             });
         }
 
@@ -81,6 +84,35 @@ namespace NineChronicles.DataProvider.Store
             return query.Get<HackAndSlashModel>();
         }
 
+        public IEnumerable<StageRankingModel> GetStageRanking(
+            int? limit = null)
+        {
+            try
+            {
+                using QueryFactory db = OpenDb();
+                var query = db.Query(HackAndSlashDbName)
+                    .Select("avatar_address as AvatarAddress")
+                    .SelectRaw($"(select name from {AvatarsDbName} where address = avatar_address) as Name")
+                    .SelectRaw("Max(stage_id) as ClearedStageId")
+                    .Where("cleared", true)
+                    .GroupBy("avatar_address")
+                    .OrderByDesc("stage_id");
+
+                if (limit is int limitNotNull)
+                {
+                    query = query.Limit(limitNotNull);
+                }
+
+                var stageRankingList = query.Get<StageRankingModel>();
+                return stageRankingList;
+            }
+            catch (MySqlException e)
+            {
+                Log.Debug("MySql Error: {0}", e.Message);
+                throw;
+            }
+        }
+
         private QueryFactory OpenDb() =>
             new QueryFactory(new MySqlConnection(_connectionString), _compiler);
 
@@ -93,7 +125,7 @@ namespace NineChronicles.DataProvider.Store
             }
             catch (MySqlException e)
             {
-                Log.Debug(e.ErrorCode.ToString());
+                Log.Debug("MySql Error: {0}", e.Message);
                 if (e.ErrorCode == MySqlErrorCode.DuplicateKeyEntry)
                 {
                     Log.Debug("Ignore DuplicateKeyEntry");
