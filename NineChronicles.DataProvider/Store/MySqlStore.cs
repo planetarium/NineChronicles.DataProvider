@@ -31,12 +31,14 @@ namespace NineChronicles.DataProvider.Store
 
         public void StoreAvatar(
             string address,
-            string agentAddress)
+            string agentAddress,
+            string name)
         {
             Insert(AvatarsDbName, new Dictionary<string, object>
             {
                 ["address"] = address,
                 ["agent_address"] = agentAddress,
+                ["name"] = name,
             });
         }
 
@@ -89,8 +91,9 @@ namespace NineChronicles.DataProvider.Store
             {
                 using QueryFactory db = OpenDb();
                 var query = db.Query(HackAndSlashDbName)
-                    .Select("avatar_address")
-                    .SelectRaw("Max(stage_id) as stage_id")
+                    .Select("avatar_address as AvatarAddress")
+                    .SelectRaw($"(select name from {AvatarsDbName} where address = avatar_address) as Name")
+                    .SelectRaw("Max(stage_id) as ClearedStageId")
                     .Where("cleared", true)
                     .GroupBy("avatar_address")
                     .OrderByDesc("stage_id");
@@ -100,18 +103,7 @@ namespace NineChronicles.DataProvider.Store
                     query = query.Limit(limitNotNull);
                 }
 
-                var hackAndSlashList = query.Get<HackAndSlashModel>();
-                var stageRankingList = new List<StageRankingModel>();
-                foreach (var hackAndSlash in hackAndSlashList)
-                {
-                    var stageRanking = new StageRankingModel()
-                    {
-                        ClearedStageId = hackAndSlash.Stage_Id,
-                        Name = hackAndSlash.Avatar_Address,
-                    };
-                    stageRankingList.Add(stageRanking);
-                }
-
+                var stageRankingList = query.Get<StageRankingModel>();
                 return stageRankingList;
             }
             catch (MySqlException e)

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`agent` (
 CREATE TABLE IF NOT EXISTS `data_provider`.`avatar` (
     `address` VARCHAR NOT NULL,
     `agent_address` VARCHAR NOT NULL,
+    `name` VARCHAR NOT NULL,
     
     PRIMARY KEY (`address`),
     INDEX `fk_avatar_agent_idx` (`agent_address`),
