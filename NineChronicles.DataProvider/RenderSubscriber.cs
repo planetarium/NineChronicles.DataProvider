@@ -55,7 +55,8 @@ namespace NineChronicles.DataProvider
                                 ev.Signer.ToString(),
                                 action.avatarAddress.ToString(),
                                 action.stageId,
-                                action.Result.IsClear
+                                action.Result.IsClear,
+                                ev.BlockHash.ToString()
                             );
                             Log.Debug("Stored HackAndSlash action in block #{0}", ev.BlockIndex);
                         }
