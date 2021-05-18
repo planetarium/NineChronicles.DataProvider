@@ -27,12 +27,14 @@
             Field<ListGraphType<StageRankingType>>(
                 name: "StageRanking",
                 arguments: new QueryArguments(
-                    new QueryArgument<IntGraphType> { Name = "limit" }
+                    new QueryArgument<IntGraphType> { Name = "limit" },
+                    new QueryArgument<BooleanGraphType> { Name = "mimisbrunnr" }
                 ),
                 resolve: context =>
                 {
                     int? limit = context.GetArgument<int?>("limit", null);
-                    return Store.GetStageRanking(limit);
+                    bool isMimisbrunnr = context.GetArgument<bool>("mimisbrunnr", false);
+                    return Store.GetStageRanking(limit, isMimisbrunnr);
                 });
         }
 
