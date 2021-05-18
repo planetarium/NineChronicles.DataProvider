@@ -111,7 +111,7 @@ namespace NineChronicles.DataProvider.Store
                     .SelectRaw("Max(stage_id) as ClearedStageId")
                     .Where("cleared", true)
                     .GroupBy("avatar_address")
-                    .OrderByDesc("stage_id");
+                    .OrderByDesc("ClearedStageId");
 
                 if (limit is int limitNotNull)
                 {
