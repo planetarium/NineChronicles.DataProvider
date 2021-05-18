@@ -65,6 +65,21 @@ namespace NineChronicles.DataProvider.Store
             });
         }
 
+        public void DeleteHackAndSlash(
+            string agentAddress,
+            string avatarAddress,
+            int stageId,
+            bool cleared)
+        {
+            Delete(HackAndSlashDbName, new Dictionary<string, object>
+            {
+                ["agent_address"] = agentAddress,
+                ["avatar_address"] = avatarAddress,
+                ["stage_id"] = stageId,
+                ["cleared"] = cleared,
+            });
+        }
+
         public IEnumerable<HackAndSlashModel> GetHackAndSlash(
             string? agentAddress = null,
             int? limit = null)
@@ -134,6 +149,26 @@ namespace NineChronicles.DataProvider.Store
                 {
                     throw;
                 }
+            }
+        }
+
+        private void Delete(string tableName, IReadOnlyDictionary<string, object> data)
+        {
+            using QueryFactory db = OpenDb();
+            var query = db.Query(tableName);
+            try
+            {
+                foreach (KeyValuePair<string, object> pair in data)
+                {
+                    query = query.Where(pair.Key, pair.Value);
+                }
+
+                query.Delete();
+            }
+            catch (MySqlException e)
+            {
+                Log.Debug(e.Message);
+                throw;
             }
         }
     }
