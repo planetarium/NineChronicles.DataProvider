@@ -42,23 +42,26 @@ namespace NineChronicles.DataProvider
                             return;
                         }
 
-                        if (ev.Action is HackAndSlash4 action)
+                        if (!(ev.Action is HackAndSlash4 action))
                         {
-                            string avatarName = ev.OutputStates.GetAvatarState(action.avatarAddress).name;
-                            Log.Debug("Storing HackAndSlash action in block #{0}", ev.BlockIndex);
-                            MySqlStore.StoreAgent(ev.Signer.ToString());
-                            MySqlStore.StoreAvatar(
-                                action.avatarAddress.ToString(),
-                                ev.Signer.ToString(),
-                                avatarName);
-                            MySqlStore.StoreHackAndSlash(
-                                ev.Signer.ToString(),
-                                action.avatarAddress.ToString(),
-                                action.stageId,
-                                action.Result.IsClear
-                            );
-                            Log.Debug("Stored HackAndSlash action in block #{0}", ev.BlockIndex);
+                            return;
                         }
+
+                        Log.Debug("Storing HackAndSlash action in block #{0}", ev.BlockIndex);
+                        string avatarName = ev.OutputStates.GetAvatarState(action.avatarAddress).name;
+                        MySqlStore.StoreAgent(ev.Signer.ToString());
+                        MySqlStore.StoreAvatar(
+                            action.avatarAddress.ToString(),
+                            ev.Signer.ToString(),
+                            avatarName);
+                        MySqlStore.StoreHackAndSlash(
+                            ev.Signer.ToString(),
+                            action.avatarAddress.ToString(),
+                            action.stageId,
+                            action.Result.IsClear,
+                            isMimisbrunnr: action.stageId > 10000000
+                        );
+                        Log.Debug("Stored HackAndSlash action in block #{0}", ev.BlockIndex);
                     });
 
             _actionRenderer.EveryUnrender<ActionBase>()

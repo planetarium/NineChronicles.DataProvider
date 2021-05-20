@@ -54,7 +54,8 @@ namespace NineChronicles.DataProvider.Store
             string agentAddress,
             string avatarAddress,
             int stageId,
-            bool cleared)
+            bool cleared,
+            bool isMimisbrunnr)
         {
             Insert(HackAndSlashDbName, new Dictionary<string, object>
             {
@@ -62,6 +63,7 @@ namespace NineChronicles.DataProvider.Store
                 ["avatar_address"] = avatarAddress,
                 ["stage_id"] = stageId,
                 ["cleared"] = cleared,
+                ["mimisbrunnr"] = isMimisbrunnr,
             });
         }
 
@@ -100,7 +102,8 @@ namespace NineChronicles.DataProvider.Store
         }
 
         public IEnumerable<StageRankingModel> GetStageRanking(
-            int? limit = null)
+            int? limit = null,
+            bool isMimisbrunnr = false)
         {
             try
             {
@@ -109,6 +112,7 @@ namespace NineChronicles.DataProvider.Store
                     .Select("avatar_address as AvatarAddress")
                     .SelectRaw($"(select name from {AvatarsDbName} where address = avatar_address) as Name")
                     .SelectRaw("Max(stage_id) as ClearedStageId")
+                    .Where("mimisbrunnr", isMimisbrunnr)
                     .Where("cleared", true)
                     .GroupBy("avatar_address")
                     .OrderByDesc("ClearedStageId");
