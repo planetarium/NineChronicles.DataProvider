@@ -1,13 +1,24 @@
-﻿namespace NineChronicles.DataProvider.Store.Models
+namespace NineChronicles.DataProvider.Store.Models
 {
-    public struct HackAndSlashModel
+    using System.ComponentModel.DataAnnotations;
+
+    public class HackAndSlashModel
     {
-        public string Agent_Address { get; set; }
+        [Key]
+        public string? Id { get; set; }
 
-        public string Avatar_Address { get; set; }
+        public string? AgentAddress { get; set; }
 
-        public int Stage_Id { get; set; }
+        public AgentModel? Agent { get; set; }
+
+        public string? AvatarAddress { get; set; }
+
+        public AvatarModel? Avatar { get; set; }
+
+        public int StageId { get; set; }
 
         public bool Cleared { get; set; }
+
+        public bool Mimisbrunnr { get; set; }
     }
 }

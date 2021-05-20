@@ -2,31 +2,17 @@ namespace NineChronicles.DataProvider.Store
 {
     using System;
     using System.Collections.Generic;
-    using Microsoft.Extensions.Options;
-    using MySqlConnector;
+    using System.Linq;
+    using Microsoft.EntityFrameworkCore;
     using NineChronicles.DataProvider.Store.Models;
-    using Serilog;
-    using SqlKata.Compilers;
-    using SqlKata.Execution;
 
     public class MySqlStore
     {
-        private const string AgentsDbName = "agent";
-        private const string AvatarsDbName = "avatar";
-        private const string HackAndSlashDbName = "hack_and_slash";
+        private readonly IDbContextFactory<NineChroniclesContext> _dbContextFactory;
 
-        private readonly MySqlCompiler _compiler;
-        private readonly string _connectionString;
-
-        public MySqlStore(IOptions<Configuration> option)
-            : this(option.Value.MySqlConnectionString)
+        public MySqlStore(IDbContextFactory<NineChroniclesContext> contextFactory)
         {
-        }
-
-        public MySqlStore(string connectionString)
-        {
-            _connectionString = connectionString;
-            _compiler = new MySqlCompiler();
+            _dbContextFactory = contextFactory;
         }
 
         public void StoreAvatar(
@@ -34,146 +20,116 @@ namespace NineChronicles.DataProvider.Store
             string agentAddress,
             string name)
         {
-            Insert(AvatarsDbName, new Dictionary<string, object>
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            if (ctx.Avatars?.Find(address) is null)
             {
-                ["address"] = address,
-                ["agent_address"] = agentAddress,
-                ["name"] = name,
-            });
+                ctx.Avatars!.Add(
+                    new AvatarModel()
+                    {
+                        Address = address,
+                        AgentAddress = agentAddress,
+                        Name = name,
+                    }
+                );
+            }
+
+            ctx.SaveChanges();
         }
 
         public void StoreAgent(string address)
         {
-            Insert(AgentsDbName, new Dictionary<string, object>
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            if (ctx.Agents?.Find(address) is null)
             {
-                ["address"] = address,
-            });
+                ctx.Agents!.Add(
+                    new AgentModel()
+                    {
+                        Address = address,
+                    }
+                );
+            }
+
+            ctx.SaveChanges();
         }
 
         public void StoreHackAndSlash(
+            string id,
             string agentAddress,
             string avatarAddress,
             int stageId,
             bool cleared,
             bool isMimisbrunnr)
         {
-            Insert(HackAndSlashDbName, new Dictionary<string, object>
-            {
-                ["agent_address"] = agentAddress,
-                ["avatar_address"] = avatarAddress,
-                ["stage_id"] = stageId,
-                ["cleared"] = cleared,
-                ["mimisbrunnr"] = isMimisbrunnr,
-            });
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            ctx.HackAndSlashes!.Add(
+                new HackAndSlashModel()
+                {
+                    Id = id,
+                    AgentAddress = agentAddress,
+                    AvatarAddress = avatarAddress,
+                    StageId = stageId,
+                    Cleared = cleared,
+                    Mimisbrunnr = isMimisbrunnr,
+                }
+            );
+            ctx.SaveChanges();
         }
 
-        public void DeleteHackAndSlash(
-            string agentAddress,
-            string avatarAddress,
-            int stageId,
-            bool cleared)
+        public void DeleteHackAndSlash(string id)
         {
-            Delete(HackAndSlashDbName, new Dictionary<string, object>
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            if (ctx.HackAndSlashes!.Find(id) is HackAndSlashModel has)
             {
-                ["agent_address"] = agentAddress,
-                ["avatar_address"] = avatarAddress,
-                ["stage_id"] = stageId,
-                ["cleared"] = cleared,
-            });
+                ctx.Remove(has);
+            }
+
+            ctx.SaveChanges();
         }
 
         public IEnumerable<HackAndSlashModel> GetHackAndSlash(
             string? agentAddress = null,
             int? limit = null)
         {
-            using QueryFactory db = OpenDb();
-            var query = db.Query(HackAndSlashDbName);
-            if (agentAddress is { })
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IEnumerable<HackAndSlashModel> hackAndSlashes = ctx.HackAndSlashes!;
+
+            if (agentAddress is { } agentAddressNotNull)
             {
-                query = query.Where("agent_address", agentAddress);
+                hackAndSlashes = hackAndSlashes.Where(has => has.AgentAddress == agentAddressNotNull);
             }
 
             if (limit is int limitNotNull)
             {
-                query = query.Limit(limitNotNull);
+                hackAndSlashes = hackAndSlashes.Take(limitNotNull);
             }
 
-            return query.Get<HackAndSlashModel>();
+            return hackAndSlashes.ToList();
         }
 
         public IEnumerable<StageRankingModel> GetStageRanking(
             int? limit = null,
             bool isMimisbrunnr = false)
         {
-            try
-            {
-                using QueryFactory db = OpenDb();
-                var query = db.Query(HackAndSlashDbName)
-                    .Select("avatar_address as AvatarAddress")
-                    .SelectRaw($"(select name from {AvatarsDbName} where address = avatar_address) as Name")
-                    .SelectRaw("Max(stage_id) as ClearedStageId")
-                    .Where("mimisbrunnr", isMimisbrunnr)
-                    .Where("cleared", true)
-                    .GroupBy("avatar_address")
-                    .OrderByDesc("ClearedStageId");
-
-                if (limit is int limitNotNull)
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IEnumerable<StageRankingModel>? query = ctx.Set<HackAndSlashModel>()
+                .AsQueryable()
+                .Where(has => has.Mimisbrunnr == isMimisbrunnr)
+                .Where(has => has.Cleared)
+                .GroupBy(has => has.AvatarAddress)
+                .Select(g => new StageRankingModel()
                 {
-                    query = query.Limit(limitNotNull);
-                }
+                    AvatarAddress = g.Key!,
+                    ClearedStageId = g.Max(x => x.StageId),
+                    Name = ctx.Avatars!.AsQueryable().Where(a => a.Address! == g.Key).Select(a => a.Name!).Single(),
+                })
+                .OrderByDescending(r => r.ClearedStageId);
 
-                var stageRankingList = query.Get<StageRankingModel>();
-                return stageRankingList;
-            }
-            catch (MySqlException e)
+            if (limit is int limitNotNull)
             {
-                Log.Debug("MySql Error: {0}", e.Message);
-                throw;
+                query = query.Take(limitNotNull);
             }
-        }
 
-        private QueryFactory OpenDb() =>
-            new QueryFactory(new MySqlConnection(_connectionString), _compiler);
-
-        private void Insert(string tableName, IReadOnlyDictionary<string, object> data)
-        {
-            using QueryFactory db = OpenDb();
-            try
-            {
-                db.Query(tableName).Insert(data);
-            }
-            catch (MySqlException e)
-            {
-                Log.Debug("MySql Error: {0}", e.Message);
-                if (e.ErrorCode == MySqlErrorCode.DuplicateKeyEntry)
-                {
-                    Log.Debug("Ignore DuplicateKeyEntry");
-                }
-                else
-                {
-                    throw;
-                }
-            }
-        }
-
-        private void Delete(string tableName, IReadOnlyDictionary<string, object> data)
-        {
-            using QueryFactory db = OpenDb();
-            var query = db.Query(tableName);
-            try
-            {
-                foreach (KeyValuePair<string, object> pair in data)
-                {
-                    query = query.Where(pair.Key, pair.Value);
-                }
-
-                query.Delete();
-            }
-            catch (MySqlException e)
-            {
-                Log.Debug(e.Message);
-                throw;
-            }
+            return query.ToList();
         }
     }
 }

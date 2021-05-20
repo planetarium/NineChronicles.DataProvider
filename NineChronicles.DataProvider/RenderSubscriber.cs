@@ -55,6 +55,7 @@ namespace NineChronicles.DataProvider
                             ev.Signer.ToString(),
                             avatarName);
                         MySqlStore.StoreHackAndSlash(
+                            action.Id.ToString(),
                             ev.Signer.ToString(),
                             action.avatarAddress.ToString(),
                             action.stageId,
@@ -76,12 +77,7 @@ namespace NineChronicles.DataProvider
                         if (ev.Action is HackAndSlash4 action)
                         {
                             Log.Debug("Deleting HackAndSlash action in block #{0}", ev.BlockIndex);
-                            MySqlStore.DeleteHackAndSlash(
-                                ev.Signer.ToString(),
-                                action.avatarAddress.ToString(),
-                                action.stageId,
-                                action.Result.IsClear
-                            );
+                            MySqlStore.DeleteHackAndSlash(action.Id.ToString());
                             Log.Debug("Deleted HackAndSlash action in block #{0}", ev.BlockIndex);
                         }
                     });
