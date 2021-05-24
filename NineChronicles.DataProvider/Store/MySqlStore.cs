@@ -129,7 +129,20 @@ namespace NineChronicles.DataProvider.Store
                 query = query.Take(limitNotNull);
             }
 
-            return query.ToList();
+            var queryList = query.ToList();
+            if (queryList.Count > 0)
+            {
+                int rank = 1;
+                for (int i = 0; i < queryList.Count; i++)
+                {
+                    var stageRankingModel = queryList[i];
+                    stageRankingModel.Ranking = rank;
+                    queryList[i] = stageRankingModel;
+                    rank += 1;
+                }
+            }
+
+            return queryList;
         }
     }
 }
