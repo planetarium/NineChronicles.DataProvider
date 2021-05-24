@@ -7,9 +7,9 @@
     {
         public HackAndSlashType()
         {
-            Field(x => x.Agent_Address);
-            Field(x => x.Avatar_Address);
-            Field(x => x.Stage_Id);
+            Field(x => x.AgentAddress);
+            Field(x => x.AvatarAddress);
+            Field(x => x.StageId);
             Field(x => x.Cleared);
 
             Name = "HackAndSlash";

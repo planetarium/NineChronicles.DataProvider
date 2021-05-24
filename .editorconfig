@@ -29,6 +29,7 @@ dotnet_diagnostic.SA1633.severity = suggestion
 
 # TODO: Documentation
 dotnet_diagnostic.SA1600.severity = suggestion
+dotnet_diagnostic.SA1601.severity = suggestion
 
 # Allow FIXME tag as position free
 dotnet_diagnostic.S1134.severity = none

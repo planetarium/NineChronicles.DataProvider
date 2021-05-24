@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless\NineChronicles.Headless.csproj" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.6" />
 	<PackageReference Include="SonarAnalyzer.CSharp" Version="8.18.0.27296">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
