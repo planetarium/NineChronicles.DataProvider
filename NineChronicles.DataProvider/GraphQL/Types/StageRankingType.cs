@@ -7,6 +7,7 @@
     {
         public StageRankingType()
         {
+            Field(x => x.Ranking);
             Field(x => x.ClearedStageId);
             Field(x => x.AvatarAddress);
             Field(x => x.Name);

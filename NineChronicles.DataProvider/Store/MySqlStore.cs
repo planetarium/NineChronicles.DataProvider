@@ -107,29 +107,57 @@ namespace NineChronicles.DataProvider.Store
         }
 
         public IEnumerable<StageRankingModel> GetStageRanking(
+            string? avatarAddress = null,
             int? limit = null,
             bool isMimisbrunnr = false)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            IEnumerable<StageRankingModel>? query = ctx.Set<HackAndSlashModel>()
-                .AsQueryable()
-                .Where(has => has.Mimisbrunnr == isMimisbrunnr)
-                .Where(has => has.Cleared)
-                .GroupBy(has => has.AvatarAddress)
-                .Select(g => new StageRankingModel()
-                {
-                    AvatarAddress = g.Key!,
-                    ClearedStageId = g.Max(x => x.StageId),
-                    Name = ctx.Avatars!.AsQueryable().Where(a => a.Address! == g.Key).Select(a => a.Name!).Single(),
-                })
-                .OrderByDescending(r => r.ClearedStageId);
+            IEnumerable<StageRankingModel>? query = avatarAddress != null ?
+                ctx.Set<HackAndSlashModel>()
+                    .AsQueryable()
+                    .Where(has => has.Mimisbrunnr == isMimisbrunnr)
+                    .Where(has => has.Cleared)
+                    .Where(has => has.AvatarAddress == avatarAddress)
+                    .Select(g => new StageRankingModel()
+                    {
+                        AvatarAddress = g.AvatarAddress!,
+                        ClearedStageId = g.StageId,
+                        Name = ctx.Avatars!.AsQueryable().Where(a => a.Address! == g.AvatarAddress).Select(a => a.Name!)
+                            .Single(),
+                    })
+                    .OrderByDescending(r => r.ClearedStageId).Take(1) :
+                ctx.Set<HackAndSlashModel>()
+                    .AsQueryable()
+                    .Where(has => has.Mimisbrunnr == isMimisbrunnr)
+                    .Where(has => has.Cleared)
+                    .GroupBy(has => has.AvatarAddress)
+                    .Select(g => new StageRankingModel()
+                    {
+                        AvatarAddress = g.Key!,
+                        ClearedStageId = g.Max(x => x.StageId),
+                        Name = ctx.Avatars!.AsQueryable().Where(a => a.Address! == g.Key).Select(a => a.Name!).Single(),
+                    })
+                    .OrderByDescending(r => r.ClearedStageId);
 
-            if (limit is int limitNotNull)
+            if (limit is int limitNotNull && avatarAddress is null)
             {
                 query = query.Take(limitNotNull);
             }
 
-            return query.ToList();
+            var queryList = query.ToList();
+            if (queryList.Count > 0)
+            {
+                int rank = 1;
+                for (int i = 0; i < queryList.Count; i++)
+                {
+                    var stageRankingModel = queryList[i];
+                    stageRankingModel.Ranking = rank;
+                    queryList[i] = stageRankingModel;
+                    rank += 1;
+                }
+            }
+
+            return queryList;
         }
     }
 }
