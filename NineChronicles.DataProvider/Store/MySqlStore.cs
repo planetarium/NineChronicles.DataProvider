@@ -112,21 +112,7 @@ namespace NineChronicles.DataProvider.Store
             bool isMimisbrunnr = false)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            IEnumerable<StageRankingModel>? query = avatarAddress != null ?
-                ctx.Set<HackAndSlashModel>()
-                    .AsQueryable()
-                    .Where(has => has.Mimisbrunnr == isMimisbrunnr)
-                    .Where(has => has.Cleared)
-                    .Where(has => has.AvatarAddress == avatarAddress)
-                    .Select(g => new StageRankingModel()
-                    {
-                        AvatarAddress = g.AvatarAddress!,
-                        ClearedStageId = g.StageId,
-                        Name = ctx.Avatars!.AsQueryable().Where(a => a.Address! == g.AvatarAddress).Select(a => a.Name!)
-                            .Single(),
-                    })
-                    .OrderByDescending(r => r.ClearedStageId).Take(1) :
-                ctx.Set<HackAndSlashModel>()
+            IEnumerable<StageRankingModel>? query = ctx.Set<HackAndSlashModel>()
                     .AsQueryable()
                     .Where(has => has.Mimisbrunnr == isMimisbrunnr)
                     .Where(has => has.Cleared)
@@ -139,7 +125,7 @@ namespace NineChronicles.DataProvider.Store
                     })
                     .OrderByDescending(r => r.ClearedStageId);
 
-            if (limit is int limitNotNull && avatarAddress is null)
+            if (limit is int limitNotNull)
             {
                 query = query.Take(limitNotNull);
             }
@@ -155,6 +141,11 @@ namespace NineChronicles.DataProvider.Store
                     queryList[i] = stageRankingModel;
                     rank += 1;
                 }
+            }
+
+            if (!(avatarAddress is null))
+            {
+                queryList = queryList.Where(s => s.AvatarAddress == avatarAddress).ToList();
             }
 
             return queryList;
