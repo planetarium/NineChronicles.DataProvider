@@ -15,26 +15,28 @@
             Field<ListGraphType<HackAndSlashType>>(
                 name: "HackAndSlashQuery",
                 arguments: new QueryArguments(
-                    new QueryArgument<StringGraphType> { Name = "agent_address" },
+                    new QueryArgument<StringGraphType> { Name = "agentAddress" },
                     new QueryArgument<IntGraphType> { Name = "limit" }
                 ),
                 resolve: context =>
                 {
-                    string? agentAddress = context.GetArgument<string?>("agent_address", null);
+                    string? agentAddress = context.GetArgument<string?>("agentAddress", null);
                     int? limit = context.GetArgument<int?>("limit", null);
                     return Store.GetHackAndSlash(agentAddress, limit);
                 });
             Field<ListGraphType<StageRankingType>>(
                 name: "StageRanking",
                 arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType> { Name = "avatarAddress" },
                     new QueryArgument<IntGraphType> { Name = "limit" },
                     new QueryArgument<BooleanGraphType> { Name = "mimisbrunnr" }
                 ),
                 resolve: context =>
                 {
+                    string? avatarAddress = context.GetArgument<string?>("avatarAddress", null);
                     int? limit = context.GetArgument<int?>("limit", null);
                     bool isMimisbrunnr = context.GetArgument<bool>("mimisbrunnr", false);
-                    return Store.GetStageRanking(limit, isMimisbrunnr);
+                    return Store.GetStageRanking(avatarAddress, limit, isMimisbrunnr);
                 });
         }
 
