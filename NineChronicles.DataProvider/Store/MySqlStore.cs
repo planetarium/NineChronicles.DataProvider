@@ -58,7 +58,8 @@ namespace NineChronicles.DataProvider.Store
             string avatarAddress,
             int stageId,
             bool cleared,
-            bool isMimisbrunnr)
+            bool isMimisbrunnr,
+            long blockIndex)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             ctx.HackAndSlashes!.Add(
@@ -70,6 +71,7 @@ namespace NineChronicles.DataProvider.Store
                     StageId = stageId,
                     Cleared = cleared,
                     Mimisbrunnr = isMimisbrunnr,
+                    BlockIndex = blockIndex,
                 }
             );
             ctx.SaveChanges();

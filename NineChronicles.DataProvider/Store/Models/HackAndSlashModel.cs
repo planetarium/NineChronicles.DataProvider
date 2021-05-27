@@ -20,5 +20,7 @@ namespace NineChronicles.DataProvider.Store.Models
         public bool Cleared { get; set; }
 
         public bool Mimisbrunnr { get; set; }
+
+        public long BlockIndex { get; set; }
     }
 }

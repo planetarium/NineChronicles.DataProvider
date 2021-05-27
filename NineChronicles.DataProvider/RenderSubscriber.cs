@@ -60,7 +60,8 @@ namespace NineChronicles.DataProvider
                             action.avatarAddress.ToString(),
                             action.stageId,
                             action.Result.IsClear,
-                            isMimisbrunnr: action.stageId > 10000000
+                            isMimisbrunnr: action.stageId > 10000000,
+                            ev.BlockIndex
                         );
                         Log.Debug("Stored HackAndSlash action in block #{0}", ev.BlockIndex);
                     });

@@ -1,37 +1,38 @@
-CREATE TABLE IF NOT EXISTS `data_provider`.`agent` (
-    `address` VARCHAR NOT NULL,
+CREATE TABLE IF NOT EXISTS `data_provider`.`Agents` (
+    `Address` VARCHAR(100) NOT NULL,
 
-    PRIMARY KEY (`address`),
-    UNIQUE INDEX `address_UNIQUE` (`address`)
+    PRIMARY KEY (`Address`),
+    UNIQUE INDEX `Address_UNIQUE` (`Address`)
 );
 
-CREATE TABLE IF NOT EXISTS `data_provider`.`avatar` (
-    `address` VARCHAR NOT NULL,
-    `agent_address` VARCHAR NOT NULL,
-    `name` VARCHAR NOT NULL,
+CREATE TABLE IF NOT EXISTS `data_provider`.`Avatars` (
+    `Address` VARCHAR(100) NOT NULL,
+    `AgentAddress` VARCHAR(100) NOT NULL,
+    `Name` VARCHAR(100) NOT NULL,
     
-    PRIMARY KEY (`address`),
-    INDEX `fk_avatar_agent_idx` (`agent_address`),
-    UNIQUE INDEX `address_UNIQUE` (`address`),
-    CONSTRAINT `fk_avatar_agent`
-        FOREIGN KEY (`agent_address`)
-            REFERENCES `agent` (`address`)
+    PRIMARY KEY (`Address`),
+    INDEX `fk_Avatars_Agent_idx` (`AgentAddress`),
+    UNIQUE INDEX `Address_UNIQUE` (`Address`),
+    CONSTRAINT `fk_Avatars_Agent`
+        FOREIGN KEY (`AgentAddress`)
+            REFERENCES `Agents` (`Address`)
 );
 
-CREATE TABLE IF NOT EXISTS `data_provider`.`hack_and_slash` (
-    `avatar_address` VARCHAR NOT NULL,
-    `agent_address` VARCHAR NOT NULL,
-    `stage_id` INT NOT NULL,
-    `cleared` BOOLEAN NOT NULL,
-    `mimisbrunnr` BOOLEAN NOT NULL,
-    `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+CREATE TABLE IF NOT EXISTS `data_provider`.`HackAndSlashes` (
+    `AvatarAddress` VARCHAR(100) NOT NULL,
+    `AgentAddress` VARCHAR(100) NOT NULL,
+    `StageId` INT NOT NULL,
+    `Cleared` BOOLEAN NOT NULL,
+    `Mimisbrunnr` BOOLEAN NOT NULL,
+    `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `BlockIndex` LONG NOT NULL,
     
-    INDEX `fk_hack_and_slash_avatar1_idx` (`avatar_address`),
-    INDEX `fk_hack_and_slash_agent1_idx` (`agent_address`),
-    CONSTRAINT `fk_hack_and_slash_avatar1`
-        FOREIGN KEY (`avatar_address`)
-            REFERENCES `avatar` (`address`),
-    CONSTRAINT `fk_hack_and_slash_agent1`
-        FOREIGN KEY (`agent_address`)
-            REFERENCES `agent` (`address`)
+    INDEX `fk_HackAndSlashes_Avatar1_idx` (`AvatarAddress`),
+    INDEX `fk_HackAndSlashes_Agent1_idx` (`AgentAddress`),
+    CONSTRAINT `fk_HackAndSlashes_Avatar1`
+        FOREIGN KEY (`AvatarAddress`)
+            REFERENCES `Avatars` (`Address`),
+    CONSTRAINT `fk_HackAndSlashes_Agent1`
+        FOREIGN KEY (`AgentAddress`)
+            REFERENCES `Agents` (`Address`)
 );

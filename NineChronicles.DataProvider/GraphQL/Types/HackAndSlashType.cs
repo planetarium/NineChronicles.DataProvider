@@ -11,6 +11,7 @@
             Field(x => x.AvatarAddress);
             Field(x => x.StageId);
             Field(x => x.Cleared);
+            Field(x => x.BlockIndex);
 
             Name = "HackAndSlash";
         }
