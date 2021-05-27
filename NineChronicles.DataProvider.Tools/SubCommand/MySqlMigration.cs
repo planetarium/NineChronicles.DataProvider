@@ -4,9 +4,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using Bencodex.Types;
+    using System.Threading.Tasks;
     using Cocona;
     using Libplanet;
+    using Libplanet.Action;
     using Libplanet.Blockchain;
     using Libplanet.Blockchain.Policies;
     using Libplanet.Blocks;
@@ -15,7 +16,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using MySqlConnector;
     using Nekoyume.Action;
     using Nekoyume.BlockChain;
-    using Nekoyume.Model.State;
     using Serilog;
     using Serilog.Events;
     using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -28,7 +28,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
-        private BlockChain<NCAction> _newChain;
         private StreamWriter _agentBulkFile;
         private StreamWriter _avatarBulkFile;
         private StreamWriter _hasBulkFile;
@@ -65,7 +64,15 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             [Option(
                 "mysql-database",
                 Description = "The name of MySQL database to use.")]
-            string mysqlDatabase
+            string mysqlDatabase,
+            [Option(
+                "offset",
+                Description = "offset of block index (no entry will migrate from the genesis block).")]
+            int? offset = null,
+            [Option(
+                "limit",
+                Description = "limit of block count (no entry will migrate to the chain tip).")]
+            int? limit = null
         )
         {
             DateTimeOffset start = DateTimeOffset.UtcNow;
@@ -124,14 +131,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             TrieStateStore baseStateStore =
                 new TrieStateStore(baseStateKeyValueStore, baseStateRootKeyValueStore);
 
-            // Setup new store
-            var newPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            RocksDBStore newStore = new RocksDBStore(newPath);
-            RocksDBKeyValueStore newStateRootKeyValueStore = new RocksDBKeyValueStore(Path.Combine(newPath, "state_hashes"));
-            RocksDBKeyValueStore newStateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(newPath, "states"));
-            TrieStateStore newStateStore =
-                new TrieStateStore(newStateKeyValueStore, newStateRootKeyValueStore);
-
             // Setup block policy
             const int minimumDifficulty = 5000000, maximumTransactions = 100;
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
@@ -142,20 +141,22 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             // Setup base chain & new chain
             Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(gHash);
             _baseChain = new BlockChain<NCAction>(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis);
-            if (blockPolicy is BlockPolicy bp && _baseChain.GetState(AuthorizedMinersState.Address) is Dictionary ams)
-            {
-                bp.AuthorizedMinersState = new AuthorizedMinersState(ams);
-            }
-
-            _newChain = new BlockChain<NCAction>(blockPolicy, stagePolicy, newStore, newStateStore, genesis);
 
             // Prepare block hashes to append to new chain
             long height = _baseChain.Tip.Index;
-            int limit = (int)height;
+            if (offset + limit > (int)height)
+            {
+                Console.Error.WriteLine(
+                    "The sum of the offset and limit is greater than the chain tip index: {0}",
+                    height);
+                Environment.Exit(1);
+                return;
+            }
+
             BlockHash[] blockHashes = limit < 0
                 ? _baseChain.BlockHashes.SkipWhile((_, i) => i < height + limit).ToArray()
-                : _baseChain.BlockHashes.Take(limit).ToArray();
-            Block<NCAction>[] blocks = blockHashes.Select(h => _baseChain[h]).ToArray();
+                : _baseChain.BlockHashes.Skip(offset ?? 0).Take(limit ?? (int)height).ToArray();
+            Block<NCAction>[] blocks = blockHashes.Select(h => _baseStore.GetBlock<NCAction>(h)).ToArray();
             Console.WriteLine(
                 "Finished setting up RocksDBStore. Migrating {0} blocks: {1}-{2} (inclusive).",
                 blockHashes.Length,
@@ -173,86 +174,71 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _avatarList = new List<string>();
 
             CreateBulkFiles();
-
             try
             {
-                foreach (Block<NCAction> block in blocks)
+                Task<List<ActionEvaluation>>[] taskArray = new Task<List<ActionEvaluation>>[blocks.Length];
+                for (int i = 0; i < taskArray.Length; i++)
                 {
-                    if (block.Index == 0)
-                    {
-                        continue;
-                    }
+                    var block = blocks[i];
+                    taskArray[i] = Task.Factory.StartNew(() => EvaluateBlock(block));
+                }
 
-                    Console.WriteLine("Migrating block #{0}", block.Index);
-                    _newChain.Append(block);
-                    if (block.Transactions.Count > 0)
+                Task.WaitAll(taskArray);
+                var count = 0;
+                foreach (var task in taskArray)
+                {
+                    count += 1;
+                    Console.WriteLine("Preparing block {0}/{1}", count, taskArray.Length);
+                    if (task.Result is { } data)
                     {
-                        foreach (var tx in block.Transactions)
+                        foreach (var ae in data)
                         {
-                            if (tx.Actions[0].InnerAction is HackAndSlash2 hasAction2)
+                            if (ae.Action is PolymorphicAction<ActionBase> action)
                             {
-                                Address signer = tx.Signer;
-                                var evList = block.Evaluate(
-                                    DateTimeOffset.Now,
-                                    address => _newChain.GetState(address, block.Hash),
-                                    (address, currency) =>
-                                        _newChain.GetBalance(address, currency, block.Hash)).ToList();
-                                string avatarName = evList.First().OutputStates
-                                    .GetAvatarState(hasAction2.avatarAddress).name;
-                                WriteHackAndSlash(
-                                    block.Index,
-                                    signer,
-                                    hasAction2.avatarAddress,
-                                    avatarName ?? "N/A",
-                                    hasAction2.stageId,
-                                    hasAction2.Result is { IsClear: true });
-                            }
+                                if (action.InnerAction is HackAndSlash2 hasAction2)
+                                {
+                                    Address signer = ae.InputContext.Signer;
+                                    WriteHackAndSlash(
+                                        ae.InputContext.BlockIndex,
+                                        signer,
+                                        hasAction2.avatarAddress,
+                                        "N/A",
+                                        hasAction2.stageId,
+                                        hasAction2.Result is { IsClear: true });
+                                }
 
-                            if (tx.Actions[0].InnerAction is HackAndSlash3 hasAction3)
-                            {
-                                Address signer = tx.Signer;
-                                var evList = block.Evaluate(
-                                    DateTimeOffset.Now,
-                                    address => _newChain.GetState(address, block.Hash),
-                                    (address, currency) =>
-                                        _newChain.GetBalance(address, currency, block.Hash)).ToList();
-                                string avatarName = evList.First().OutputStates
-                                    .GetAvatarState(hasAction3.avatarAddress).name;
-                                WriteHackAndSlash(
-                                    block.Index,
-                                    signer,
-                                    hasAction3.avatarAddress,
-                                    avatarName ?? "N/A",
-                                    hasAction3.stageId,
-                                    hasAction3.Result is { IsClear: true });
-                            }
+                                if (ae.Action is HackAndSlash3 hasAction3)
+                                {
+                                    Address signer = ae.InputContext.Signer;
+                                    WriteHackAndSlash(
+                                        ae.InputContext.BlockIndex,
+                                        signer,
+                                        hasAction3.avatarAddress,
+                                        "N/A",
+                                        hasAction3.stageId,
+                                        hasAction3.Result is { IsClear: true });
+                                }
 
-                            if (tx.Actions[0].InnerAction is HackAndSlash4 hasAction4)
-                            {
-                                Address signer = tx.Signer;
-                                var evList = block.Evaluate(
-                                    DateTimeOffset.Now,
-                                    address => _newChain.GetState(address, block.Hash),
-                                    (address, currency) =>
-                                        _newChain.GetBalance(address, currency, block.Hash)).ToList();
-                                string avatarName = evList.First().OutputStates
-                                    .GetAvatarState(hasAction4.avatarAddress).name;
-                                WriteHackAndSlash(
-                                    block.Index,
-                                    signer,
-                                    hasAction4.avatarAddress,
-                                    avatarName ?? "N/A",
-                                    hasAction4.stageId,
-                                    hasAction4.Result is { IsClear: true });
+                                if (ae.Action is HackAndSlash4 hasAction4)
+                                {
+                                    Address signer = ae.InputContext.Signer;
+                                    WriteHackAndSlash(
+                                        ae.InputContext.BlockIndex,
+                                        signer,
+                                        hasAction4.avatarAddress,
+                                        "N/A",
+                                        hasAction4.stageId,
+                                        hasAction4.Result is { IsClear: true });
+                                }
                             }
                         }
                     }
 
-                    if ((block.Index > 0 && block.Index % 10000 == 0) || block.Index == limit - 1)
+                    if ((count > 0 && count % 10000 == 0) || count == taskArray.Length)
                     {
                         FlushBulkFiles();
                         CreateBulkFiles();
-                        Console.WriteLine("Finished block data preparation at block {0}.", block.Index);
+                        Console.WriteLine("Finished block data preparation at {0}/{1} blocks.", count, taskArray.Length);
                     }
                 }
 
@@ -278,11 +264,22 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error: {0}", e.Message);
+                Console.WriteLine(e.Message);
             }
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
+        }
+
+        private List<ActionEvaluation> EvaluateBlock(Block<NCAction> block)
+        {
+            Console.WriteLine("Evaluating block #{0}", block.Index);
+            var evList = block.Evaluate(
+                DateTimeOffset.Now,
+                address => _baseChain.GetState(address, block.Hash),
+                (address, currency) =>
+                    _baseChain.GetBalance(address, currency, block.Hash)).ToList();
+            return evList;
         }
 
         private void FlushBulkFiles()
