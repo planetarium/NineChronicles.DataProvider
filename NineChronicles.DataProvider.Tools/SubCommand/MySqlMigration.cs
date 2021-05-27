@@ -166,10 +166,12 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             Console.WriteLine("Start migration.");
 
+            // files to store bulk file paths (new file created every 10000 blocks for bulk load performance)
             _agentFiles = new List<string>();
             _avatarFiles = new List<string>();
             _hasFiles = new List<string>();
 
+            // lists to keep track of inserted addresses to minimize duplicates
             _agentList = new List<string>();
             _avatarList = new List<string>();
 
@@ -195,6 +197,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         {
                             if (ae.Action is PolymorphicAction<ActionBase> action)
                             {
+                                // avatarNames will be stored as "N/A" for optimzation
                                 if (action.InnerAction is HackAndSlash2 hasAction2)
                                 {
                                     Address signer = ae.InputContext.Signer;
@@ -234,15 +237,21 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         }
                     }
 
-                    if ((count > 0 && count % 10000 == 0) || count == taskArray.Length)
+                    // create new bulk files for every 10000 blocks
+                    if (count > 0 && count % 10000 == 0)
                     {
                         FlushBulkFiles();
                         CreateBulkFiles();
                         Console.WriteLine("Finished block data preparation at {0}/{1} blocks.", count, taskArray.Length);
                     }
-                }
 
-                FlushBulkFiles();
+                    // flush final bulk files when prep is finished
+                    if (count == taskArray.Length)
+                    {
+                        FlushBulkFiles();
+                        Console.WriteLine("Finished block data preparation at {0}/{1} blocks.", count, taskArray.Length);
+                    }
+                }
 
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
@@ -349,6 +358,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             int stageId,
             bool isClear)
         {
+            // check if address is already in _agentList
             if (!_agentList.Contains(agentAddress.ToString()))
             {
                 _agentBulkFile.WriteLine(
@@ -356,6 +366,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 _agentList.Add(agentAddress.ToString());
             }
 
+            // check if address is already in _avatarList
             if (!_avatarList.Contains(avatarAddress.ToString()))
             {
                 _avatarBulkFile.WriteLine(
@@ -371,7 +382,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 $"{stageId};" +
                 $"{isClear};" +
                 $"{stageId > 10000000}");
-            Console.WriteLine("Write HackAndSlash action in block #{0}", blockIndex);
+            Console.WriteLine("Writing HackAndSlash action in block #{0}", blockIndex);
         }
     }
 }
