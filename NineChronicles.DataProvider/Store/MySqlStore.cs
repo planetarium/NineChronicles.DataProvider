@@ -115,17 +115,19 @@ namespace NineChronicles.DataProvider.Store
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             IEnumerable<StageRankingModel>? query = ctx.Set<HackAndSlashModel>()
-                    .AsQueryable()
-                    .Where(has => has.Mimisbrunnr == isMimisbrunnr)
-                    .Where(has => has.Cleared)
-                    .GroupBy(has => has.AvatarAddress)
-                    .Select(g => new StageRankingModel()
-                    {
-                        AvatarAddress = g.Key!,
-                        ClearedStageId = g.Max(x => x.StageId),
-                        Name = ctx.Avatars!.AsQueryable().Where(a => a.Address! == g.Key).Select(a => a.Name!).Single(),
-                    })
-                    .OrderByDescending(r => r.ClearedStageId);
+                .AsQueryable()
+                .Where(has => has.Mimisbrunnr == isMimisbrunnr)
+                .Where(has => has.Cleared)
+                .GroupBy(has => has.AvatarAddress)
+                .Select(g => new StageRankingModel()
+                {
+                    AvatarAddress = g.Key!,
+                    ClearedStageId = g.Max(x => x.StageId),
+                    Name = ctx.Avatars!.AsQueryable().Where(a => a.Address! == g.Key).Select(a => a.Name!).Single(),
+                    BlockIndex = g.Min(has => has.BlockIndex),
+                })
+                .OrderByDescending(r => r.ClearedStageId)
+                .ThenBy(r => r.BlockIndex);
 
             if (limit is int limitNotNull)
             {

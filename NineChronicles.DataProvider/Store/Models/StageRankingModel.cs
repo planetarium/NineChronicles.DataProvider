@@ -9,5 +9,7 @@
         public string AvatarAddress { get; set; }
 
         public string Name { get; set; }
+
+        public long BlockIndex { get; set; }
     }
 }
