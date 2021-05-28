@@ -11,6 +11,7 @@
             Field(x => x.ClearedStageId);
             Field(x => x.AvatarAddress);
             Field(x => x.Name);
+            Field(x => x.BlockIndex);
 
             Name = "StageRanking";
         }
