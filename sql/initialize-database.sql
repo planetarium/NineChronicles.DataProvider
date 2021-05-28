@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`HackAndSlashes` (
     `Cleared` BOOLEAN NOT NULL,
     `Mimisbrunnr` BOOLEAN NOT NULL,
     `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `BlockIndex` LONG NOT NULL,
+    `BlockIndex` BIGINT NOT NULL,
     
     INDEX `fk_HackAndSlashes_Avatar1_idx` (`AvatarAddress`),
     INDEX `fk_HackAndSlashes_Agent1_idx` (`AgentAddress`),
