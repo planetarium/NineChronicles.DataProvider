@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Avatars` (
 );
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`HackAndSlashes` (
+    `Id` VARCHAR(100) NOT NULL,
     `AvatarAddress` VARCHAR(100) NOT NULL,
     `AgentAddress` VARCHAR(100) NOT NULL,
     `StageId` INT NOT NULL,
