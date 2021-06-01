@@ -202,6 +202,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 {
                                     Address signer = ae.InputContext.Signer;
                                     WriteHackAndSlash(
+                                        hasAction2.Id,
                                         ae.InputContext.BlockIndex,
                                         signer,
                                         hasAction2.avatarAddress,
@@ -214,6 +215,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 {
                                     Address signer = ae.InputContext.Signer;
                                     WriteHackAndSlash(
+                                        hasAction3.Id,
                                         ae.InputContext.BlockIndex,
                                         signer,
                                         hasAction3.avatarAddress,
@@ -226,6 +228,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 {
                                     Address signer = ae.InputContext.Signer;
                                     WriteHackAndSlash(
+                                        hasAction4.Id,
                                         ae.InputContext.BlockIndex,
                                         signer,
                                         hasAction4.avatarAddress,
@@ -351,6 +354,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         }
 
         private void WriteHackAndSlash(
+            Guid actionId,
             long blockIndex,
             Address agentAddress,
             Address avatarAddress,
@@ -377,11 +381,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             }
 
             _hasBulkFile.WriteLine(
+                $"{actionId.ToString()};" +
                 $"{avatarAddress.ToString()};" +
                 $"{agentAddress.ToString()};" +
                 $"{stageId};" +
                 $"{isClear};" +
-                $"{stageId > 10000000}");
+                $"{stageId > 10000000}" +
+                $"{blockIndex}");
             Console.WriteLine("Writing HackAndSlash action in block #{0}", blockIndex);
         }
     }
