@@ -22,9 +22,9 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
     public class MySqlMigration
     {
-        private const string AgentDbName = "agent";
-        private const string AvatarDbName = "avatar";
-        private const string HasDbName = "hack_and_slash";
+        private const string AgentDbName = "Agents";
+        private const string AvatarDbName = "Avatars";
+        private const string HasDbName = "HackAndSlashes";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
