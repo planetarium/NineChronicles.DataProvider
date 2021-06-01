@@ -22,7 +22,7 @@ RUN dotnet restore NineChronicles.DataProvider.Tools
 
 # Copy everything else and build
 COPY . ./
-RUN dotnet publish NineChronicles.DataProvider.Executable/NineChronicles.DataProvider.Executable.csproj \
+RUN dotnet publish NineChronicles.DataProvider.Tools/NineChronicles.DataProvider.Tools.csproj \
     -c Release \
     -r linux-x64 \
     -o out \
