@@ -112,7 +112,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 throw new CommandExitedException("Invalid rocksdb-store. Please enter a valid store path", -1);
             }
 
-            if (!(_baseStore.GetCanonicalChainId() is Guid chainId))
+            if (!(_baseStore.GetCanonicalChainId() is { } chainId))
             {
                 Console.Error.WriteLine("There is no canonical chain: {0}", storePath);
                 Environment.Exit(1);
@@ -168,33 +168,43 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             CreateBulkFiles();
             int totalCount = limit ?? (int)_baseStore.CountBlocks();
             Console.WriteLine("Migrating data from block #{0} to #{1}", offset ?? 0, offset ?? 0 + totalCount - 1);
-            Task<bool>[] taskArray = new Task<bool>[totalCount];
+            Task<List<ActionEvaluation>>[] taskArray = new Task<List<ActionEvaluation>>[totalCount];
 
             try
             {
                 foreach (var item in
                     _baseStore.IterateIndexes(_baseChain.Id, offset ?? 0, limit).Select((value, i) => new { i, value }))
                 {
-                    if (item.i > 0 && item.i % 5000 == 0 && item.i + 1 != totalCount)
-                    {
-                        Thread.Sleep(1500);
-                        FlushBulkFiles();
-                        CreateBulkFiles();
-                        Thread.Sleep(1500);
-                    }
-
                     Console.WriteLine($"Block progress: {item.i}/{totalCount}");
                     var block = _baseStore.GetBlock<NCAction>(item.value);
                     taskArray[item.i] = Task.Factory.StartNew(() =>
                     {
                         List<ActionEvaluation> actionEvaluations = EvaluateBlock(block);
-                        ProcessActionEvaluation(actionEvaluations);
-                        return true;
+                        return actionEvaluations;
                     });
                 }
 
                 Task.WaitAll(taskArray);
-                Thread.Sleep(1500);
+
+                var count = 0;
+                foreach (var task in taskArray)
+                {
+                    if (task.Result is { } data)
+                    {
+                        ProcessActionEvaluation(data);
+                    }
+
+                    count += 1;
+                    if (count > 0 && count % 5000 == 0 && count + 1 != totalCount)
+                    {
+                        // Thread.Sleep(1500);
+                        FlushBulkFiles();
+                        CreateBulkFiles();
+                        //Thread.Sleep(1500);
+                    }
+                }
+
+                //Thread.Sleep(1500);
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
@@ -203,7 +213,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             {
                 Console.WriteLine(e.Message);
             }
-
 
             foreach (var path in _agentFiles)
             {
@@ -221,7 +230,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             }
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
-            Console.WriteLine("Migration from block #{0} to #{1} Complete! Time Elapsed: {2}", offset ?? 0, offset ?? 0 + totalCount - 1, end - start);
+            Console.WriteLine(
+                "Migration from block #{0} to #{1} Complete! Time Elapsed: {2}",
+                offset ?? 0,
+                offset != null ? offset + totalCount - 1 : totalCount - 1,
+                end - start);
         }
 
         private void ProcessActionEvaluation(List<ActionEvaluation> actionEvaluations)
@@ -230,6 +243,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             {
                 if (ae.Action is PolymorphicAction<ActionBase> action)
                 {
+                    Console.WriteLine("Processing HAS in block #{0}", ae.InputContext.BlockIndex);
+
                     // avatarNames will be stored as "N/A" for optimization
                     if (action.InnerAction is HackAndSlash2 hasAction2)
                     {
@@ -246,6 +261,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                     if (ae.Action is HackAndSlash3 hasAction3)
                     {
+                        Console.WriteLine("Processing HAS in block #{0}", ae.InputContext.BlockIndex);
                         Address signer = ae.InputContext.Signer;
                         WriteHackAndSlash(
                             hasAction3.Id,
@@ -259,6 +275,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                     if (ae.Action is HackAndSlash4 hasAction4)
                     {
+                        Console.WriteLine("Processing HAS in block #{0}", ae.InputContext.BlockIndex);
                         Address signer = ae.InputContext.Signer;
                         WriteHackAndSlash(
                             hasAction4.Id,
