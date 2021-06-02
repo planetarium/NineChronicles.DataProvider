@@ -4,6 +4,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using Cocona;
     using Libplanet;
@@ -153,17 +154,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 return;
             }
 
-            BlockHash[] blockHashes = limit < 0
-                ? _baseChain.BlockHashes.SkipWhile((_, i) => i < height + limit).ToArray()
-                : _baseChain.BlockHashes.Skip(offset ?? 0).Take(limit ?? (int)height).ToArray();
-            Block<NCAction>[] blocks = blockHashes.Select(h => _baseStore.GetBlock<NCAction>(h)).ToArray();
-            Console.WriteLine(
-                "Finished setting up RocksDBStore. Migrating {0} blocks: {1}-{2} (inclusive).",
-                blockHashes.Length,
-                blockHashes[0],
-                blockHashes.Last()
-            );
-
             Console.WriteLine("Start migration.");
 
             // files to store bulk file paths (new file created every 10000 blocks for bulk load performance)
@@ -176,116 +166,115 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _avatarList = new List<string>();
 
             CreateBulkFiles();
+            int totalCount = limit ?? (int)_baseStore.CountBlocks();
+            Console.WriteLine("Migrating data from block #{0} to #{1}", offset ?? 0, offset ?? 0 + totalCount - 1);
+            Task<bool>[] taskArray = new Task<bool>[totalCount];
+
             try
             {
-                Task<List<ActionEvaluation>>[] taskArray = new Task<List<ActionEvaluation>>[blocks.Length];
-                for (int i = 0; i < taskArray.Length; i++)
+                foreach (var item in
+                    _baseStore.IterateIndexes(_baseChain.Id, offset ?? 0, limit).Select((value, i) => new { i, value }))
                 {
-                    var block = blocks[i];
-                    taskArray[i] = Task.Factory.StartNew(() => EvaluateBlock(block));
+                    if (item.i > 0 && item.i % 5000 == 0 && item.i + 1 != totalCount)
+                    {
+                        Thread.Sleep(1500);
+                        FlushBulkFiles();
+                        CreateBulkFiles();
+                        Thread.Sleep(1500);
+                    }
+
+                    Console.WriteLine($"Block progress: {item.i}/{totalCount}");
+                    var block = _baseStore.GetBlock<NCAction>(item.value);
+                    taskArray[item.i] = Task.Factory.StartNew(() =>
+                    {
+                        List<ActionEvaluation> actionEvaluations = EvaluateBlock(block);
+                        ProcessActionEvaluation(actionEvaluations);
+                        return true;
+                    });
                 }
 
                 Task.WaitAll(taskArray);
-                var count = 0;
-                foreach (var task in taskArray)
-                {
-                    count += 1;
-                    Console.WriteLine("Preparing block {0}/{1}", count, taskArray.Length);
-                    if (task.Result is { } data)
-                    {
-                        foreach (var ae in data)
-                        {
-                            if (ae.Action is PolymorphicAction<ActionBase> action)
-                            {
-                                // avatarNames will be stored as "N/A" for optimzation
-                                if (action.InnerAction is HackAndSlash2 hasAction2)
-                                {
-                                    Address signer = ae.InputContext.Signer;
-                                    WriteHackAndSlash(
-                                        hasAction2.Id,
-                                        ae.InputContext.BlockIndex,
-                                        signer,
-                                        hasAction2.avatarAddress,
-                                        "N/A",
-                                        hasAction2.stageId,
-                                        hasAction2.Result is { IsClear: true });
-                                }
-
-                                if (ae.Action is HackAndSlash3 hasAction3)
-                                {
-                                    Address signer = ae.InputContext.Signer;
-                                    WriteHackAndSlash(
-                                        hasAction3.Id,
-                                        ae.InputContext.BlockIndex,
-                                        signer,
-                                        hasAction3.avatarAddress,
-                                        "N/A",
-                                        hasAction3.stageId,
-                                        hasAction3.Result is { IsClear: true });
-                                }
-
-                                if (ae.Action is HackAndSlash4 hasAction4)
-                                {
-                                    Address signer = ae.InputContext.Signer;
-                                    WriteHackAndSlash(
-                                        hasAction4.Id,
-                                        ae.InputContext.BlockIndex,
-                                        signer,
-                                        hasAction4.avatarAddress,
-                                        "N/A",
-                                        hasAction4.stageId,
-                                        hasAction4.Result is { IsClear: true });
-                                }
-                            }
-                        }
-                    }
-
-                    // create new bulk files for every 10000 blocks
-                    if (count > 0 && count % 10000 == 0)
-                    {
-                        FlushBulkFiles();
-                        CreateBulkFiles();
-                        Console.WriteLine("Finished block data preparation at {0}/{1} blocks.", count, taskArray.Length);
-                    }
-
-                    // flush final bulk files when prep is finished
-                    if (count == taskArray.Length)
-                    {
-                        FlushBulkFiles();
-                        Console.WriteLine("Finished block data preparation at {0}/{1} blocks.", count, taskArray.Length);
-                    }
-                }
-
+                Thread.Sleep(1500);
+                FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
-
-                foreach (var path in _agentFiles)
-                {
-                    BulkInsert(AgentDbName, path);
-                }
-
-                foreach (var path in _avatarFiles)
-                {
-                    BulkInsert(AvatarDbName, path);
-                }
-
-                foreach (var path in _hasFiles)
-                {
-                    BulkInsert(HasDbName, path);
-                }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
 
+
+            foreach (var path in _agentFiles)
+            {
+                BulkInsert(AgentDbName, path);
+            }
+
+            foreach (var path in _avatarFiles)
+            {
+                BulkInsert(AvatarDbName, path);
+            }
+
+            foreach (var path in _hasFiles)
+            {
+                BulkInsert(HasDbName, path);
+            }
+
             DateTimeOffset end = DateTimeOffset.UtcNow;
-            Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
+            Console.WriteLine("Migration from block #{0} to #{1} Complete! Time Elapsed: {2}", offset ?? 0, offset ?? 0 + totalCount - 1, end - start);
+        }
+
+        private void ProcessActionEvaluation(List<ActionEvaluation> actionEvaluations)
+        {
+            foreach (var ae in actionEvaluations)
+            {
+                if (ae.Action is PolymorphicAction<ActionBase> action)
+                {
+                    // avatarNames will be stored as "N/A" for optimization
+                    if (action.InnerAction is HackAndSlash2 hasAction2)
+                    {
+                        Address signer = ae.InputContext.Signer;
+                        WriteHackAndSlash(
+                            hasAction2.Id,
+                            ae.InputContext.BlockIndex,
+                            signer,
+                            hasAction2.avatarAddress,
+                            "N/A",
+                            hasAction2.stageId,
+                            hasAction2.Result is { IsClear: true });
+                    }
+
+                    if (ae.Action is HackAndSlash3 hasAction3)
+                    {
+                        Address signer = ae.InputContext.Signer;
+                        WriteHackAndSlash(
+                            hasAction3.Id,
+                            ae.InputContext.BlockIndex,
+                            signer,
+                            hasAction3.avatarAddress,
+                            "N/A",
+                            hasAction3.stageId,
+                            hasAction3.Result is { IsClear: true });
+                    }
+
+                    if (ae.Action is HackAndSlash4 hasAction4)
+                    {
+                        Address signer = ae.InputContext.Signer;
+                        WriteHackAndSlash(
+                            hasAction4.Id,
+                            ae.InputContext.BlockIndex,
+                            signer,
+                            hasAction4.avatarAddress,
+                            "N/A",
+                            hasAction4.stageId,
+                            hasAction4.Result is { IsClear: true });
+                    }
+                }
+            }
         }
 
         private List<ActionEvaluation> EvaluateBlock(Block<NCAction> block)
         {
-            Console.WriteLine("Evaluating block #{0}", block.Index);
             var evList = block.Evaluate(
                 DateTimeOffset.Now,
                 address => _baseChain.GetState(address, block.Hash),
@@ -336,7 +325,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     TableName = tableName,
                     FileName = filePath,
                     Timeout = 0,
-                    LineTerminator = "\n",
+                    LineTerminator = "\r\n",
                     FieldTerminator = ";",
                     Local = true,
                 };
@@ -362,33 +351,39 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             int stageId,
             bool isClear)
         {
-            // check if address is already in _agentList
-            if (!_agentList.Contains(agentAddress.ToString()))
+            try
             {
-                _agentBulkFile.WriteLine(
-                    $"{agentAddress.ToString()};");
-                _agentList.Add(agentAddress.ToString());
-            }
+                // check if address is already in _agentList
+                if (!_agentList.Contains(agentAddress.ToString()))
+                {
+                    _agentBulkFile.WriteLine(
+                        $"{agentAddress.ToString()};");
+                    _agentList.Add(agentAddress.ToString());
+                }
 
-            // check if address is already in _avatarList
-            if (!_avatarList.Contains(avatarAddress.ToString()))
-            {
-                _avatarBulkFile.WriteLine(
+                // check if address is already in _avatarList
+                if (!_avatarList.Contains(avatarAddress.ToString()))
+                {
+                    _avatarBulkFile.WriteLine(
+                        $"{avatarAddress.ToString()};" +
+                        $"{agentAddress.ToString()};" +
+                        $"{avatarName ?? "N/A"}");
+                    _avatarList.Add(avatarAddress.ToString());
+                }
+
+                _hasBulkFile.WriteLine(
+                    $"{actionId.ToString()};" +
                     $"{avatarAddress.ToString()};" +
                     $"{agentAddress.ToString()};" +
-                    $"{avatarName ?? "N/A"}");
-                _avatarList.Add(avatarAddress.ToString());
+                    $"{stageId};" +
+                    $"{isClear};" +
+                    $"{stageId > 10000000};" +
+                    $"{blockIndex.ToString()}");
             }
-
-            _hasBulkFile.WriteLine(
-                $"{actionId.ToString()};" +
-                $"{avatarAddress.ToString()};" +
-                $"{agentAddress.ToString()};" +
-                $"{stageId};" +
-                $"{isClear};" +
-                $"{stageId > 10000000}" +
-                $"{blockIndex}");
-            Console.WriteLine("Writing HackAndSlash action in block #{0}", blockIndex);
+            catch (Exception e)
+            {
+                Console.Write(e.Message);
+            }
         }
     }
 }
