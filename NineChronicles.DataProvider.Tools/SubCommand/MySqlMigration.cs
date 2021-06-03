@@ -4,7 +4,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Threading;
     using System.Threading.Tasks;
     using Cocona;
     using Libplanet;
@@ -175,26 +174,20 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 foreach (var item in
                     _baseStore.IterateIndexes(_baseChain.Id, offset ?? 0, limit).Select((value, i) => new { i, value }))
                 {
-                    if (item.i > 0 && item.i % 5000 == 0 && item.i + 1 != totalCount)
-                    {
-                        Thread.Sleep(1500);
-                        FlushBulkFiles();
-                        CreateBulkFiles();
-                        Thread.Sleep(1500);
-                    }
-
                     Console.WriteLine($"Block progress: {item.i}/{totalCount}");
                     var block = _baseStore.GetBlock<NCAction>(item.value);
                     taskArray[item.i] = Task.Factory.StartNew(() =>
                     {
+                        DateTimeOffset preEval = DateTimeOffset.Now;
                         List<ActionEvaluation> actionEvaluations = EvaluateBlock(block);
                         ProcessActionEvaluation(actionEvaluations);
+                        DateTimeOffset postEval = DateTimeOffset.Now;
+                        Console.WriteLine("Evaluated block #{0}: {1}", block.Index, postEval - preEval);
                         return true;
                     });
                 }
 
                 Task.WaitAll(taskArray);
-                Thread.Sleep(1500);
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
