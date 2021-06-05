@@ -4,6 +4,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Threading;
     using Bencodex.Types;
     using Cocona;
     using Libplanet;
@@ -194,60 +195,36 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         {
                             if (tx.Actions[0].InnerAction is HackAndSlash2 hasAction2)
                             {
-                                Address signer = tx.Signer;
-                                var evList = block.Evaluate(
-                                    DateTimeOffset.Now,
-                                    address => _newChain.GetState(address, block.Hash),
-                                    (address, currency) =>
-                                        _newChain.GetBalance(address, currency, block.Hash)).ToList();
-                                string avatarName = evList.First().OutputStates
-                                    .GetAvatarState(hasAction2.avatarAddress).name;
                                 WriteHackAndSlash(
                                     hasAction2.Id,
                                     block.Index,
-                                    signer,
+                                    tx.Signer,
                                     hasAction2.avatarAddress,
-                                    avatarName ?? "N/A",
+                                    "N/A",
                                     hasAction2.stageId,
                                     hasAction2.Result is { IsClear: true });
                             }
 
                             if (tx.Actions[0].InnerAction is HackAndSlash3 hasAction3)
                             {
-                                Address signer = tx.Signer;
-                                var evList = block.Evaluate(
-                                    DateTimeOffset.Now,
-                                    address => _newChain.GetState(address, block.Hash),
-                                    (address, currency) =>
-                                        _newChain.GetBalance(address, currency, block.Hash)).ToList();
-                                string avatarName = evList.First().OutputStates
-                                    .GetAvatarState(hasAction3.avatarAddress).name;
                                 WriteHackAndSlash(
                                     hasAction3.Id,
                                     block.Index,
-                                    signer,
+                                    tx.Signer,
                                     hasAction3.avatarAddress,
-                                    avatarName ?? "N/A",
+                                    "N/A",
                                     hasAction3.stageId,
                                     hasAction3.Result is { IsClear: true });
                             }
 
                             if (tx.Actions[0].InnerAction is HackAndSlash4 hasAction4)
                             {
-                                Address signer = tx.Signer;
-                                var evList = block.Evaluate(
-                                    DateTimeOffset.Now,
-                                    address => _newChain.GetState(address, block.Hash),
-                                    (address, currency) =>
-                                        _newChain.GetBalance(address, currency, block.Hash)).ToList();
-                                string avatarName = evList.First().OutputStates
-                                    .GetAvatarState(hasAction4.avatarAddress).name;
                                 WriteHackAndSlash(
                                     hasAction4.Id,
                                     block.Index,
-                                    signer,
+                                    tx.Signer,
                                     hasAction4.avatarAddress,
-                                    avatarName ?? "N/A",
+                                    "N/A",
                                     hasAction4.stageId,
                                     hasAction4.Result is { IsClear: true });
                             }
@@ -260,12 +237,19 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         CreateBulkFiles();
                         Console.WriteLine("Finished block data preparation at block {0}.", block.Index);
                     }
+
+                    if (block.Index > 0 && block.Index % 5000 == 0)
+                    {
+                        Thread.Sleep(1000);
+
+                        // ReSharper disable once S1215
+                        GC.Collect();
+                    }
                 }
 
                 FlushBulkFiles();
 
-                DateTimeOffset postDataPrep = DateTimeOffset.Now;
-                Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
+                Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", DateTimeOffset.Now - start);
 
                 foreach (var path in _agentFiles)
                 {
@@ -287,8 +271,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 Console.WriteLine("Error: {0}", e.Message);
             }
 
-            DateTimeOffset end = DateTimeOffset.UtcNow;
-            Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
+            Console.WriteLine("Migration Complete! Time Elapsed: {0}", DateTimeOffset.UtcNow - start);
         }
 
         private void FlushBulkFiles()
@@ -340,8 +323,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                 loader.Load();
                 Console.WriteLine($"Bulk load to {tableName} complete.");
-                DateTimeOffset end = DateTimeOffset.Now;
-                Console.WriteLine("Time elapsed: {0}", end - start);
+                Console.WriteLine("Time elapsed: {0}", DateTimeOffset.Now - start);
             }
             catch (Exception e)
             {
