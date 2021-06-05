@@ -22,9 +22,9 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
     public class MySqlMigration
     {
-        private const string AgentDbName = "agent";
-        private const string AvatarDbName = "avatar";
-        private const string HasDbName = "hack_and_slash";
+        private const string AgentDbName = "Agents";
+        private const string AvatarDbName = "Avatars";
+        private const string HasDbName = "HackAndSlashes";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
@@ -65,7 +65,15 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             [Option(
                 "mysql-database",
                 Description = "The name of MySQL database to use.")]
-            string mysqlDatabase
+            string mysqlDatabase,
+            [Option(
+                "offset",
+                Description = "offset of block index (no entry will migrate from the genesis block).")]
+            int? offset = null,
+            [Option(
+                "limit",
+                Description = "limit of block count (no entry will migrate to the chain tip).")]
+            int? limit = null
         )
         {
             DateTimeOffset start = DateTimeOffset.UtcNow;
@@ -90,7 +98,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             }
             else if (rocksdbStoreType == "mono")
             {
-                _baseStore = new MonoRocksDBStore(storePath);
+                _baseStore = new MonoRocksDBStore(storePath, 100000, 100000);
             }
             else
             {
@@ -149,20 +157,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             _newChain = new BlockChain<NCAction>(blockPolicy, stagePolicy, newStore, newStateStore, genesis);
 
-            // Prepare block hashes to append to new chain
-            long height = _baseChain.Tip.Index;
-            int limit = (int)height;
-            BlockHash[] blockHashes = limit < 0
-                ? _baseChain.BlockHashes.SkipWhile((_, i) => i < height + limit).ToArray()
-                : _baseChain.BlockHashes.Take(limit).ToArray();
-            Block<NCAction>[] blocks = blockHashes.Select(h => _baseChain[h]).ToArray();
-            Console.WriteLine(
-                "Finished setting up RocksDBStore. Migrating {0} blocks: {1}-{2} (inclusive).",
-                blockHashes.Length,
-                blockHashes[0],
-                blockHashes.Last()
-            );
-
             Console.WriteLine("Start migration.");
 
             _agentFiles = new List<string>();
@@ -176,8 +170,12 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             try
             {
-                foreach (Block<NCAction> block in blocks)
+                int totalCount = limit ?? (int)totalLength;
+                foreach (var item in
+                    _baseStore.IterateIndexes(_baseChain.Id, 0, limit).Select((value, i) => new { i, value }))
                 {
+                    Console.WriteLine($"Block progress: {item.i}/{totalCount}");
+                    var block = _baseStore.GetBlock<NCAction>(item.value);
                     if (block.Index == 0)
                     {
                         continue;
@@ -185,6 +183,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                     Console.WriteLine("Migrating block #{0}", block.Index);
                     _newChain.Append(block);
+                    if (block.Index < (offset ?? 0))
+                    {
+                        continue;
+                    }
+
                     if (block.Transactions.Count > 0)
                     {
                         foreach (var tx in block.Transactions)
@@ -200,6 +203,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 string avatarName = evList.First().OutputStates
                                     .GetAvatarState(hasAction2.avatarAddress).name;
                                 WriteHackAndSlash(
+                                    hasAction2.Id,
                                     block.Index,
                                     signer,
                                     hasAction2.avatarAddress,
@@ -219,6 +223,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 string avatarName = evList.First().OutputStates
                                     .GetAvatarState(hasAction3.avatarAddress).name;
                                 WriteHackAndSlash(
+                                    hasAction3.Id,
                                     block.Index,
                                     signer,
                                     hasAction3.avatarAddress,
@@ -238,6 +243,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 string avatarName = evList.First().OutputStates
                                     .GetAvatarState(hasAction4.avatarAddress).name;
                                 WriteHackAndSlash(
+                                    hasAction4.Id,
                                     block.Index,
                                     signer,
                                     hasAction4.avatarAddress,
@@ -299,13 +305,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
         private void CreateBulkFiles()
         {
-            string agentFilePath = Path.GetTempFileName();
+            string agentFilePath = Path.GetTempPath() + "agents-" + Guid.NewGuid().ToString() + ".tmp";
             _agentBulkFile = new StreamWriter(agentFilePath);
 
-            string avatarFilePath = Path.GetTempFileName();
+            string avatarFilePath = Path.GetTempPath() + "avatars-" + Guid.NewGuid().ToString() + ".tmp";
             _avatarBulkFile = new StreamWriter(avatarFilePath);
 
-            string hasFilePath = Path.GetTempFileName();
+            string hasFilePath = Path.GetTempPath() + "has-" + Guid.NewGuid().ToString() + ".tmp";
             _hasBulkFile = new StreamWriter(hasFilePath);
 
             _agentFiles.Add(agentFilePath);
@@ -345,6 +351,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         }
 
         private void WriteHackAndSlash(
+            Guid id,
             long blockIndex,
             Address agentAddress,
             Address avatarAddress,
@@ -369,11 +376,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             }
 
             _hasBulkFile.WriteLine(
+                $"{id.ToString()};" +
                 $"{avatarAddress.ToString()};" +
                 $"{agentAddress.ToString()};" +
                 $"{stageId};" +
-                $"{isClear};" +
-                $"{stageId > 10000000}");
+                $"{(isClear ? 1 : 0)};" +
+                $"{(stageId > 10000000 ? 1 : 0)};" +
+                $"{blockIndex.ToString()};");
             Console.WriteLine("Write HackAndSlash action in block #{0}", blockIndex);
         }
     }
