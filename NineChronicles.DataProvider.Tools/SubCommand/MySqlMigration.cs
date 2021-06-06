@@ -236,7 +236,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             hasAction2.Result is { IsClear: true });
                     }
 
-                    if (ae.Action is HackAndSlash3 hasAction3)
+                    if (action.InnerAction is HackAndSlash3 hasAction3)
                     {
                         Address signer = ae.InputContext.Signer;
                         WriteHackAndSlash(
@@ -249,7 +249,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             hasAction3.Result is { IsClear: true });
                     }
 
-                    if (ae.Action is HackAndSlash4 hasAction4)
+                    if (action.InnerAction is HackAndSlash4 hasAction4)
                     {
                         Address signer = ae.InputContext.Signer;
                         WriteHackAndSlash(
