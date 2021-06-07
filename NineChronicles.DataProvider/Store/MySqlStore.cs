@@ -137,5 +137,111 @@ namespace NineChronicles.DataProvider.Store
 
             return query.ToList();
         }
+
+        public void StoreCombinationConsumable(
+            string id,
+            string agentAddress,
+            string avatarAddress,
+            int recipeId,
+            int slotIndex,
+            long blockIndex)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            ctx.CombinationConsumables!.Add(
+                new CombinationConsumableModel()
+                {
+                    Id = id,
+                    AgentAddress = agentAddress,
+                    AvatarAddress = avatarAddress,
+                    RecipeId = recipeId,
+                    SlotIndex = slotIndex,
+                    BlockIndex = blockIndex,
+                }
+            );
+            ctx.SaveChanges();
+        }
+
+        public void DeleteCombinationConsumable(string id)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            if (ctx.CombinationConsumables!.Find(id) is CombinationConsumableModel combinationConsumable)
+            {
+                ctx.Remove(combinationConsumable);
+            }
+
+            ctx.SaveChanges();
+        }
+
+        public void StoreCombinationEquipment(
+            string id,
+            string agentAddress,
+            string avatarAddress,
+            int recipeId,
+            int slotIndex,
+            int? subRecipeId,
+            long blockIndex)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            ctx.CombinationEquipments!.Add(
+                new CombinationEquipmentModel()
+                {
+                    Id = id,
+                    AgentAddress = agentAddress,
+                    AvatarAddress = avatarAddress,
+                    RecipeId = recipeId,
+                    SlotIndex = slotIndex,
+                    SubRecipeId = subRecipeId ?? 0,
+                    BlockIndex = blockIndex,
+                }
+            );
+            ctx.SaveChanges();
+        }
+
+        public void DeleteCombinationEquipment(string id)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            if (ctx.CombinationEquipments!.Find(id) is CombinationEquipmentModel combinationEquipment)
+            {
+                ctx.Remove(combinationEquipment);
+            }
+
+            ctx.SaveChanges();
+        }
+
+        public void StoreItemEnhancement(
+            string id,
+            string agentAddress,
+            string avatarAddress,
+            string itemId,
+            string materialId,
+            int slotIndex,
+            long blockIndex)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            ctx.ItemEnhancements!.Add(
+                new ItemEnhancementModel()
+                {
+                    Id = id,
+                    AgentAddress = agentAddress,
+                    AvatarAddress = avatarAddress,
+                    ItemId = itemId,
+                    MaterialId = materialId,
+                    SlotIndex = slotIndex,
+                    BlockIndex = blockIndex,
+                }
+            );
+            ctx.SaveChanges();
+        }
+
+        public void DeleteItemEnhancement(string id)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            if (ctx.ItemEnhancements!.Find(id) is ItemEnhancementModel itemEnhancement)
+            {
+                ctx.Remove(itemEnhancement);
+            }
+
+            ctx.SaveChanges();
+        }
     }
 }
