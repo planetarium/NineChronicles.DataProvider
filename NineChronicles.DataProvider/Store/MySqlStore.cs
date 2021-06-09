@@ -124,18 +124,18 @@ namespace NineChronicles.DataProvider.Store
                             "FROM `HackAndSlashes` AS `h` " +
                             $"WHERE (`h`.`Mimisbrunnr` = {isMimisbrunnr}) AND `h`.`Cleared` " +
                             "GROUP BY `h`.`AvatarAddress`;");
-            var result = query.ToList();
+
             if (!(avatarAddress is null))
             {
-                result = result.Where(s => s.AvatarAddress == avatarAddress).ToList();
+                query = query.Where(s => s.AvatarAddress == avatarAddress);
             }
 
             if (limit is { } limitNotNull)
             {
-                result = result.Take(limitNotNull).ToList();
+                query = query.Take(limitNotNull);
             }
 
-            return result;
+            return query.ToList();
         }
     }
 }
