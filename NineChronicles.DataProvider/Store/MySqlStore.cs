@@ -114,45 +114,28 @@ namespace NineChronicles.DataProvider.Store
             bool isMimisbrunnr = false)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            IEnumerable<StageRankingModel>? query = ctx.Set<HackAndSlashModel>()
-                .AsQueryable()
-                .Where(has => has.Mimisbrunnr == isMimisbrunnr)
-                .Where(has => has.Cleared)
-                .GroupBy(has => has.AvatarAddress)
-                .Select(g => new StageRankingModel()
-                {
-                    AvatarAddress = g.Key!,
-                    ClearedStageId = g.Max(x => x.StageId),
-                    Name = ctx.Avatars!.AsQueryable().Where(a => a.Address! == g.Key).Select(a => a.Name!).Single(),
-                    BlockIndex = g.Min(has => has.BlockIndex),
-                })
-                .OrderByDescending(r => r.ClearedStageId)
-                .ThenBy(r => r.BlockIndex);
+            var query = ctx.Set<StageRankingModel>()
+                .FromSqlRaw("SELECT `h`.`AvatarAddress`, MAX(`h`.`StageId`) AS `ClearedStageId`, (" +
+                            "SELECT `a`.`Name` " +
+                            "FROM `Avatars` AS `a` " +
+                            "WHERE `a`.`Address` = `h`.`AvatarAddress` " +
+                            "LIMIT 1) AS `Name`, MIN(`h`.`BlockIndex`) AS `BlockIndex`, " +
+                            "row_number() over(ORDER BY MAX(`h`.`StageId`) DESC, MIN(`h`.`BlockIndex`)) Ranking " +
+                            "FROM `HackAndSlashes` AS `h` " +
+                            $"WHERE (`h`.`Mimisbrunnr` = {isMimisbrunnr}) AND `h`.`Cleared` " +
+                            "GROUP BY `h`.`AvatarAddress`;");
 
-            if (limit is int limitNotNull)
+            if (!(avatarAddress is null))
+            {
+                query = query.Where(s => s.AvatarAddress == avatarAddress);
+            }
+
+            if (limit is { } limitNotNull)
             {
                 query = query.Take(limitNotNull);
             }
 
-            var queryList = query.ToList();
-            if (queryList.Count > 0)
-            {
-                int rank = 1;
-                for (int i = 0; i < queryList.Count; i++)
-                {
-                    var stageRankingModel = queryList[i];
-                    stageRankingModel.Ranking = rank;
-                    queryList[i] = stageRankingModel;
-                    rank += 1;
-                }
-            }
-
-            if (!(avatarAddress is null))
-            {
-                queryList = queryList.Where(s => s.AvatarAddress == avatarAddress).ToList();
-            }
-
-            return queryList;
+            return query.ToList();
         }
     }
 }

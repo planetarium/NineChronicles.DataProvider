@@ -12,6 +12,8 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<HackAndSlashModel>? HackAndSlashes { get; set; }
 
+        public DbSet<StageRankingModel>? StageRankings { get; set; }
+
         public DbSet<AvatarModel>? Avatars { get; set; }
 
         public DbSet<AgentModel>? Agents { get; set; }
