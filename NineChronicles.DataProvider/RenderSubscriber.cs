@@ -42,28 +42,26 @@ namespace NineChronicles.DataProvider
                             return;
                         }
 
-                        if (!(ev.Action is HackAndSlash4 action))
+                        if (ev.Action is HackAndSlash has)
                         {
-                            return;
+                            Log.Debug("Storing HackAndSlash action in block #{0}", ev.BlockIndex);
+                            string avatarName = ev.OutputStates.GetAvatarState(has.avatarAddress).name;
+                            MySqlStore.StoreAgent(ev.Signer.ToString());
+                            MySqlStore.StoreAvatar(
+                                has.avatarAddress.ToString(),
+                                ev.Signer.ToString(),
+                                avatarName);
+                            MySqlStore.StoreHackAndSlash(
+                                has.Id.ToString(),
+                                ev.Signer.ToString(),
+                                has.avatarAddress.ToString(),
+                                has.stageId,
+                                has.Result.IsClear,
+                                isMimisbrunnr: has.stageId > 10000000,
+                                ev.BlockIndex
+                            );
+                            Log.Debug("Stored HackAndSlash action in block #{0}", ev.BlockIndex);
                         }
-
-                        Log.Debug("Storing HackAndSlash action in block #{0}", ev.BlockIndex);
-                        string avatarName = ev.OutputStates.GetAvatarState(action.avatarAddress).name;
-                        MySqlStore.StoreAgent(ev.Signer.ToString());
-                        MySqlStore.StoreAvatar(
-                            action.avatarAddress.ToString(),
-                            ev.Signer.ToString(),
-                            avatarName);
-                        MySqlStore.StoreHackAndSlash(
-                            action.Id.ToString(),
-                            ev.Signer.ToString(),
-                            action.avatarAddress.ToString(),
-                            action.stageId,
-                            action.Result.IsClear,
-                            isMimisbrunnr: action.stageId > 10000000,
-                            ev.BlockIndex
-                        );
-                        Log.Debug("Stored HackAndSlash action in block #{0}", ev.BlockIndex);
                     });
 
             _actionRenderer.EveryUnrender<ActionBase>()
@@ -75,10 +73,10 @@ namespace NineChronicles.DataProvider
                             return;
                         }
 
-                        if (ev.Action is HackAndSlash4 action)
+                        if (ev.Action is HackAndSlash has)
                         {
                             Log.Debug("Deleting HackAndSlash action in block #{0}", ev.BlockIndex);
-                            MySqlStore.DeleteHackAndSlash(action.Id.ToString());
+                            MySqlStore.DeleteHackAndSlash(has.Id.ToString());
                             Log.Debug("Deleted HackAndSlash action in block #{0}", ev.BlockIndex);
                         }
                     });
