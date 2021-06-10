@@ -123,7 +123,7 @@ namespace NineChronicles.DataProvider.Store
                             "row_number() over(ORDER BY MAX(`h`.`StageId`) DESC, MIN(`h`.`BlockIndex`)) Ranking " +
                             "FROM `HackAndSlashes` AS `h` " +
                             $"WHERE (`h`.`Mimisbrunnr` = {isMimisbrunnr}) AND `h`.`Cleared` " +
-                            "GROUP BY `h`.`AvatarAddress`;");
+                            "GROUP BY `h`.`AvatarAddress`");
 
             if (!(avatarAddress is null))
             {
