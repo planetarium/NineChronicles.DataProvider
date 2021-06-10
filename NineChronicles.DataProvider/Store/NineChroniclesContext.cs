@@ -20,6 +20,8 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<ItemEnhancementModel>? ItemEnhancements { get; set; }
 
+        public DbSet<CraftRankingModel>? CraftRankings { get; set; }
+
         public DbSet<AvatarModel>? Avatars { get; set; }
 
         public DbSet<AgentModel>? Agents { get; set; }

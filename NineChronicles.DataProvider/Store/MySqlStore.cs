@@ -1,6 +1,5 @@
 namespace NineChronicles.DataProvider.Store
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
@@ -80,7 +79,7 @@ namespace NineChronicles.DataProvider.Store
         public void DeleteHackAndSlash(string id)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            if (ctx.HackAndSlashes!.Find(id) is HackAndSlashModel has)
+            if (ctx.HackAndSlashes?.Find(id) is { } has)
             {
                 ctx.Remove(has);
             }
@@ -100,7 +99,7 @@ namespace NineChronicles.DataProvider.Store
                 hackAndSlashes = hackAndSlashes.Where(has => has.AgentAddress == agentAddressNotNull);
             }
 
-            if (limit is int limitNotNull)
+            if (limit is { } limitNotNull)
             {
                 hackAndSlashes = hackAndSlashes.Take(limitNotNull);
             }
@@ -158,15 +157,52 @@ namespace NineChronicles.DataProvider.Store
                     BlockIndex = blockIndex,
                 }
             );
+
+            if (ctx.CraftRankings?.Find(avatarAddress) is { } rankingData)
+            {
+                ctx.CraftRankings!.Update(
+                    new CraftRankingModel()
+                    {
+                        AgentAddress = agentAddress,
+                        AvatarAddress = avatarAddress,
+                        CraftCount = rankingData.CraftCount + 1,
+                        BlockIndex = blockIndex,
+                    });
+            }
+            else
+            {
+                ctx.CraftRankings!.Add(
+                    new CraftRankingModel()
+                    {
+                        AgentAddress = agentAddress,
+                        AvatarAddress = avatarAddress,
+                        CraftCount = 1,
+                        BlockIndex = blockIndex,
+                    });
+            }
+
             ctx.SaveChanges();
         }
 
         public void DeleteCombinationConsumable(string id)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            if (ctx.CombinationConsumables!.Find(id) is CombinationConsumableModel combinationConsumable)
+
+            var consumableData = ctx.CombinationConsumables?.Find(id);
+            if (consumableData is { } combinationConsumable)
             {
                 ctx.Remove(combinationConsumable);
+
+                if (ctx.CraftRankings?.Find(consumableData.AvatarAddress) is { } rankingData)
+                {
+                    ctx.CraftRankings!.Update(
+                        new CraftRankingModel()
+                        {
+                            AgentAddress = consumableData.AgentAddress,
+                            AvatarAddress = consumableData.AvatarAddress,
+                            CraftCount = rankingData.CraftCount - 1,
+                        });
+                }
             }
 
             ctx.SaveChanges();
@@ -194,15 +230,51 @@ namespace NineChronicles.DataProvider.Store
                     BlockIndex = blockIndex,
                 }
             );
+
+            if (ctx.CraftRankings?.Find(avatarAddress) is { } rankingData)
+            {
+                ctx.CraftRankings!.Update(
+                    new CraftRankingModel()
+                    {
+                        AgentAddress = agentAddress,
+                        AvatarAddress = avatarAddress,
+                        CraftCount = rankingData.CraftCount + 1,
+                        BlockIndex = blockIndex,
+                    });
+            }
+            else
+            {
+                ctx.CraftRankings!.Add(
+                    new CraftRankingModel()
+                    {
+                        AgentAddress = agentAddress,
+                        AvatarAddress = avatarAddress,
+                        CraftCount = 1,
+                        BlockIndex = blockIndex,
+                    });
+            }
+
             ctx.SaveChanges();
         }
 
         public void DeleteCombinationEquipment(string id)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            if (ctx.CombinationEquipments!.Find(id) is CombinationEquipmentModel combinationEquipment)
+            var equipmentData = ctx.CombinationEquipments?.Find(id);
+            if (equipmentData is { } combinationEquipment)
             {
                 ctx.Remove(combinationEquipment);
+
+                if (ctx.CraftRankings?.Find(equipmentData.AvatarAddress) is { } rankingData)
+                {
+                    ctx.CraftRankings!.Update(
+                        new CraftRankingModel()
+                        {
+                            AgentAddress = equipmentData.AgentAddress,
+                            AvatarAddress = equipmentData.AvatarAddress,
+                            CraftCount = rankingData.CraftCount - 1,
+                        });
+                }
             }
 
             ctx.SaveChanges();
@@ -230,18 +302,81 @@ namespace NineChronicles.DataProvider.Store
                     BlockIndex = blockIndex,
                 }
             );
+
+            if (ctx.CraftRankings?.Find(avatarAddress) is { } rankingData)
+            {
+                ctx.CraftRankings!.Update(
+                    new CraftRankingModel()
+                    {
+                        AgentAddress = agentAddress,
+                        AvatarAddress = avatarAddress,
+                        CraftCount = rankingData.CraftCount + 1,
+                        BlockIndex = blockIndex,
+                    });
+            }
+            else
+            {
+                ctx.CraftRankings!.Add(
+                    new CraftRankingModel()
+                    {
+                        AgentAddress = agentAddress,
+                        AvatarAddress = avatarAddress,
+                        CraftCount = 1,
+                        BlockIndex = blockIndex,
+                    });
+            }
+
             ctx.SaveChanges();
         }
 
         public void DeleteItemEnhancement(string id)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            if (ctx.ItemEnhancements!.Find(id) is ItemEnhancementModel itemEnhancement)
+            var itemData = ctx.ItemEnhancements?.Find(id);
+            if (itemData is { } itemEnhancement)
             {
                 ctx.Remove(itemEnhancement);
+
+                if (ctx.CraftRankings?.Find(itemData.AvatarAddress) is { } rankingData)
+                {
+                    ctx.CraftRankings!.Update(
+                        new CraftRankingModel()
+                        {
+                            AgentAddress = itemData.AgentAddress,
+                            AvatarAddress = itemData.AvatarAddress,
+                            CraftCount = rankingData.CraftCount - 1,
+                        });
+                }
             }
 
             ctx.SaveChanges();
+        }
+
+        public IEnumerable<CraftRankingModel> GetCraftRanking(
+            string? avatarAddress = null,
+            int? limit = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            var query = ctx.Set<CraftRankingModel>()
+                .FromSqlRaw("SELECT `h`.`AvatarAddress`, `CraftCount`, (" +
+                            "SELECT `a`.`Name` " +
+                            "FROM `Avatars` AS `a` " +
+                            "WHERE `a`.`Address` = `h`.`AvatarAddress` " +
+                            "LIMIT 1) AS `Name`, " +
+                            "row_number() over(ORDER BY `CraftCount` DESC, MIN(`h`.`BlockIndex`)) Ranking " +
+                            "FROM `CraftRankings` AS `h`");
+
+            if (!(avatarAddress is null))
+            {
+                query = query.Where(s => s.AvatarAddress == avatarAddress);
+            }
+
+            if (limit is { } limitNotNull)
+            {
+                query = query.Take(limitNotNull);
+            }
+
+            return query.ToList();
         }
     }
 }

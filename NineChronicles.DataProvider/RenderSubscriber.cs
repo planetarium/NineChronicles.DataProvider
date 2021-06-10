@@ -145,21 +145,21 @@ namespace NineChronicles.DataProvider
                         if (ev.Action is CombinationConsumable combinationConsumable)
                         {
                             Log.Debug("Deleting CombinationConsumable action in block #{0}", ev.BlockIndex);
-                            MySqlStore.DeleteHackAndSlash(combinationConsumable.Id.ToString());
+                            MySqlStore.DeleteCombinationConsumable(combinationConsumable.Id.ToString());
                             Log.Debug("Deleted CombinationConsumable action in block #{0}", ev.BlockIndex);
                         }
 
                         if (ev.Action is CombinationEquipment combinationEquipment)
                         {
                             Log.Debug("Deleting CombinationEquipment action in block #{0}", ev.BlockIndex);
-                            MySqlStore.DeleteHackAndSlash(combinationEquipment.Id.ToString());
+                            MySqlStore.DeleteCombinationEquipment(combinationEquipment.Id.ToString());
                             Log.Debug("Deleted CombinationEquipment action in block #{0}", ev.BlockIndex);
                         }
 
                         if (ev.Action is ItemEnhancement itemEnhancement)
                         {
                             Log.Debug("Deleting ItemEnhancement action in block #{0}", ev.BlockIndex);
-                            MySqlStore.DeleteHackAndSlash(itemEnhancement.Id.ToString());
+                            MySqlStore.DeleteItemEnhancement(itemEnhancement.Id.ToString());
                             Log.Debug("Deleted ItemEnhancement action in block #{0}", ev.BlockIndex);
                         }
                     });

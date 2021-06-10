@@ -9,7 +9,7 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    [Migration("20210610135200_AddCraftRanking")]
+    [Migration("20210610141401_AddCraftRanking")]
     partial class AddCraftRanking
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -105,6 +105,28 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.HasIndex("AvatarAddress");
 
                     b.ToTable("CombinationEquipments");
+                });
+
+            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.CraftRankingModel", b =>
+                {
+                    b.Property<string>("AvatarAddress")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AgentAddress")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("BlockIndex")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CraftCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Ranking")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("AvatarAddress");
+
+                    b.ToTable("CraftRankings");
                 });
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.HackAndSlashModel", b =>

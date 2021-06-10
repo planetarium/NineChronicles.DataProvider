@@ -105,6 +105,28 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.ToTable("CombinationEquipments");
                 });
 
+            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.CraftRankingModel", b =>
+                {
+                    b.Property<string>("AvatarAddress")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AgentAddress")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("BlockIndex")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CraftCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Ranking")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("AvatarAddress");
+
+                    b.ToTable("CraftRankings");
+                });
+
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.HackAndSlashModel", b =>
                 {
                     b.Property<string>("Id")
