@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
-
-namespace NineChronicles.DataProvider.Executable.Migrations
+﻿namespace NineChronicles.DataProvider.Executable.Migrations
 {
+    using Microsoft.EntityFrameworkCore.Migrations;
+
     public partial class AddCraftRanking : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -14,7 +14,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     AgentAddress = table.Column<string>(type: "TEXT", nullable: true),
                     BlockIndex = table.Column<long>(type: "INTEGER", nullable: false),
                     CraftCount = table.Column<int>(type: "INTEGER", nullable: false),
-                    Ranking = table.Column<int>(type: "INTEGER", nullable: false)
+                    Ranking = table.Column<int>(type: "INTEGER", nullable: false),
                 },
                 constraints: table =>
                 {

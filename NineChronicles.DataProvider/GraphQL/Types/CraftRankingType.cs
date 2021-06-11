@@ -9,9 +9,9 @@
         {
             Field(x => x.AvatarAddress);
             Field(x => x.AgentAddress);
-            Field(x => x.Ranking);
-            Field(x => x.CraftCount);
             Field(x => x.BlockIndex);
+            Field(x => x.CraftCount);
+            Field(x => x.Ranking);
 
             Name = "CraftRanking";
         }

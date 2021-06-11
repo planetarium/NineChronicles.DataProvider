@@ -160,14 +160,8 @@ namespace NineChronicles.DataProvider.Store
 
             if (ctx.CraftRankings?.Find(avatarAddress) is { } rankingData)
             {
-                ctx.CraftRankings!.Update(
-                    new CraftRankingModel()
-                    {
-                        AgentAddress = agentAddress,
-                        AvatarAddress = avatarAddress,
-                        CraftCount = rankingData.CraftCount + 1,
-                        BlockIndex = blockIndex,
-                    });
+                rankingData.CraftCount += 1;
+                rankingData.BlockIndex = blockIndex;
             }
             else
             {
@@ -191,18 +185,12 @@ namespace NineChronicles.DataProvider.Store
             var consumableData = ctx.CombinationConsumables?.Find(id);
             if (consumableData is { } combinationConsumable)
             {
-                ctx.Remove(combinationConsumable);
-
-                if (ctx.CraftRankings?.Find(consumableData.AvatarAddress) is { } rankingData)
+                if (ctx.CraftRankings?.Find(consumableData?.AvatarAddress) is { } rankingData)
                 {
-                    ctx.CraftRankings!.Update(
-                        new CraftRankingModel()
-                        {
-                            AgentAddress = consumableData.AgentAddress,
-                            AvatarAddress = consumableData.AvatarAddress,
-                            CraftCount = rankingData.CraftCount - 1,
-                        });
+                    rankingData.CraftCount -= 1;
                 }
+
+                ctx.Remove(combinationConsumable);
             }
 
             ctx.SaveChanges();
@@ -233,14 +221,8 @@ namespace NineChronicles.DataProvider.Store
 
             if (ctx.CraftRankings?.Find(avatarAddress) is { } rankingData)
             {
-                ctx.CraftRankings!.Update(
-                    new CraftRankingModel()
-                    {
-                        AgentAddress = agentAddress,
-                        AvatarAddress = avatarAddress,
-                        CraftCount = rankingData.CraftCount + 1,
-                        BlockIndex = blockIndex,
-                    });
+                rankingData.CraftCount += 1;
+                rankingData.BlockIndex = blockIndex;
             }
             else
             {
@@ -263,18 +245,12 @@ namespace NineChronicles.DataProvider.Store
             var equipmentData = ctx.CombinationEquipments?.Find(id);
             if (equipmentData is { } combinationEquipment)
             {
-                ctx.Remove(combinationEquipment);
-
-                if (ctx.CraftRankings?.Find(equipmentData.AvatarAddress) is { } rankingData)
+                if (ctx.CraftRankings?.Find(equipmentData?.AvatarAddress) is { } rankingData)
                 {
-                    ctx.CraftRankings!.Update(
-                        new CraftRankingModel()
-                        {
-                            AgentAddress = equipmentData.AgentAddress,
-                            AvatarAddress = equipmentData.AvatarAddress,
-                            CraftCount = rankingData.CraftCount - 1,
-                        });
+                    rankingData.CraftCount -= 1;
                 }
+
+                ctx.Remove(combinationEquipment);
             }
 
             ctx.SaveChanges();
@@ -305,14 +281,8 @@ namespace NineChronicles.DataProvider.Store
 
             if (ctx.CraftRankings?.Find(avatarAddress) is { } rankingData)
             {
-                ctx.CraftRankings!.Update(
-                    new CraftRankingModel()
-                    {
-                        AgentAddress = agentAddress,
-                        AvatarAddress = avatarAddress,
-                        CraftCount = rankingData.CraftCount + 1,
-                        BlockIndex = blockIndex,
-                    });
+                rankingData.CraftCount += 1;
+                rankingData.BlockIndex = blockIndex;
             }
             else
             {
@@ -335,18 +305,12 @@ namespace NineChronicles.DataProvider.Store
             var itemData = ctx.ItemEnhancements?.Find(id);
             if (itemData is { } itemEnhancement)
             {
-                ctx.Remove(itemEnhancement);
-
-                if (ctx.CraftRankings?.Find(itemData.AvatarAddress) is { } rankingData)
+                if (ctx.CraftRankings?.Find(itemData?.AvatarAddress) is { } rankingData)
                 {
-                    ctx.CraftRankings!.Update(
-                        new CraftRankingModel()
-                        {
-                            AgentAddress = itemData.AgentAddress,
-                            AvatarAddress = itemData.AvatarAddress,
-                            CraftCount = rankingData.CraftCount - 1,
-                        });
+                    rankingData.CraftCount -= 1;
                 }
+
+                ctx.Remove(itemEnhancement);
             }
 
             ctx.SaveChanges();
@@ -358,13 +322,9 @@ namespace NineChronicles.DataProvider.Store
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             var query = ctx.Set<CraftRankingModel>()
-                .FromSqlRaw("SELECT `h`.`AvatarAddress`, `CraftCount`, (" +
-                            "SELECT `a`.`Name` " +
-                            "FROM `Avatars` AS `a` " +
-                            "WHERE `a`.`Address` = `h`.`AvatarAddress` " +
-                            "LIMIT 1) AS `Name`, " +
-                            "row_number() over(ORDER BY `CraftCount` DESC, MIN(`h`.`BlockIndex`)) Ranking " +
-                            "FROM `CraftRankings` AS `h`");
+                .FromSqlRaw("SELECT `h`.`AvatarAddress`, `AgentAddress`, `CraftCount`, `BlockIndex`, " +
+                    "row_number() over(ORDER BY `CraftCount` DESC, `h`.`BlockIndex`) `Ranking` " +
+                    "FROM `CraftRankings` AS `h` ");
 
             if (!(avatarAddress is null))
             {
