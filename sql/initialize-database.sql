@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`HackAndSlashes` (
     `Mimisbrunnr` BOOLEAN NOT NULL,
     `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `BlockIndex` BIGINT NOT NULL,
-    
+
+    PRIMARY KEY (`Id`),
     INDEX `fk_HackAndSlashes_Avatar1_idx` (`AvatarAddress`),
     INDEX `fk_HackAndSlashes_Agent1_idx` (`AgentAddress`),
     CONSTRAINT `fk_HackAndSlashes_Avatar1`
@@ -47,6 +48,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`CombinationConsumables` (
     `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `BlockIndex` BIGINT NOT NULL,
 
+    PRIMARY KEY (`Id`),
     INDEX `fk_CombinationConsumables_Avatar1_idx` (`AvatarAddress`),
     INDEX `fk_CombinationConsumables_Agent1_idx` (`AgentAddress`),
     CONSTRAINT `fk_CombinationConsumables_Avatar1`
@@ -67,6 +69,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`CombinationEquipments` (
     `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `BlockIndex` BIGINT NOT NULL,
 
+    PRIMARY KEY (`Id`),
     INDEX `fk_CombinationEquipments_Avatar1_idx` (`AvatarAddress`),
     INDEX `fk_CombinationEquipments_Agent1_idx` (`AgentAddress`),
     CONSTRAINT `fk_CombinationEquipments_Avatar1`
@@ -87,6 +90,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`ItemEnhancements` (
     `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `BlockIndex` BIGINT NOT NULL,
 
+    PRIMARY KEY (`Id`),
     INDEX `fk_ItemEnhancements_Avatar1_idx` (`AvatarAddress`),
     INDEX `fk_ItemEnhancements_Agent1_idx` (`AgentAddress`),
     CONSTRAINT `fk_ItemEnhancements_Avatar1`
