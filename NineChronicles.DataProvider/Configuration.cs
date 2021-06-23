@@ -86,5 +86,7 @@ namespace NineChronicles.DataProvider
 #pragma warning restore SA1011 // Closing square brackets should be spaced correctly
 #nullable disable
         public string MySqlConnectionString { get; set; }
+
+        public bool Preload { get; set; }
     }
 }
