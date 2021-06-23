@@ -100,3 +100,21 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`ItemEnhancements` (
     FOREIGN KEY (`AgentAddress`)
     REFERENCES `Agents` (`Address`)
 );
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`CraftRankings` (
+    `AvatarAddress` VARCHAR(100) NOT NULL,
+    `AgentAddress` VARCHAR(100) NOT NULL,
+    `CraftCount` INT NOT NULL,
+    `BlockIndex` BIGINT NOT NULL,
+    `Ranking` INT DEFAULT NULL,
+
+    UNIQUE KEY `AvatarAddress_UNIQUE` (`AvatarAddress`),
+    KEY `fk_CrafRankings_Avatar1_idx` (`AvatarAddress`),
+    KEY `fk_CrafRankings_Agent1_idx` (`AgentAddress`),
+    CONSTRAINT `fk_CrafRankings_Agent1`
+    FOREIGN KEY (`AgentAddress`)
+    REFERENCES `agents` (`Address`),
+    CONSTRAINT `fk_CrafRankings_Avatar1`
+    FOREIGN KEY (`AvatarAddress`)
+    REFERENCES `avatars` (`Address`)
+);
