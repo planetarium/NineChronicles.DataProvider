@@ -2,6 +2,7 @@
 {
     using global::GraphQL;
     using global::GraphQL.Types;
+    using Libplanet;
     using NineChronicles.DataProvider.Store;
 
     internal class NineChroniclesSummaryQuery : ObjectGraphType
@@ -20,7 +21,7 @@
                 ),
                 resolve: context =>
                 {
-                    string? agentAddress = context.GetArgument<string?>("agentAddress", null);
+                    Address? agentAddress = context.GetArgument<Address?>("agentAddress", null);
                     int? limit = context.GetArgument<int?>("limit", null);
                     return Store.GetHackAndSlash(agentAddress, limit);
                 });
@@ -33,7 +34,7 @@
                 ),
                 resolve: context =>
                 {
-                    string? avatarAddress = context.GetArgument<string?>("avatarAddress", null);
+                    Address? avatarAddress = context.GetArgument<Address?>("avatarAddress", null);
                     int? limit = context.GetArgument<int?>("limit", null);
                     bool isMimisbrunnr = context.GetArgument<bool>("mimisbrunnr", false);
                     return Store.GetStageRanking(avatarAddress, limit, isMimisbrunnr);
@@ -46,7 +47,7 @@
                 ),
                 resolve: context =>
                 {
-                    string? avatarAddress = context.GetArgument<string?>("avatarAddress", null);
+                    Address? avatarAddress = context.GetArgument<Address?>("avatarAddress", null);
                     int? limit = context.GetArgument<int?>("limit", null);
                     return Store.GetCraftRanking(avatarAddress, limit);
                 });
