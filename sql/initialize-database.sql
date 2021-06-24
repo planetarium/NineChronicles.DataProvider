@@ -118,3 +118,23 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`CraftRankings` (
     FOREIGN KEY (`AvatarAddress`)
     REFERENCES `avatars` (`Address`)
 );
+CREATE TABLE IF NOT EXISTS `data_provider`.`Equipments` (
+    `ItemId` VARCHAR(100) NOT NULL,
+    `AgentAddress` VARCHAR(100) NOT NULL,
+    `AvatarAddress` VARCHAR(100) NOT NULL,
+    `EquipmentId` INT NOT NULL,
+    `Cp` INT NOT NULL,
+    `Level` INT NOT NULL,
+    `ItemSubType` VARCHAR(100) NOT NULL,
+    `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (`ItemId`),
+    INDEX `fk_Equipments_Avatar1_idx` (`AvatarAddress`),
+    INDEX `fk_Equipments_Agent1_idx` (`AgentAddress`),
+    CONSTRAINT `fk_Equipments_Avatar1`
+    FOREIGN KEY (`AvatarAddress`)
+    REFERENCES `Avatars` (`Address`),
+    CONSTRAINT `fk_Equipments_Agent1`
+    FOREIGN KEY (`AgentAddress`)
+    REFERENCES `Agents` (`Address`)
+);
