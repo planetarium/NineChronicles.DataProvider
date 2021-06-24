@@ -2,6 +2,7 @@
 {
     using global::GraphQL;
     using global::GraphQL.Types;
+    using Libplanet;
     using NineChronicles.DataProvider.Store;
 
     internal class NineChroniclesSummaryQuery : ObjectGraphType
@@ -13,14 +14,14 @@
                 name: "test",
                 resolve: context => "Should be done.");
             Field<ListGraphType<HackAndSlashType>>(
-                name: "HackAndSlashQuery",
+                name: "HackAndSlash",
                 arguments: new QueryArguments(
                     new QueryArgument<StringGraphType> { Name = "agentAddress" },
                     new QueryArgument<IntGraphType> { Name = "limit" }
                 ),
                 resolve: context =>
                 {
-                    string? agentAddress = context.GetArgument<string?>("agentAddress", null);
+                    Address? agentAddress = context.GetArgument<Address?>("agentAddress", null);
                     int? limit = context.GetArgument<int?>("limit", null);
                     return Store.GetHackAndSlash(agentAddress, limit);
                 });
@@ -33,10 +34,22 @@
                 ),
                 resolve: context =>
                 {
-                    string? avatarAddress = context.GetArgument<string?>("avatarAddress", null);
+                    Address? avatarAddress = context.GetArgument<Address?>("avatarAddress", null);
                     int? limit = context.GetArgument<int?>("limit", null);
                     bool isMimisbrunnr = context.GetArgument<bool>("mimisbrunnr", false);
                     return Store.GetStageRanking(avatarAddress, limit, isMimisbrunnr);
+                });
+            Field<ListGraphType<CraftRankingType>>(
+                name: "CraftRanking",
+                arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType> { Name = "avatarAddress" },
+                    new QueryArgument<IntGraphType> { Name = "limit" }
+                ),
+                resolve: context =>
+                {
+                    Address? avatarAddress = context.GetArgument<Address?>("avatarAddress", null);
+                    int? limit = context.GetArgument<int?>("limit", null);
+                    return Store.GetCraftRanking(avatarAddress, limit);
                 });
         }
 
