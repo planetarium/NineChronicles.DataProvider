@@ -1,7 +1,9 @@
 namespace NineChronicles.DataProvider.Store
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Libplanet;
     using Microsoft.EntityFrameworkCore;
     using NineChronicles.DataProvider.Store.Models;
 
@@ -15,8 +17,8 @@ namespace NineChronicles.DataProvider.Store
         }
 
         public void StoreAvatar(
-            string address,
-            string agentAddress,
+            Address address,
+            Address agentAddress,
             string name)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
@@ -25,8 +27,8 @@ namespace NineChronicles.DataProvider.Store
                 ctx.Avatars!.Add(
                     new AvatarModel()
                     {
-                        Address = address,
-                        AgentAddress = agentAddress,
+                        Address = address.ToString(),
+                        AgentAddress = agentAddress.ToString(),
                         Name = name,
                     }
                 );
@@ -35,15 +37,15 @@ namespace NineChronicles.DataProvider.Store
             ctx.SaveChanges();
         }
 
-        public void StoreAgent(string address)
+        public void StoreAgent(Address address)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            if (ctx.Agents?.Find(address) is null)
+            if (ctx.Agents?.Find(address.ToString()) is null)
             {
                 ctx.Agents!.Add(
                     new AgentModel()
                     {
-                        Address = address,
+                        Address = address.ToString(),
                     }
                 );
             }
@@ -52,9 +54,9 @@ namespace NineChronicles.DataProvider.Store
         }
 
         public void StoreHackAndSlash(
-            string id,
-            string agentAddress,
-            string avatarAddress,
+            Guid id,
+            Address agentAddress,
+            Address avatarAddress,
             int stageId,
             bool cleared,
             bool isMimisbrunnr,
@@ -64,9 +66,9 @@ namespace NineChronicles.DataProvider.Store
             ctx.HackAndSlashes!.Add(
                 new HackAndSlashModel()
                 {
-                    Id = id,
-                    AgentAddress = agentAddress,
-                    AvatarAddress = avatarAddress,
+                    Id = id.ToString(),
+                    AgentAddress = agentAddress.ToString(),
+                    AvatarAddress = avatarAddress.ToString(),
                     StageId = stageId,
                     Cleared = cleared,
                     Mimisbrunnr = isMimisbrunnr,
@@ -76,10 +78,10 @@ namespace NineChronicles.DataProvider.Store
             ctx.SaveChanges();
         }
 
-        public void DeleteHackAndSlash(string id)
+        public void DeleteHackAndSlash(Guid id)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            if (ctx.HackAndSlashes?.Find(id) is { } has)
+            if (ctx.HackAndSlashes?.Find(id.ToString()) is { } has)
             {
                 ctx.Remove(has);
             }
@@ -88,7 +90,7 @@ namespace NineChronicles.DataProvider.Store
         }
 
         public IEnumerable<HackAndSlashModel> GetHackAndSlash(
-            string? agentAddress = null,
+            Address? agentAddress = null,
             int? limit = null)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
@@ -96,7 +98,8 @@ namespace NineChronicles.DataProvider.Store
 
             if (agentAddress is { } agentAddressNotNull)
             {
-                hackAndSlashes = hackAndSlashes.Where(has => has.AgentAddress == agentAddressNotNull);
+                hackAndSlashes = hackAndSlashes
+                    .Where(has => has.AgentAddress == agentAddressNotNull.ToString());
             }
 
             if (limit is { } limitNotNull)
@@ -108,7 +111,7 @@ namespace NineChronicles.DataProvider.Store
         }
 
         public IEnumerable<StageRankingModel> GetStageRanking(
-            string? avatarAddress = null,
+            Address? avatarAddress = null,
             int? limit = null,
             bool isMimisbrunnr = false)
         {
@@ -124,9 +127,9 @@ namespace NineChronicles.DataProvider.Store
                             $"WHERE (`h`.`Mimisbrunnr` = {isMimisbrunnr}) AND `h`.`Cleared` " +
                             "GROUP BY `h`.`AvatarAddress`");
 
-            if (!(avatarAddress is null))
+            if (avatarAddress is { } avatarAddressNotNull)
             {
-                query = query.Where(s => s.AvatarAddress == avatarAddress);
+                query = query.Where(s => s.AvatarAddress == avatarAddressNotNull.ToString());
             }
 
             if (limit is { } limitNotNull)
@@ -138,9 +141,9 @@ namespace NineChronicles.DataProvider.Store
         }
 
         public void StoreCombinationConsumable(
-            string id,
-            string agentAddress,
-            string avatarAddress,
+            Guid id,
+            Address agentAddress,
+            Address avatarAddress,
             int recipeId,
             int slotIndex,
             long blockIndex)
@@ -149,9 +152,9 @@ namespace NineChronicles.DataProvider.Store
             ctx.CombinationConsumables!.Add(
                 new CombinationConsumableModel()
                 {
-                    Id = id,
-                    AgentAddress = agentAddress,
-                    AvatarAddress = avatarAddress,
+                    Id = id.ToString(),
+                    AgentAddress = agentAddress.ToString(),
+                    AvatarAddress = avatarAddress.ToString(),
                     RecipeId = recipeId,
                     SlotIndex = slotIndex,
                     BlockIndex = blockIndex,
@@ -168,8 +171,8 @@ namespace NineChronicles.DataProvider.Store
                 ctx.CraftRankings!.Add(
                     new CraftRankingModel()
                     {
-                        AgentAddress = agentAddress,
-                        AvatarAddress = avatarAddress,
+                        AgentAddress = agentAddress.ToString(),
+                        AvatarAddress = avatarAddress.ToString(),
                         CraftCount = 1,
                         BlockIndex = blockIndex,
                     });
@@ -178,11 +181,11 @@ namespace NineChronicles.DataProvider.Store
             ctx.SaveChanges();
         }
 
-        public void DeleteCombinationConsumable(string id)
+        public void DeleteCombinationConsumable(Guid id)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
 
-            var consumableData = ctx.CombinationConsumables?.Find(id);
+            var consumableData = ctx.CombinationConsumables?.Find(id.ToString());
             if (consumableData is { } combinationConsumable)
             {
                 if (ctx.CraftRankings?.Find(consumableData?.AvatarAddress) is { } rankingData)
@@ -197,9 +200,9 @@ namespace NineChronicles.DataProvider.Store
         }
 
         public void StoreCombinationEquipment(
-            string id,
-            string agentAddress,
-            string avatarAddress,
+            Guid id,
+            Address agentAddress,
+            Address avatarAddress,
             int recipeId,
             int slotIndex,
             int? subRecipeId,
@@ -209,9 +212,9 @@ namespace NineChronicles.DataProvider.Store
             ctx.CombinationEquipments!.Add(
                 new CombinationEquipmentModel()
                 {
-                    Id = id,
-                    AgentAddress = agentAddress,
-                    AvatarAddress = avatarAddress,
+                    Id = id.ToString(),
+                    AgentAddress = agentAddress.ToString(),
+                    AvatarAddress = avatarAddress.ToString(),
                     RecipeId = recipeId,
                     SlotIndex = slotIndex,
                     SubRecipeId = subRecipeId ?? 0,
@@ -229,8 +232,8 @@ namespace NineChronicles.DataProvider.Store
                 ctx.CraftRankings!.Add(
                     new CraftRankingModel()
                     {
-                        AgentAddress = agentAddress,
-                        AvatarAddress = avatarAddress,
+                        AgentAddress = agentAddress.ToString(),
+                        AvatarAddress = avatarAddress.ToString(),
                         CraftCount = 1,
                         BlockIndex = blockIndex,
                     });
@@ -239,10 +242,10 @@ namespace NineChronicles.DataProvider.Store
             ctx.SaveChanges();
         }
 
-        public void DeleteCombinationEquipment(string id)
+        public void DeleteCombinationEquipment(Guid id)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            var equipmentData = ctx.CombinationEquipments?.Find(id);
+            var equipmentData = ctx.CombinationEquipments?.Find(id.ToString());
             if (equipmentData is { } combinationEquipment)
             {
                 if (ctx.CraftRankings?.Find(equipmentData?.AvatarAddress) is { } rankingData)
@@ -257,11 +260,11 @@ namespace NineChronicles.DataProvider.Store
         }
 
         public void StoreItemEnhancement(
-            string id,
-            string agentAddress,
-            string avatarAddress,
-            string itemId,
-            string materialId,
+            Guid id,
+            Address agentAddress,
+            Address avatarAddress,
+            Guid itemId,
+            Guid materialId,
             int slotIndex,
             long blockIndex)
         {
@@ -269,11 +272,11 @@ namespace NineChronicles.DataProvider.Store
             ctx.ItemEnhancements!.Add(
                 new ItemEnhancementModel()
                 {
-                    Id = id,
-                    AgentAddress = agentAddress,
-                    AvatarAddress = avatarAddress,
-                    ItemId = itemId,
-                    MaterialId = materialId,
+                    Id = id.ToString(),
+                    AgentAddress = agentAddress.ToString(),
+                    AvatarAddress = avatarAddress.ToString(),
+                    ItemId = itemId.ToString(),
+                    MaterialId = materialId.ToString(),
                     SlotIndex = slotIndex,
                     BlockIndex = blockIndex,
                 }
@@ -289,8 +292,8 @@ namespace NineChronicles.DataProvider.Store
                 ctx.CraftRankings!.Add(
                     new CraftRankingModel()
                     {
-                        AgentAddress = agentAddress,
-                        AvatarAddress = avatarAddress,
+                        AgentAddress = agentAddress.ToString(),
+                        AvatarAddress = avatarAddress.ToString(),
                         CraftCount = 1,
                         BlockIndex = blockIndex,
                     });
@@ -299,10 +302,10 @@ namespace NineChronicles.DataProvider.Store
             ctx.SaveChanges();
         }
 
-        public void DeleteItemEnhancement(string id)
+        public void DeleteItemEnhancement(Guid id)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            var itemData = ctx.ItemEnhancements?.Find(id);
+            var itemData = ctx.ItemEnhancements?.Find(id.ToString());
             if (itemData is { } itemEnhancement)
             {
                 if (ctx.CraftRankings?.Find(itemData?.AvatarAddress) is { } rankingData)
@@ -317,7 +320,7 @@ namespace NineChronicles.DataProvider.Store
         }
 
         public IEnumerable<CraftRankingModel> GetCraftRanking(
-            string? avatarAddress = null,
+            Address? avatarAddress = null,
             int? limit = null)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
@@ -326,9 +329,9 @@ namespace NineChronicles.DataProvider.Store
                     "row_number() over(ORDER BY `CraftCount` DESC, `h`.`BlockIndex`) `Ranking` " +
                     "FROM `CraftRankings` AS `h` ");
 
-            if (!(avatarAddress is null))
+            if (avatarAddress is { } avatarAddressNotNull)
             {
-                query = query.Where(s => s.AvatarAddress == avatarAddress);
+                query = query.Where(s => s.AvatarAddress == avatarAddressNotNull.ToString());
             }
 
             if (limit is { } limitNotNull)
