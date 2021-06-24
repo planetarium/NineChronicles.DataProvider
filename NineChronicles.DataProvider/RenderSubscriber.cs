@@ -44,7 +44,6 @@ namespace NineChronicles.DataProvider
 
                         if (ev.Action is HackAndSlash has)
                         {
-                            Log.Debug("Storing HackAndSlash action in block #{0}", ev.BlockIndex);
                             string avatarName = ev.OutputStates.GetAvatarState(has.avatarAddress).name;
                             MySqlStore.StoreAgent(ev.Signer.ToString());
                             MySqlStore.StoreAvatar(
@@ -60,12 +59,11 @@ namespace NineChronicles.DataProvider
                                 isMimisbrunnr: has.stageId > 10000000,
                                 ev.BlockIndex
                             );
-                            Log.Debug("Stored HackAndSlash action in block #{0}", ev.BlockIndex);
+                            Log.Debug("Stored HackAndSlash action in block #{index}", ev.BlockIndex);
                         }
 
                         if (ev.Action is CombinationConsumable combinationConsumable)
                         {
-                            Log.Debug("Storing CombinationConsumable action in block #{0}", ev.BlockIndex);
                             string avatarName = ev.OutputStates.GetAvatarState(combinationConsumable.AvatarAddress).name;
                             MySqlStore.StoreAgent(ev.Signer.ToString());
                             MySqlStore.StoreAvatar(
@@ -80,12 +78,11 @@ namespace NineChronicles.DataProvider
                                 combinationConsumable.slotIndex,
                                 ev.BlockIndex
                             );
-                            Log.Debug("Stored CombinationConsumable action in block #{0}", ev.BlockIndex);
+                            Log.Debug("Stored CombinationConsumable action in block #{index}", ev.BlockIndex);
                         }
 
                         if (ev.Action is CombinationEquipment combinationEquipment)
                         {
-                            Log.Debug("Storing CombinationEquipment action in block #{0}", ev.BlockIndex);
                             string avatarName = ev.OutputStates.GetAvatarState(combinationEquipment.AvatarAddress).name;
                             MySqlStore.StoreAgent(ev.Signer.ToString());
                             MySqlStore.StoreAvatar(
@@ -101,12 +98,11 @@ namespace NineChronicles.DataProvider
                                 combinationEquipment.SubRecipeId,
                                 ev.BlockIndex
                             );
-                            Log.Debug("Stored CombinationEquipment action in block #{0}", ev.BlockIndex);
+                            Log.Debug("Stored CombinationEquipment action in block #{index}", ev.BlockIndex);
                         }
 
                         if (ev.Action is ItemEnhancement itemEnhancement)
                         {
-                            Log.Debug("Storing ItemEnhancement action in block #{0}", ev.BlockIndex);
                             string avatarName = ev.OutputStates.GetAvatarState(itemEnhancement.avatarAddress).name;
                             MySqlStore.StoreAgent(ev.Signer.ToString());
                             MySqlStore.StoreAvatar(
@@ -122,7 +118,7 @@ namespace NineChronicles.DataProvider
                                 itemEnhancement.slotIndex,
                                 ev.BlockIndex
                             );
-                            Log.Debug("Stored ItemEnhancement action in block #{0}", ev.BlockIndex);
+                            Log.Debug("Stored ItemEnhancement action in block #{index}", ev.BlockIndex);
                         }
                     });
 
@@ -137,30 +133,26 @@ namespace NineChronicles.DataProvider
 
                         if (ev.Action is HackAndSlash has)
                         {
-                            Log.Debug("Deleting HackAndSlash action in block #{0}", ev.BlockIndex);
                             MySqlStore.DeleteHackAndSlash(has.Id.ToString());
-                            Log.Debug("Deleted HackAndSlash action in block #{0}", ev.BlockIndex);
+                            Log.Debug("Deleted HackAndSlash action in block #{index}", ev.BlockIndex);
                         }
 
                         if (ev.Action is CombinationConsumable combinationConsumable)
                         {
-                            Log.Debug("Deleting CombinationConsumable action in block #{0}", ev.BlockIndex);
                             MySqlStore.DeleteCombinationConsumable(combinationConsumable.Id.ToString());
-                            Log.Debug("Deleted CombinationConsumable action in block #{0}", ev.BlockIndex);
+                            Log.Debug("Deleted CombinationConsumable action in block #{index}", ev.BlockIndex);
                         }
 
                         if (ev.Action is CombinationEquipment combinationEquipment)
                         {
-                            Log.Debug("Deleting CombinationEquipment action in block #{0}", ev.BlockIndex);
                             MySqlStore.DeleteCombinationEquipment(combinationEquipment.Id.ToString());
-                            Log.Debug("Deleted CombinationEquipment action in block #{0}", ev.BlockIndex);
+                            Log.Debug("Deleted CombinationEquipment action in block #{index}", ev.BlockIndex);
                         }
 
                         if (ev.Action is ItemEnhancement itemEnhancement)
                         {
-                            Log.Debug("Deleting ItemEnhancement action in block #{0}", ev.BlockIndex);
                             MySqlStore.DeleteItemEnhancement(itemEnhancement.Id.ToString());
-                            Log.Debug("Deleted ItemEnhancement action in block #{0}", ev.BlockIndex);
+                            Log.Debug("Deleted ItemEnhancement action in block #{index}", ev.BlockIndex);
                         }
                     });
             return Task.CompletedTask;
