@@ -22,7 +22,7 @@ namespace NineChronicles.DataProvider.Store
             string name)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            if (ctx.Avatars?.Find(address) is null)
+            if (ctx.Avatars?.Find(address.ToString()) is null)
             {
                 ctx.Avatars!.Add(
                     new AvatarModel()
@@ -161,7 +161,7 @@ namespace NineChronicles.DataProvider.Store
                 }
             );
 
-            if (ctx.CraftRankings?.Find(avatarAddress) is { } rankingData)
+            if (ctx.CraftRankings?.Find(avatarAddress.ToString()) is { } rankingData)
             {
                 rankingData.CraftCount += 1;
                 rankingData.BlockIndex = blockIndex;
@@ -222,7 +222,7 @@ namespace NineChronicles.DataProvider.Store
                 }
             );
 
-            if (ctx.CraftRankings?.Find(avatarAddress) is { } rankingData)
+            if (ctx.CraftRankings?.Find(avatarAddress.ToString()) is { } rankingData)
             {
                 rankingData.CraftCount += 1;
                 rankingData.BlockIndex = blockIndex;
@@ -282,7 +282,7 @@ namespace NineChronicles.DataProvider.Store
                 }
             );
 
-            if (ctx.CraftRankings?.Find(avatarAddress) is { } rankingData)
+            if (ctx.CraftRankings?.Find(avatarAddress.ToString()) is { } rankingData)
             {
                 rankingData.CraftCount += 1;
                 rankingData.BlockIndex = blockIndex;
