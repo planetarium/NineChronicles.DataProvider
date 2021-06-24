@@ -341,5 +341,64 @@ namespace NineChronicles.DataProvider.Store
 
             return query.ToList();
         }
+
+        public void StoreEquipment(
+            string itemId,
+            string agentAddress,
+            string avatarAddress,
+            int equipmentId,
+            int cp,
+            int level,
+            string itemSubType)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            if (ctx.Equipments?.Find(itemId) is { } equipmentData)
+            {
+                equipmentData.AgentAddress = agentAddress;
+                equipmentData.AvatarAddress = avatarAddress;
+                equipmentData.Cp = cp;
+                equipmentData.Level = level;
+            }
+            else
+            {
+                ctx.Equipments!.Add(
+                    new EquipmentModel()
+                    {
+                        ItemId = itemId,
+                        AgentAddress = agentAddress,
+                        AvatarAddress = avatarAddress,
+                        EquipmentId = equipmentId,
+                        Cp = cp,
+                        Level = level,
+                        ItemSubType = itemSubType,
+                    });
+            }
+
+            ctx.SaveChanges();
+        }
+
+        public IEnumerable<EquipmentRankingModel> GetEquipmentRanking(
+            string? avatarAddress = null,
+            int? limit = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            var query = ctx.Set<EquipmentRankingModel>()
+                .FromSqlRaw("SELECT `h`.`ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, " +
+                            "MAX(`h`.`Cp`) AS `Cp`, `Level`, `ItemSubType`, " +
+                            "row_number() over(ORDER BY MAX(`h`.`Cp`) DESC) Ranking " +
+                            "FROM `Equipments` AS `h` GROUP BY `h`.`AvatarAddress` ");
+
+            if (!(avatarAddress is null))
+            {
+                query = query.Where(s => s.AvatarAddress == avatarAddress);
+            }
+
+            if (limit is { } limitNotNull)
+            {
+                query = query.Take(limitNotNull);
+            }
+
+            return query.ToList();
+        }
     }
 }

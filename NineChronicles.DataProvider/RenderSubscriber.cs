@@ -6,6 +6,8 @@ namespace NineChronicles.DataProvider
     using Lib9c.Renderer;
     using Microsoft.Extensions.Hosting;
     using Nekoyume.Action;
+    using Nekoyume.Battle;
+    using Nekoyume.Model.Item;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.Headless;
     using Serilog;
@@ -60,6 +62,14 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex
                             );
                             Log.Debug("Stored HackAndSlash action in block #{index}", ev.BlockIndex);
+                            var inventory = ev.OutputStates.GetAvatarState(has.avatarAddress).inventory;
+                            if (inventory != null)
+                            {
+                                StoreEquipments(
+                                    ev.Signer.ToString(),
+                                    has.avatarAddress.ToString(),
+                                    inventory);
+                            }
                         }
 
                         if (ev.Action is CombinationConsumable combinationConsumable)
@@ -156,6 +166,30 @@ namespace NineChronicles.DataProvider
                         }
                     });
             return Task.CompletedTask;
+        }
+
+        private void StoreEquipments(
+            string agentAddress,
+            string avatarAddress,
+            Inventory? inventory)
+        {
+            var equipments = inventory?.Equipments;
+            if (equipments != null)
+            {
+                Log.Debug("Storing equipments of avatar: {0}", avatarAddress);
+                foreach (var equipment in equipments)
+                {
+                    var cp = CPHelper.GetCP(equipment);
+                    MySqlStore.StoreEquipment(
+                        equipment.ItemId.ToString(),
+                        agentAddress,
+                        avatarAddress,
+                        equipment.Id,
+                        cp,
+                        equipment.level,
+                        equipment.ItemSubType.ToString());
+                }
+            }
         }
     }
 }
