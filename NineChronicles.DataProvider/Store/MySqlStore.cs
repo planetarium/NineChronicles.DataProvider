@@ -5,6 +5,7 @@ namespace NineChronicles.DataProvider.Store
     using System.Linq;
     using Libplanet;
     using Microsoft.EntityFrameworkCore;
+    using Nekoyume.Model.Item;
     using NineChronicles.DataProvider.Store.Models;
 
     public class MySqlStore
@@ -342,20 +343,20 @@ namespace NineChronicles.DataProvider.Store
             return query.ToList();
         }
 
-        public void StoreEquipment(
-            string itemId,
-            string agentAddress,
-            string avatarAddress,
+        public void ProcessEquipment(
+            Guid itemId,
+            Address agentAddress,
+            Address avatarAddress,
             int equipmentId,
             int cp,
             int level,
-            string itemSubType)
+            ItemSubType itemSubType)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            if (ctx.Equipments?.Find(itemId) is { } equipmentData)
+            if (ctx.Equipments?.Find(itemId.ToString()) is { } equipmentData)
             {
-                equipmentData.AgentAddress = agentAddress;
-                equipmentData.AvatarAddress = avatarAddress;
+                equipmentData.AgentAddress = agentAddress.ToString();
+                equipmentData.AvatarAddress = avatarAddress.ToString();
                 equipmentData.Cp = cp;
                 equipmentData.Level = level;
             }
@@ -364,13 +365,13 @@ namespace NineChronicles.DataProvider.Store
                 ctx.Equipments!.Add(
                     new EquipmentModel()
                     {
-                        ItemId = itemId,
-                        AgentAddress = agentAddress,
-                        AvatarAddress = avatarAddress,
+                        ItemId = itemId.ToString(),
+                        AgentAddress = agentAddress.ToString(),
+                        AvatarAddress = avatarAddress.ToString(),
                         EquipmentId = equipmentId,
                         Cp = cp,
                         Level = level,
-                        ItemSubType = itemSubType,
+                        ItemSubType = itemSubType.ToString(),
                     });
             }
 
@@ -378,19 +379,27 @@ namespace NineChronicles.DataProvider.Store
         }
 
         public IEnumerable<EquipmentRankingModel> GetEquipmentRanking(
-            string? avatarAddress = null,
+            string? itemSubType = null,
             int? limit = null)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            var query = ctx.Set<EquipmentRankingModel>()
-                .FromSqlRaw("SELECT `h`.`ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, " +
-                            "MAX(`h`.`Cp`) AS `Cp`, `Level`, `ItemSubType`, " +
-                            "row_number() over(ORDER BY MAX(`h`.`Cp`) DESC) Ranking " +
-                            "FROM `Equipments` AS `h` GROUP BY `h`.`AvatarAddress` ");
-
-            if (!(avatarAddress is null))
+            IQueryable<EquipmentRankingModel>? query = null;
+            if (itemSubType is { } itemSubTypeNotNull)
             {
-                query = query.Where(s => s.AvatarAddress == avatarAddress);
+                query = ctx.Set<EquipmentRankingModel>()
+                    .FromSqlRaw("SELECT `h`.`ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, " +
+                                "MAX(`h`.`Cp`) AS `Cp`, `Level`, `ItemSubType`, " +
+                                "row_number() over(ORDER BY MAX(`h`.`Cp`) DESC) Ranking " +
+                                $"FROM `Equipments` AS `h` where `ItemSubType` = \"{itemSubTypeNotNull}\" " +
+                                "GROUP BY `h`.`AvatarAddress` ");
+            }
+            else
+            {
+                query = ctx.Set<EquipmentRankingModel>()
+                    .FromSqlRaw("SELECT `h`.`ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, " +
+                                "MAX(`h`.`Cp`) AS `Cp`, `Level`, `ItemSubType`, " +
+                                "row_number() over(ORDER BY MAX(`h`.`Cp`) DESC) Ranking " +
+                                "FROM `Equipments` AS `h` GROUP BY `h`.`AvatarAddress` ");
             }
 
             if (limit is { } limitNotNull)
@@ -398,7 +407,8 @@ namespace NineChronicles.DataProvider.Store
                 query = query.Take(limitNotNull);
             }
 
-            return query.ToList();
+            var list = query.ToList();
+            return list;
         }
     }
 }
