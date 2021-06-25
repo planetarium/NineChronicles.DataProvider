@@ -113,10 +113,10 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`CraftRankings` (
     KEY `fk_CrafRankings_Agent1_idx` (`AgentAddress`),
     CONSTRAINT `fk_CrafRankings_Agent1`
     FOREIGN KEY (`AgentAddress`)
-    REFERENCES `agents` (`Address`),
+    REFERENCES `Agents` (`Address`),
     CONSTRAINT `fk_CrafRankings_Avatar1`
     FOREIGN KEY (`AvatarAddress`)
-    REFERENCES `avatars` (`Address`)
+    REFERENCES `Avatars` (`Address`)
 );
 CREATE TABLE IF NOT EXISTS `data_provider`.`Equipments` (
     `ItemId` VARCHAR(100) NOT NULL,
