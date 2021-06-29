@@ -12,8 +12,22 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<HackAndSlashModel>? HackAndSlashes { get; set; }
 
+        public DbSet<StageRankingModel>? StageRankings { get; set; }
+
+        public DbSet<CombinationConsumableModel>? CombinationConsumables { get; set; }
+
+        public DbSet<CombinationEquipmentModel>? CombinationEquipments { get; set; }
+
+        public DbSet<ItemEnhancementModel>? ItemEnhancements { get; set; }
+
+        public DbSet<CraftRankingModel>? CraftRankings { get; set; }
+
         public DbSet<AvatarModel>? Avatars { get; set; }
 
         public DbSet<AgentModel>? Agents { get; set; }
+
+        public DbSet<EquipmentModel>? Equipments { get; set; }
+
+        public DbSet<EquipmentRankingModel>? EquipmentRankings { get; set; }
     }
 }

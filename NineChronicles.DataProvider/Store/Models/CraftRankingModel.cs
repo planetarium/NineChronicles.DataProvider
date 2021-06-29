@@ -2,17 +2,18 @@
 {
     using System.ComponentModel.DataAnnotations;
 
-    public class StageRankingModel
+    public class CraftRankingModel
     {
         [Key]
-        public int Ranking { get; set; }
-
-        public int ClearedStageId { get; set; }
 
         public string? AvatarAddress { get; set; }
 
-        public string? Name { get; set; }
+        public string? AgentAddress { get; set; }
 
         public long BlockIndex { get; set; }
+
+        public int CraftCount { get; set; }
+
+        public int Ranking { get; set; }
     }
 }

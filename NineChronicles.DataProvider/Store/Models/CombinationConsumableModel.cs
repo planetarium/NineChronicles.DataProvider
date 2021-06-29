@@ -2,7 +2,7 @@ namespace NineChronicles.DataProvider.Store.Models
 {
     using System.ComponentModel.DataAnnotations;
 
-    public class HackAndSlashModel
+    public class CombinationConsumableModel
     {
         [Key]
         public string? Id { get; set; }
@@ -15,11 +15,9 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public AvatarModel? Avatar { get; set; }
 
-        public int StageId { get; set; }
+        public int RecipeId { get; set; }
 
-        public bool Cleared { get; set; }
-
-        public bool Mimisbrunnr { get; set; }
+        public int SlotIndex { get; set; }
 
         public long BlockIndex { get; set; }
     }

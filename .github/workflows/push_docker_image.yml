@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - migration
+      - development
 
 jobs:
   build_and_push:
