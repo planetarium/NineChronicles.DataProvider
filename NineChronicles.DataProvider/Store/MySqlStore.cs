@@ -407,8 +407,7 @@ namespace NineChronicles.DataProvider.Store
                 query = query.Take(limitNotNull);
             }
 
-            var list = query.ToList();
-            return list;
+            return query.ToList();
         }
     }
 }
