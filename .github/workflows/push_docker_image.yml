@@ -6,6 +6,7 @@ on:
       - main
       - migration
       - development
+      - craft-equip-migration
 
 jobs:
   build_and_push:

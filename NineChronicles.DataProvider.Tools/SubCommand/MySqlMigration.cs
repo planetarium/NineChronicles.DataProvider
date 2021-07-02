@@ -24,18 +24,24 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     {
         private const string AgentDbName = "Agents";
         private const string AvatarDbName = "Avatars";
-        private const string HasDbName = "HackAndSlashes";
+        private const string CCDbName = "CombinationConsumables";
+        private const string CEDbName = "CombinationEquipments";
+        private const string IEDbName = "ItemEnhancements";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
+        private StreamWriter _ccBulkFile;
+        private StreamWriter _ceBulkFile;
+        private StreamWriter _ieBulkFile;
         private StreamWriter _agentBulkFile;
         private StreamWriter _avatarBulkFile;
-        private StreamWriter _hasBulkFile;
         private List<string> _agentList;
         private List<string> _avatarList;
+        private List<string> _ccFiles;
+        private List<string> _ceFiles;
+        private List<string> _ieFiles;
         private List<string> _agentFiles;
         private List<string> _avatarFiles;
-        private List<string> _hasFiles;
 
         [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
         public void Migration(
@@ -156,9 +162,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             Console.WriteLine("Start migration.");
 
             // files to store bulk file paths (new file created every 10000 blocks for bulk load performance)
+            _ccFiles = new List<string>();
+            _ceFiles = new List<string>();
+            _ieFiles = new List<string>();
             _agentFiles = new List<string>();
             _avatarFiles = new List<string>();
-            _hasFiles = new List<string>();
 
             // lists to keep track of inserted addresses to minimize duplicates
             _agentList = new List<string>();
@@ -228,9 +236,19 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     BulkInsert(AvatarDbName, path);
                 }
 
-                foreach (var path in _hasFiles)
+                foreach (var path in _ccFiles)
                 {
-                    BulkInsert(HasDbName, path);
+                    BulkInsert(CCDbName, path);
+                }
+
+                foreach (var path in _ceFiles)
+                {
+                    BulkInsert(CEDbName, path);
+                }
+
+                foreach (var path in _ieFiles)
+                {
+                    BulkInsert(IEDbName, path);
                 }
             }
             catch (Exception e)
@@ -252,41 +270,194 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     {
                         if (ae.Action is PolymorphicAction<ActionBase> action)
                         {
-                            // avatarNames will be stored as "N/A" for optimzation
-                            if (action.InnerAction is HackAndSlash2 hasAction2)
+                            if (action.InnerAction is CombinationConsumable cc)
                             {
-                                WriteHackAndSlash(
-                                    hasAction2.Id,
-                                    ae.InputContext.BlockIndex,
+                                WriteCC(
+                                    cc.Id,
                                     ae.InputContext.Signer,
-                                    hasAction2.avatarAddress,
-                                    "N/A",
-                                    hasAction2.stageId,
-                                    hasAction2.Result is { IsClear: true });
+                                    cc.AvatarAddress,
+                                    cc.recipeId,
+                                    cc.slotIndex,
+                                    ae.InputContext.BlockIndex);
                             }
 
-                            if (action.InnerAction is HackAndSlash3 hasAction3)
+                            if (action.InnerAction is CombinationConsumable2 cc2)
                             {
-                                WriteHackAndSlash(
-                                    hasAction3.Id,
-                                    ae.InputContext.BlockIndex,
+                                WriteCC(
+                                    cc2.Id,
                                     ae.InputContext.Signer,
-                                    hasAction3.avatarAddress,
-                                    "N/A",
-                                    hasAction3.stageId,
-                                    hasAction3.Result is { IsClear: true });
+                                    cc2.AvatarAddress,
+                                    cc2.recipeId,
+                                    cc2.slotIndex,
+                                    ae.InputContext.BlockIndex);
                             }
 
-                            if (action.InnerAction is HackAndSlash4 hasAction4)
+                            if (action.InnerAction is CombinationConsumable3 cc3)
                             {
-                                WriteHackAndSlash(
-                                    hasAction4.Id,
-                                    ae.InputContext.BlockIndex,
+                                WriteCC(
+                                    cc3.Id,
                                     ae.InputContext.Signer,
-                                    hasAction4.avatarAddress,
-                                    "N/A",
-                                    hasAction4.stageId,
-                                    hasAction4.Result is { IsClear: true });
+                                    cc3.AvatarAddress,
+                                    cc3.recipeId,
+                                    cc3.slotIndex,
+                                    ae.InputContext.BlockIndex);
+                            }
+
+                            if (action.InnerAction is CombinationConsumable4 cc4)
+                            {
+                                WriteCC(
+                                    cc4.Id,
+                                    ae.InputContext.Signer,
+                                    cc4.AvatarAddress,
+                                    cc4.recipeId,
+                                    cc4.slotIndex,
+                                    ae.InputContext.BlockIndex);
+                            }
+
+                            if (action.InnerAction is CombinationConsumable5 cc5)
+                            {
+                                WriteCC(
+                                    cc5.Id,
+                                    ae.InputContext.Signer,
+                                    cc5.AvatarAddress,
+                                    cc5.recipeId,
+                                    cc5.slotIndex,
+                                    ae.InputContext.BlockIndex);
+                            }
+
+                            if (action.InnerAction is CombinationEquipment ce)
+                            {
+                                WriteCE(
+                                    ce.Id,
+                                    ae.InputContext.Signer,
+                                    ce.AvatarAddress,
+                                    ce.RecipeId,
+                                    ce.SlotIndex,
+                                    ce.SubRecipeId ?? 0,
+                                    ae.InputContext.BlockIndex);
+                            }
+
+                            if (action.InnerAction is CombinationEquipment2 ce2)
+                            {
+                                WriteCE(
+                                    ce2.Id,
+                                    ae.InputContext.Signer,
+                                    ce2.AvatarAddress,
+                                    ce2.RecipeId,
+                                    ce2.SlotIndex,
+                                    ce2.SubRecipeId ?? 0,
+                                    ae.InputContext.BlockIndex);
+                            }
+
+                            if (action.InnerAction is CombinationEquipment3 ce3)
+                            {
+                                WriteCE(
+                                    ce3.Id,
+                                    ae.InputContext.Signer,
+                                    ce3.AvatarAddress,
+                                    ce3.RecipeId,
+                                    ce3.SlotIndex,
+                                    ce3.SubRecipeId ?? 0,
+                                    ae.InputContext.BlockIndex);
+                            }
+
+                            if (action.InnerAction is CombinationEquipment4 ce4)
+                            {
+                                WriteCE(
+                                    ce4.Id,
+                                    ae.InputContext.Signer,
+                                    ce4.AvatarAddress,
+                                    ce4.RecipeId,
+                                    ce4.SlotIndex,
+                                    ce4.SubRecipeId ?? 0,
+                                    ae.InputContext.BlockIndex);
+                            }
+
+                            if (action.InnerAction is CombinationEquipment5 ce5)
+                            {
+                                WriteCE(
+                                    ce5.Id,
+                                    ae.InputContext.Signer,
+                                    ce5.AvatarAddress,
+                                    ce5.RecipeId,
+                                    ce5.SlotIndex,
+                                    ce5.SubRecipeId ?? 0,
+                                    ae.InputContext.BlockIndex);
+                            }
+
+                            if (action.InnerAction is ItemEnhancement ie)
+                            {
+                                WriteIE(
+                                    ie.Id,
+                                    ae.InputContext.Signer,
+                                    ie.avatarAddress,
+                                    ie.itemId,
+                                    ie.materialId,
+                                    ie.slotIndex,
+                                    ae.InputContext.BlockIndex);
+                            }
+
+                            if (action.InnerAction is ItemEnhancement2 ie2)
+                            {
+                                WriteIE(
+                                    ie2.Id,
+                                    ae.InputContext.Signer,
+                                    ie2.avatarAddress,
+                                    ie2.itemId,
+                                    ie2.materialId,
+                                    ie2.slotIndex,
+                                    ae.InputContext.BlockIndex);
+                            }
+
+                            if (action.InnerAction is ItemEnhancement3 ie3)
+                            {
+                                WriteIE(
+                                    ie3.Id,
+                                    ae.InputContext.Signer,
+                                    ie3.avatarAddress,
+                                    ie3.itemId,
+                                    ie3.materialId,
+                                    ie3.slotIndex,
+                                    ae.InputContext.BlockIndex);
+                            }
+
+                            if (action.InnerAction is ItemEnhancement4 ie4)
+                            {
+                                WriteIE(
+                                    ie4.Id,
+                                    ae.InputContext.Signer,
+                                    ie4.avatarAddress,
+                                    ie4.itemId,
+                                    ie4.materialId,
+                                    ie4.slotIndex,
+                                    ae.InputContext.BlockIndex);
+                            }
+
+                            if (action.InnerAction is ItemEnhancement5 ie5)
+                            {
+                                WriteIE(
+                                    ie5.Id,
+                                    ae.InputContext.Signer,
+                                    ie5.avatarAddress,
+                                    ie5.itemId,
+                                    ie5.materialId,
+                                    ie5.slotIndex,
+                                    ae.InputContext.BlockIndex);
+                            }
+
+                            if (action.InnerAction is ItemEnhancement6 ie6)
+                            {
+                                foreach (var materialId in ie6.materialIds)
+                                {
+                                    WriteIE(
+                                        ie6.Id,
+                                        ae.InputContext.Signer,
+                                        ie6.avatarAddress,
+                                        ie6.itemId,
+                                        materialId,
+                                        ie6.slotIndex,
+                                        ae.InputContext.BlockIndex);
+                                }
                             }
                         }
                     }
@@ -312,8 +483,14 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _avatarBulkFile.Flush();
             _avatarBulkFile.Close();
 
-            _hasBulkFile.Flush();
-            _hasBulkFile.Close();
+            _ccBulkFile.Flush();
+            _ccBulkFile.Close();
+
+            _ceBulkFile.Flush();
+            _ceBulkFile.Close();
+
+            _ieBulkFile.Flush();
+            _ieBulkFile.Close();
         }
 
         private void CreateBulkFiles()
@@ -324,12 +501,20 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             string avatarFilePath = Path.GetTempFileName();
             _avatarBulkFile = new StreamWriter(avatarFilePath);
 
-            string hasFilePath = Path.GetTempFileName();
-            _hasBulkFile = new StreamWriter(hasFilePath);
+            string ccFilePath = Path.GetTempFileName();
+            _ccBulkFile = new StreamWriter(ccFilePath);
+
+            string ceFilePath = Path.GetTempFileName();
+            _ceBulkFile = new StreamWriter(ceFilePath);
+
+            string ieFilePath = Path.GetTempFileName();
+            _ieBulkFile = new StreamWriter(ieFilePath);
 
             _agentFiles.Add(agentFilePath);
             _avatarFiles.Add(avatarFilePath);
-            _hasFiles.Add(hasFilePath);
+            _ccFiles.Add(ccFilePath);
+            _ceFiles.Add(ceFilePath);
+            _ieFiles.Add(ieFilePath);
         }
 
         private void BulkInsert(
@@ -363,14 +548,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             }
         }
 
-        private void WriteHackAndSlash(
-            Guid actionId,
-            long blockIndex,
+        private void WriteCC(
+            Guid id,
             Address agentAddress,
             Address avatarAddress,
-            string avatarName,
-            int stageId,
-            bool isClear)
+            int recipeId,
+            int slotIndex,
+            long blockIndex)
         {
             // check if address is already in _agentList
             if (!_agentList.Contains(agentAddress.ToString()))
@@ -386,19 +570,94 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 _avatarBulkFile.WriteLine(
                     $"{avatarAddress.ToString()};" +
                     $"{agentAddress.ToString()};" +
-                    $"{avatarName ?? "N/A"}");
+                    "N/A");
                 _avatarList.Add(avatarAddress.ToString());
             }
 
-            _hasBulkFile.WriteLine(
-                $"{actionId.ToString()};" +
+            _ccBulkFile.WriteLine(
+                $"{id.ToString()};" +
                 $"{avatarAddress.ToString()};" +
                 $"{agentAddress.ToString()};" +
-                $"{stageId};" +
-                $"{(isClear ? 1 : 0)};" +
-                $"{(stageId > 10000000 ? 1 : 0)};" +
+                $"{recipeId};" +
+                $"{slotIndex};" +
                 $"{blockIndex.ToString()}");
-            Console.WriteLine("Writing HackAndSlash action in block #{0}", blockIndex);
+            Console.WriteLine("Writing CC action in block #{0}", blockIndex);
+        }
+
+        private void WriteCE(
+            Guid id,
+            Address agentAddress,
+            Address avatarAddress,
+            int recipeId,
+            int slotIndex,
+            int? subRecipeId,
+            long blockIndex)
+        {
+            // check if address is already in _agentList
+            if (!_agentList.Contains(agentAddress.ToString()))
+            {
+                _agentBulkFile.WriteLine(
+                    $"{agentAddress.ToString()};");
+                _agentList.Add(agentAddress.ToString());
+            }
+
+            // check if address is already in _avatarList
+            if (!_avatarList.Contains(avatarAddress.ToString()))
+            {
+                _avatarBulkFile.WriteLine(
+                    $"{avatarAddress.ToString()};" +
+                    $"{agentAddress.ToString()};" +
+                    "N/A");
+                _avatarList.Add(avatarAddress.ToString());
+            }
+
+            _ceBulkFile.WriteLine(
+                $"{id.ToString()};" +
+                $"{avatarAddress.ToString()};" +
+                $"{agentAddress.ToString()};" +
+                $"{recipeId};" +
+                $"{slotIndex};" +
+                $"{subRecipeId ?? 0};" +
+                $"{blockIndex.ToString()}");
+            Console.WriteLine("Writing CE action in block #{0}", blockIndex);
+        }
+
+        private void WriteIE(
+            Guid id,
+            Address agentAddress,
+            Address avatarAddress,
+            Guid itemId,
+            Guid materialId,
+            int slotIndex,
+            long blockIndex)
+        {
+            // check if address is already in _agentList
+            if (!_agentList.Contains(agentAddress.ToString()))
+            {
+                _agentBulkFile.WriteLine(
+                    $"{agentAddress.ToString()};");
+                _agentList.Add(agentAddress.ToString());
+            }
+
+            // check if address is already in _avatarList
+            if (!_avatarList.Contains(avatarAddress.ToString()))
+            {
+                _avatarBulkFile.WriteLine(
+                    $"{avatarAddress.ToString()};" +
+                    $"{agentAddress.ToString()};" +
+                    "N/A");
+                _avatarList.Add(avatarAddress.ToString());
+            }
+
+            _ieBulkFile.WriteLine(
+                $"{id.ToString()};" +
+                $"{avatarAddress.ToString()};" +
+                $"{agentAddress.ToString()};" +
+                $"{itemId.ToString()};" +
+                $"{materialId.ToString()};" +
+                $"{slotIndex};" +
+                $"{blockIndex.ToString()}");
+            Console.WriteLine("Writing IE action in block #{0}", blockIndex);
         }
     }
 }
