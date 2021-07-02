@@ -80,7 +80,7 @@ namespace NineChronicles.DataProvider.Store
         public void DeleteHackAndSlash(string id)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            if (ctx.HackAndSlashes!.Find(id) is HackAndSlashModel has)
+            if (ctx.HackAndSlashes!.Find(id) is { } has)
             {
                 ctx.Remove(has);
             }
@@ -100,7 +100,7 @@ namespace NineChronicles.DataProvider.Store
                 hackAndSlashes = hackAndSlashes.Where(has => has.AgentAddress == agentAddressNotNull);
             }
 
-            if (limit is int limitNotNull)
+            if (limit is { } limitNotNull)
             {
                 hackAndSlashes = hackAndSlashes.Take(limitNotNull);
             }
@@ -115,8 +115,8 @@ namespace NineChronicles.DataProvider.Store
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             var query = ctx.Set<StageRankingModel>()
-                .FromSqlRaw("SELECT `h`.`AvatarAddress`, MAX(`h`.`StageId`) AS `ClearedStageId`, (" +
-                            "SELECT `a`.`Name` " +
+                .FromSqlRaw("SELECT `h`.`AvatarAddress`, `h`.`AgentAddress`, MAX(`h`.`StageId`) " +
+                            "AS `ClearedStageId`, (SELECT `a`.`Name` " +
                             "FROM `Avatars` AS `a` " +
                             "WHERE `a`.`Address` = `h`.`AvatarAddress` " +
                             "LIMIT 1) AS `Name`, MIN(`h`.`BlockIndex`) AS `BlockIndex`, " +
