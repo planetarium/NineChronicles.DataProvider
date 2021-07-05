@@ -51,6 +51,18 @@
                     int? limit = context.GetArgument<int?>("limit", null);
                     return Store.GetCraftRanking(avatarAddress, limit);
                 });
+            Field<ListGraphType<EquipmentRankingType>>(
+                name: "EquipmentRanking",
+                arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType> { Name = "itemSubType" },
+                    new QueryArgument<IntGraphType> { Name = "limit" }
+                ),
+                resolve: context =>
+                {
+                    string? itemSubType = context.GetArgument<string?>("itemSubType", null);
+                    int? limit = context.GetArgument<int?>("limit", null);
+                    return Store.GetEquipmentRanking(itemSubType, limit);
+                });
         }
 
         private MySqlStore Store { get; }

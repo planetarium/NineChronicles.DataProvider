@@ -25,5 +25,9 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<AvatarModel>? Avatars { get; set; }
 
         public DbSet<AgentModel>? Agents { get; set; }
+
+        public DbSet<EquipmentModel>? Equipments { get; set; }
+
+        public DbSet<EquipmentRankingModel>? EquipmentRankings { get; set; }
     }
 }
