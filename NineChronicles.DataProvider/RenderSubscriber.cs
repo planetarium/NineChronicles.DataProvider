@@ -1,6 +1,7 @@
 namespace NineChronicles.DataProvider
 {
     using System;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Lib9c.Renderer;
@@ -103,18 +104,21 @@ namespace NineChronicles.DataProvider
                             );
                             Log.Debug("Stored CombinationEquipment action in block #{index}", ev.BlockIndex);
 
-                            var inventory = ev.OutputStates.GetAvatarState(combinationEquipment.AvatarAddress).inventory;
-                            if (inventory is { } inventoryNotNull)
+                            var slotState = ev.OutputStates.GetCombinationSlotState(
+                                combinationEquipment.AvatarAddress,
+                                combinationEquipment.SlotIndex);
+
+                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                             {
-                                ProcessEquipments(
+                                ProcessEquipmentData(
                                     ev.Signer,
                                     combinationEquipment.AvatarAddress,
-                                    inventoryNotNull,
+                                    (Equipment)slotState.Result.itemUsable,
                                     avatarName);
                             }
 
                             Log.Debug(
-                                "Stored avatar {address}'s equipments in block #{index}",
+                                "Stored avatar {address}'s equipment in block #{index}",
                                 combinationEquipment.AvatarAddress,
                                 ev.BlockIndex);
                         }
@@ -138,18 +142,21 @@ namespace NineChronicles.DataProvider
                             );
                             Log.Debug("Stored ItemEnhancement action in block #{index}", ev.BlockIndex);
 
-                            var inventory = ev.OutputStates.GetAvatarState(itemEnhancement.avatarAddress).inventory;
-                            if (inventory is { } inventoryNotNull)
+                            var slotState = ev.OutputStates.GetCombinationSlotState(
+                                itemEnhancement.avatarAddress,
+                                itemEnhancement.slotIndex);
+
+                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                             {
-                                ProcessEquipments(
+                                ProcessEquipmentData(
                                     ev.Signer,
                                     itemEnhancement.avatarAddress,
-                                    inventoryNotNull,
+                                    (Equipment)slotState.Result.itemUsable,
                                     avatarName);
                             }
 
                             Log.Debug(
-                                "Stored avatar {address}'s equipments in block #{index}",
+                                "Stored avatar {address}'s equipment in block #{index}",
                                 itemEnhancement.avatarAddress,
                                 ev.BlockIndex);
                         }
@@ -157,43 +164,27 @@ namespace NineChronicles.DataProvider
                         if (ev.Action is Buy buy)
                         {
                             string avatarName = ev.OutputStates.GetAvatarState(buy.buyerAvatarAddress).name;
-                            var inventory = ev.OutputStates.GetAvatarState(buy.buyerAvatarAddress).inventory;
-                            if (inventory is { } inventoryNotNull)
-                            {
-                                ProcessEquipments(
-                                    ev.Signer,
-                                    buy.buyerAvatarAddress,
-                                    inventoryNotNull,
-                                    avatarName);
-                            }
-
-                            Log.Debug(
-                                "Stored avatar {address}'s equipments in block #{index}",
-                                buy.buyerAvatarAddress,
-                                ev.BlockIndex);
-                        }
-
-                        if (ev.Action is Sell sell)
-                        {
-                            string avatarName = ev.OutputStates.GetAvatarState(sell.sellerAvatarAddress).name;
                             MySqlStore.StoreAgent(ev.Signer);
                             MySqlStore.StoreAvatar(
-                                sell.sellerAvatarAddress,
+                                buy.buyerAvatarAddress,
                                 ev.Signer,
                                 avatarName);
-                            var inventory = ev.OutputStates.GetAvatarState(sell.sellerAvatarAddress).inventory;
-                            if (inventory is { } inventoryNotNull)
+
+                            foreach (var purchaseResult in buy.buyerMultipleResult.purchaseResults)
                             {
-                                ProcessEquipments(
-                                    ev.Signer,
-                                    sell.sellerAvatarAddress,
-                                    inventoryNotNull,
-                                    avatarName);
+                                if (purchaseResult.itemUsable is { } itemNotNull)
+                                {
+                                    ProcessEquipmentData(
+                                        ev.Signer,
+                                        buy.buyerAvatarAddress,
+                                        (Equipment)itemNotNull,
+                                        avatarName);
+                                }
                             }
 
                             Log.Debug(
-                                "Stored avatar {address}'s equipments in block #{index}",
-                                sell.sellerAvatarAddress,
+                                "Stored avatar {address}'s equipment in block #{index}",
+                                buy.buyerAvatarAddress,
                                 ev.BlockIndex);
                         }
                     });
@@ -223,14 +214,18 @@ namespace NineChronicles.DataProvider
                         {
                             MySqlStore.DeleteCombinationEquipment(combinationEquipment.Id);
                             Log.Debug("Deleted CombinationEquipment action in block #{index}", ev.BlockIndex);
-                            string avatarName = ev.OutputStates.GetAvatarState(combinationEquipment.AvatarAddress).name;
-                            var inventory = ev.OutputStates.GetAvatarState(combinationEquipment.AvatarAddress).inventory;
-                            if (inventory is { } inventoryNotNull)
+                            string avatarName = ev.OutputStates.GetAvatarState(combinationEquipment.AvatarAddress)
+                                .name;
+                            var slotState = ev.OutputStates.GetCombinationSlotState(
+                                combinationEquipment.AvatarAddress,
+                                combinationEquipment.SlotIndex);
+
+                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                             {
-                                ProcessEquipments(
+                                ProcessEquipmentData(
                                     ev.Signer,
                                     combinationEquipment.AvatarAddress,
-                                    inventoryNotNull,
+                                    (Equipment)slotState.Result.itemUsable,
                                     avatarName);
                             }
 
@@ -245,13 +240,16 @@ namespace NineChronicles.DataProvider
                             MySqlStore.DeleteItemEnhancement(itemEnhancement.Id);
                             Log.Debug("Deleted ItemEnhancement action in block #{index}", ev.BlockIndex);
                             string avatarName = ev.OutputStates.GetAvatarState(itemEnhancement.avatarAddress).name;
-                            var inventory = ev.OutputStates.GetAvatarState(itemEnhancement.avatarAddress).inventory;
-                            if (inventory is { } inventoryNotNull)
+                            var slotState = ev.OutputStates.GetCombinationSlotState(
+                                itemEnhancement.avatarAddress,
+                                itemEnhancement.slotIndex);
+
+                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                             {
-                                ProcessEquipments(
+                                ProcessEquipmentData(
                                     ev.Signer,
                                     itemEnhancement.avatarAddress,
-                                    inventoryNotNull,
+                                    (Equipment)slotState.Result.itemUsable,
                                     avatarName);
                             }
 
@@ -263,49 +261,37 @@ namespace NineChronicles.DataProvider
 
                         if (ev.Action is Buy buy)
                         {
-                            string avatarName = ev.OutputStates.GetAvatarState(buy.buyerAvatarAddress).name;
-                            var inventory = ev.OutputStates.GetAvatarState(buy.buyerAvatarAddress).inventory;
-                            if (inventory is { } inventoryNotNull)
+                            if (buy.purchaseInfos.First() is { } purchaseInfoNotNull)
                             {
-                                ProcessEquipments(
-                                    ev.Signer,
-                                    buy.buyerAvatarAddress,
-                                    inventoryNotNull,
-                                    avatarName);
+                                var sellerState =
+                                    ev.OutputStates.GetAvatarState(purchaseInfoNotNull.sellerAvatarAddress);
+                                string avatarName = sellerState.name;
+                                foreach (var purchaseResult in buy.buyerMultipleResult.purchaseResults)
+                                {
+                                    if (purchaseResult.itemUsable is { } itemNotNull)
+                                    {
+                                        ProcessEquipmentData(
+                                            purchaseInfoNotNull.sellerAgentAddress,
+                                            purchaseInfoNotNull.sellerAvatarAddress,
+                                            (Equipment)itemNotNull,
+                                            avatarName);
+                                    }
+                                }
                             }
 
                             Log.Debug(
-                                "Reverted avatar {address}'s equipments in block #{index}",
+                                "Reverted avatar {address}'s equipment in block #{index}",
                                 buy.buyerAvatarAddress,
-                                ev.BlockIndex);
-                        }
-
-                        if (ev.Action is Sell sell)
-                        {
-                            string avatarName = ev.OutputStates.GetAvatarState(sell.sellerAvatarAddress).name;
-                            var inventory = ev.OutputStates.GetAvatarState(sell.sellerAvatarAddress).inventory;
-                            if (inventory is { } inventoryNotNull)
-                            {
-                                ProcessEquipments(
-                                    ev.Signer,
-                                    sell.sellerAvatarAddress,
-                                    inventoryNotNull,
-                                    avatarName);
-                            }
-
-                            Log.Debug(
-                                "Reverted avatar {address}'s equipments in block #{index}",
-                                sell.sellerAvatarAddress,
                                 ev.BlockIndex);
                         }
                     });
             return Task.CompletedTask;
         }
 
-        private void ProcessEquipments(
+        private void ProcessEquipmentData(
             Address agentAddress,
             Address avatarAddress,
-            Inventory? inventory,
+            Equipment equipment,
             string avatarName)
         {
             MySqlStore.StoreAgent(agentAddress);
@@ -313,22 +299,15 @@ namespace NineChronicles.DataProvider
                 avatarAddress,
                 agentAddress,
                 avatarName);
-            var equipments = inventory?.Equipments;
-            if (equipments is { } equipmentsNotNull)
-            {
-                foreach (var equipment in equipmentsNotNull)
-                {
-                    var cp = CPHelper.GetCP(equipment);
-                    MySqlStore.ProcessEquipment(
-                        equipment.ItemId,
-                        agentAddress,
-                        avatarAddress,
-                        equipment.Id,
-                        cp,
-                        equipment.level,
-                        equipment.ItemSubType);
-                }
-            }
+            var cp = CPHelper.GetCP(equipment);
+            MySqlStore.ProcessEquipment(
+                equipment.ItemId,
+                agentAddress,
+                avatarAddress,
+                equipment.Id,
+                cp,
+                equipment.level,
+                equipment.ItemSubType);
         }
     }
 }
