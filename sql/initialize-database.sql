@@ -25,8 +25,8 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`HackAndSlashes` (
     `StageId` INT NOT NULL,
     `Cleared` BOOLEAN NOT NULL,
     `Mimisbrunnr` BOOLEAN NOT NULL,
-    `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `BlockIndex` BIGINT NOT NULL,
+    `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     PRIMARY KEY (`Id`),
     INDEX `fk_HackAndSlashes_Avatar1_idx` (`AvatarAddress`),
@@ -45,8 +45,8 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`CombinationConsumables` (
     `AgentAddress` VARCHAR(100) NOT NULL,
     `RecipeId` INT NOT NULL,
     `SlotIndex` INT NOT NULL,
-    `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `BlockIndex` BIGINT NOT NULL,
+    `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     PRIMARY KEY (`Id`),
     INDEX `fk_CombinationConsumables_Avatar1_idx` (`AvatarAddress`),
@@ -66,8 +66,8 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`CombinationEquipments` (
     `RecipeId` INT NOT NULL,
     `SlotIndex` INT NOT NULL,
     `SubRecipeId` INT NOT NULL,
-    `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `BlockIndex` BIGINT NOT NULL,
+    `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     PRIMARY KEY (`Id`),
     INDEX `fk_CombinationEquipments_Avatar1_idx` (`AvatarAddress`),
