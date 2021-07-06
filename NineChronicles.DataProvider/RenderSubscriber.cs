@@ -48,7 +48,7 @@ namespace NineChronicles.DataProvider
 
                         if (ev.Action is HackAndSlash has)
                         {
-                            string avatarName = ev.OutputStates.GetAvatarState(has.avatarAddress).name;
+                            string avatarName = ev.OutputStates.GetAvatarStateV2(has.avatarAddress).name;
                             MySqlStore.StoreAgent(ev.Signer);
                             MySqlStore.StoreAvatar(
                                 has.avatarAddress,
@@ -68,7 +68,7 @@ namespace NineChronicles.DataProvider
 
                         if (ev.Action is CombinationConsumable combinationConsumable)
                         {
-                            string avatarName = ev.OutputStates.GetAvatarState(combinationConsumable.AvatarAddress).name;
+                            string avatarName = ev.OutputStates.GetAvatarStateV2(combinationConsumable.AvatarAddress).name;
                             MySqlStore.StoreAgent(ev.Signer);
                             MySqlStore.StoreAvatar(
                                 combinationConsumable.AvatarAddress,
@@ -87,7 +87,7 @@ namespace NineChronicles.DataProvider
 
                         if (ev.Action is CombinationEquipment combinationEquipment)
                         {
-                            string avatarName = ev.OutputStates.GetAvatarState(combinationEquipment.AvatarAddress).name;
+                            string avatarName = ev.OutputStates.GetAvatarStateV2(combinationEquipment.AvatarAddress).name;
                             MySqlStore.StoreAgent(ev.Signer);
                             MySqlStore.StoreAvatar(
                                 combinationEquipment.AvatarAddress,
@@ -125,7 +125,7 @@ namespace NineChronicles.DataProvider
 
                         if (ev.Action is ItemEnhancement itemEnhancement)
                         {
-                            string avatarName = ev.OutputStates.GetAvatarState(itemEnhancement.avatarAddress).name;
+                            string avatarName = ev.OutputStates.GetAvatarStateV2(itemEnhancement.avatarAddress).name;
                             MySqlStore.StoreAgent(ev.Signer);
                             MySqlStore.StoreAvatar(
                                 itemEnhancement.avatarAddress,
@@ -163,21 +163,33 @@ namespace NineChronicles.DataProvider
 
                         if (ev.Action is Buy buy)
                         {
-                            string avatarName = ev.OutputStates.GetAvatarState(buy.buyerAvatarAddress).name;
+                            var buyerState = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
+                            string avatarName = buyerState.name;
                             MySqlStore.StoreAgent(ev.Signer);
                             MySqlStore.StoreAvatar(
                                 buy.buyerAvatarAddress,
                                 ev.Signer,
                                 avatarName);
-
-                            foreach (var purchaseResult in buy.buyerMultipleResult.purchaseResults)
+                            var inventory = buyerState.inventory;
+                            foreach (var purchaseInfo in buy.purchaseInfos)
                             {
-                                if (purchaseResult.itemUsable is { } itemNotNull)
+                                if (purchaseInfo.ItemSubType == ItemSubType.Armor
+                                    || purchaseInfo.ItemSubType == ItemSubType.Belt
+                                    || purchaseInfo.ItemSubType == ItemSubType.Necklace
+                                    || purchaseInfo.ItemSubType == ItemSubType.Ring
+                                    || purchaseInfo.ItemSubType == ItemSubType.Weapon)
                                 {
+                                    if (inventory.Equipments == null)
+                                    {
+                                        continue;
+                                    }
+
+                                    var equipment = inventory.Equipments.Single(i =>
+                                        i.TradableId == purchaseInfo.TradableId);
                                     ProcessEquipmentData(
                                         ev.Signer,
                                         buy.buyerAvatarAddress,
-                                        (Equipment)itemNotNull,
+                                        equipment,
                                         avatarName);
                                 }
                             }
@@ -214,8 +226,7 @@ namespace NineChronicles.DataProvider
                         {
                             MySqlStore.DeleteCombinationEquipment(combinationEquipment.Id);
                             Log.Debug("Deleted CombinationEquipment action in block #{index}", ev.BlockIndex);
-                            string avatarName = ev.OutputStates.GetAvatarState(combinationEquipment.AvatarAddress)
-                                .name;
+                            string avatarName = ev.OutputStates.GetAvatarStateV2(combinationEquipment.AvatarAddress).name;
                             var slotState = ev.OutputStates.GetCombinationSlotState(
                                 combinationEquipment.AvatarAddress,
                                 combinationEquipment.SlotIndex);
@@ -239,7 +250,7 @@ namespace NineChronicles.DataProvider
                         {
                             MySqlStore.DeleteItemEnhancement(itemEnhancement.Id);
                             Log.Debug("Deleted ItemEnhancement action in block #{index}", ev.BlockIndex);
-                            string avatarName = ev.OutputStates.GetAvatarState(itemEnhancement.avatarAddress).name;
+                            string avatarName = ev.OutputStates.GetAvatarStateV2(itemEnhancement.avatarAddress).name;
                             var slotState = ev.OutputStates.GetCombinationSlotState(
                                 itemEnhancement.avatarAddress,
                                 itemEnhancement.slotIndex);
@@ -261,21 +272,37 @@ namespace NineChronicles.DataProvider
 
                         if (ev.Action is Buy buy)
                         {
-                            if (buy.purchaseInfos.First() is { } purchaseInfoNotNull)
+                            var sellerInfo = buy.purchaseInfos.First();
+                            var sellerState =
+                                ev.OutputStates.GetAvatarStateV2(sellerInfo.SellerAvatarAddress);
+                            string avatarName = sellerState.name;
+                            var inventory = sellerState.inventory;
+
+                            if (inventory.Equipments == null)
                             {
-                                var sellerState =
-                                    ev.OutputStates.GetAvatarState(purchaseInfoNotNull.sellerAvatarAddress);
-                                string avatarName = sellerState.name;
-                                foreach (var purchaseResult in buy.buyerMultipleResult.purchaseResults)
+                                return;
+                            }
+
+                            foreach (var purchaseInfo in buy.purchaseInfos)
+                            {
+                                if (purchaseInfo.ItemSubType == ItemSubType.Armor
+                                    || purchaseInfo.ItemSubType == ItemSubType.Belt
+                                    || purchaseInfo.ItemSubType == ItemSubType.Necklace
+                                    || purchaseInfo.ItemSubType == ItemSubType.Ring
+                                    || purchaseInfo.ItemSubType == ItemSubType.Weapon)
                                 {
-                                    if (purchaseResult.itemUsable is { } itemNotNull)
-                                    {
-                                        ProcessEquipmentData(
-                                            purchaseInfoNotNull.sellerAgentAddress,
-                                            purchaseInfoNotNull.sellerAvatarAddress,
-                                            (Equipment)itemNotNull,
-                                            avatarName);
-                                    }
+                                    MySqlStore.StoreAgent(ev.Signer);
+                                    MySqlStore.StoreAvatar(
+                                        purchaseInfo.SellerAvatarAddress,
+                                        purchaseInfo.SellerAgentAddress,
+                                        avatarName);
+                                    var equipment = inventory.Equipments.Single(i =>
+                                        i.TradableId == purchaseInfo.TradableId);
+                                    ProcessEquipmentData(
+                                        purchaseInfo.SellerAvatarAddress,
+                                        purchaseInfo.SellerAgentAddress,
+                                        equipment,
+                                        avatarName);
                                 }
                             }
 
