@@ -21,7 +21,10 @@
                 ),
                 resolve: context =>
                 {
-                    Address? agentAddress = context.GetArgument<Address?>("agentAddress", null);
+                    string? address = context.GetArgument<string?>("agentAddress", null);
+                    Address? agentAddress = address == null
+                        ? (Address?)null
+                        : new Address(address[2..]);
                     int? limit = context.GetArgument<int?>("limit", null);
                     return Store.GetHackAndSlash(agentAddress, limit);
                 });
@@ -34,7 +37,10 @@
                 ),
                 resolve: context =>
                 {
-                    Address? avatarAddress = context.GetArgument<Address?>("avatarAddress", null);
+                    string? address = context.GetArgument<string?>("avatarAddress", null);
+                    Address? avatarAddress = address == null
+                        ? (Address?)null
+                        : new Address(address[2..]);
                     int? limit = context.GetArgument<int?>("limit", null);
                     bool isMimisbrunnr = context.GetArgument<bool>("mimisbrunnr", false);
                     return Store.GetStageRanking(avatarAddress, limit, isMimisbrunnr);
@@ -47,7 +53,10 @@
                 ),
                 resolve: context =>
                 {
-                    Address? avatarAddress = context.GetArgument<Address?>("avatarAddress", null);
+                    string? address = context.GetArgument<string?>("avatarAddress", null);
+                    Address? avatarAddress = address == null
+                        ? (Address?)null
+                        : new Address(address[2..]);
                     int? limit = context.GetArgument<int?>("limit", null);
                     return Store.GetCraftRanking(avatarAddress, limit);
                 });
