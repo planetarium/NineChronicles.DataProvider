@@ -118,8 +118,8 @@ namespace NineChronicles.DataProvider.Store
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             var query = ctx.Set<StageRankingModel>()
-                .FromSqlRaw("SELECT `h`.`AvatarAddress`, MAX(`h`.`StageId`) AS `ClearedStageId`, (" +
-                            "SELECT `a`.`Name` " +
+                .FromSqlRaw("SELECT `h`.`AvatarAddress`, `h`.`AgentAddress`, MAX(`h`.`StageId`) " +
+                            "AS `ClearedStageId`, (SELECT `a`.`Name` " +
                             "FROM `Avatars` AS `a` " +
                             "WHERE `a`.`Address` = `h`.`AvatarAddress` " +
                             "LIMIT 1) AS `Name`, MIN(`h`.`BlockIndex`) AS `BlockIndex`, " +
