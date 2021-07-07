@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - development
+      - rc-*
 
 jobs:
   build_and_push:
