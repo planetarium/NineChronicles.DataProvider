@@ -75,7 +75,8 @@ namespace NineChronicles.DataProvider.Executable
                     tipTimeout: headlessConfig.TipTimeout,
                     demandBuffer: headlessConfig.DemandBuffer,
                     staticPeerStrings: headlessConfig.StaticPeerStrings,
-                    render: true);
+                    render: true,
+                    preload: false);
 
             var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
             {
