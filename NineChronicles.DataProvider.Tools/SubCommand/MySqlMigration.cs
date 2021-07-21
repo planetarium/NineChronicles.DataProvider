@@ -253,6 +253,30 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         if (ae.Action is PolymorphicAction<ActionBase> action)
                         {
                             // avatarNames will be stored as "N/A" for optimzation
+                            if (action.InnerAction is HackAndSlash hasAction)
+                            {
+                                WriteHackAndSlash(
+                                    hasAction.Id,
+                                    ae.InputContext.BlockIndex,
+                                    ae.InputContext.Signer,
+                                    hasAction.avatarAddress,
+                                    "N/A",
+                                    hasAction.stageId,
+                                    hasAction.Result is { IsClear: true });
+                            }
+
+                            if (action.InnerAction is HackAndSlash0 hasAction0)
+                            {
+                                WriteHackAndSlash(
+                                    hasAction0.Id,
+                                    ae.InputContext.BlockIndex,
+                                    ae.InputContext.Signer,
+                                    hasAction0.avatarAddress,
+                                    "N/A",
+                                    hasAction0.stageId,
+                                    hasAction0.Result is { IsClear: true });
+                            }
+
                             if (action.InnerAction is HackAndSlash2 hasAction2)
                             {
                                 WriteHackAndSlash(
@@ -287,6 +311,18 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                     "N/A",
                                     hasAction4.stageId,
                                     hasAction4.Result is { IsClear: true });
+                            }
+
+                            if (action.InnerAction is HackAndSlash5 hasAction5)
+                            {
+                                WriteHackAndSlash(
+                                    hasAction5.Id,
+                                    ae.InputContext.BlockIndex,
+                                    ae.InputContext.Signer,
+                                    hasAction5.avatarAddress,
+                                    "N/A",
+                                    hasAction5.stageId,
+                                    hasAction5.Result is { IsClear: true });
                             }
                         }
                     }
@@ -349,6 +385,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     LineTerminator = "\n",
                     FieldTerminator = ";",
                     Local = true,
+                    ConflictOption = MySqlBulkLoaderConflictOption.Ignore,
                 };
 
                 loader.Load();
@@ -376,7 +413,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             if (!_agentList.Contains(agentAddress.ToString()))
             {
                 _agentBulkFile.WriteLine(
-                    $"{agentAddress.ToString()};");
+                    $"{agentAddress.ToString()}");
                 _agentList.Add(agentAddress.ToString());
             }
 
