@@ -379,27 +379,50 @@ namespace NineChronicles.DataProvider.Store
         }
 
         public IEnumerable<EquipmentRankingModel> GetEquipmentRanking(
+            Address? avatarAddress = null,
             string? itemSubType = null,
             int? limit = null)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             IQueryable<EquipmentRankingModel>? query = null;
-            if (itemSubType is { } itemSubTypeNotNull)
+
+            if (avatarAddress is { } avatarAddressNotNull)
             {
-                query = ctx.Set<EquipmentRankingModel>()
-                    .FromSqlRaw("SELECT `h`.`ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, " +
-                                "MAX(`h`.`Cp`) AS `Cp`, `Level`, `ItemSubType`, " +
-                                "row_number() over(ORDER BY MAX(`h`.`Cp`) DESC) Ranking " +
-                                $"FROM `Equipments` AS `h` where `ItemSubType` = \"{itemSubTypeNotNull}\" " +
-                                "GROUP BY `h`.`AvatarAddress` ");
+                if (itemSubType is { } itemSubTypeNotNull)
+                {
+                    query = ctx.Set<EquipmentRankingModel>()
+                        .FromSqlRaw("SELECT `ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, `Cp`, " +
+                                    "`Level`, `ItemSubType`, row_number() over(ORDER BY `Cp` DESC) Ranking " +
+                                    $"FROM `Equipments` where `avatarAddress` = \"{avatarAddressNotNull}\" " +
+                                    $"AND `ItemSubType` = \"{itemSubTypeNotNull}\" ");
+                }
+                else
+                {
+                    query = ctx.Set<EquipmentRankingModel>()
+                        .FromSqlRaw("SELECT `ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, `Cp`, " +
+                                    "`Level`, `ItemSubType`, row_number() over(ORDER BY `Cp` DESC) Ranking " +
+                                    $"FROM `Equipments` where `avatarAddress` = \"{avatarAddressNotNull}\" ");
+                }
             }
             else
             {
-                query = ctx.Set<EquipmentRankingModel>()
-                    .FromSqlRaw("SELECT `h`.`ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, " +
-                                "MAX(`h`.`Cp`) AS `Cp`, `Level`, `ItemSubType`, " +
-                                "row_number() over(ORDER BY MAX(`h`.`Cp`) DESC) Ranking " +
-                                "FROM `Equipments` AS `h` GROUP BY `h`.`AvatarAddress` ");
+                if (itemSubType is { } itemSubTypeNotNull)
+                {
+                    query = ctx.Set<EquipmentRankingModel>()
+                        .FromSqlRaw("SELECT `h`.`ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, " +
+                                    "MAX(`h`.`Cp`) AS `Cp`, `Level`, `ItemSubType`, " +
+                                    "row_number() over(ORDER BY MAX(`h`.`Cp`) DESC) Ranking " +
+                                    $"FROM `Equipments` AS `h` where `ItemSubType` = \"{itemSubTypeNotNull}\" " +
+                                    "GROUP BY `h`.`AvatarAddress` ");
+                }
+                else
+                {
+                    query = ctx.Set<EquipmentRankingModel>()
+                        .FromSqlRaw("SELECT `h`.`ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, " +
+                                    "MAX(`h`.`Cp`) AS `Cp`, `Level`, `ItemSubType`, " +
+                                    "row_number() over(ORDER BY MAX(`h`.`Cp`) DESC) Ranking " +
+                                    "FROM `Equipments` AS `h` GROUP BY `h`.`AvatarAddress` ");
+                }
             }
 
             if (limit is { } limitNotNull)
