@@ -63,14 +63,19 @@
             Field<ListGraphType<EquipmentRankingType>>(
                 name: "EquipmentRanking",
                 arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType> { Name = "avatarAddress" },
                     new QueryArgument<StringGraphType> { Name = "itemSubType" },
                     new QueryArgument<IntGraphType> { Name = "limit" }
                 ),
                 resolve: context =>
                 {
+                    string? address = context.GetArgument<string?>("avatarAddress", null);
+                    Address? avatarAddress = address == null
+                        ? (Address?)null
+                        : new Address(address[2..]);
                     string? itemSubType = context.GetArgument<string?>("itemSubType", null);
                     int? limit = context.GetArgument<int?>("limit", null);
-                    return Store.GetEquipmentRanking(itemSubType, limit);
+                    return Store.GetEquipmentRanking(avatarAddress, itemSubType, limit);
                 });
         }
 
