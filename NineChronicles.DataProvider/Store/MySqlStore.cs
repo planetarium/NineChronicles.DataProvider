@@ -379,27 +379,31 @@ namespace NineChronicles.DataProvider.Store
         }
 
         public IEnumerable<EquipmentRankingModel> GetEquipmentRanking(
+            Address? avatarAddress = null,
             string? itemSubType = null,
             int? limit = null)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             IQueryable<EquipmentRankingModel>? query = null;
+
             if (itemSubType is { } itemSubTypeNotNull)
             {
                 query = ctx.Set<EquipmentRankingModel>()
-                    .FromSqlRaw("SELECT `h`.`ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, " +
-                                "MAX(`h`.`Cp`) AS `Cp`, `Level`, `ItemSubType`, " +
-                                "row_number() over(ORDER BY MAX(`h`.`Cp`) DESC) Ranking " +
-                                $"FROM `Equipments` AS `h` where `ItemSubType` = \"{itemSubTypeNotNull}\" " +
-                                "GROUP BY `h`.`AvatarAddress` ");
+                    .FromSqlRaw("SELECT `ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, `Cp`, `Level`, " +
+                                 "`ItemSubType`, ROW_NUMBER() OVER(ORDER BY `Cp` DESC, `Level` DESC) " +
+                                 $"Ranking FROM `Equipments` where `ItemSubType` = \"{itemSubTypeNotNull}\" ");
             }
             else
             {
                 query = ctx.Set<EquipmentRankingModel>()
-                    .FromSqlRaw("SELECT `h`.`ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, " +
-                                "MAX(`h`.`Cp`) AS `Cp`, `Level`, `ItemSubType`, " +
-                                "row_number() over(ORDER BY MAX(`h`.`Cp`) DESC) Ranking " +
-                                "FROM `Equipments` AS `h` GROUP BY `h`.`AvatarAddress` ");
+                    .FromSqlRaw("SELECT `ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, `Cp`, `Level`, " +
+                                "`ItemSubType`, ROW_NUMBER() OVER(ORDER BY `Cp` DESC, `Level` DESC) " +
+                                "Ranking FROM `Equipments` ");
+            }
+
+            if (avatarAddress is { } avatarAddressNotNull)
+            {
+                query = query.Where(s => s.AvatarAddress == avatarAddressNotNull.ToString());
             }
 
             if (limit is { } limitNotNull)
