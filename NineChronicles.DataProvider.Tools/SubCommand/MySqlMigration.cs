@@ -173,7 +173,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                 while (remainingCount > 0)
                 {
-                    int interval = 1000;
+                    int interval = 100;
                     int limitInterval;
                     Task<List<ActionEvaluation>>[] taskArray;
                     if (interval < remainingCount)
