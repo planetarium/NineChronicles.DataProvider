@@ -10,6 +10,7 @@ namespace NineChronicles.DataProvider
     using Nekoyume.Action;
     using Nekoyume.Battle;
     using Nekoyume.Model.Item;
+    using Nekoyume.Model.State;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.Headless;
     using Serilog;
@@ -50,7 +51,9 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is HackAndSlash has)
                             {
-                                string avatarName = ev.OutputStates.GetAvatarStateV2(has.avatarAddress).name;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has.avatarAddress);
+                                string avatarName = avatarState.name;
+                                bool isClear = avatarState.stageMap.ContainsKey(has.stageId);
                                 MySqlStore.StoreAgent(ev.Signer);
                                 MySqlStore.StoreAvatar(
                                     has.avatarAddress,
@@ -61,7 +64,7 @@ namespace NineChronicles.DataProvider
                                     ev.Signer,
                                     has.avatarAddress,
                                     has.stageId,
-                                    has.Result.IsClear,
+                                    isClear,
                                     isMimisbrunnr: has.stageId > 10000000,
                                     ev.BlockIndex
                                 );
