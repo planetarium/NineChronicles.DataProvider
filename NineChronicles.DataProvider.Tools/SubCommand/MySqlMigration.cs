@@ -24,18 +24,24 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     {
         private const string AgentDbName = "Agents";
         private const string AvatarDbName = "Avatars";
-        private const string HasDbName = "HackAndSlashes";
+        private const string CCDbName = "CombinationConsumables";
+        private const string CEDbName = "CombinationEquipments";
+        private const string IEDbName = "ItemEnhancements";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
+        private StreamWriter _ccBulkFile;
+        private StreamWriter _ceBulkFile;
+        private StreamWriter _ieBulkFile;
         private StreamWriter _agentBulkFile;
         private StreamWriter _avatarBulkFile;
-        private StreamWriter _hasBulkFile;
         private List<string> _agentList;
         private List<string> _avatarList;
+        private List<string> _ccFiles;
+        private List<string> _ceFiles;
+        private List<string> _ieFiles;
         private List<string> _agentFiles;
         private List<string> _avatarFiles;
-        private List<string> _hasFiles;
 
         [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
         public void Migration(
@@ -156,9 +162,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             Console.WriteLine("Start migration.");
 
             // files to store bulk file paths (new file created every 10000 blocks for bulk load performance)
+            _ccFiles = new List<string>();
+            _ceFiles = new List<string>();
+            _ieFiles = new List<string>();
             _agentFiles = new List<string>();
             _avatarFiles = new List<string>();
-            _hasFiles = new List<string>();
 
             // lists to keep track of inserted addresses to minimize duplicates
             _agentList = new List<string>();
@@ -173,17 +181,15 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                 while (remainingCount > 0)
                 {
-                    int interval = 1000;
+                    int interval = 100000;
                     int limitInterval;
-                    Task<List<ActionEvaluation>>[] taskArray;
+                    Task<int>[] taskArray;
                     if (interval < remainingCount)
                     {
-                        taskArray = new Task<List<ActionEvaluation>>[interval];
                         limitInterval = interval;
                     }
                     else
                     {
-                        taskArray = new Task<List<ActionEvaluation>>[remainingCount];
                         limitInterval = remainingCount;
                     }
 
@@ -191,12 +197,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
                     {
                         var block = _baseStore.GetBlock<NCAction>(item.value);
-                        taskArray[item.i] = Task.Factory.StartNew(() =>
-                        {
-                            List<ActionEvaluation> actionEvaluations = EvaluateBlock(block);
-                            Console.WriteLine($"Block progress: {block.Index}/{remainingCount}");
-                            return actionEvaluations;
-                        });
+                        Console.WriteLine("Migrating {0}/{1}", item.i, remainingCount);
+                        WriteCC(block.Miner);
                     }
 
                     if (interval < remainingCount)
@@ -209,9 +211,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         remainingCount = 0;
                         offsetIdx += remainingCount;
                     }
-
-                    Task.WaitAll(taskArray);
-                    ProcessTasks(taskArray);
                 }
 
                 FlushBulkFiles();
@@ -221,16 +220,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 foreach (var path in _agentFiles)
                 {
                     BulkInsert(AgentDbName, path);
-                }
-
-                foreach (var path in _avatarFiles)
-                {
-                    BulkInsert(AvatarDbName, path);
-                }
-
-                foreach (var path in _hasFiles)
-                {
-                    BulkInsert(HasDbName, path);
                 }
             }
             catch (Exception e)
@@ -242,104 +231,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
         }
 
-        private void ProcessTasks(Task<List<ActionEvaluation>>[] taskArray)
-        {
-            foreach (var task in taskArray)
-            {
-                if (task.Result is { } data)
-                {
-                    foreach (var ae in data)
-                    {
-                        if (ae.Action is PolymorphicAction<ActionBase> action)
-                        {
-                            // avatarNames will be stored as "N/A" for optimzation
-                            if (action.InnerAction is HackAndSlash hasAction)
-                            {
-                                WriteHackAndSlash(
-                                    hasAction.Id,
-                                    ae.InputContext.BlockIndex,
-                                    ae.InputContext.Signer,
-                                    hasAction.avatarAddress,
-                                    "N/A",
-                                    hasAction.stageId,
-                                    hasAction.Result is { IsClear: true });
-                            }
-
-                            if (action.InnerAction is HackAndSlash0 hasAction0)
-                            {
-                                WriteHackAndSlash(
-                                    hasAction0.Id,
-                                    ae.InputContext.BlockIndex,
-                                    ae.InputContext.Signer,
-                                    hasAction0.avatarAddress,
-                                    "N/A",
-                                    hasAction0.stageId,
-                                    hasAction0.Result is { IsClear: true });
-                            }
-
-                            if (action.InnerAction is HackAndSlash2 hasAction2)
-                            {
-                                WriteHackAndSlash(
-                                    hasAction2.Id,
-                                    ae.InputContext.BlockIndex,
-                                    ae.InputContext.Signer,
-                                    hasAction2.avatarAddress,
-                                    "N/A",
-                                    hasAction2.stageId,
-                                    hasAction2.Result is { IsClear: true });
-                            }
-
-                            if (action.InnerAction is HackAndSlash3 hasAction3)
-                            {
-                                WriteHackAndSlash(
-                                    hasAction3.Id,
-                                    ae.InputContext.BlockIndex,
-                                    ae.InputContext.Signer,
-                                    hasAction3.avatarAddress,
-                                    "N/A",
-                                    hasAction3.stageId,
-                                    hasAction3.Result is { IsClear: true });
-                            }
-
-                            if (action.InnerAction is HackAndSlash4 hasAction4)
-                            {
-                                WriteHackAndSlash(
-                                    hasAction4.Id,
-                                    ae.InputContext.BlockIndex,
-                                    ae.InputContext.Signer,
-                                    hasAction4.avatarAddress,
-                                    "N/A",
-                                    hasAction4.stageId,
-                                    hasAction4.Result is { IsClear: true });
-                            }
-
-                            if (action.InnerAction is HackAndSlash5 hasAction5)
-                            {
-                                WriteHackAndSlash(
-                                    hasAction5.Id,
-                                    ae.InputContext.BlockIndex,
-                                    ae.InputContext.Signer,
-                                    hasAction5.avatarAddress,
-                                    "N/A",
-                                    hasAction5.stageId,
-                                    hasAction5.Result is { IsClear: true });
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private List<ActionEvaluation> EvaluateBlock(Block<NCAction> block)
-        {
-            var evList = block.Evaluate(
-                DateTimeOffset.Now,
-                address => _baseChain.GetState(address, block.Hash),
-                (address, currency) =>
-                    _baseChain.GetBalance(address, currency, block.Hash)).ToList();
-            return evList;
-        }
-
         private void FlushBulkFiles()
         {
             _agentBulkFile.Flush();
@@ -348,8 +239,14 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _avatarBulkFile.Flush();
             _avatarBulkFile.Close();
 
-            _hasBulkFile.Flush();
-            _hasBulkFile.Close();
+            _ccBulkFile.Flush();
+            _ccBulkFile.Close();
+
+            _ceBulkFile.Flush();
+            _ceBulkFile.Close();
+
+            _ieBulkFile.Flush();
+            _ieBulkFile.Close();
         }
 
         private void CreateBulkFiles()
@@ -360,12 +257,20 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             string avatarFilePath = Path.GetTempFileName();
             _avatarBulkFile = new StreamWriter(avatarFilePath);
 
-            string hasFilePath = Path.GetTempFileName();
-            _hasBulkFile = new StreamWriter(hasFilePath);
+            string ccFilePath = Path.GetTempFileName();
+            _ccBulkFile = new StreamWriter(ccFilePath);
+
+            string ceFilePath = Path.GetTempFileName();
+            _ceBulkFile = new StreamWriter(ceFilePath);
+
+            string ieFilePath = Path.GetTempFileName();
+            _ieBulkFile = new StreamWriter(ieFilePath);
 
             _agentFiles.Add(agentFilePath);
             _avatarFiles.Add(avatarFilePath);
-            _hasFiles.Add(hasFilePath);
+            _ccFiles.Add(ccFilePath);
+            _ceFiles.Add(ceFilePath);
+            _ieFiles.Add(ieFilePath);
         }
 
         private void BulkInsert(
@@ -382,7 +287,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     TableName = tableName,
                     FileName = filePath,
                     Timeout = 0,
-                    LineTerminator = "\n",
+                    LineTerminator = "\r\n",
                     FieldTerminator = ";",
                     Local = true,
                     ConflictOption = MySqlBulkLoaderConflictOption.Ignore,
@@ -400,20 +305,37 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             }
         }
 
-        private void WriteHackAndSlash(
-            Guid actionId,
-            long blockIndex,
-            Address agentAddress,
-            Address avatarAddress,
-            string avatarName,
-            int stageId,
-            bool isClear)
+        private void WriteCC(
+            Address? agentAddress)
         {
+            if (agentAddress == null)
+            {
+                return;
+            }
+
             // check if address is already in _agentList
             if (!_agentList.Contains(agentAddress.ToString()))
             {
                 _agentBulkFile.WriteLine(
                     $"{agentAddress.ToString()}");
+                _agentList.Add(agentAddress.ToString());
+            }
+        }
+
+        private void WriteCE(
+            Guid id,
+            Address agentAddress,
+            Address avatarAddress,
+            int recipeId,
+            int slotIndex,
+            int? subRecipeId,
+            long blockIndex)
+        {
+            // check if address is already in _agentList
+            if (!_agentList.Contains(agentAddress.ToString()))
+            {
+                _agentBulkFile.WriteLine(
+                    $"{agentAddress.ToString()};");
                 _agentList.Add(agentAddress.ToString());
             }
 
@@ -423,19 +345,57 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 _avatarBulkFile.WriteLine(
                     $"{avatarAddress.ToString()};" +
                     $"{agentAddress.ToString()};" +
-                    $"{avatarName ?? "N/A"}");
+                    "N/A");
                 _avatarList.Add(avatarAddress.ToString());
             }
 
-            _hasBulkFile.WriteLine(
-                $"{actionId.ToString()};" +
+            _ceBulkFile.WriteLine(
+                $"{id.ToString()};" +
                 $"{avatarAddress.ToString()};" +
                 $"{agentAddress.ToString()};" +
-                $"{stageId};" +
-                $"{(isClear ? 1 : 0)};" +
-                $"{(stageId > 10000000 ? 1 : 0)};" +
+                $"{recipeId};" +
+                $"{slotIndex};" +
+                $"{subRecipeId ?? 0};" +
                 $"{blockIndex.ToString()}");
-            Console.WriteLine("Writing HackAndSlash action in block #{0}", blockIndex);
+            Console.WriteLine("Writing CE action in block #{0}", blockIndex);
+        }
+
+        private void WriteIE(
+            Guid id,
+            Address agentAddress,
+            Address avatarAddress,
+            Guid itemId,
+            Guid materialId,
+            int slotIndex,
+            long blockIndex)
+        {
+            // check if address is already in _agentList
+            if (!_agentList.Contains(agentAddress.ToString()))
+            {
+                _agentBulkFile.WriteLine(
+                    $"{agentAddress.ToString()};");
+                _agentList.Add(agentAddress.ToString());
+            }
+
+            // check if address is already in _avatarList
+            if (!_avatarList.Contains(avatarAddress.ToString()))
+            {
+                _avatarBulkFile.WriteLine(
+                    $"{avatarAddress.ToString()};" +
+                    $"{agentAddress.ToString()};" +
+                    "N/A");
+                _avatarList.Add(avatarAddress.ToString());
+            }
+
+            _ieBulkFile.WriteLine(
+                $"{id.ToString()};" +
+                $"{avatarAddress.ToString()};" +
+                $"{agentAddress.ToString()};" +
+                $"{itemId.ToString()};" +
+                $"{materialId.ToString()};" +
+                $"{slotIndex};" +
+                $"{blockIndex.ToString()}");
+            Console.WriteLine("Writing IE action in block #{0}", blockIndex);
         }
     }
 }
