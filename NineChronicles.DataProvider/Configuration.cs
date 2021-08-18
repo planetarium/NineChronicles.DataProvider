@@ -81,6 +81,10 @@ namespace NineChronicles.DataProvider
 
         public int DemandBuffer { get; set; }
 
+        public int MinimumBroadcastTarget { get; set; }
+
+        public int BucketSize { get; set; }
+
         public string[]? StaticPeerStrings { get; set; }
 
 #pragma warning restore SA1011 // Closing square brackets should be spaced correctly
