@@ -74,6 +74,8 @@ namespace NineChronicles.DataProvider.Executable
                     messageTimeout: headlessConfig.MessageTimeout,
                     tipTimeout: headlessConfig.TipTimeout,
                     demandBuffer: headlessConfig.DemandBuffer,
+                    minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget,
+                    bucketSize: headlessConfig.BucketSize,
                     staticPeerStrings: headlessConfig.StaticPeerStrings,
                     render: true,
                     preload: false);
