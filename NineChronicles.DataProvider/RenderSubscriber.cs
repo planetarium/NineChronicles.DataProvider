@@ -73,16 +73,16 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is CombinationConsumable combinationConsumable)
                             {
-                                string avatarName = ev.OutputStates.GetAvatarStateV2(combinationConsumable.AvatarAddress).name;
+                                string avatarName = ev.OutputStates.GetAvatarStateV2(combinationConsumable.avatarAddress).name;
                                 MySqlStore.StoreAgent(ev.Signer);
                                 MySqlStore.StoreAvatar(
-                                    combinationConsumable.AvatarAddress,
+                                    combinationConsumable.avatarAddress,
                                     ev.Signer,
                                     avatarName);
                                 MySqlStore.StoreCombinationConsumable(
                                     combinationConsumable.Id,
                                     ev.Signer,
-                                    combinationConsumable.AvatarAddress,
+                                    combinationConsumable.avatarAddress,
                                     combinationConsumable.recipeId,
                                     combinationConsumable.slotIndex,
                                     ev.BlockIndex
@@ -92,39 +92,39 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is CombinationEquipment combinationEquipment)
                             {
-                                string avatarName = ev.OutputStates.GetAvatarStateV2(combinationEquipment.AvatarAddress).name;
+                                string avatarName = ev.OutputStates.GetAvatarStateV2(combinationEquipment.avatarAddress).name;
                                 MySqlStore.StoreAgent(ev.Signer);
                                 MySqlStore.StoreAvatar(
-                                    combinationEquipment.AvatarAddress,
+                                    combinationEquipment.avatarAddress,
                                     ev.Signer,
                                     avatarName);
                                 MySqlStore.StoreCombinationEquipment(
                                     combinationEquipment.Id,
                                     ev.Signer,
-                                    combinationEquipment.AvatarAddress,
-                                    combinationEquipment.RecipeId,
-                                    combinationEquipment.SlotIndex,
-                                    combinationEquipment.SubRecipeId,
+                                    combinationEquipment.avatarAddress,
+                                    combinationEquipment.recipeId,
+                                    combinationEquipment.slotIndex,
+                                    combinationEquipment.subRecipeId,
                                     ev.BlockIndex
                                 );
                                 Log.Debug("Stored CombinationEquipment action in block #{index}", ev.BlockIndex);
 
                                 var slotState = ev.OutputStates.GetCombinationSlotState(
-                                    combinationEquipment.AvatarAddress,
-                                    combinationEquipment.SlotIndex);
+                                    combinationEquipment.avatarAddress,
+                                    combinationEquipment.slotIndex);
 
                                 if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                                 {
                                     ProcessEquipmentData(
                                         ev.Signer,
-                                        combinationEquipment.AvatarAddress,
+                                        combinationEquipment.avatarAddress,
                                         (Equipment)slotState.Result.itemUsable,
                                         avatarName);
                                 }
 
                                 Log.Debug(
                                     "Stored avatar {address}'s equipment in block #{index}",
-                                    combinationEquipment.AvatarAddress,
+                                    combinationEquipment.avatarAddress,
                                     ev.BlockIndex);
                             }
 
@@ -246,24 +246,24 @@ namespace NineChronicles.DataProvider
                             {
                                 MySqlStore.DeleteCombinationEquipment(combinationEquipment.Id);
                                 Log.Debug("Deleted CombinationEquipment action in block #{index}", ev.BlockIndex);
-                                string avatarName = ev.OutputStates.GetAvatarStateV2(combinationEquipment.AvatarAddress)
+                                string avatarName = ev.OutputStates.GetAvatarStateV2(combinationEquipment.avatarAddress)
                                     .name;
                                 var slotState = ev.OutputStates.GetCombinationSlotState(
-                                    combinationEquipment.AvatarAddress,
-                                    combinationEquipment.SlotIndex);
+                                    combinationEquipment.avatarAddress,
+                                    combinationEquipment.slotIndex);
 
                                 if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                                 {
                                     ProcessEquipmentData(
                                         ev.Signer,
-                                        combinationEquipment.AvatarAddress,
+                                        combinationEquipment.avatarAddress,
                                         (Equipment)slotState.Result.itemUsable,
                                         avatarName);
                                 }
 
                                 Log.Debug(
                                     "Reverted avatar {address}'s equipments in block #{index}",
-                                    combinationEquipment.AvatarAddress,
+                                    combinationEquipment.avatarAddress,
                                     ev.BlockIndex);
                             }
 
