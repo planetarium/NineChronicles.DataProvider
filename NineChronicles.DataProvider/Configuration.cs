@@ -16,8 +16,6 @@ namespace NineChronicles.DataProvider
 
         public string? SwarmPrivateKeyString { get; set; }
 
-        public int MinimumDifficulty { get; set; }
-
         public string? MinerPrivateKeyString { get; set; }
 
         public string? StoreType { get; set; }
@@ -50,8 +48,6 @@ namespace NineChronicles.DataProvider
         public int Workers { get; set; }
 
         public int Confirmations { get; set; }
-
-        public int MaximumTransactions { get; set; }
 
         public bool StrictRendering { get; set; }
 
