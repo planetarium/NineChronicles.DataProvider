@@ -76,7 +76,8 @@ namespace NineChronicles.DataProvider.Executable
                     bucketSize: headlessConfig.BucketSize,
                     staticPeerStrings: headlessConfig.StaticPeerStrings,
                     render: true,
-                    preload: false);
+                    preload: false,
+                    transportType: "netmq");
 
             var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
             {
