@@ -83,6 +83,7 @@ namespace NineChronicles.DataProvider.Executable
             {
                MinerPrivateKey = null,
                Libplanet = properties,
+               TxQuotaPerSigner = 10,
             };
 
             if (headlessConfig.LogActionRenders)
