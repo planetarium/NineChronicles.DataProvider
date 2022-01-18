@@ -1,94 +1,38 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
-
-namespace NineChronicles.DataProvider.Executable.Migrations
+﻿namespace NineChronicles.DataProvider.Executable.Migrations
 {
+    using Microsoft.EntityFrameworkCore.Migrations;
+
     public partial class AbilityRanking : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "AgentAddress",
-                table: "StageRankings",
-                type: "TEXT",
-                nullable: true);
+            migrationBuilder.AddColumn<string>(name: "AgentAddress", table: "StageRankings", type: "TEXT", nullable: true);
 
-            migrationBuilder.AddColumn<int>(
-                name: "ArmorId",
-                table: "StageRankings",
-                type: "INTEGER",
-                nullable: true);
+            migrationBuilder.AddColumn<int>(name: "ArmorId", table: "StageRankings", type: "INTEGER", nullable: true);
 
-            migrationBuilder.AddColumn<int>(
-                name: "AvatarLevel",
-                table: "StageRankings",
-                type: "INTEGER",
-                nullable: true);
+            migrationBuilder.AddColumn<int>(name: "AvatarLevel", table: "StageRankings", type: "INTEGER", nullable: true);
 
-            migrationBuilder.AddColumn<int>(
-                name: "Cp",
-                table: "StageRankings",
-                type: "INTEGER",
-                nullable: true);
+            migrationBuilder.AddColumn<int>(name: "Cp", table: "StageRankings", type: "INTEGER", nullable: true);
 
-            migrationBuilder.AddColumn<int>(
-                name: "TitleId",
-                table: "StageRankings",
-                type: "INTEGER",
-                nullable: true);
+            migrationBuilder.AddColumn<int>(name: "TitleId", table: "StageRankings", type: "INTEGER", nullable: true);
 
-            migrationBuilder.AddColumn<int>(
-                name: "ArmorId",
-                table: "CraftRankings",
-                type: "INTEGER",
-                nullable: true);
+            migrationBuilder.AddColumn<int>(name: "ArmorId", table: "CraftRankings", type: "INTEGER", nullable: true);
 
-            migrationBuilder.AddColumn<int>(
-                name: "AvatarLevel",
-                table: "CraftRankings",
-                type: "INTEGER",
-                nullable: true);
+            migrationBuilder.AddColumn<int>(name: "AvatarLevel", table: "CraftRankings", type: "INTEGER", nullable: true);
 
-            migrationBuilder.AddColumn<int>(
-                name: "Cp",
-                table: "CraftRankings",
-                type: "INTEGER",
-                nullable: true);
+            migrationBuilder.AddColumn<int>(name: "Cp", table: "CraftRankings", type: "INTEGER", nullable: true);
 
-            migrationBuilder.AddColumn<string>(
-                name: "Name",
-                table: "CraftRankings",
-                type: "TEXT",
-                nullable: true);
+            migrationBuilder.AddColumn<string>(name: "Name", table: "CraftRankings", type: "TEXT", nullable: true);
 
-            migrationBuilder.AddColumn<int>(
-                name: "TitleId",
-                table: "CraftRankings",
-                type: "INTEGER",
-                nullable: true);
+            migrationBuilder.AddColumn<int>(name: "TitleId", table: "CraftRankings", type: "INTEGER", nullable: true);
 
-            migrationBuilder.AddColumn<int>(
-                name: "ArmorId",
-                table: "Avatars",
-                type: "INTEGER",
-                nullable: true);
+            migrationBuilder.AddColumn<int>(name: "ArmorId", table: "Avatars", type: "INTEGER", nullable: true);
 
-            migrationBuilder.AddColumn<int>(
-                name: "AvatarLevel",
-                table: "Avatars",
-                type: "INTEGER",
-                nullable: true);
+            migrationBuilder.AddColumn<int>(name: "AvatarLevel", table: "Avatars", type: "INTEGER", nullable: true);
 
-            migrationBuilder.AddColumn<int>(
-                name: "Cp",
-                table: "Avatars",
-                type: "INTEGER",
-                nullable: true);
+            migrationBuilder.AddColumn<int>(name: "Cp", table: "Avatars", type: "INTEGER", nullable: true);
 
-            migrationBuilder.AddColumn<int>(
-                name: "TitleId",
-                table: "Avatars",
-                type: "INTEGER",
-                nullable: true);
+            migrationBuilder.AddColumn<int>(name: "TitleId", table: "Avatars", type: "INTEGER", nullable: true);
 
             migrationBuilder.CreateTable(
                 name: "AbilityRankings",
@@ -101,7 +45,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     TitleId = table.Column<int>(type: "INTEGER", nullable: true),
                     ArmorId = table.Column<int>(type: "INTEGER", nullable: true),
                     Cp = table.Column<int>(type: "INTEGER", nullable: true),
-                    Ranking = table.Column<int>(type: "INTEGER", nullable: false)
+                    Ranking = table.Column<int>(type: "INTEGER", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -123,7 +67,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     AvatarLevel = table.Column<int>(type: "INTEGER", nullable: true),
                     TitleId = table.Column<int>(type: "INTEGER", nullable: true),
                     ArmorId = table.Column<int>(type: "INTEGER", nullable: true),
-                    Ranking = table.Column<int>(type: "INTEGER", nullable: false)
+                    Ranking = table.Column<int>(type: "INTEGER", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -140,7 +84,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     EquipmentId = table.Column<int>(type: "INTEGER", nullable: false),
                     Cp = table.Column<int>(type: "INTEGER", nullable: false),
                     Level = table.Column<int>(type: "INTEGER", nullable: false),
-                    ItemSubType = table.Column<string>(type: "TEXT", nullable: true)
+                    ItemSubType = table.Column<string>(type: "TEXT", nullable: true),
                 },
                 constraints: table =>
                 {
