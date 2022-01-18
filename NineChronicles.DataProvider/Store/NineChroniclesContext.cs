@@ -29,5 +29,7 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<EquipmentModel>? Equipments { get; set; }
 
         public DbSet<EquipmentRankingModel>? EquipmentRankings { get; set; }
+
+        public DbSet<AbilityRankingModel>? AbilityRankings { get; set; }
     }
 }
