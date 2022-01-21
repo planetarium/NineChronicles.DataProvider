@@ -3,7 +3,7 @@
     using global::GraphQL.Types;
     using NineChronicles.DataProvider.Store.Models;
 
-    public class CraftRankingType : ObjectGraphType<CraftRankingModel>
+    public class CraftRankingType : ObjectGraphType<CraftRankingOutputModel>
     {
         public CraftRankingType()
         {
