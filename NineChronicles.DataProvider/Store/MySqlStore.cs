@@ -221,7 +221,7 @@ namespace NineChronicles.DataProvider.Store
             else
             {
                 ctx.CraftRankings!.Add(
-                    new CraftRankingModel()
+                    new CraftRankingInputModel()
                     {
                         AgentAddress = agentAddress.ToString(),
                         AvatarAddress = avatarAddress.ToString(),
@@ -282,7 +282,7 @@ namespace NineChronicles.DataProvider.Store
             else
             {
                 ctx.CraftRankings!.Add(
-                    new CraftRankingModel()
+                    new CraftRankingInputModel()
                     {
                         AgentAddress = agentAddress.ToString(),
                         AvatarAddress = avatarAddress.ToString(),
@@ -342,7 +342,7 @@ namespace NineChronicles.DataProvider.Store
             else
             {
                 ctx.CraftRankings!.Add(
-                    new CraftRankingModel()
+                    new CraftRankingInputModel()
                     {
                         AgentAddress = agentAddress.ToString(),
                         AvatarAddress = avatarAddress.ToString(),
@@ -371,12 +371,12 @@ namespace NineChronicles.DataProvider.Store
             ctx.SaveChanges();
         }
 
-        public IEnumerable<CraftRankingModel> GetCraftRanking(
+        public IEnumerable<CraftRankingOutputModel> GetCraftRanking(
             Address? avatarAddress = null,
             int? limit = null)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            var query = ctx.Set<CraftRankingModel>()
+            var query = ctx.Set<CraftRankingOutputModel>()
                 .FromSqlRaw("SELECT `h`.`AvatarAddress`, `AgentAddress`, `CraftCount`, `BlockIndex`, " +
                             "(SELECT `a`.`Name` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Name`, " +
                             "(SELECT `a`.`AvatarLevel` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `AvatarLevel`, " +
