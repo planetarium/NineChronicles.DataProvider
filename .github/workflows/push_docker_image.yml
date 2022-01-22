@@ -6,6 +6,7 @@ on:
       - main
       - development
       - rc-*
+      - feat/add-avatar-fields
 
 jobs:
   build_and_push:
