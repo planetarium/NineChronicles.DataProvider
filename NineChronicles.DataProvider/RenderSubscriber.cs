@@ -137,16 +137,30 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is CombinationConsumable combinationConsumable)
                             {
-                                string avatarName = ev.OutputStates.GetAvatarStateV2(combinationConsumable.avatarAddress).name;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(combinationConsumable.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
                                 MySqlStore.StoreAgent(ev.Signer);
                                 MySqlStore.StoreAvatar(
                                     combinationConsumable.avatarAddress,
                                     ev.Signer,
                                     avatarName,
-                                    null,
-                                    null,
-                                    null,
-                                    null);
+                                    avatarLevel,
+                                    avatarTitleId,
+                                    avatarArmorId,
+                                    avatarCp);
                                 MySqlStore.StoreCombinationConsumable(
                                     combinationConsumable.Id,
                                     ev.Signer,
@@ -160,16 +174,30 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is CombinationEquipment combinationEquipment)
                             {
-                                string avatarName = ev.OutputStates.GetAvatarStateV2(combinationEquipment.avatarAddress).name;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(combinationEquipment.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
                                 MySqlStore.StoreAgent(ev.Signer);
                                 MySqlStore.StoreAvatar(
                                     combinationEquipment.avatarAddress,
                                     ev.Signer,
                                     avatarName,
-                                    null,
-                                    null,
-                                    null,
-                                    null);
+                                    avatarLevel,
+                                    avatarTitleId,
+                                    avatarArmorId,
+                                    avatarCp);
                                 MySqlStore.StoreCombinationEquipment(
                                     combinationEquipment.Id,
                                     ev.Signer,
@@ -202,16 +230,30 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is ItemEnhancement itemEnhancement)
                             {
-                                string avatarName = ev.OutputStates.GetAvatarStateV2(itemEnhancement.avatarAddress).name;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
                                 MySqlStore.StoreAgent(ev.Signer);
                                 MySqlStore.StoreAvatar(
                                     itemEnhancement.avatarAddress,
                                     ev.Signer,
                                     avatarName,
-                                    null,
-                                    null,
-                                    null,
-                                    null);
+                                    avatarLevel,
+                                    avatarTitleId,
+                                    avatarArmorId,
+                                    avatarCp);
                                 MySqlStore.StoreItemEnhancement(
                                     itemEnhancement.Id,
                                     ev.Signer,
@@ -244,18 +286,31 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is Buy buy)
                             {
-                                var buyerState = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
-                                string avatarName = buyerState.name;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
                                 MySqlStore.StoreAgent(ev.Signer);
                                 MySqlStore.StoreAvatar(
                                     buy.buyerAvatarAddress,
                                     ev.Signer,
                                     avatarName,
-                                    null,
-                                    null,
-                                    null,
-                                    null);
-                                var buyerInventory = buyerState.inventory;
+                                    avatarLevel,
+                                    avatarTitleId,
+                                    avatarArmorId,
+                                    avatarCp);
+                                var buyerInventory = avatarState.inventory;
                                 foreach (var purchaseInfo in buy.purchaseInfos)
                                 {
                                     if (purchaseInfo.ItemSubType == ItemSubType.Armor
