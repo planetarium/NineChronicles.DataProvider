@@ -59,6 +59,8 @@ namespace NineChronicles.DataProvider
 
         public bool LogActionRenders { get; set; }
 
+        public bool Render { get; set; }
+
         public string? AwsCognitoIdentity { get; set; }
 
         public string? AwsAccessKey { get; set; }
