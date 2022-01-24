@@ -20,7 +20,9 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<ItemEnhancementModel>? ItemEnhancements { get; set; }
 
-        public DbSet<CraftRankingModel>? CraftRankings { get; set; }
+        public DbSet<CraftRankingInputModel>? CraftRankings { get; set; }
+
+        public DbSet<CraftRankingOutputModel>? CraftRankingsOutput { get; set; }
 
         public DbSet<AvatarModel>? Avatars { get; set; }
 
@@ -29,5 +31,7 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<EquipmentModel>? Equipments { get; set; }
 
         public DbSet<EquipmentRankingModel>? EquipmentRankings { get; set; }
+
+        public DbSet<AbilityRankingModel>? AbilityRankings { get; set; }
     }
 }
