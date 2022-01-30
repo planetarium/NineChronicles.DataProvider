@@ -12,7 +12,7 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<HackAndSlashModel>? HackAndSlashes { get; set; }
 
-        public DbSet<StageRankingModel>? StageRankings { get; set; }
+        public DbSet<StageRankingModel>? StageRanking { get; set; }
 
         public DbSet<CombinationConsumableModel>? CombinationConsumables { get; set; }
 

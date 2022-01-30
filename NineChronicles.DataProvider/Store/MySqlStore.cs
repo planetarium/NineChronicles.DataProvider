@@ -165,19 +165,17 @@ namespace NineChronicles.DataProvider.Store
             bool isMimisbrunnr = false)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            var query = ctx.Set<StageRankingModel>()
-                .FromSqlRaw("SELECT `h`.`AvatarAddress`, `h`.`AgentAddress`, MAX(`h`.`StageId`) " +
-                            "AS `ClearedStageId`, " +
-                            "(SELECT `a`.`Name` FROM `Avatars` AS `a` WHERE `a`.`Address` = `h`.`AvatarAddress` LIMIT 1) AS `Name`, " +
-                            "(SELECT `a`.`AvatarLevel` FROM `Avatars` AS `a` WHERE `a`.`Address` = `h`.`AvatarAddress` LIMIT 1) AS `AvatarLevel`, " +
-                            "(SELECT `a`.`TitleId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `h`.`AvatarAddress` LIMIT 1) AS `TitleId`, " +
-                            "(SELECT `a`.`ArmorId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `h`.`AvatarAddress` LIMIT 1) AS `ArmorId`, " +
-                            "(SELECT `a`.`Cp` FROM `Avatars` AS `a` WHERE `a`.`Address` = `h`.`AvatarAddress` LIMIT 1) AS `Cp`, " +
-                            "MIN(`h`.`BlockIndex`) AS `BlockIndex`, " +
-                            "row_number() over(ORDER BY MAX(`h`.`StageId`) DESC, MIN(`h`.`BlockIndex`)) Ranking " +
-                            "FROM `HackAndSlashes` AS `h` " +
-                            $"WHERE (`h`.`Mimisbrunnr` = {isMimisbrunnr}) AND `h`.`Cleared` " +
-                            "GROUP BY `h`.`AvatarAddress`");
+            IQueryable<StageRankingModel>? query = null;
+            if (!isMimisbrunnr)
+            {
+                query = ctx.Set<StageRankingModel>()
+                    .FromSqlRaw("SELECT * FROM data_provider.StageRanking ORDER BY Ranking ");
+            }
+            else
+            {
+                query = ctx.Set<StageRankingModel>()
+                    .FromSqlRaw("SELECT * FROM data_provider.StageRankingMimisbrunnr ORDER BY Ranking ");
+            }
 
             if (avatarAddress is { } avatarAddressNotNull)
             {
@@ -445,26 +443,12 @@ namespace NineChronicles.DataProvider.Store
             if (itemSubType is { } itemSubTypeNotNull)
             {
                 query = ctx.Set<EquipmentRankingModel>()
-                    .FromSqlRaw("SELECT `ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, `Cp`, `Level`, " +
-                                 "`ItemSubType`, " +
-                                 "(SELECT `a`.`Name` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Name`, " +
-                                 "(SELECT `a`.`AvatarLevel` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `AvatarLevel`, " +
-                                 "(SELECT `a`.`TitleId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `TitleId`, " +
-                                 "(SELECT `a`.`ArmorId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `ArmorId`, " +
-                                 "ROW_NUMBER() OVER(ORDER BY `Cp` DESC, `Level` DESC) " +
-                                 $"Ranking FROM `Equipments` where `ItemSubType` = \"{itemSubTypeNotNull}\" ");
+                    .FromSqlRaw($"SELECT * FROM EquipmentRanking{itemSubTypeNotNull} ORDER BY Ranking ");
             }
             else
             {
                 query = ctx.Set<EquipmentRankingModel>()
-                    .FromSqlRaw("SELECT `ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, `Cp`, `Level`, " +
-                                "`ItemSubType`, " +
-                                "(SELECT `a`.`Name` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Name`, " +
-                                "(SELECT `a`.`AvatarLevel` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `AvatarLevel`, " +
-                                "(SELECT `a`.`TitleId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `TitleId`, " +
-                                "(SELECT `a`.`ArmorId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `ArmorId`, " +
-                                "ROW_NUMBER() OVER(ORDER BY `Cp` DESC, `Level` DESC) " +
-                                "Ranking FROM `Equipments` ");
+                    .FromSqlRaw("SELECT * FROM EquipmentRanking ORDER BY Ranking ");
             }
 
             if (avatarAddress is { } avatarAddressNotNull)
