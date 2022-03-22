@@ -12,5 +12,13 @@ namespace NineChronicles.DataProvider.Store.Models
         public AgentModel? Agent { get; set; }
 
         public string? Name { get; set; }
+
+        public int? AvatarLevel { get; set; }
+
+        public int? TitleId { get; set; }
+
+        public int? ArmorId { get; set; }
+
+        public int? Cp { get; set; }
     }
 }

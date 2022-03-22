@@ -9,6 +9,11 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Avatars` (
     `Address` VARCHAR(100) NOT NULL,
     `AgentAddress` VARCHAR(100) NOT NULL,
     `Name` VARCHAR(100) NOT NULL,
+    `AvatarLevel` INT NOT NULL,
+    `TitleId` INT,
+    `ArmorId` INT,
+    `Cp` INT,
+    `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
     PRIMARY KEY (`Address`),
     INDEX `fk_Avatars_Agent_idx` (`AgentAddress`),

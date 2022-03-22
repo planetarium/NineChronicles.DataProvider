@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20220118125358_AbilityRanking")]
+    partial class AbilityRanking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -148,29 +150,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.ToTable("CombinationEquipments");
                 });
 
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.CraftRankingInputModel", b =>
-                {
-                    b.Property<string>("AvatarAddress")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("AgentAddress")
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("BlockIndex")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CraftCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Ranking")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("AvatarAddress");
-
-                    b.ToTable("CraftRankings");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.CraftRankingOutputModel", b =>
+            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.CraftRankingModel", b =>
                 {
                     b.Property<string>("AvatarAddress")
                         .HasColumnType("TEXT");
@@ -204,7 +184,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
                     b.HasKey("AvatarAddress");
 
-                    b.ToTable("CraftRankingsOutput");
+                    b.ToTable("CraftRankings");
                 });
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.EquipmentModel", b =>
