@@ -75,7 +75,7 @@ namespace NineChronicles.DataProvider.Executable
                     minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget,
                     bucketSize: headlessConfig.BucketSize,
                     staticPeerStrings: headlessConfig.StaticPeerStrings,
-                    render: true,
+                    render: headlessConfig.Render,
                     preload: false,
                     transportType: "netmq");
 
