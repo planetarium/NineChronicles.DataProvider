@@ -32,7 +32,7 @@ namespace NineChronicles.DataProvider.Store
                 using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
                 if (ctx.Avatars?.Find(address.ToString()) is null)
                 {
-                    ctx.Avatars!.Add(
+                    ctx.Avatars!.AddAsync(
                         new AvatarModel()
                         {
                             Address = address.ToString(),
@@ -91,7 +91,7 @@ namespace NineChronicles.DataProvider.Store
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             if (ctx.Agents?.Find(address.ToString()) is null)
             {
-                ctx.Agents!.Add(
+                ctx.Agents!.AddAsync(
                     new AgentModel()
                     {
                         Address = address.ToString(),
@@ -112,7 +112,7 @@ namespace NineChronicles.DataProvider.Store
             long blockIndex)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            ctx.HackAndSlashes!.Add(
+            ctx.HackAndSlashes!.AddAsync(
                 new HackAndSlashModel()
                 {
                     Id = id.ToString(),
@@ -199,7 +199,7 @@ namespace NineChronicles.DataProvider.Store
             long blockIndex)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            ctx.CombinationConsumables!.Add(
+            ctx.CombinationConsumables!.AddAsync(
                 new CombinationConsumableModel()
                 {
                     Id = id.ToString(),
@@ -218,7 +218,7 @@ namespace NineChronicles.DataProvider.Store
             }
             else
             {
-                ctx.CraftRankings!.Add(
+                ctx.CraftRankings!.AddAsync(
                     new CraftRankingInputModel()
                     {
                         AgentAddress = agentAddress.ToString(),
@@ -259,7 +259,7 @@ namespace NineChronicles.DataProvider.Store
             long blockIndex)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            ctx.CombinationEquipments!.Add(
+            ctx.CombinationEquipments!.AddAsync(
                 new CombinationEquipmentModel()
                 {
                     Id = id.ToString(),
@@ -279,7 +279,7 @@ namespace NineChronicles.DataProvider.Store
             }
             else
             {
-                ctx.CraftRankings!.Add(
+                ctx.CraftRankings!.AddAsync(
                     new CraftRankingInputModel()
                     {
                         AgentAddress = agentAddress.ToString(),
@@ -319,7 +319,7 @@ namespace NineChronicles.DataProvider.Store
             long blockIndex)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            ctx.ItemEnhancements!.Add(
+            ctx.ItemEnhancements!.AddAsync(
                 new ItemEnhancementModel()
                 {
                     Id = id.ToString(),
@@ -339,7 +339,7 @@ namespace NineChronicles.DataProvider.Store
             }
             else
             {
-                ctx.CraftRankings!.Add(
+                ctx.CraftRankings!.AddAsync(
                     new CraftRankingInputModel()
                     {
                         AgentAddress = agentAddress.ToString(),
@@ -416,7 +416,7 @@ namespace NineChronicles.DataProvider.Store
             }
             else
             {
-                ctx.Equipments!.Add(
+                ctx.Equipments!.AddAsync(
                     new EquipmentModel()
                     {
                         ItemId = itemId.ToString(),
