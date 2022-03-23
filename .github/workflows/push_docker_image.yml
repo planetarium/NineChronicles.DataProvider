@@ -6,7 +6,6 @@ on:
       - main
       - development
       - rc-*
-      - v100101-avatarfield
 
 jobs:
   build_and_push:
