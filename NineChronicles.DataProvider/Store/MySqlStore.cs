@@ -30,7 +30,7 @@ namespace NineChronicles.DataProvider.Store
             try
             {
                 using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-                if (ctx.Avatars?.Find(address.ToString()) is null)
+                if (ctx.Avatars?.FindAsync(address.ToString()).Result is null)
                 {
                     ctx.Avatars!.AddAsync(
                         new AvatarModel()
@@ -44,7 +44,7 @@ namespace NineChronicles.DataProvider.Store
                             Cp = cp,
                         }
                     );
-                    ctx.SaveChanges();
+                    ctx.SaveChangesAsync();
                 }
                 else
                 {
@@ -60,7 +60,7 @@ namespace NineChronicles.DataProvider.Store
                                 Name = name,
                             }
                         );
-                        updateCtx.SaveChanges();
+                        updateCtx.SaveChangesAsync();
                     }
                     else
                     {
@@ -76,7 +76,7 @@ namespace NineChronicles.DataProvider.Store
                                 Cp = cp,
                             }
                         );
-                        updateCtx.SaveChanges();
+                        updateCtx.SaveChangesAsync();
                     }
                 }
             }
@@ -89,7 +89,7 @@ namespace NineChronicles.DataProvider.Store
         public void StoreAgent(Address address)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            if (ctx.Agents?.Find(address.ToString()) is null)
+            if (ctx.Agents?.FindAsync(address.ToString()).Result is null)
             {
                 ctx.Agents!.AddAsync(
                     new AgentModel()
@@ -99,7 +99,7 @@ namespace NineChronicles.DataProvider.Store
                 );
             }
 
-            ctx.SaveChanges();
+            ctx.SaveChangesAsync();
         }
 
         public void StoreHackAndSlash(
@@ -124,7 +124,7 @@ namespace NineChronicles.DataProvider.Store
                     BlockIndex = blockIndex,
                 }
             );
-            ctx.SaveChanges();
+            ctx.SaveChangesAsync();
         }
 
         public void DeleteHackAndSlash(Guid id)
@@ -211,7 +211,7 @@ namespace NineChronicles.DataProvider.Store
                 }
             );
 
-            if (ctx.CraftRankings?.Find(avatarAddress.ToString()) is { } rankingData)
+            if (ctx.CraftRankings?.FindAsync(avatarAddress.ToString()).Result is { } rankingData)
             {
                 rankingData.CraftCount += 1;
                 rankingData.BlockIndex = blockIndex;
@@ -228,7 +228,7 @@ namespace NineChronicles.DataProvider.Store
                     });
             }
 
-            ctx.SaveChanges();
+            ctx.SaveChangesAsync();
         }
 
         public void DeleteCombinationConsumable(Guid id)
@@ -272,7 +272,7 @@ namespace NineChronicles.DataProvider.Store
                 }
             );
 
-            if (ctx.CraftRankings?.Find(avatarAddress.ToString()) is { } rankingData)
+            if (ctx.CraftRankings?.FindAsync(avatarAddress.ToString()).Result is { } rankingData)
             {
                 rankingData.CraftCount += 1;
                 rankingData.BlockIndex = blockIndex;
@@ -289,7 +289,7 @@ namespace NineChronicles.DataProvider.Store
                     });
             }
 
-            ctx.SaveChanges();
+            ctx.SaveChangesAsync();
         }
 
         public void DeleteCombinationEquipment(Guid id)
@@ -332,7 +332,7 @@ namespace NineChronicles.DataProvider.Store
                 }
             );
 
-            if (ctx.CraftRankings?.Find(avatarAddress.ToString()) is { } rankingData)
+            if (ctx.CraftRankings?.FindAsync(avatarAddress.ToString()).Result is { } rankingData)
             {
                 rankingData.CraftCount += 1;
                 rankingData.BlockIndex = blockIndex;
@@ -349,7 +349,7 @@ namespace NineChronicles.DataProvider.Store
                     });
             }
 
-            ctx.SaveChanges();
+            ctx.SaveChangesAsync();
         }
 
         public void DeleteItemEnhancement(Guid id)
@@ -407,7 +407,7 @@ namespace NineChronicles.DataProvider.Store
             ItemSubType itemSubType)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            if (ctx.Equipments?.Find(itemId.ToString()) is { } equipmentData)
+            if (ctx.Equipments?.FindAsync(itemId.ToString()).Result is { } equipmentData)
             {
                 equipmentData.AgentAddress = agentAddress.ToString();
                 equipmentData.AvatarAddress = avatarAddress.ToString();
@@ -429,7 +429,7 @@ namespace NineChronicles.DataProvider.Store
                     });
             }
 
-            ctx.SaveChanges();
+            ctx.SaveChangesAsync();
         }
 
         public IEnumerable<EquipmentRankingModel> GetEquipmentRanking(
