@@ -52,6 +52,7 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is HackAndSlash has)
                             {
+                                var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has.avatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
@@ -94,11 +95,13 @@ namespace NineChronicles.DataProvider
                                     isMimisbrunnr: has.stageId > 10000000,
                                     ev.BlockIndex
                                 );
-                                Log.Debug("Stored HackAndSlash action in block #{index}", ev.BlockIndex);
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is RankingBattle rb)
                             {
+                                var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(rb.avatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
@@ -132,11 +135,13 @@ namespace NineChronicles.DataProvider
                                     avatarArmorId,
                                     avatarCp);
 
-                                Log.Debug("Stored RankingBattle avatar data in block #{index}", ev.BlockIndex);
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored RankingBattle avatar data in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is CombinationConsumable combinationConsumable)
                             {
+                                var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(combinationConsumable.avatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
@@ -169,11 +174,13 @@ namespace NineChronicles.DataProvider
                                     combinationConsumable.slotIndex,
                                     ev.BlockIndex
                                 );
-                                Log.Debug("Stored CombinationConsumable action in block #{index}", ev.BlockIndex);
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored CombinationConsumable action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is CombinationEquipment combinationEquipment)
                             {
+                                var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(combinationEquipment.avatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
@@ -207,7 +214,9 @@ namespace NineChronicles.DataProvider
                                     combinationEquipment.subRecipeId,
                                     ev.BlockIndex
                                 );
-                                Log.Debug("Stored CombinationEquipment action in block #{index}", ev.BlockIndex);
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored CombinationEquipment action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                                start = DateTimeOffset.Now;
 
                                 var slotState = ev.OutputStates.GetCombinationSlotState(
                                     combinationEquipment.avatarAddress,
@@ -226,14 +235,17 @@ namespace NineChronicles.DataProvider
                                         avatarCp);
                                 }
 
+                                end = DateTimeOffset.Now;
                                 Log.Debug(
-                                    "Stored avatar {address}'s equipment in block #{index}",
+                                    "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
                                     combinationEquipment.avatarAddress,
-                                    ev.BlockIndex);
+                                    ev.BlockIndex,
+                                    (end - start).Milliseconds);
                             }
 
                             if (ev.Action is ItemEnhancement itemEnhancement)
                             {
+                                var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
@@ -267,7 +279,9 @@ namespace NineChronicles.DataProvider
                                     itemEnhancement.slotIndex,
                                     ev.BlockIndex
                                 );
-                                Log.Debug("Stored ItemEnhancement action in block #{index}", ev.BlockIndex);
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                                start = DateTimeOffset.Now;
 
                                 var slotState = ev.OutputStates.GetCombinationSlotState(
                                     itemEnhancement.avatarAddress,
@@ -286,14 +300,17 @@ namespace NineChronicles.DataProvider
                                         avatarCp);
                                 }
 
+                                end = DateTimeOffset.Now;
                                 Log.Debug(
-                                    "Stored avatar {address}'s equipment in block #{index}",
+                                    "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
                                     itemEnhancement.avatarAddress,
-                                    ev.BlockIndex);
+                                    ev.BlockIndex,
+                                    (end - start).Milliseconds);
                             }
 
                             if (ev.Action is Buy buy)
                             {
+                                var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
@@ -354,10 +371,12 @@ namespace NineChronicles.DataProvider
                                     }
                                 }
 
+                                var end = DateTimeOffset.Now;
                                 Log.Debug(
-                                    "Stored avatar {address}'s equipment in block #{index}",
+                                    "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
                                     buy.buyerAvatarAddress,
-                                    ev.BlockIndex);
+                                    ev.BlockIndex,
+                                    (end - start).Milliseconds);
                             }
                         }
                         catch (Exception ex)
