@@ -1,6 +1,7 @@
 namespace NineChronicles.DataProvider
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -13,6 +14,7 @@ namespace NineChronicles.DataProvider
     using Nekoyume.Model.State;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.Store;
+    using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless;
     using Serilog;
 
@@ -22,6 +24,32 @@ namespace NineChronicles.DataProvider
         private readonly ActionRenderer _actionRenderer;
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
+        private readonly List<AgentModel> _hasAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _hasAvatarList = new List<AvatarModel>();
+        private readonly List<HackAndSlashModel> _hasList = new List<HackAndSlashModel>();
+        private readonly List<AgentModel> _rbAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _rbAvatarList = new List<AvatarModel>();
+        private readonly List<AgentModel> _ccAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _ccAvatarList = new List<AvatarModel>();
+        private readonly List<CombinationConsumableModel> _ccList = new List<CombinationConsumableModel>();
+        private readonly List<AgentModel> _ceAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _ceAvatarList = new List<AvatarModel>();
+        private readonly List<CombinationEquipmentModel> _ceList = new List<CombinationEquipmentModel>();
+        private readonly List<AgentModel> _eqAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _eqAvatarList = new List<AvatarModel>();
+        private readonly List<EquipmentModel> _eqList = new List<EquipmentModel>();
+        private readonly List<AgentModel> _ieAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _ieAvatarList = new List<AvatarModel>();
+        private readonly List<ItemEnhancementModel> _ieList = new List<ItemEnhancementModel>();
+        private readonly List<AgentModel> _buyAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _buyAvatarList = new List<AvatarModel>();
+        private int _hasCount = 0;
+        private int _rbCount = 0;
+        private int _ccCount = 0;
+        private int _ceCount = 0;
+        private int _eqCount = 0;
+        private int _ieCount = 0;
+        private int _buyCount = 0;
 
         public RenderSubscriber(
             NineChroniclesNodeService nodeService,
@@ -77,24 +105,45 @@ namespace NineChronicles.DataProvider
                                     avatarCp);
 
                                 bool isClear = avatarState.stageMap.ContainsKey(has.stageId);
-                                MySqlStore.StoreAgent(ev.Signer);
-                                MySqlStore.StoreAvatar(
-                                    has.avatarAddress,
-                                    ev.Signer,
-                                    avatarName,
-                                    avatarLevel,
-                                    avatarTitleId,
-                                    avatarArmorId,
-                                    avatarCp);
-                                MySqlStore.StoreHackAndSlash(
-                                    has.Id,
-                                    ev.Signer,
-                                    has.avatarAddress,
-                                    has.stageId,
-                                    isClear,
-                                    isMimisbrunnr: has.stageId > 10000000,
-                                    ev.BlockIndex
-                                );
+
+                                _hasAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _hasAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = has.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _hasList.Add(new HackAndSlashModel()
+                                {
+                                    Id = has.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = has.avatarAddress.ToString(),
+                                    StageId = has.stageId,
+                                    Cleared = isClear,
+                                    Mimisbrunnr = has.stageId > 10000000,
+                                    BlockIndex = ev.BlockIndex,
+                                });
+
+                                _hasCount++;
+                                Console.WriteLine(_hasCount);
+                                if (_hasCount == 100)
+                                {
+                                    MySqlStore.StoreAgentList(_hasAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                    MySqlStore.StoreAvatarList(_hasAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                    MySqlStore.StoreHackAndSlashList(_hasList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
+                                    _hasCount = 0;
+                                    _hasAgentList.Clear();
+                                    _hasAvatarList.Clear();
+                                    _hasList.Clear();
+                                }
+
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
@@ -125,15 +174,31 @@ namespace NineChronicles.DataProvider
                                     avatarTitleId,
                                     avatarCp);
 
-                                MySqlStore.StoreAgent(ev.Signer);
-                                MySqlStore.StoreAvatar(
-                                    rb.avatarAddress,
-                                    ev.Signer,
-                                    avatarName,
-                                    avatarLevel,
-                                    avatarTitleId,
-                                    avatarArmorId,
-                                    avatarCp);
+                                _rbAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _rbAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = rb.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+
+                                _rbCount++;
+                                Console.WriteLine(_rbCount);
+                                if (_rbCount == 100)
+                                {
+                                    MySqlStore.StoreAgentList(_rbAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                    MySqlStore.StoreAvatarList(_rbAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                    _rbCount = 0;
+                                    _rbAgentList.Clear();
+                                    _rbAvatarList.Clear();
+                                }
 
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored RankingBattle avatar data in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
@@ -157,23 +222,43 @@ namespace NineChronicles.DataProvider
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
 
-                                MySqlStore.StoreAgent(ev.Signer);
-                                MySqlStore.StoreAvatar(
-                                    combinationConsumable.avatarAddress,
-                                    ev.Signer,
-                                    avatarName,
-                                    avatarLevel,
-                                    avatarTitleId,
-                                    avatarArmorId,
-                                    avatarCp);
-                                MySqlStore.StoreCombinationConsumable(
-                                    combinationConsumable.Id,
-                                    ev.Signer,
-                                    combinationConsumable.avatarAddress,
-                                    combinationConsumable.recipeId,
-                                    combinationConsumable.slotIndex,
-                                    ev.BlockIndex
-                                );
+                                _ccAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _ccAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = combinationConsumable.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _ccList.Add(new CombinationConsumableModel()
+                                {
+                                    Id = combinationConsumable.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = combinationConsumable.avatarAddress.ToString(),
+                                    RecipeId = combinationConsumable.recipeId,
+                                    SlotIndex = combinationConsumable.slotIndex,
+                                    BlockIndex = ev.BlockIndex,
+                                });
+
+                                _ccCount++;
+                                Console.WriteLine(_ccCount);
+                                if (_ccCount == 100)
+                                {
+                                    MySqlStore.StoreAgentList(_ccAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                    MySqlStore.StoreAvatarList(_ccAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                    MySqlStore.StoreCombinationConsumableList(_ccList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
+                                    _ccCount = 0;
+                                    _ccAgentList.Clear();
+                                    _ccAvatarList.Clear();
+                                    _ccList.Clear();
+                                }
+
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored CombinationConsumable action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
@@ -196,24 +281,44 @@ namespace NineChronicles.DataProvider
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
 
-                                MySqlStore.StoreAgent(ev.Signer);
-                                MySqlStore.StoreAvatar(
-                                    combinationEquipment.avatarAddress,
-                                    ev.Signer,
-                                    avatarName,
-                                    avatarLevel,
-                                    avatarTitleId,
-                                    avatarArmorId,
-                                    avatarCp);
-                                MySqlStore.StoreCombinationEquipment(
-                                    combinationEquipment.Id,
-                                    ev.Signer,
-                                    combinationEquipment.avatarAddress,
-                                    combinationEquipment.recipeId,
-                                    combinationEquipment.slotIndex,
-                                    combinationEquipment.subRecipeId,
-                                    ev.BlockIndex
-                                );
+                                _ceAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _ceAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = combinationEquipment.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _ceList.Add(new CombinationEquipmentModel()
+                                {
+                                    Id = combinationEquipment.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = combinationEquipment.avatarAddress.ToString(),
+                                    RecipeId = combinationEquipment.recipeId,
+                                    SlotIndex = combinationEquipment.slotIndex,
+                                    SubRecipeId = combinationEquipment.subRecipeId ?? 0,
+                                    BlockIndex = ev.BlockIndex,
+                                });
+
+                                _ceCount++;
+                                Console.WriteLine(_ceCount);
+                                if (_ceCount == 100)
+                                {
+                                    MySqlStore.StoreAgentList(_ceAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                    MySqlStore.StoreAvatarList(_ceAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                    MySqlStore.StoreCombinationEquipmentList(_ceList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
+                                    _ceCount = 0;
+                                    _ceAgentList.Clear();
+                                    _ceAvatarList.Clear();
+                                    _ceList.Clear();
+                                }
+
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored CombinationEquipment action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.Now;
@@ -225,14 +330,14 @@ namespace NineChronicles.DataProvider
                                 if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                                 {
                                     ProcessEquipmentData(
-                                        ev.Signer,
-                                        combinationEquipment.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable,
-                                        avatarName,
-                                        avatarLevel,
-                                        avatarTitleId,
-                                        avatarArmorId,
-                                        avatarCp);
+                                         ev.Signer,
+                                         combinationEquipment.avatarAddress,
+                                         avatarName,
+                                         avatarLevel,
+                                         avatarTitleId,
+                                         avatarArmorId,
+                                         avatarCp,
+                                         (Equipment)slotState.Result.itemUsable);
                                 }
 
                                 end = DateTimeOffset.Now;
@@ -261,24 +366,44 @@ namespace NineChronicles.DataProvider
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
 
-                                MySqlStore.StoreAgent(ev.Signer);
-                                MySqlStore.StoreAvatar(
-                                    itemEnhancement.avatarAddress,
-                                    ev.Signer,
-                                    avatarName,
-                                    avatarLevel,
-                                    avatarTitleId,
-                                    avatarArmorId,
-                                    avatarCp);
-                                MySqlStore.StoreItemEnhancement(
-                                    itemEnhancement.Id,
-                                    ev.Signer,
-                                    itemEnhancement.avatarAddress,
-                                    itemEnhancement.itemId,
-                                    itemEnhancement.materialId,
-                                    itemEnhancement.slotIndex,
-                                    ev.BlockIndex
-                                );
+                                _ieAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _ieAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = itemEnhancement.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _ieList.Add(new ItemEnhancementModel()
+                                {
+                                    Id = itemEnhancement.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = itemEnhancement.avatarAddress.ToString(),
+                                    ItemId = itemEnhancement.itemId.ToString(),
+                                    MaterialId = itemEnhancement.materialId.ToString(),
+                                    SlotIndex = itemEnhancement.slotIndex,
+                                    BlockIndex = ev.BlockIndex,
+                                });
+
+                                _ieCount++;
+                                Console.WriteLine(_ieCount);
+                                if (_ieCount == 100)
+                                {
+                                    MySqlStore.StoreAgentList(_ieAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                    MySqlStore.StoreAvatarList(_ieAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                    MySqlStore.StoreItemEnhancementList(_ieList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
+                                    _ieCount = 0;
+                                    _ieAgentList.Clear();
+                                    _ieAvatarList.Clear();
+                                    _ieList.Clear();
+                                }
+
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.Now;
@@ -292,12 +417,12 @@ namespace NineChronicles.DataProvider
                                     ProcessEquipmentData(
                                         ev.Signer,
                                         itemEnhancement.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable,
                                         avatarName,
                                         avatarLevel,
                                         avatarTitleId,
                                         avatarArmorId,
-                                        avatarCp);
+                                        avatarCp,
+                                        (Equipment)slotState.Result.itemUsable);
                                 }
 
                                 end = DateTimeOffset.Now;
@@ -326,15 +451,32 @@ namespace NineChronicles.DataProvider
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
 
-                                MySqlStore.StoreAgent(ev.Signer);
-                                MySqlStore.StoreAvatar(
-                                    buy.buyerAvatarAddress,
-                                    ev.Signer,
-                                    avatarName,
-                                    avatarLevel,
-                                    avatarTitleId,
-                                    avatarArmorId,
-                                    avatarCp);
+                                _buyAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _buyAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = buy.buyerAvatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+
+                                _buyCount++;
+                                Console.WriteLine(_buyCount);
+                                if (_buyCount == 100)
+                                {
+                                    MySqlStore.StoreAgentList(_buyAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                    MySqlStore.StoreAvatarList(_buyAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                    _buyCount = 0;
+                                    _buyAgentList.Clear();
+                                    _buyAvatarList.Clear();
+                                }
+
                                 var buyerInventory = avatarState.inventory;
                                 foreach (var purchaseInfo in buy.purchaseInfos)
                                 {
@@ -361,12 +503,12 @@ namespace NineChronicles.DataProvider
                                             ProcessEquipmentData(
                                                 ev.Signer,
                                                 buy.buyerAvatarAddress,
-                                                equipmentNotNull,
                                                 avatarName,
                                                 avatarLevel,
                                                 avatarTitleId,
                                                 avatarArmorId,
-                                                avatarCp);
+                                                avatarCp,
+                                                equipmentNotNull);
                                         }
                                     }
                                 }
@@ -435,12 +577,12 @@ namespace NineChronicles.DataProvider
                                     ProcessEquipmentData(
                                         ev.Signer,
                                         combinationEquipment.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable,
                                         avatarName,
                                         avatarLevel,
                                         avatarTitleId,
                                         avatarArmorId,
-                                        avatarCp);
+                                        avatarCp,
+                                        (Equipment)slotState.Result.itemUsable);
                                 }
 
                                 Log.Debug(
@@ -476,12 +618,12 @@ namespace NineChronicles.DataProvider
                                     ProcessEquipmentData(
                                         ev.Signer,
                                         itemEnhancement.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable,
                                         avatarName,
                                         avatarLevel,
                                         avatarTitleId,
                                         avatarArmorId,
-                                        avatarCp);
+                                        avatarCp,
+                                        (Equipment)slotState.Result.itemUsable);
                                 }
 
                                 Log.Debug(
@@ -541,12 +683,12 @@ namespace NineChronicles.DataProvider
                                             ProcessEquipmentData(
                                                 purchaseInfo.SellerAvatarAddress,
                                                 purchaseInfo.SellerAgentAddress,
-                                                equipmentNotNull,
                                                 avatarName,
                                                 avatarLevel,
                                                 avatarTitleId,
                                                 avatarArmorId,
-                                                avatarCp);
+                                                avatarCp,
+                                                equipmentNotNull);
                                         }
                                     }
                                 }
@@ -568,31 +710,51 @@ namespace NineChronicles.DataProvider
         private void ProcessEquipmentData(
             Address agentAddress,
             Address avatarAddress,
-            Equipment equipment,
             string avatarName,
-            int? avatarLevel,
+            int avatarLevel,
             int? avatarTitleId,
-            int? avatarArmorId,
-            int? avatarCp)
+            int avatarArmorId,
+            int avatarCp,
+            Equipment equipment)
         {
-            MySqlStore.StoreAgent(agentAddress);
-            MySqlStore.StoreAvatar(
-                avatarAddress,
-                agentAddress,
-                avatarName,
-                avatarLevel,
-                avatarTitleId,
-                avatarArmorId,
-                avatarCp);
             var cp = CPHelper.GetCP(equipment);
-            MySqlStore.ProcessEquipment(
-                equipment.ItemId,
-                agentAddress,
-                avatarAddress,
-                equipment.Id,
-                cp,
-                equipment.level,
-                equipment.ItemSubType);
+            _eqAgentList.Add(new AgentModel()
+            {
+                Address = agentAddress.ToString(),
+            });
+            _eqAvatarList.Add(new AvatarModel()
+            {
+                Address = avatarAddress.ToString(),
+                AgentAddress = agentAddress.ToString(),
+                Name = avatarName,
+                AvatarLevel = avatarLevel,
+                TitleId = avatarTitleId,
+                ArmorId = avatarArmorId,
+                Cp = avatarCp,
+            });
+            _eqList.Add(new EquipmentModel()
+            {
+                ItemId = equipment.ItemId.ToString(),
+                AgentAddress = agentAddress.ToString(),
+                AvatarAddress = avatarAddress.ToString(),
+                EquipmentId = equipment.Id,
+                Cp = cp,
+                Level = equipment.level,
+                ItemSubType = equipment.ItemSubType.ToString(),
+            });
+
+            _eqCount++;
+            Console.WriteLine(_eqCount);
+            if (_eqCount == 100)
+            {
+                MySqlStore.StoreAgentList(_eqAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                MySqlStore.StoreAvatarList(_eqAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                MySqlStore.ProcessEquipmentList(_eqList.GroupBy(i => i.ItemId).Select(i => i.FirstOrDefault()).ToList());
+                _eqCount = 0;
+                _eqAgentList.Clear();
+                _eqAvatarList.Clear();
+                _eqList.Clear();
+            }
         }
     }
 }

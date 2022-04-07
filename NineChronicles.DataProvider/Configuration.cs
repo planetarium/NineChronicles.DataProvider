@@ -71,6 +71,8 @@ namespace NineChronicles.DataProvider
 
         public bool AuthorizedMiner { get; set; }
 
+        public bool Preload { get; set; }
+
         public int TxLifeTime { get; set; }
 
         public int MessageTimeout { get; set; }
