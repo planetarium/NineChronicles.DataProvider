@@ -50,6 +50,7 @@ namespace NineChronicles.DataProvider
         private int _eqCount = 0;
         private int _ieCount = 0;
         private int _buyCount = 0;
+        private readonly int _insertInterval = 500;
 
         public RenderSubscriber(
             NineChroniclesNodeService nodeService,
@@ -133,7 +134,7 @@ namespace NineChronicles.DataProvider
 
                                 _hasCount++;
                                 Console.WriteLine(_hasCount);
-                                if (_hasCount == 100)
+                                if (_hasCount == _insertInterval)
                                 {
                                     MySqlStore.StoreAgentList(_hasAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                     MySqlStore.StoreAvatarList(_hasAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
@@ -191,7 +192,7 @@ namespace NineChronicles.DataProvider
 
                                 _rbCount++;
                                 Console.WriteLine(_rbCount);
-                                if (_rbCount == 100)
+                                if (_rbCount == _insertInterval)
                                 {
                                     MySqlStore.StoreAgentList(_rbAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                     MySqlStore.StoreAvatarList(_rbAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
@@ -248,7 +249,7 @@ namespace NineChronicles.DataProvider
 
                                 _ccCount++;
                                 Console.WriteLine(_ccCount);
-                                if (_ccCount == 100)
+                                if (_ccCount == _insertInterval)
                                 {
                                     MySqlStore.StoreAgentList(_ccAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                     MySqlStore.StoreAvatarList(_ccAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
@@ -308,7 +309,7 @@ namespace NineChronicles.DataProvider
 
                                 _ceCount++;
                                 Console.WriteLine(_ceCount);
-                                if (_ceCount == 100)
+                                if (_ceCount == _insertInterval)
                                 {
                                     MySqlStore.StoreAgentList(_ceAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                     MySqlStore.StoreAvatarList(_ceAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
@@ -393,7 +394,7 @@ namespace NineChronicles.DataProvider
 
                                 _ieCount++;
                                 Console.WriteLine(_ieCount);
-                                if (_ieCount == 100)
+                                if (_ieCount == _insertInterval)
                                 {
                                     MySqlStore.StoreAgentList(_ieAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                     MySqlStore.StoreAvatarList(_ieAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
@@ -468,7 +469,7 @@ namespace NineChronicles.DataProvider
 
                                 _buyCount++;
                                 Console.WriteLine(_buyCount);
-                                if (_buyCount == 100)
+                                if (_buyCount == _insertInterval)
                                 {
                                     MySqlStore.StoreAgentList(_buyAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                     MySqlStore.StoreAvatarList(_buyAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
@@ -745,7 +746,7 @@ namespace NineChronicles.DataProvider
 
             _eqCount++;
             Console.WriteLine(_eqCount);
-            if (_eqCount == 100)
+            if (_eqCount == _insertInterval)
             {
                 MySqlStore.StoreAgentList(_eqAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                 MySqlStore.StoreAvatarList(_eqAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
