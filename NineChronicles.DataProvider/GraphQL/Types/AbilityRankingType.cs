@@ -3,12 +3,10 @@
     using global::GraphQL.Types;
     using NineChronicles.DataProvider.Store.Models;
 
-    public class StageRankingType : ObjectGraphType<StageRankingModel>
+    public class AbilityRankingType : ObjectGraphType<AbilityRankingModel>
     {
-        public StageRankingType()
+        public AbilityRankingType()
         {
-            Field(x => x.Ranking);
-            Field(x => x.ClearedStageId);
             Field(x => x.AvatarAddress);
             Field(x => x.AgentAddress);
             Field(x => x.Name);
@@ -16,9 +14,9 @@
             Field(x => x.TitleId, nullable: true);
             Field(x => x.ArmorId, nullable: true);
             Field(x => x.Cp, nullable: true);
-            Field(x => x.BlockIndex);
+            Field(x => x.Ranking);
 
-            Name = "StageRanking";
+            Name = "AbilityRanking";
         }
     }
 }

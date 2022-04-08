@@ -14,6 +14,10 @@
             Field(x => x.Cp);
             Field(x => x.Level);
             Field(x => x.ItemSubType);
+            Field(x => x.Name);
+            Field(x => x.AvatarLevel, nullable: true);
+            Field(x => x.TitleId, nullable: true);
+            Field(x => x.ArmorId, nullable: true);
             Field(x => x.Ranking);
 
             Name = "EquipmentRanking";

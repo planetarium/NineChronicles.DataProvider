@@ -60,7 +60,6 @@ namespace NineChronicles.DataProvider.Executable
                     headlessConfig.Host,
                     headlessConfig.Port,
                     headlessConfig.SwarmPrivateKeyString,
-                    headlessConfig.MinimumDifficulty,
                     headlessConfig.StoreType,
                     headlessConfig.StorePath,
                     100,
@@ -70,18 +69,21 @@ namespace NineChronicles.DataProvider.Executable
                     noMiner: true,
                     workers: headlessConfig.Workers,
                     confirmations: headlessConfig.Confirmations,
-                    maximumTransactions: headlessConfig.MaximumTransactions,
                     messageTimeout: headlessConfig.MessageTimeout,
                     tipTimeout: headlessConfig.TipTimeout,
                     demandBuffer: headlessConfig.DemandBuffer,
+                    minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget,
+                    bucketSize: headlessConfig.BucketSize,
                     staticPeerStrings: headlessConfig.StaticPeerStrings,
-                    render: true,
-                    preload: false);
+                    render: headlessConfig.Render,
+                    preload: false,
+                    transportType: "netmq");
 
             var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
             {
                MinerPrivateKey = null,
                Libplanet = properties,
+               TxQuotaPerSigner = 10,
             };
 
             if (headlessConfig.LogActionRenders)

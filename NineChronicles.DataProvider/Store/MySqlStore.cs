@@ -7,6 +7,7 @@ namespace NineChronicles.DataProvider.Store
     using Microsoft.EntityFrameworkCore;
     using Nekoyume.Model.Item;
     using NineChronicles.DataProvider.Store.Models;
+    using Serilog;
 
     public class MySqlStore
     {
@@ -20,22 +21,69 @@ namespace NineChronicles.DataProvider.Store
         public void StoreAvatar(
             Address address,
             Address agentAddress,
-            string name)
+            string name,
+            int? avatarLevel,
+            int? titleId,
+            int? armorId,
+            int? cp)
         {
-            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            if (ctx.Avatars?.Find(address.ToString()) is null)
+            try
             {
-                ctx.Avatars!.Add(
-                    new AvatarModel()
+                using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                if (ctx.Avatars?.Find(address.ToString()) is null)
+                {
+                    ctx.Avatars!.Add(
+                        new AvatarModel()
+                        {
+                            Address = address.ToString(),
+                            AgentAddress = agentAddress.ToString(),
+                            Name = name,
+                            AvatarLevel = avatarLevel,
+                            TitleId = titleId,
+                            ArmorId = armorId,
+                            Cp = cp,
+                        }
+                    );
+                    ctx.SaveChanges();
+                }
+                else
+                {
+                    ctx.Dispose();
+                    using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                    if (avatarLevel == null && titleId == null && armorId == null && cp == null)
                     {
-                        Address = address.ToString(),
-                        AgentAddress = agentAddress.ToString(),
-                        Name = name,
+                        updateCtx.Avatars!.Update(
+                            new AvatarModel()
+                            {
+                                Address = address.ToString(),
+                                AgentAddress = agentAddress.ToString(),
+                                Name = name,
+                            }
+                        );
+                        updateCtx.SaveChanges();
                     }
-                );
+                    else
+                    {
+                        updateCtx.Avatars!.Update(
+                            new AvatarModel()
+                            {
+                                Address = address.ToString(),
+                                AgentAddress = agentAddress.ToString(),
+                                Name = name,
+                                AvatarLevel = avatarLevel,
+                                TitleId = titleId,
+                                ArmorId = armorId,
+                                Cp = cp,
+                            }
+                        );
+                        updateCtx.SaveChanges();
+                    }
+                }
             }
-
-            ctx.SaveChanges();
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
         }
 
         public void StoreAgent(Address address)
@@ -117,16 +165,17 @@ namespace NineChronicles.DataProvider.Store
             bool isMimisbrunnr = false)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            var query = ctx.Set<StageRankingModel>()
-                .FromSqlRaw("SELECT `h`.`AvatarAddress`, `h`.`AgentAddress`, MAX(`h`.`StageId`) " +
-                            "AS `ClearedStageId`, (SELECT `a`.`Name` " +
-                            "FROM `Avatars` AS `a` " +
-                            "WHERE `a`.`Address` = `h`.`AvatarAddress` " +
-                            "LIMIT 1) AS `Name`, MIN(`h`.`BlockIndex`) AS `BlockIndex`, " +
-                            "row_number() over(ORDER BY MAX(`h`.`StageId`) DESC, MIN(`h`.`BlockIndex`)) Ranking " +
-                            "FROM `HackAndSlashes` AS `h` " +
-                            $"WHERE (`h`.`Mimisbrunnr` = {isMimisbrunnr}) AND `h`.`Cleared` " +
-                            "GROUP BY `h`.`AvatarAddress`");
+            IQueryable<StageRankingModel>? query = null;
+            if (!isMimisbrunnr)
+            {
+                query = ctx.Set<StageRankingModel>()
+                    .FromSqlRaw("SELECT * FROM data_provider.StageRanking ORDER BY Ranking ");
+            }
+            else
+            {
+                query = ctx.Set<StageRankingModel>()
+                    .FromSqlRaw("SELECT * FROM data_provider.StageRankingMimisbrunnr ORDER BY Ranking ");
+            }
 
             if (avatarAddress is { } avatarAddressNotNull)
             {
@@ -170,7 +219,7 @@ namespace NineChronicles.DataProvider.Store
             else
             {
                 ctx.CraftRankings!.Add(
-                    new CraftRankingModel()
+                    new CraftRankingInputModel()
                     {
                         AgentAddress = agentAddress.ToString(),
                         AvatarAddress = avatarAddress.ToString(),
@@ -231,7 +280,7 @@ namespace NineChronicles.DataProvider.Store
             else
             {
                 ctx.CraftRankings!.Add(
-                    new CraftRankingModel()
+                    new CraftRankingInputModel()
                     {
                         AgentAddress = agentAddress.ToString(),
                         AvatarAddress = avatarAddress.ToString(),
@@ -291,7 +340,7 @@ namespace NineChronicles.DataProvider.Store
             else
             {
                 ctx.CraftRankings!.Add(
-                    new CraftRankingModel()
+                    new CraftRankingInputModel()
                     {
                         AgentAddress = agentAddress.ToString(),
                         AvatarAddress = avatarAddress.ToString(),
@@ -320,15 +369,20 @@ namespace NineChronicles.DataProvider.Store
             ctx.SaveChanges();
         }
 
-        public IEnumerable<CraftRankingModel> GetCraftRanking(
+        public IEnumerable<CraftRankingOutputModel> GetCraftRanking(
             Address? avatarAddress = null,
             int? limit = null)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            var query = ctx.Set<CraftRankingModel>()
+            var query = ctx.Set<CraftRankingOutputModel>()
                 .FromSqlRaw("SELECT `h`.`AvatarAddress`, `AgentAddress`, `CraftCount`, `BlockIndex`, " +
-                    "row_number() over(ORDER BY `CraftCount` DESC, `h`.`BlockIndex`) `Ranking` " +
-                    "FROM `CraftRankings` AS `h` ");
+                            "(SELECT `a`.`Name` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Name`, " +
+                            "(SELECT `a`.`AvatarLevel` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `AvatarLevel`, " +
+                            "(SELECT `a`.`TitleId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `TitleId`, " +
+                            "(SELECT `a`.`ArmorId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `ArmorId`, " +
+                            "(SELECT `a`.`Cp` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Cp`, " +
+                            "row_number() over(ORDER BY `CraftCount` DESC, `h`.`BlockIndex`) `Ranking` " +
+                            "FROM `CraftRankings` AS `h` ");
 
             if (avatarAddress is { } avatarAddressNotNull)
             {
@@ -389,17 +443,36 @@ namespace NineChronicles.DataProvider.Store
             if (itemSubType is { } itemSubTypeNotNull)
             {
                 query = ctx.Set<EquipmentRankingModel>()
-                    .FromSqlRaw("SELECT `ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, `Cp`, `Level`, " +
-                                 "`ItemSubType`, ROW_NUMBER() OVER(ORDER BY `Cp` DESC, `Level` DESC) " +
-                                 $"Ranking FROM `Equipments` where `ItemSubType` = \"{itemSubTypeNotNull}\" ");
+                    .FromSqlRaw($"SELECT * FROM EquipmentRanking{itemSubTypeNotNull} ORDER BY Ranking ");
             }
             else
             {
                 query = ctx.Set<EquipmentRankingModel>()
-                    .FromSqlRaw("SELECT `ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, `Cp`, `Level`, " +
-                                "`ItemSubType`, ROW_NUMBER() OVER(ORDER BY `Cp` DESC, `Level` DESC) " +
-                                "Ranking FROM `Equipments` ");
+                    .FromSqlRaw("SELECT * FROM EquipmentRanking ORDER BY Ranking ");
             }
+
+            if (avatarAddress is { } avatarAddressNotNull)
+            {
+                query = query.Where(s => s.AvatarAddress == avatarAddressNotNull.ToString());
+            }
+
+            if (limit is { } limitNotNull)
+            {
+                query = query.Take(limitNotNull);
+            }
+
+            return query.ToList();
+        }
+
+        public IEnumerable<AbilityRankingModel> GetAbilityRanking(
+            Address? avatarAddress = null,
+            int? limit = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            var query = ctx.Set<AbilityRankingModel>()
+                .FromSqlRaw("SELECT `Address` as `AvatarAddress`, `AgentAddress`, `Name`, `TitleId`, `AvatarLevel`, `ArmorId`, `Cp`, " +
+                            "row_number() over(ORDER BY `Cp` DESC) `Ranking` " +
+                            "FROM `Avatars` ");
 
             if (avatarAddress is { } avatarAddressNotNull)
             {

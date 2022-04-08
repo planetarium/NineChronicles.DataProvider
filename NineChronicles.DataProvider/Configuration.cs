@@ -16,8 +16,6 @@ namespace NineChronicles.DataProvider
 
         public string? SwarmPrivateKeyString { get; set; }
 
-        public int MinimumDifficulty { get; set; }
-
         public string? MinerPrivateKeyString { get; set; }
 
         public string? StoreType { get; set; }
@@ -51,8 +49,6 @@ namespace NineChronicles.DataProvider
 
         public int Confirmations { get; set; }
 
-        public int MaximumTransactions { get; set; }
-
         public bool StrictRendering { get; set; }
 
         public bool IsDev { get; set; }
@@ -62,6 +58,8 @@ namespace NineChronicles.DataProvider
         public int ReorgInterval { get; set; }
 
         public bool LogActionRenders { get; set; }
+
+        public bool Render { get; set; }
 
         public string? AwsCognitoIdentity { get; set; }
 
@@ -80,6 +78,10 @@ namespace NineChronicles.DataProvider
         public int TipTimeout { get; set; }
 
         public int DemandBuffer { get; set; }
+
+        public int MinimumBroadcastTarget { get; set; }
+
+        public int BucketSize { get; set; }
 
         public string[]? StaticPeerStrings { get; set; }
 
