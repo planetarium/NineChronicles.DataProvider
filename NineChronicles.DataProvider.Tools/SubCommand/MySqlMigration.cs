@@ -1,3 +1,5 @@
+using Nekoyume.BlockChain.Policy;
+
 namespace NineChronicles.DataProvider.Tools.SubCommand
 {
     using System;
@@ -101,10 +103,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     storePath,
                     dbConnectionCacheSize: 10000);
             }
-            else if (rocksdbStoreType == "mono")
-            {
-                _baseStore = new MonoRocksDBStore(storePath);
-            }
             else
             {
                 throw new CommandExitedException("Invalid rocksdb-storetype. Please enter 'new' or 'mono'", -1);
@@ -132,20 +130,18 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             }
 
             // Setup base store
-            RocksDBKeyValueStore baseStateRootKeyValueStore = new RocksDBKeyValueStore(Path.Combine(storePath, "state_hashes"));
             RocksDBKeyValueStore baseStateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(storePath, "states"));
             TrieStateStore baseStateStore =
-                new TrieStateStore(baseStateKeyValueStore, baseStateRootKeyValueStore);
+                new TrieStateStore(baseStateKeyValueStore);
 
             // Setup block policy
-            const int minimumDifficulty = 5000000, maximumTransactions = 100;
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
-            IBlockPolicy<NCAction> blockPolicy = blockPolicySource.GetPolicy(minimumDifficulty, maximumTransactions);
+            IBlockPolicy<NCAction> blockPolicy = blockPolicySource.GetPolicy();
 
             // Setup base chain & new chain
-            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(gHash);
+            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, gHash);
             _baseChain = new BlockChain<NCAction>(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis);
 
             // Prepare block hashes to append to new chain
@@ -196,7 +192,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     foreach (var item in
                         _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
                     {
-                        var block = _baseStore.GetBlock<NCAction>(item.value);
+                        var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
                         Console.WriteLine("Migrating {0}/{1}", item.i, remainingCount);
                         WriteCC(block.Miner);
                     }
