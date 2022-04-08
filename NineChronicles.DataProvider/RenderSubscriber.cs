@@ -20,6 +20,7 @@ namespace NineChronicles.DataProvider
 
     public class RenderSubscriber : BackgroundService
     {
+        private const int InsertInterval = 500;
         private readonly BlockRenderer _blockRenderer;
         private readonly ActionRenderer _actionRenderer;
         private readonly ExceptionRenderer _exceptionRenderer;
@@ -43,7 +44,6 @@ namespace NineChronicles.DataProvider
         private readonly List<ItemEnhancementModel> _ieList = new List<ItemEnhancementModel>();
         private readonly List<AgentModel> _buyAgentList = new List<AgentModel>();
         private readonly List<AvatarModel> _buyAvatarList = new List<AvatarModel>();
-        private const int InsertInterval = 500;
         private int _hasCount = 0;
         private int _rbCount = 0;
         private int _ccCount = 0;
