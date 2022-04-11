@@ -438,11 +438,6 @@ namespace NineChronicles.DataProvider
                             {
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
-                                AvatarState avatarState2 = ev.OutputStates.GetAvatarStateV2(buy.purchaseInfos.First().SellerAvatarAddress);
-                                var i = ev.OutputStates.GetShopState();
-                                var e = ev.OutputStates.GetItemSheet();
-                                Console.WriteLine(i.Products.Count);
-                                Console.WriteLine(avatarState2.ToString());
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
                                 var avatarLevel = avatarState.level;
