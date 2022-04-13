@@ -1,4 +1,12 @@
+using System.Net;
+using Bencodex.Types;
+using Lib9c.Model.Order;
+using Nekoyume;
+using Nekoyume.Battle;
 using Nekoyume.BlockChain.Policy;
+using Nekoyume.Model.Item;
+using Nekoyume.Model.State;
+using Nekoyume.TableData;
 
 namespace NineChronicles.DataProvider.Tools.SubCommand
 {
@@ -174,12 +182,12 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 int totalCount = limit ?? (int)_baseStore.CountBlocks();
                 int remainingCount = totalCount;
                 int offsetIdx = 0;
+                // var tasks = new List<Task>();
 
                 while (remainingCount > 0)
                 {
-                    int interval = 100000;
+                    int interval = 10000;
                     int limitInterval;
-                    Task<int>[] taskArray;
                     if (interval < remainingCount)
                     {
                         limitInterval = interval;
@@ -189,13 +197,157 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         limitInterval = remainingCount;
                     }
 
-                    foreach (var item in
-                        _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
-                    {
-                        var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
-                        Console.WriteLine("Migrating {0}/{1}", item.i, remainingCount);
-                        WriteCC(block.Miner);
-                    }
+                    var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, _baseChain.Tip.Index);
+                    var tip = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, (BlockHash)tipHash);
+                    var exec = _baseChain.ExecuteActions(tip);
+                    var ev = exec.First();
+
+                    var count = remainingCount;
+                    var idx = offsetIdx;
+                    // tasks.Add(Task.Run(() =>
+                    // {
+                        foreach (var item in
+                            _baseStore.IterateIndexes(_baseChain.Id, offset + idx ?? 0 + idx, limitInterval)
+                                .Select((value, i) => new { i, value }))
+                        {
+                            var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
+                            Console.WriteLine("Migrating {0}/{1} #{2}", item.i, count, block.Index);
+
+                            foreach (var tx in block.Transactions)
+                            {
+                                if (tx.Actions.FirstOrDefault()?.InnerAction is Buy0 buy0)
+                                {
+                                    Console.WriteLine(buy0.buyerResult);
+                                }
+
+                                if (tx.Actions.FirstOrDefault()?.InnerAction is Buy2 buy2)
+                                {
+                                    Console.WriteLine(buy2.buyerResult);
+                                }
+
+                                if (tx.Actions.FirstOrDefault()?.InnerAction is Buy3 buy3)
+                                {
+                                    Console.WriteLine(buy3.buyerResult);
+                                }
+
+                                if (tx.Actions.FirstOrDefault()?.InnerAction is Buy4 buy4)
+                                {
+                                    Console.WriteLine(buy4.buyerResult);
+                                }
+
+                                if (tx.Actions.FirstOrDefault()?.InnerAction is Buy5 buy5)
+                                {
+                                    Console.WriteLine(buy5.purchaseInfos.Count());
+                                }
+
+                                if (tx.Actions.FirstOrDefault()?.InnerAction is Buy6 buy6)
+                                {
+                                    Console.WriteLine(buy6.purchaseInfos.Count());
+                                }
+
+                                if (tx.Actions.FirstOrDefault()?.InnerAction is Buy7 buy7)
+                                {
+                                    Console.WriteLine(buy7.purchaseInfos.Count());
+                                }
+
+                                if (tx.Actions.FirstOrDefault()?.InnerAction is Buy8 buy8)
+                                {
+                                    Console.WriteLine(buy8.purchaseInfos.Count());
+                                }
+
+                                if (tx.Actions.FirstOrDefault()?.InnerAction is Buy9 buy9)
+                                {
+                                    Console.WriteLine(buy9.purchaseInfos.Count());
+                                }
+
+                                if (tx.Actions.FirstOrDefault()?.InnerAction is Buy buy)
+                                {
+                                    Console.WriteLine(buy.purchaseInfos.Count());
+                                    var buyerAvatarState = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
+                                    var sellerAvatarState = ev.OutputStates.GetAvatarStateV2((Address)buy.purchaseInfos.FirstOrDefault()
+                                        ?.SellerAvatarAddress);
+                                    var itemSheet = ev.OutputStates.GetItemSheet();
+                                    var state = ev.OutputStates.GetState(
+                                        Addresses.GetItemAddress(buy.purchaseInfos.First().TradableId));
+                                    ITradableItem orderItem = (ITradableItem)ItemFactory.Deserialize((Dictionary)state);
+                                    Order order =
+                                        OrderFactory.Deserialize(
+                                            (Dictionary)ev.OutputStates.GetState(Order.DeriveAddress(buy.purchaseInfos.FirstOrDefault().OrderId)));
+                                    var orderReceipt = new OrderReceipt((Dictionary)ev.OutputStates.GetState(OrderReceipt.DeriveAddress(buy.purchaseInfos.FirstOrDefault().OrderId)));
+                                    int itemCount = order is FungibleOrder fungibleOrder ? fungibleOrder.ItemCount : 1;
+                                    // var hi = _baseChain.ExecuteActions(block);
+                                    // var buyerAvatarState2 = hi.FirstOrDefault()?.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
+                                    // var sellerAvatarState2 = hi.FirstOrDefault()?.OutputStates.GetAvatarStateV2((Address)buy.purchaseInfos.FirstOrDefault()
+                                    //     ?.SellerAvatarAddress);
+                                }
+
+                                // if (!_agentList.Contains(tx.Signer.ToString()))
+                                // {
+                                //     WriteAgent(tx.Signer);
+                                //     if (ev.OutputStates.GetAgentState(tx.Signer) is { } agentState)
+                                //     {
+                                //         var avatarAddresses = agentState.avatarAddresses;
+                                //         foreach (var avatarAddress in avatarAddresses)
+                                //         {
+                                //             try
+                                //             {
+                                //                 if (ev.OutputStates.GetAvatarStateV2(avatarAddress.Value) is
+                                //                     { } avatarState)
+                                //                 {
+                                //                     var characterSheet = ev.OutputStates.GetSheet<CharacterSheet>();
+                                //                     var avatarLevel = avatarState.level;
+                                //                     var avatarArmorId = avatarState.GetArmorId();
+                                //                     var avatarTitleCostume =
+                                //                         avatarState.inventory.Costumes.FirstOrDefault(costume =>
+                                //                             costume.ItemSubType == ItemSubType.Title &&
+                                //                             costume.equipped);
+                                //                     int? avatarTitleId = null;
+                                //                     if (avatarTitleCostume != null)
+                                //                     {
+                                //                         avatarTitleId = avatarTitleCostume.Id;
+                                //                     }
+                                //
+                                //                     var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                //                     string avatarName = avatarState.name;
+                                //
+                                //                     Log.Debug(
+                                //                         "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                //                         avatarName,
+                                //                         avatarLevel,
+                                //                         avatarArmorId,
+                                //                         avatarTitleId,
+                                //                         avatarCp);
+                                //                     WriteAvatar(
+                                //                         tx.Signer,
+                                //                         avatarAddress.Value,
+                                //                         avatarName,
+                                //                         avatarLevel,
+                                //                         avatarTitleId ?? 0,
+                                //                         avatarArmorId,
+                                //                         avatarCp);
+                                //                 }
+                                //                 else
+                                //                 {
+                                //                     Console.WriteLine("Hi");
+                                //                 }
+                                //             }
+                                //             catch (Exception e)
+                                //             {
+                                //                 Console.WriteLine("Hi");
+                                //             }
+                                //         }
+                                //     }
+                                    // WriteAgent(tx.Signer);
+                                    // tasks.Add(Task.Run(() =>
+                                    // {
+                                    //     WriteAgent(tx.Signer);
+                                    // }));
+                                // }
+                            }
+
+                            Console.WriteLine("Migrating Done {0}/{1} #{2}", item.i, count, block.Index);
+                        }
+                    // }));
 
                     if (interval < remainingCount)
                     {
@@ -209,6 +361,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     }
                 }
 
+                // Task.WaitAll(tasks.ToArray());
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
@@ -216,6 +369,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 foreach (var path in _agentFiles)
                 {
                     BulkInsert(AgentDbName, path);
+                }
+
+                foreach (var path in _avatarFiles)
+                {
+                    BulkInsert(AvatarDbName, path);
                 }
             }
             catch (Exception e)
@@ -301,7 +459,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             }
         }
 
-        private void WriteCC(
+        private void WriteAgent(
             Address? agentAddress)
         {
             if (agentAddress == null)
@@ -309,12 +467,48 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 return;
             }
 
+            // _agentBulkFile.WriteLine(
+            //     $"{agentAddress.ToString()}");
+            // _agentList.Add(agentAddress.ToString());
             // check if address is already in _agentList
             if (!_agentList.Contains(agentAddress.ToString()))
             {
                 _agentBulkFile.WriteLine(
                     $"{agentAddress.ToString()}");
                 _agentList.Add(agentAddress.ToString());
+            }
+        }
+
+        private void WriteAvatar(
+            Address? agentAddress,
+            Address? avatarAddress,
+            string avatarName,
+            int avatarLevel,
+            int? avatarTitleId,
+            int avatarArmorId,
+            int avatarCp)
+        {
+            if (agentAddress == null)
+            {
+                return;
+            }
+
+            if (avatarAddress == null)
+            {
+                return;
+            }
+
+            if (!_avatarList.Contains(avatarAddress.ToString()))
+            {
+                _avatarBulkFile.WriteLine(
+                    $"{avatarAddress.ToString()};" +
+                    $"{agentAddress.ToString()};" +
+                    $"{avatarName};" +
+                    $"{avatarLevel};" +
+                    $"{avatarTitleId};" +
+                    $"{avatarArmorId};" +
+                    $"{avatarCp}");
+                _avatarList.Add(avatarAddress.ToString());
             }
         }
 
