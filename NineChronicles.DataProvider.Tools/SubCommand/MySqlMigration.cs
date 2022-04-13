@@ -198,7 +198,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     {
                         var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
                         Console.WriteLine("Migrating {0}/{1}", item.i, remainingCount);
-                        WriteCC(block.Miner);
+                        var avatarAddresses = ev.OutputStates.GetAgentState(block.Miner).avatarAddresses;
+                        foreach (var avatarAddress in avatarAddresses)
+                        {
+                            WriteCC(block.Miner, avatarAddress.Value);
+                        }
                     }
 
                     if (interval < remainingCount)
@@ -220,6 +224,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 foreach (var path in _agentFiles)
                 {
                     BulkInsert(AgentDbName, path);
+                }
+
+                foreach (var path in _avatarFiles)
+                {
+                    BulkInsert(AvatarDbName, path);
                 }
             }
             catch (Exception e)
