@@ -196,12 +196,25 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     foreach (var item in
                         _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
                     {
-                        var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
-                        Console.WriteLine("Migrating {0}/{1}", item.i, remainingCount);
-                        var avatarAddresses = ev.OutputStates.GetAgentState(block.Miner).avatarAddresses;
-                        foreach (var avatarAddress in avatarAddresses)
+                        try
                         {
-                            WriteCC(block.Miner, avatarAddress.Value);
+                            var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
+                            Console.WriteLine("Migrating {0}/{1}", item.i, remainingCount);
+                            foreach (var tx in block.Transactions)
+                            {
+                                if (tx.Signer != block.Miner)
+                                {
+                                    var avatarAddresses = ev.OutputStates.GetAgentState(tx.Signer).avatarAddresses;
+                                    foreach (var avatarAddress in avatarAddresses)
+                                    {
+                                        WriteCC(tx.Signer, avatarAddress.Value);
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex);
                         }
                     }
 
