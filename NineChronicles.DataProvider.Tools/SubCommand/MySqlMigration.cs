@@ -169,6 +169,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _avatarList = new List<string>();
 
             CreateBulkFiles();
+            var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, _baseChain.Tip.Index);
+            var tip = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, (BlockHash)tipHash);
+            var exec = _baseChain.ExecuteActions(tip);
+            var ev = exec.First();
             try
             {
                 int totalCount = limit ?? (int)_baseStore.CountBlocks();
@@ -302,7 +306,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         }
 
         private void WriteCC(
-            Address? agentAddress)
+            Address? agentAddress,
+            Address? avatarAddress)
         {
             if (agentAddress == null)
             {
@@ -315,6 +320,16 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 _agentBulkFile.WriteLine(
                     $"{agentAddress.ToString()}");
                 _agentList.Add(agentAddress.ToString());
+            }
+
+            // check if address is already in _avatarList
+            if (!_avatarList.Contains(avatarAddress.ToString()))
+            {
+                _avatarBulkFile.WriteLine(
+                    $"{avatarAddress.ToString()};" +
+                    $"{agentAddress.ToString()};" +
+                    "N/A");
+                _avatarList.Add(avatarAddress.ToString());
             }
         }
 
