@@ -175,6 +175,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             // lists to keep track of inserted addresses to minimize duplicates
             _agentList = new List<string>();
             _avatarList = new List<string>();
+            var eqCount = 0;
+            var mtCount = 0;
+            var csCount = 0;
+            var ctCount = 0;
 
             CreateBulkFiles();
             try
@@ -183,6 +187,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 int remainingCount = totalCount;
                 int offsetIdx = 0;
                 // var tasks = new List<Task>();
+                
 
                 while (remainingCount > 0)
                 {
@@ -262,23 +267,62 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                                 if (tx.Actions.FirstOrDefault()?.InnerAction is Buy buy)
                                 {
-                                    Console.WriteLine(buy.purchaseInfos.Count());
-                                    var buyerAvatarState = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
-                                    var sellerAvatarState = ev.OutputStates.GetAvatarStateV2((Address)buy.purchaseInfos.FirstOrDefault()
-                                        ?.SellerAvatarAddress);
-                                    var itemSheet = ev.OutputStates.GetItemSheet();
-                                    var state = ev.OutputStates.GetState(
-                                        Addresses.GetItemAddress(buy.purchaseInfos.First().TradableId));
-                                    ITradableItem orderItem = (ITradableItem)ItemFactory.Deserialize((Dictionary)state);
-                                    Order order =
-                                        OrderFactory.Deserialize(
-                                            (Dictionary)ev.OutputStates.GetState(Order.DeriveAddress(buy.purchaseInfos.FirstOrDefault().OrderId)));
-                                    var orderReceipt = new OrderReceipt((Dictionary)ev.OutputStates.GetState(OrderReceipt.DeriveAddress(buy.purchaseInfos.FirstOrDefault().OrderId)));
-                                    int itemCount = order is FungibleOrder fungibleOrder ? fungibleOrder.ItemCount : 1;
-                                    // var hi = _baseChain.ExecuteActions(block);
-                                    // var buyerAvatarState2 = hi.FirstOrDefault()?.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
-                                    // var sellerAvatarState2 = hi.FirstOrDefault()?.OutputStates.GetAvatarStateV2((Address)buy.purchaseInfos.FirstOrDefault()
-                                    //     ?.SellerAvatarAddress);
+                                    try
+                                    {
+                                        Console.WriteLine(buy.purchaseInfos.Count());
+                                        var buyerAvatarState = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
+                                        var sellerAvatarState = ev.OutputStates.GetAvatarStateV2((Address) buy
+                                            .purchaseInfos.FirstOrDefault()
+                                            ?.SellerAvatarAddress);
+                                        var itemSheet = ev.OutputStates.GetItemSheet();
+                                        var state = ev.OutputStates.GetState(
+                                            Addresses.GetItemAddress(buy.purchaseInfos.First().TradableId));
+                                        ITradableItem orderItem =
+                                            (ITradableItem) ItemFactory.Deserialize((Dictionary) state);
+                                        if (orderItem.ItemType == ItemType.Material)
+                                        {
+                                            mtCount++;
+                                            Console.WriteLine("Material");
+                                        }
+
+                                        if (orderItem.ItemType == ItemType.Equipment)
+                                        {
+                                            eqCount++;
+                                            Console.WriteLine("Equipment");
+                                        }
+
+                                        if (orderItem.ItemType == ItemType.Consumable)
+                                        {
+                                            csCount++;
+                                            Console.WriteLine("Consumable");
+                                        }
+
+                                        if (orderItem.ItemType == ItemType.Costume)
+                                        {
+                                            ctCount++;
+                                            Console.WriteLine("Costume");
+                                        }
+
+                                        Order order =
+                                            OrderFactory.Deserialize(
+                                                (Dictionary) ev.OutputStates.GetState(
+                                                    Order.DeriveAddress(buy.purchaseInfos.FirstOrDefault().OrderId)));
+                                        var orderReceipt = new OrderReceipt(
+                                            (Dictionary) ev.OutputStates.GetState(
+                                                OrderReceipt.DeriveAddress(buy.purchaseInfos.FirstOrDefault()
+                                                    .OrderId)));
+                                        int itemCount = order is FungibleOrder fungibleOrder
+                                            ? fungibleOrder.ItemCount
+                                            : 1;
+                                        // var hi = _baseChain.ExecuteActions(block);
+                                        // var buyerAvatarState2 = hi.FirstOrDefault()?.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
+                                        // var sellerAvatarState2 = hi.FirstOrDefault()?.OutputStates.GetAvatarStateV2((Address)buy.purchaseInfos.FirstOrDefault()
+                                        //     ?.SellerAvatarAddress);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine(ex.Message);
+                                    }
                                 }
 
                                 // if (!_agentList.Contains(tx.Signer.ToString()))
@@ -365,16 +409,17 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
+                Console.WriteLine($"Equipment: {eqCount}, Costume: {ctCount}, Material: {mtCount}, Consumable: {csCount}");
 
-                foreach (var path in _agentFiles)
-                {
-                    BulkInsert(AgentDbName, path);
-                }
-
-                foreach (var path in _avatarFiles)
-                {
-                    BulkInsert(AvatarDbName, path);
-                }
+                // foreach (var path in _agentFiles)
+                // {
+                //     BulkInsert(AgentDbName, path);
+                // }
+                //
+                // foreach (var path in _avatarFiles)
+                // {
+                //     BulkInsert(AvatarDbName, path);
+                // }
             }
             catch (Exception e)
             {
