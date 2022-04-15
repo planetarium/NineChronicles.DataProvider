@@ -231,14 +231,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                         foreach (var material in userMaterials)
                         {
-                            try
-                            {
-                                WriteMaterial(material, avatarState.agentAddress, avatarAddress);
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine(ex.Message);
-                            }
+
+                            WriteMaterial(material, avatarState.agentAddress, avatarAddress);
                         }
 
                         foreach (var consumable in userConsumables)
