@@ -203,9 +203,9 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         try
                         {
                             var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
+                            Console.WriteLine("Migrating {0}/{1} #{2}", item.i, remainingCount, block.Index);
                             var i = _baseChain.ExecuteActions(block);
                             Console.WriteLine(i.Count);
-                            Console.WriteLine("Migrating {0}/{1}", item.i, remainingCount);
                             foreach (var tx in block.Transactions)
                             {
                                 if (tx.Signer != block.Miner)
