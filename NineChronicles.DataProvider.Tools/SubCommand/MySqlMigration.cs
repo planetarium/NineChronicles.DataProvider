@@ -1,4 +1,8 @@
+using Nekoyume.Battle;
 using Nekoyume.BlockChain.Policy;
+using Nekoyume.Model.Item;
+using Nekoyume.Model.State;
+using Nekoyume.TableData;
 
 namespace NineChronicles.DataProvider.Tools.SubCommand
 {
@@ -199,6 +203,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         try
                         {
                             var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
+                            var i = _baseChain.ExecuteActions(block);
+                            Console.WriteLine(i.Count);
                             Console.WriteLine("Migrating {0}/{1}", item.i, remainingCount);
                             foreach (var tx in block.Transactions)
                             {
@@ -207,7 +213,29 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                     var avatarAddresses = ev.OutputStates.GetAgentState(tx.Signer).avatarAddresses;
                                     foreach (var avatarAddress in avatarAddresses)
                                     {
-                                        WriteCC(tx.Signer, avatarAddress.Value);
+                                        AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress.Value);
+                                        var previousStates = ev.InputContext.PreviousStates;
+                                        var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                        var avatarLevel = avatarState.level;
+                                        var avatarArmorId = avatarState.GetArmorId();
+                                        var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                        int? avatarTitleId = null;
+                                        if (avatarTitleCostume != null)
+                                        {
+                                            avatarTitleId = avatarTitleCostume.Id;
+                                        }
+
+                                        var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                        string avatarName = avatarState.name;
+
+                                        Log.Debug(
+                                            "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                            avatarName,
+                                            avatarLevel,
+                                            avatarArmorId,
+                                            avatarTitleId,
+                                            avatarCp);
+                                        WriteCC(tx.Signer, avatarAddress.Value, avatarName, avatarLevel, avatarTitleId, avatarArmorId, avatarCp);
                                     }
                                 }
                             }
@@ -329,7 +357,12 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
         private void WriteCC(
             Address? agentAddress,
-            Address? avatarAddress)
+            Address? avatarAddress,
+            string name,
+            int level,
+            int? titleId,
+            int armorId,
+            int cp)
         {
             if (agentAddress == null)
             {
@@ -350,7 +383,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 _avatarBulkFile.WriteLine(
                     $"{avatarAddress.ToString()};" +
                     $"{agentAddress.ToString()};" +
-                    "N/A");
+                    $"{name};" +
+                    $"{level};" +
+                    $"{titleId ?? 0};" +
+                    $"{armorId};" +
+                    $"{cp}");
                 _avatarList.Add(avatarAddress.ToString());
             }
         }
