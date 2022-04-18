@@ -239,6 +239,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 //     try
                                 //     {
                                 //         buy0Count++;
+                                //         var i = _baseChain.ExecuteActions(block);
                                 //         Console.WriteLine($"Buy0: {buy0Count}");
                                 //         Console.WriteLine(buy0.buyerResult);
                                 //         var buyerAvatarState = ev.OutputStates.GetAvatarState(buy0.buyerAvatarAddress);
@@ -283,7 +284,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 //         Console.WriteLine(ex.Message);
                                 //     }
                                 // }
-                                //
+
                                 // if (tx.Actions.FirstOrDefault()?.InnerAction is Buy2 buy2)
                                 // {
                                 //     try
@@ -422,104 +423,105 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 //     }
                                 // }
 
-                                if (tx.Actions.FirstOrDefault()?.InnerAction is Buy5 buy5)
-                                {
-                                    try
-                                    {
-                                        Console.WriteLine(buy5.purchaseInfos.Count());
-                                        var buyerAvatarState = ev.OutputStates.GetAvatarStateV2(buy5.buyerAvatarAddress) ?? ev.OutputStates.GetAvatarState(buy5.buyerAvatarAddress);
-                                        var sellerAvatarState = ev.OutputStates.GetAvatarStateV2((Address)buy5
-                                            .purchaseInfos.FirstOrDefault()
-                                            ?.sellerAvatarAddress) ?? ev.OutputStates.GetAvatarState((Address)buy5
-                                            .purchaseInfos.FirstOrDefault()
-                                            ?.sellerAvatarAddress);
-                                        var itemSheet = ev.OutputStates.GetItemSheet();
-                                        var state = ev.OutputStates.GetState(
-                                            Addresses.GetItemAddress(buy5.purchaseInfos.First().productId));
-                                        ITradableItem orderItem =
-                                            (ITradableItem)ItemFactory.Deserialize((Dictionary)state);
-                                        if (orderItem.ItemType == ItemType.Material)
-                                        {
-                                            mtCount++;
-                                            Console.WriteLine("5. Material");
-                                        }
-
-                                        if (orderItem.ItemType == ItemType.Equipment)
-                                        {
-                                            eqCount++;
-                                            Console.WriteLine("5. Equipment");
-                                        }
-
-                                        if (orderItem.ItemType == ItemType.Consumable)
-                                        {
-                                            csCount++;
-                                            Console.WriteLine("5. Consumable");
-                                        }
-
-                                        if (orderItem.ItemType == ItemType.Costume)
-                                        {
-                                            ctCount++;
-                                            Console.WriteLine("5. Costume");
-                                        }
-
-                                        var pr = buy5.buyerMultipleResult.purchaseResults.FirstOrDefault();
-                                        var shopItem1 = pr.shopItem;
-                                        int itemCount = shopItem1.TradableFungibleItemCount == 0 ? 1 : shopItem1.TradableFungibleItemCount;
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Console.WriteLine(ex.Message);
-                                    }
-                                }
-
-                                // if (tx.Actions.FirstOrDefault()?.InnerAction is Buy6 buy6)
+                                // if (tx.Actions.FirstOrDefault()?.InnerAction is Buy5 buy5)
                                 // {
                                 //     try
                                 //     {
-                                //         Console.WriteLine(buy6.purchaseInfos.Count());
-                                //         var buyerAvatarState = ev.OutputStates.GetAvatarStateV2(buy6.buyerAvatarAddress);
-                                //         var sellerAvatarState = ev.OutputStates.GetAvatarStateV2((Address) buy6
+                                //         Console.WriteLine(buy5.purchaseInfos.Count());
+                                //         var i = _baseChain.ExecuteActions(block);
+                                //         var buyerAvatarState = ev.OutputStates.GetAvatarStateV2(buy5.buyerAvatarAddress) ?? ev.OutputStates.GetAvatarState(buy5.buyerAvatarAddress);
+                                //         var sellerAvatarState = ev.OutputStates.GetAvatarStateV2((Address)buy5
+                                //             .purchaseInfos.FirstOrDefault()
+                                //             ?.sellerAvatarAddress) ?? ev.OutputStates.GetAvatarState((Address)buy5
                                 //             .purchaseInfos.FirstOrDefault()
                                 //             ?.sellerAvatarAddress);
                                 //         var itemSheet = ev.OutputStates.GetItemSheet();
                                 //         var state = ev.OutputStates.GetState(
-                                //             Addresses.GetItemAddress(buy6.purchaseInfos.First().productId));
+                                //             Addresses.GetItemAddress(buy5.purchaseInfos.First().productId));
                                 //         ITradableItem orderItem =
-                                //             (ITradableItem) ItemFactory.Deserialize((Dictionary) state);
+                                //             (ITradableItem)ItemFactory.Deserialize((Dictionary)state);
                                 //         if (orderItem.ItemType == ItemType.Material)
                                 //         {
                                 //             mtCount++;
-                                //             Console.WriteLine("6. Material");
+                                //             Console.WriteLine("5. Material");
                                 //         }
                                 //
                                 //         if (orderItem.ItemType == ItemType.Equipment)
                                 //         {
                                 //             eqCount++;
-                                //             Console.WriteLine("6. Equipment");
+                                //             Console.WriteLine("5. Equipment");
                                 //         }
                                 //
                                 //         if (orderItem.ItemType == ItemType.Consumable)
                                 //         {
                                 //             csCount++;
-                                //             Console.WriteLine("6. Consumable");
+                                //             Console.WriteLine("5. Consumable");
                                 //         }
                                 //
                                 //         if (orderItem.ItemType == ItemType.Costume)
                                 //         {
                                 //             ctCount++;
-                                //             Console.WriteLine("6. Costume");
+                                //             Console.WriteLine("5. Costume");
                                 //         }
                                 //
-                                //         var pr = buy6.buyerMultipleResult.purchaseResults.FirstOrDefault();
-                                //         var shopItem = pr.shopItem;
-                                //         int itemCount = shopItem.TradableFungibleItemCount == 0 ? 1 : shopItem.TradableFungibleItemCount;
+                                //         var pr = buy5.buyerMultipleResult.purchaseResults.FirstOrDefault();
+                                //         var shopItem1 = pr.shopItem;
+                                //         int itemCount = shopItem1.TradableFungibleItemCount == 0 ? 1 : shopItem1.TradableFungibleItemCount;
                                 //     }
                                 //     catch (Exception ex)
                                 //     {
                                 //         Console.WriteLine(ex.Message);
                                 //     }
                                 // }
-                                //
+
+                                if (tx.Actions.FirstOrDefault()?.InnerAction is Buy6 buy6)
+                                {
+                                    try
+                                    {
+                                        Console.WriteLine(buy6.purchaseInfos.Count());
+                                        var buyerAvatarState = ev.OutputStates.GetAvatarStateV2(buy6.buyerAvatarAddress);
+                                        var sellerAvatarState = ev.OutputStates.GetAvatarStateV2((Address) buy6
+                                            .purchaseInfos.FirstOrDefault()
+                                            ?.sellerAvatarAddress);
+                                        var itemSheet = ev.OutputStates.GetItemSheet();
+                                        var state = ev.OutputStates.GetState(
+                                            Addresses.GetItemAddress(buy6.purchaseInfos.First().productId));
+                                        ITradableItem orderItem =
+                                            (ITradableItem) ItemFactory.Deserialize((Dictionary) state);
+                                        if (orderItem.ItemType == ItemType.Material)
+                                        {
+                                            mtCount++;
+                                            Console.WriteLine("6. Material");
+                                        }
+                                
+                                        if (orderItem.ItemType == ItemType.Equipment)
+                                        {
+                                            eqCount++;
+                                            Console.WriteLine("6. Equipment");
+                                        }
+                                
+                                        if (orderItem.ItemType == ItemType.Consumable)
+                                        {
+                                            csCount++;
+                                            Console.WriteLine("6. Consumable");
+                                        }
+                                
+                                        if (orderItem.ItemType == ItemType.Costume)
+                                        {
+                                            ctCount++;
+                                            Console.WriteLine("6. Costume");
+                                        }
+                                
+                                        var pr = buy6.buyerMultipleResult.purchaseResults.FirstOrDefault();
+                                        var shopItem = pr.shopItem;
+                                        int itemCount = shopItem.TradableFungibleItemCount == 0 ? 1 : shopItem.TradableFungibleItemCount;
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine(ex.Message);
+                                    }
+                                }
+                                
                                 // if (tx.Actions.FirstOrDefault()?.InnerAction is Buy7 buy7)
                                 // {
                                 //     try
