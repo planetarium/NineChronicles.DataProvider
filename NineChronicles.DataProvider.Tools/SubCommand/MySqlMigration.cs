@@ -216,7 +216,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                         try
                                         {
                                             AvatarState avatarState =
-                                                ev.OutputStates.GetAvatarStateV2(avatarAddress.Value);
+                                                ev.OutputStates.GetAvatarStateV2(avatarAddress.Value) ?? ev.OutputStates.GetAvatarState(avatarAddress.Value);
                                             var previousStates = ev.InputContext.PreviousStates;
                                             var characterSheet = previousStates.GetSheet<CharacterSheet>();
                                             var avatarLevel = avatarState.level;
