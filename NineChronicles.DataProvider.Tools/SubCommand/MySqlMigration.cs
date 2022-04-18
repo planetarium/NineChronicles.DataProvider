@@ -234,56 +234,53 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 //     }
                                 // }
 
-                                // if (tx.Actions.FirstOrDefault()?.InnerAction is Buy0 buy0)
-                                // {
-                                //     try
-                                //     {
-                                //         buy0Count++;
-                                //         var i = _baseChain.ExecuteActions(block);
-                                //         Console.WriteLine($"Buy0: {buy0Count}");
-                                //         Console.WriteLine(buy0.buyerResult);
-                                //         var buyerAvatarState = ev.OutputStates.GetAvatarState(buy0.buyerAvatarAddress);
-                                //         var sellerAvatarState = ev.OutputStates.GetAvatarState(buy0
-                                //                 .sellerAvatarAddress);
-                                //         var itemSheet = ev.OutputStates.GetItemSheet();
-                                //         var shopState = ev.OutputStates.GetShopState();
-                                //         var (productId, shopItem1) = shopState.Products.FirstOrDefault();
-                                //         var state = ev.OutputStates.GetState(
-                                //             Addresses.GetItemAddress(buy0.productId));
-                                //         ITradableItem orderItem =
-                                //             (ITradableItem) ItemFactory.Deserialize((Dictionary) state);
-                                //         if (orderItem.ItemType == ItemType.Material)
-                                //         {
-                                //             mtCount++;
-                                //             Console.WriteLine("0. Material");
-                                //         }
-                                //
-                                //         if (orderItem.ItemType == ItemType.Equipment)
-                                //         {
-                                //             eqCount++;
-                                //             Console.WriteLine("0. Equipment");
-                                //         }
-                                //
-                                //         if (orderItem.ItemType == ItemType.Consumable)
-                                //         {
-                                //             csCount++;
-                                //             Console.WriteLine("0. Consumable");
-                                //         }
-                                //
-                                //         if (orderItem.ItemType == ItemType.Costume)
-                                //         {
-                                //             ctCount++;
-                                //             Console.WriteLine("0. Costume");
-                                //         }
-                                //
-                                //         var shopItem = buy0.buyerResult.shopItem;
-                                //         int itemCount = shopItem.TradableFungibleItemCount == 0 ? 1 : shopItem.TradableFungibleItemCount;
-                                //     }
-                                //     catch (Exception ex)
-                                //     {
-                                //         Console.WriteLine(ex.Message);
-                                //     }
-                                // }
+                                if (tx.Actions.FirstOrDefault()?.InnerAction is Buy0 buy0)
+                                {
+                                    try
+                                    {
+                                        buy0Count++;
+                                        var aes = _baseChain.ExecuteActions(block);
+                                        foreach (var ae in aes)
+                                        {
+                                            var action = (PolymorphicAction<ActionBase>)ae.Action;
+                                            if (action.InnerAction is Buy0 buy0I)
+                                            {
+                                                Console.WriteLine($"Buy0: {buy0Count}");
+                                                Console.WriteLine(buy0I.buyerResult);
+                                                if (buy0I.buyerResult.itemUsable.ItemType == ItemType.Material)
+                                                {
+                                                    mtCount++;
+                                                    Console.WriteLine("0. Material");
+                                                }
+                                                
+                                                if (buy0I.buyerResult.itemUsable.ItemType == ItemType.Equipment)
+                                                {
+                                                    eqCount++;
+                                                    Console.WriteLine("0. Equipment");
+                                                }
+                                                
+                                                if (buy0I.buyerResult.itemUsable.ItemType == ItemType.Consumable)
+                                                {
+                                                    csCount++;
+                                                    Console.WriteLine("0. Consumable");
+                                                }
+                                                
+                                                if (buy0I.buyerResult.itemUsable.ItemType == ItemType.Costume)
+                                                {
+                                                    ctCount++;
+                                                    Console.WriteLine("0. Costume");
+                                                }
+                                                
+                                                var shopItem = buy0I.buyerResult.shopItem;
+                                                int itemCount = shopItem.TradableFungibleItemCount == 0 ? 1 : shopItem.TradableFungibleItemCount;
+                                            }
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine(ex.Message);
+                                    }
+                                }
 
                                 // if (tx.Actions.FirstOrDefault()?.InnerAction is Buy2 buy2)
                                 // {
@@ -478,43 +475,48 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 {
                                     try
                                     {
-                                        Console.WriteLine(buy6.purchaseInfos.Count());
-                                        var buyerAvatarState = ev.OutputStates.GetAvatarStateV2(buy6.buyerAvatarAddress);
-                                        var sellerAvatarState = ev.OutputStates.GetAvatarStateV2((Address) buy6
-                                            .purchaseInfos.FirstOrDefault()
-                                            ?.sellerAvatarAddress);
-                                        var itemSheet = ev.OutputStates.GetItemSheet();
-                                        var state = ev.OutputStates.GetState(
-                                            Addresses.GetItemAddress(buy6.purchaseInfos.First().productId));
-                                        ITradableItem orderItem =
-                                            (ITradableItem) ItemFactory.Deserialize((Dictionary) state);
-                                        if (orderItem.ItemType == ItemType.Material)
+                                        var aes = _baseChain.ExecuteActions(block);
+                                        foreach (var ae in aes)
                                         {
-                                            mtCount++;
-                                            Console.WriteLine("6. Material");
+                                            var action = (PolymorphicAction<ActionBase>)ae.Action;
+                                            if (action.InnerAction is Buy6 buy6i)
+                                            {
+                                                Console.WriteLine(buy6i.purchaseInfos.Count());
+                                                var buyerAvatarState = ev.OutputStates.GetAvatarStateV2(buy6i.buyerAvatarAddress);
+                                                var sellerAvatarState = ev.OutputStates.GetAvatarStateV2((Address) buy6i
+                                                    .purchaseInfos.FirstOrDefault()
+                                                    ?.sellerAvatarAddress);
+                                                foreach (var buy in buy6i.buyerMultipleResult.purchaseResults)
+                                                {
+                                                    if (buy.shopItem.ItemUsable.ItemType == ItemType.Material)
+                                                    {
+                                                        mtCount++;
+                                                        Console.WriteLine("6. Material");
+                                                    }
+                                            
+                                                    if (buy.shopItem.ItemUsable.ItemType == ItemType.Equipment)
+                                                    {
+                                                        eqCount++;
+                                                        Console.WriteLine("6. Equipment");
+                                                    }
+                                            
+                                                    if (buy.shopItem.ItemUsable.ItemType == ItemType.Consumable)
+                                                    {
+                                                        csCount++;
+                                                        Console.WriteLine("6. Consumable");
+                                                    }
+                                            
+                                                    if (buy.shopItem.ItemUsable.ItemType == ItemType.Costume)
+                                                    {
+                                                        ctCount++;
+                                                        Console.WriteLine("6. Costume");
+                                                    }
+
+                                                    int itemCount = buy.shopItem.TradableFungibleItemCount == 0 ? 1 : buy.shopItem.TradableFungibleItemCount;
+                                                    Console.WriteLine($"{itemCount}");
+                                                }
+                                            }
                                         }
-                                
-                                        if (orderItem.ItemType == ItemType.Equipment)
-                                        {
-                                            eqCount++;
-                                            Console.WriteLine("6. Equipment");
-                                        }
-                                
-                                        if (orderItem.ItemType == ItemType.Consumable)
-                                        {
-                                            csCount++;
-                                            Console.WriteLine("6. Consumable");
-                                        }
-                                
-                                        if (orderItem.ItemType == ItemType.Costume)
-                                        {
-                                            ctCount++;
-                                            Console.WriteLine("6. Costume");
-                                        }
-                                
-                                        var pr = buy6.buyerMultipleResult.purchaseResults.FirstOrDefault();
-                                        var shopItem = pr.shopItem;
-                                        int itemCount = shopItem.TradableFungibleItemCount == 0 ? 1 : shopItem.TradableFungibleItemCount;
                                     }
                                     catch (Exception ex)
                                     {
