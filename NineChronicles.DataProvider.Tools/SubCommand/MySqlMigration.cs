@@ -724,6 +724,67 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                     }
                                 }
 
+                                if (tx.Actions.FirstOrDefault()?.InnerAction is BuyMultiple bm)
+                                {
+                                    try
+                                    {
+                                        var aes = _baseChain.ExecuteActions(block);
+                                        foreach (var ae in aes)
+                                        {
+                                            var action = (PolymorphicAction<ActionBase>)ae.Action;
+                                            if (action.InnerAction is Buy bmi)
+                                            {
+                                                Console.WriteLine(bmi.purchaseInfos.Count());
+                                                foreach (var buy in bmi.purchaseInfos)
+                                                {
+                                                    var state = ev.OutputStates.GetState(
+                                                    Addresses.GetItemAddress(buy.TradableId));
+                                                    ITradableItem orderItem =
+                                                        (ITradableItem) ItemFactory.Deserialize((Dictionary)state);
+                                                    if (orderItem.ItemType == ItemType.Material)
+                                                    {
+                                                        mtCount++;
+                                                        Console.WriteLine("BM. Material");
+                                                    }
+                                            
+                                                    if (orderItem.ItemType == ItemType.Equipment)
+                                                    {
+                                                        eqCount++;
+                                                        Console.WriteLine("BM. Equipment");
+                                                    }
+                                            
+                                                    if (orderItem.ItemType == ItemType.Consumable)
+                                                    {
+                                                        csCount++;
+                                                        Console.WriteLine("BM. Consumable");
+                                                    }
+                                            
+                                                    if (orderItem.ItemType == ItemType.Costume)
+                                                    {
+                                                        ctCount++;
+                                                        Console.WriteLine("BM. Costume");
+                                                    }
+                                            
+                                                    Order order =
+                                                        OrderFactory.Deserialize(
+                                                            (Dictionary) ev.OutputStates.GetState(
+                                                                Order.DeriveAddress(buy.OrderId)));
+                                                    var orderReceipt = new OrderReceipt(
+                                                        (Dictionary) ev.OutputStates.GetState(
+                                                            OrderReceipt.DeriveAddress(buy.OrderId)));
+                                                    int itemCount = order is FungibleOrder fungibleOrder
+                                                        ? fungibleOrder.ItemCount
+                                                        : 1;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine(ex.Message);
+                                    }
+                                }
+
                                 // if (!_agentList.Contains(tx.Signer.ToString()))
                                 // {
                                 //     WriteAgent(tx.Signer);
