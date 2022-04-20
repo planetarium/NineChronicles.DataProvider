@@ -1,3 +1,7 @@
+using Bencodex.Types;
+using Lib9c.Model.Order;
+using Nekoyume;
+
 namespace NineChronicles.DataProvider
 {
     using System;
@@ -44,6 +48,10 @@ namespace NineChronicles.DataProvider
         private readonly List<ItemEnhancementModel> _ieList = new List<ItemEnhancementModel>();
         private readonly List<AgentModel> _buyAgentList = new List<AgentModel>();
         private readonly List<AvatarModel> _buyAvatarList = new List<AvatarModel>();
+        private readonly List<ShopHistoryEquipmentModel> _buyShopEquipmentsList = new List<ShopHistoryEquipmentModel>();
+        private readonly List<ShopHistoryCostumeModel> _buyShopCostumesList = new List<ShopHistoryCostumeModel>();
+        private readonly List<ShopHistoryMaterialModel> _buyShopMaterialsList = new List<ShopHistoryMaterialModel>();
+        private readonly List<ShopHistoryConsumableModel> _buyShopConsumablesList = new List<ShopHistoryConsumableModel>();
         private int _hasCount = 0;
         private int _rbCount = 0;
         private int _ccCount = 0;
@@ -467,20 +475,131 @@ namespace NineChronicles.DataProvider
                                     Cp = avatarCp,
                                 });
 
-                                _buyCount++;
-                                Console.WriteLine(_buyCount);
-                                if (_buyCount == InsertInterval)
-                                {
-                                    MySqlStore.StoreAgentList(_buyAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                    MySqlStore.StoreAvatarList(_buyAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                    _buyCount = 0;
-                                    _buyAgentList.Clear();
-                                    _buyAvatarList.Clear();
-                                }
-
                                 var buyerInventory = avatarState.inventory;
                                 foreach (var purchaseInfo in buy.purchaseInfos)
                                 {
+                                    var state = ev.OutputStates.GetState(
+                                    Addresses.GetItemAddress(purchaseInfo.TradableId));
+                                    ITradableItem orderItem =
+                                        (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
+                                    Order order =
+                                        OrderFactory.Deserialize(
+                                            (Dictionary)ev.OutputStates.GetState(
+                                                Order.DeriveAddress(purchaseInfo.OrderId))!);
+                                    int itemCount = order is FungibleOrder fungibleOrder
+                                        ? fungibleOrder.ItemCount
+                                        : 1;
+                                    if (orderItem.ItemType == ItemType.Equipment)
+                                    {
+                                        Equipment equipment = (Equipment)orderItem;
+                                        _buyShopEquipmentsList.Add(new ShopHistoryEquipmentModel()
+                                        {
+                                            OrderId = purchaseInfo.OrderId.ToString(),
+                                            TxId = string.Empty,
+                                            BlockIndex = ev.BlockIndex,
+                                            BlockHash = string.Empty,
+                                            ItemId = equipment.ItemId.ToString(),
+                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
+                                            BuyerAvatarAddress = buy.buyerAvatarAddress.ToString(),
+                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                            ItemType = equipment.ItemType.ToString(),
+                                            ItemSubType = equipment.ItemSubType.ToString(),
+                                            Id = equipment.Id,
+                                            BuffSkillCount = equipment.BuffSkills.Count,
+                                            ElementalType = equipment.ElementalType.ToString(),
+                                            Grade = equipment.Grade,
+                                            SetId = equipment.SetId,
+                                            SkillsCount = equipment.Skills.Count,
+                                            SpineResourcePath = equipment.SpineResourcePath,
+                                            RequiredBlockIndex = equipment.RequiredBlockIndex,
+                                            NonFungibleId = equipment.NonFungibleId.ToString(),
+                                            TradableId = equipment.TradableId.ToString(),
+                                            UniqueStatType = equipment.UniqueStatType.ToString(),
+                                            ItemCount = itemCount,
+                                            TimeStamp = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                        });
+                                    }
+
+                                    if (orderItem.ItemType == ItemType.Costume)
+                                    {
+                                        Costume costume = (Costume)orderItem;
+                                        _buyShopCostumesList.Add(new ShopHistoryCostumeModel()
+                                        {
+                                            OrderId = purchaseInfo.OrderId.ToString(),
+                                            TxId = string.Empty,
+                                            BlockIndex = ev.BlockIndex,
+                                            BlockHash = string.Empty,
+                                            ItemId = costume.ItemId.ToString(),
+                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
+                                            BuyerAvatarAddress = buy.buyerAvatarAddress.ToString(),
+                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                            ItemType = costume.ItemType.ToString(),
+                                            ItemSubType = costume.ItemSubType.ToString(),
+                                            Id = costume.Id,
+                                            ElementalType = costume.ElementalType.ToString(),
+                                            Grade = costume.Grade,
+                                            Equipped = costume.Equipped,
+                                            SpineResourcePath = costume.SpineResourcePath,
+                                            RequiredBlockIndex = costume.RequiredBlockIndex,
+                                            NonFungibleId = costume.NonFungibleId.ToString(),
+                                            TradableId = costume.TradableId.ToString(),
+                                            ItemCount = itemCount,
+                                            TimeStamp = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                        });
+                                    }
+
+                                    if (orderItem.ItemType == ItemType.Material)
+                                    {
+                                        Material material = (Material)orderItem;
+                                        _buyShopMaterialsList.Add(new ShopHistoryMaterialModel()
+                                        {
+                                            OrderId = purchaseInfo.OrderId.ToString(),
+                                            TxId = string.Empty,
+                                            BlockIndex = ev.BlockIndex,
+                                            BlockHash = string.Empty,
+                                            ItemId = material.ItemId.ToString(),
+                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
+                                            BuyerAvatarAddress = buy.buyerAvatarAddress.ToString(),
+                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                            ItemType = material.ItemType.ToString(),
+                                            ItemSubType = material.ItemSubType.ToString(),
+                                            Id = material.Id,
+                                            ElementalType = material.ElementalType.ToString(),
+                                            Grade = material.Grade,
+                                            ItemCount = itemCount,
+                                            TimeStamp = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                        });
+                                    }
+
+                                    if (orderItem.ItemType == ItemType.Consumable)
+                                    {
+                                        Consumable consumable = (Consumable)orderItem;
+                                        _buyShopConsumablesList.Add(new ShopHistoryConsumableModel()
+                                        {
+                                            OrderId = purchaseInfo.OrderId.ToString(),
+                                            TxId = string.Empty,
+                                            BlockIndex = ev.BlockIndex,
+                                            BlockHash = string.Empty,
+                                            ItemId = consumable.ItemId.ToString(),
+                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
+                                            BuyerAvatarAddress = buy.buyerAvatarAddress.ToString(),
+                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                            ItemType = consumable.ItemType.ToString(),
+                                            ItemSubType = consumable.ItemSubType.ToString(),
+                                            Id = consumable.Id,
+                                            BuffSkillCount = consumable.BuffSkills.Count,
+                                            ElementalType = consumable.ElementalType.ToString(),
+                                            Grade = consumable.Grade,
+                                            SkillsCount = consumable.Skills.Count,
+                                            RequiredBlockIndex = consumable.RequiredBlockIndex,
+                                            NonFungibleId = consumable.NonFungibleId.ToString(),
+                                            TradableId = consumable.TradableId.ToString(),
+                                            MainStat = consumable.MainStat.ToString(),
+                                            ItemCount = itemCount,
+                                            TimeStamp = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                        });
+                                    }
+
                                     if (purchaseInfo.ItemSubType == ItemSubType.Armor
                                         || purchaseInfo.ItemSubType == ItemSubType.Belt
                                         || purchaseInfo.ItemSubType == ItemSubType.Necklace
@@ -512,6 +631,25 @@ namespace NineChronicles.DataProvider
                                                 equipmentNotNull);
                                         }
                                     }
+                                }
+
+                                _buyCount++;
+                                Console.WriteLine(_buyCount);
+                                if (_buyCount == InsertInterval)
+                                {
+                                    MySqlStore.StoreAgentList(_buyAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                    MySqlStore.StoreAvatarList(_buyAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                    MySqlStore.StoreShopHistoryEquipmentList(_buyShopEquipmentsList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
+                                    MySqlStore.StoreShopHistoryCostumeList(_buyShopCostumesList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
+                                    MySqlStore.StoreShopHistoryMaterialList(_buyShopMaterialsList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
+                                    MySqlStore.StoreShopHistoryConsumableList(_buyShopConsumablesList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
+                                    _buyCount = 0;
+                                    _buyAgentList.Clear();
+                                    _buyAvatarList.Clear();
+                                    _buyShopEquipmentsList.Clear();
+                                    _buyShopCostumesList.Clear();
+                                    _buyShopMaterialsList.Clear();
+                                    _buyShopConsumablesList.Clear();
                                 }
 
                                 var end = DateTimeOffset.Now;
