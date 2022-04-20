@@ -6,7 +6,6 @@ on:
       - main
       - development
       - rc-*
-      - v160-improve-blocksync
 
 jobs:
   build_and_push:
