@@ -206,6 +206,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 int totalCount = limit ?? (int)_baseStore.CountBlocks();
                 int remainingCount = totalCount;
                 int offsetIdx = 0;
+                var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, _baseChain.Tip.Index);
+                var tip = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, (BlockHash)tipHash);
+                var exec = _baseChain.ExecuteActions(tip);
+                var ev = exec.First();
                 while (remainingCount > 0)
                 {
                     int interval = 10000;
@@ -218,11 +222,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     {
                         limitInterval = remainingCount;
                     }
-
-                    var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, _baseChain.Tip.Index);
-                    var tip = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, (BlockHash)tipHash);
-                    var exec = _baseChain.ExecuteActions(tip);
-                    var ev = exec.First();
 
                     var count = remainingCount;
                     var idx = offsetIdx;
@@ -1236,11 +1235,39 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     {
                         remainingCount -= interval;
                         offsetIdx += interval;
+                        FlushBulkFiles();
+                        foreach (var path in _seFiles)
+                        {
+                            BulkInsert(SEDbName, path);
+                        }
+
+                        foreach (var path in _sctFiles)
+                        {
+                            BulkInsert(SCTDbName, path);
+                        }
+
+                        foreach (var path in _smFiles)
+                        {
+                            BulkInsert(SMDbName, path);
+                        }
+
+                        foreach (var path in _scFiles)
+                        {
+                            BulkInsert(SCDbName, path);
+                        }
+
+                        _seFiles.RemoveAt(0);
+                        _sctFiles.RemoveAt(0);
+                        _smFiles.RemoveAt(0);
+                        _scFiles.RemoveAt(0);
+                        CreateBulkFiles();
                     }
                     else
                     {
                         remainingCount = 0;
                         offsetIdx += remainingCount;
+                        FlushBulkFiles();
+                        CreateBulkFiles();
                     }
                 }
 
