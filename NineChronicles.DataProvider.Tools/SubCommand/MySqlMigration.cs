@@ -189,6 +189,16 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             var csCount = 0;
             var ctCount = 0;
             var buy0Count = 0;
+            var buy2Count = 0;
+            var buy3Count = 0;
+            var buy4Count = 0;
+            var buy5Count = 0;
+            var buy6Count = 0;
+            var buy7Count = 0;
+            var buy8Count = 0;
+            var buy9Count = 0;
+            var buyCount = 0;
+            var buymCount = 0;
 
             CreateBulkFiles();
             try
@@ -318,6 +328,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             {
                                 try
                                 {
+                                    buy2Count++;
                                     if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
                                     {
                                         aes = _baseChain.ExecuteActions(block);
@@ -404,6 +415,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             {
                                 try
                                 {
+                                    buy3Count++;
                                     if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
                                     {
                                         aes = _baseChain.ExecuteActions(block);
@@ -490,6 +502,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             {
                                 try
                                 {
+                                    buy4Count++;
                                     if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
                                     {
                                         aes = _baseChain.ExecuteActions(block);
@@ -576,6 +589,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             {
                                 try
                                 {
+                                    buy5Count++;
                                     if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
                                     {
                                         aes = _baseChain.ExecuteActions(block);
@@ -663,6 +677,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             {
                                 try
                                 {
+                                    buy6Count++;
                                     if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
                                     {
                                         aes = _baseChain.ExecuteActions(block);
@@ -750,6 +765,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             {
                                 try
                                 {
+                                    buy7Count++;
                                     if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
                                     {
                                         aes = _baseChain.ExecuteActions(block);
@@ -838,6 +854,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             {
                                 try
                                 {
+                                    buy8Count++;
                                     foreach (var buy in buy8i.purchaseInfos)
                                     {
                                         var state = ev.OutputStates.GetState(
@@ -933,6 +950,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             {
                                 try
                                 {
+                                    buy9Count++;
                                     foreach (var buy in buy9i.purchaseInfos)
                                     {
                                         var state = ev.OutputStates.GetState(
@@ -1028,6 +1046,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             {
                                 try
                                 {
+                                    buyCount++;
                                     foreach (var buy in buyi.purchaseInfos)
                                     {
                                         var state = ev.OutputStates.GetState(
@@ -1123,6 +1142,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             {
                                 try
                                 {
+                                    buymCount++;
                                     if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
                                     {
                                         aes = _baseChain.ExecuteActions(block);
@@ -1227,7 +1247,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
-                Console.WriteLine($"Equipment: {eqCount}, Costume: {ctCount}, Material: {mtCount}, Consumable: {csCount} Buy0: {buy0Count}");
+                Console.WriteLine($"Equipment: {eqCount}, Costume: {ctCount}, Material: {mtCount}, Consumable: {csCount}");
+                Console.WriteLine($"Buy0: {buy0Count}, Buy2: {buy2Count}, Buy3: {buy3Count}, Buy4: {buy4Count}, Buy5: {buy5Count}, Buy6: {buy6Count}, Buy7: {buy7Count}, Buy8: {buy8Count}, Buy9: {buy9Count}, Buy: {buyCount}, Buym: {buymCount}, ");
 
                 // foreach (var path in _agentFiles)
                 // {
