@@ -1,7 +1,3 @@
-using Bencodex.Types;
-using Lib9c.Model.Order;
-using Nekoyume;
-
 namespace NineChronicles.DataProvider
 {
     using System;
@@ -9,9 +5,12 @@ namespace NineChronicles.DataProvider
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Bencodex.Types;
+    using Lib9c.Model.Order;
     using Lib9c.Renderer;
     using Libplanet;
     using Microsoft.Extensions.Hosting;
+    using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Battle;
     using Nekoyume.Model.Item;
