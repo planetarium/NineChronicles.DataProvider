@@ -6,7 +6,6 @@ on:
       - main
       - development
       - rc-*
-      - feat/add-shop-data-test
 
 jobs:
   build_and_push:
