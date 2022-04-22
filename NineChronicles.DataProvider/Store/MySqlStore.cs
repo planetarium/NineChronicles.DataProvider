@@ -550,6 +550,146 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreShopHistoryEquipmentList(List<ShopHistoryEquipmentModel> seList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var se in seList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.ShopHistoryEquipments?.Find(se.OrderId) is null)
+                        {
+                            ctx.ShopHistoryEquipments!.AddRange(se);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.ShopHistoryEquipments!.UpdateRange(se);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreShopHistoryCostumeList(List<ShopHistoryCostumeModel> sctList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var sct in sctList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.ShopHistoryCostumes?.Find(sct.OrderId) is null)
+                        {
+                            ctx.ShopHistoryCostumes!.AddRange(sct);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.ShopHistoryCostumes!.UpdateRange(sct);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreShopHistoryMaterialList(List<ShopHistoryMaterialModel> smList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var sm in smList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.ShopHistoryMaterials?.Find(sm.OrderId) is null)
+                        {
+                            ctx.ShopHistoryMaterials!.AddRange(sm);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.ShopHistoryMaterials!.UpdateRange(sm);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreShopHistoryConsumableList(List<ShopHistoryConsumableModel> scList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var sc in scList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.ShopHistoryConsumables?.Find(sc.OrderId) is null)
+                        {
+                            ctx.ShopHistoryConsumables!.AddRange(sc);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.ShopHistoryConsumables!.UpdateRange(sc);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public void DeleteCombinationEquipment(Guid id)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();

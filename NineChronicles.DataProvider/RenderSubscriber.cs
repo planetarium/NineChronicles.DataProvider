@@ -5,9 +5,12 @@ namespace NineChronicles.DataProvider
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Bencodex.Types;
+    using Lib9c.Model.Order;
     using Lib9c.Renderer;
     using Libplanet;
     using Microsoft.Extensions.Hosting;
+    using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Battle;
     using Nekoyume.Model.Item;
@@ -20,7 +23,7 @@ namespace NineChronicles.DataProvider
 
     public class RenderSubscriber : BackgroundService
     {
-        private const int InsertInterval = 100;
+        private const int InsertInterval = 500;
         private readonly BlockRenderer _blockRenderer;
         private readonly ActionRenderer _actionRenderer;
         private readonly ExceptionRenderer _exceptionRenderer;
@@ -44,13 +47,11 @@ namespace NineChronicles.DataProvider
         private readonly List<ItemEnhancementModel> _ieList = new List<ItemEnhancementModel>();
         private readonly List<AgentModel> _buyAgentList = new List<AgentModel>();
         private readonly List<AvatarModel> _buyAvatarList = new List<AvatarModel>();
-        private int _hasCount = 0;
-        private int _rbCount = 0;
-        private int _ccCount = 0;
-        private int _ceCount = 0;
-        private int _eqCount = 0;
-        private int _ieCount = 0;
-        private int _buyCount = 0;
+        private readonly List<ShopHistoryEquipmentModel> _buyShopEquipmentsList = new List<ShopHistoryEquipmentModel>();
+        private readonly List<ShopHistoryCostumeModel> _buyShopCostumesList = new List<ShopHistoryCostumeModel>();
+        private readonly List<ShopHistoryMaterialModel> _buyShopMaterialsList = new List<ShopHistoryMaterialModel>();
+        private readonly List<ShopHistoryConsumableModel> _buyShopConsumablesList = new List<ShopHistoryConsumableModel>();
+        private int _renderCount = 0;
 
         public RenderSubscriber(
             NineChroniclesNodeService nodeService,
@@ -79,8 +80,65 @@ namespace NineChronicles.DataProvider
                                 return;
                             }
 
+                            if (_renderCount == InsertInterval)
+                            {
+                                var start = DateTimeOffset.Now;
+                                Log.Debug("Storing Data");
+                                MySqlStore.StoreAgentList(_hasAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_hasAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreHackAndSlashList(_hasList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAgentList(_rbAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_rbAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAgentList(_ccAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_ccAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreCombinationConsumableList(_ccList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAgentList(_ceAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_ceAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreCombinationEquipmentList(_ceList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAgentList(_ieAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_ieAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreItemEnhancementList(_ieList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAgentList(_buyAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_buyAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreShopHistoryEquipmentList(_buyShopEquipmentsList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreShopHistoryCostumeList(_buyShopCostumesList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreShopHistoryMaterialList(_buyShopMaterialsList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreShopHistoryConsumableList(_buyShopConsumablesList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAgentList(_eqAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_eqAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.ProcessEquipmentList(_eqList.GroupBy(i => i.ItemId).Select(i => i.FirstOrDefault()).ToList());
+                                _renderCount = 0;
+                                _hasAgentList.Clear();
+                                _hasAvatarList.Clear();
+                                _hasList.Clear();
+                                _rbAgentList.Clear();
+                                _rbAvatarList.Clear();
+                                _ccAgentList.Clear();
+                                _ccAvatarList.Clear();
+                                _ccList.Clear();
+                                _ceAgentList.Clear();
+                                _ceAvatarList.Clear();
+                                _ceList.Clear();
+                                _ieAgentList.Clear();
+                                _ieAvatarList.Clear();
+                                _ieList.Clear();
+                                _buyAgentList.Clear();
+                                _buyAvatarList.Clear();
+                                _buyShopEquipmentsList.Clear();
+                                _buyShopCostumesList.Clear();
+                                _buyShopMaterialsList.Clear();
+                                _buyShopConsumablesList.Clear();
+                                _eqAgentList.Clear();
+                                _eqAvatarList.Clear();
+                                _eqList.Clear();
+                                var end = DateTimeOffset.Now;
+                                Log.Debug($"Storing Data Complete. Time Taken: {(end - start).Milliseconds} ms.");
+                            }
+
                             if (ev.Action is HackAndSlash has)
                             {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has.avatarAddress);
                                 var previousStates = ev.PreviousStates;
@@ -132,25 +190,14 @@ namespace NineChronicles.DataProvider
                                     BlockIndex = ev.BlockIndex,
                                 });
 
-                                _hasCount++;
-                                Console.WriteLine(_hasCount);
-                                if (_hasCount == InsertInterval)
-                                {
-                                    MySqlStore.StoreAgentList(_hasAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                    MySqlStore.StoreAvatarList(_hasAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                    MySqlStore.StoreHackAndSlashList(_hasList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                                    _hasCount = 0;
-                                    _hasAgentList.Clear();
-                                    _hasAvatarList.Clear();
-                                    _hasList.Clear();
-                                }
-
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is RankingBattle rb)
                             {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(rb.avatarAddress);
                                 var previousStates = ev.PreviousStates;
@@ -190,23 +237,14 @@ namespace NineChronicles.DataProvider
                                     Cp = avatarCp,
                                 });
 
-                                _rbCount++;
-                                Console.WriteLine(_rbCount);
-                                if (_rbCount == InsertInterval)
-                                {
-                                    MySqlStore.StoreAgentList(_rbAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                    MySqlStore.StoreAvatarList(_rbAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                    _rbCount = 0;
-                                    _rbAgentList.Clear();
-                                    _rbAvatarList.Clear();
-                                }
-
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored RankingBattle avatar data in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is CombinationConsumable combinationConsumable)
                             {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(combinationConsumable.avatarAddress);
                                 var previousStates = ev.PreviousStates;
@@ -247,25 +285,14 @@ namespace NineChronicles.DataProvider
                                     BlockIndex = ev.BlockIndex,
                                 });
 
-                                _ccCount++;
-                                Console.WriteLine(_ccCount);
-                                if (_ccCount == InsertInterval)
-                                {
-                                    MySqlStore.StoreAgentList(_ccAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                    MySqlStore.StoreAvatarList(_ccAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                    MySqlStore.StoreCombinationConsumableList(_ccList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                                    _ccCount = 0;
-                                    _ccAgentList.Clear();
-                                    _ccAvatarList.Clear();
-                                    _ccList.Clear();
-                                }
-
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored CombinationConsumable action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is CombinationEquipment combinationEquipment)
                             {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(combinationEquipment.avatarAddress);
                                 var previousStates = ev.PreviousStates;
@@ -307,19 +334,6 @@ namespace NineChronicles.DataProvider
                                     BlockIndex = ev.BlockIndex,
                                 });
 
-                                _ceCount++;
-                                Console.WriteLine(_ceCount);
-                                if (_ceCount == InsertInterval)
-                                {
-                                    MySqlStore.StoreAgentList(_ceAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                    MySqlStore.StoreAvatarList(_ceAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                    MySqlStore.StoreCombinationEquipmentList(_ceList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                                    _ceCount = 0;
-                                    _ceAgentList.Clear();
-                                    _ceAvatarList.Clear();
-                                    _ceList.Clear();
-                                }
-
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored CombinationEquipment action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.Now;
@@ -351,6 +365,8 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is ItemEnhancement itemEnhancement)
                             {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
                                 var previousStates = ev.PreviousStates;
@@ -392,19 +408,6 @@ namespace NineChronicles.DataProvider
                                     BlockIndex = ev.BlockIndex,
                                 });
 
-                                _ieCount++;
-                                Console.WriteLine(_ieCount);
-                                if (_ieCount == InsertInterval)
-                                {
-                                    MySqlStore.StoreAgentList(_ieAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                    MySqlStore.StoreAvatarList(_ieAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                    MySqlStore.StoreItemEnhancementList(_ieList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                                    _ieCount = 0;
-                                    _ieAgentList.Clear();
-                                    _ieAvatarList.Clear();
-                                    _ieList.Clear();
-                                }
-
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.Now;
@@ -436,6 +439,8 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is Buy buy)
                             {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
                                 var previousStates = ev.PreviousStates;
@@ -467,20 +472,131 @@ namespace NineChronicles.DataProvider
                                     Cp = avatarCp,
                                 });
 
-                                _buyCount++;
-                                Console.WriteLine(_buyCount);
-                                if (_buyCount == InsertInterval)
-                                {
-                                    MySqlStore.StoreAgentList(_buyAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                    MySqlStore.StoreAvatarList(_buyAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                    _buyCount = 0;
-                                    _buyAgentList.Clear();
-                                    _buyAvatarList.Clear();
-                                }
-
                                 var buyerInventory = avatarState.inventory;
                                 foreach (var purchaseInfo in buy.purchaseInfos)
                                 {
+                                    var state = ev.OutputStates.GetState(
+                                    Addresses.GetItemAddress(purchaseInfo.TradableId));
+                                    ITradableItem orderItem =
+                                        (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
+                                    Order order =
+                                        OrderFactory.Deserialize(
+                                            (Dictionary)ev.OutputStates.GetState(
+                                                Order.DeriveAddress(purchaseInfo.OrderId))!);
+                                    int itemCount = order is FungibleOrder fungibleOrder
+                                        ? fungibleOrder.ItemCount
+                                        : 1;
+                                    if (orderItem.ItemType == ItemType.Equipment)
+                                    {
+                                        Equipment equipment = (Equipment)orderItem;
+                                        _buyShopEquipmentsList.Add(new ShopHistoryEquipmentModel()
+                                        {
+                                            OrderId = purchaseInfo.OrderId.ToString(),
+                                            TxId = string.Empty,
+                                            BlockIndex = ev.BlockIndex,
+                                            BlockHash = string.Empty,
+                                            ItemId = equipment.ItemId.ToString(),
+                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
+                                            BuyerAvatarAddress = buy.buyerAvatarAddress.ToString(),
+                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                            ItemType = equipment.ItemType.ToString(),
+                                            ItemSubType = equipment.ItemSubType.ToString(),
+                                            Id = equipment.Id,
+                                            BuffSkillCount = equipment.BuffSkills.Count,
+                                            ElementalType = equipment.ElementalType.ToString(),
+                                            Grade = equipment.Grade,
+                                            SetId = equipment.SetId,
+                                            SkillsCount = equipment.Skills.Count,
+                                            SpineResourcePath = equipment.SpineResourcePath,
+                                            RequiredBlockIndex = equipment.RequiredBlockIndex,
+                                            NonFungibleId = equipment.NonFungibleId.ToString(),
+                                            TradableId = equipment.TradableId.ToString(),
+                                            UniqueStatType = equipment.UniqueStatType.ToString(),
+                                            ItemCount = itemCount,
+                                            TimeStamp = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                        });
+                                    }
+
+                                    if (orderItem.ItemType == ItemType.Costume)
+                                    {
+                                        Costume costume = (Costume)orderItem;
+                                        _buyShopCostumesList.Add(new ShopHistoryCostumeModel()
+                                        {
+                                            OrderId = purchaseInfo.OrderId.ToString(),
+                                            TxId = string.Empty,
+                                            BlockIndex = ev.BlockIndex,
+                                            BlockHash = string.Empty,
+                                            ItemId = costume.ItemId.ToString(),
+                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
+                                            BuyerAvatarAddress = buy.buyerAvatarAddress.ToString(),
+                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                            ItemType = costume.ItemType.ToString(),
+                                            ItemSubType = costume.ItemSubType.ToString(),
+                                            Id = costume.Id,
+                                            ElementalType = costume.ElementalType.ToString(),
+                                            Grade = costume.Grade,
+                                            Equipped = costume.Equipped,
+                                            SpineResourcePath = costume.SpineResourcePath,
+                                            RequiredBlockIndex = costume.RequiredBlockIndex,
+                                            NonFungibleId = costume.NonFungibleId.ToString(),
+                                            TradableId = costume.TradableId.ToString(),
+                                            ItemCount = itemCount,
+                                            TimeStamp = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                        });
+                                    }
+
+                                    if (orderItem.ItemType == ItemType.Material)
+                                    {
+                                        Material material = (Material)orderItem;
+                                        _buyShopMaterialsList.Add(new ShopHistoryMaterialModel()
+                                        {
+                                            OrderId = purchaseInfo.OrderId.ToString(),
+                                            TxId = string.Empty,
+                                            BlockIndex = ev.BlockIndex,
+                                            BlockHash = string.Empty,
+                                            ItemId = material.ItemId.ToString(),
+                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
+                                            BuyerAvatarAddress = buy.buyerAvatarAddress.ToString(),
+                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                            ItemType = material.ItemType.ToString(),
+                                            ItemSubType = material.ItemSubType.ToString(),
+                                            Id = material.Id,
+                                            ElementalType = material.ElementalType.ToString(),
+                                            Grade = material.Grade,
+                                            ItemCount = itemCount,
+                                            TimeStamp = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                        });
+                                    }
+
+                                    if (orderItem.ItemType == ItemType.Consumable)
+                                    {
+                                        Consumable consumable = (Consumable)orderItem;
+                                        _buyShopConsumablesList.Add(new ShopHistoryConsumableModel()
+                                        {
+                                            OrderId = purchaseInfo.OrderId.ToString(),
+                                            TxId = string.Empty,
+                                            BlockIndex = ev.BlockIndex,
+                                            BlockHash = string.Empty,
+                                            ItemId = consumable.ItemId.ToString(),
+                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
+                                            BuyerAvatarAddress = buy.buyerAvatarAddress.ToString(),
+                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                            ItemType = consumable.ItemType.ToString(),
+                                            ItemSubType = consumable.ItemSubType.ToString(),
+                                            Id = consumable.Id,
+                                            BuffSkillCount = consumable.BuffSkills.Count,
+                                            ElementalType = consumable.ElementalType.ToString(),
+                                            Grade = consumable.Grade,
+                                            SkillsCount = consumable.Skills.Count,
+                                            RequiredBlockIndex = consumable.RequiredBlockIndex,
+                                            NonFungibleId = consumable.NonFungibleId.ToString(),
+                                            TradableId = consumable.TradableId.ToString(),
+                                            MainStat = consumable.MainStat.ToString(),
+                                            ItemCount = itemCount,
+                                            TimeStamp = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                        });
+                                    }
+
                                     if (purchaseInfo.ItemSubType == ItemSubType.Armor
                                         || purchaseInfo.ItemSubType == ItemSubType.Belt
                                         || purchaseInfo.ItemSubType == ItemSubType.Necklace
@@ -743,19 +859,6 @@ namespace NineChronicles.DataProvider
                 Level = equipment.level,
                 ItemSubType = equipment.ItemSubType.ToString(),
             });
-
-            _eqCount++;
-            Console.WriteLine(_eqCount);
-            if (_eqCount == InsertInterval)
-            {
-                MySqlStore.StoreAgentList(_eqAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                MySqlStore.StoreAvatarList(_eqAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                MySqlStore.ProcessEquipmentList(_eqList.GroupBy(i => i.ItemId).Select(i => i.FirstOrDefault()).ToList());
-                _eqCount = 0;
-                _eqAgentList.Clear();
-                _eqAvatarList.Clear();
-                _eqList.Clear();
-            }
         }
     }
 }
