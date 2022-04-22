@@ -51,14 +51,6 @@ namespace NineChronicles.DataProvider
         private readonly List<ShopHistoryCostumeModel> _buyShopCostumesList = new List<ShopHistoryCostumeModel>();
         private readonly List<ShopHistoryMaterialModel> _buyShopMaterialsList = new List<ShopHistoryMaterialModel>();
         private readonly List<ShopHistoryConsumableModel> _buyShopConsumablesList = new List<ShopHistoryConsumableModel>();
-
-        // private int _hasCount = 0;
-        // private int _rbCount = 0;
-        // private int _ccCount = 0;
-        // private int _ceCount = 0;
-        // private int _eqCount = 0;
-        // private int _ieCount = 0;
-        // private int _buyCount = 0;
         private int _renderCount = 0;
 
         public RenderSubscriber(
@@ -88,8 +80,6 @@ namespace NineChronicles.DataProvider
                                 return;
                             }
 
-                            // _renderCount++;
-                            // Log.Debug($"Render Count: #{_renderCount}");
                             if (_renderCount == InsertInterval)
                             {
                                 var start = DateTimeOffset.Now;
