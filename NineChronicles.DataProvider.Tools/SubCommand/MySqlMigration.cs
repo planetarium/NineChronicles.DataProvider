@@ -18,6 +18,7 @@ using Nekoyume;
 using Nekoyume.Action;
 using Nekoyume.BlockChain.Policy;
 using Nekoyume.Model.Item;
+using Nekoyume.Model.State;
 using Serilog;
 using Serilog.Events;
 
@@ -216,6 +217,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var exec = _baseChain.ExecuteActions(tip);
                 var ev = exec.First();
                 var avatarCount = 0;
+                AvatarState avatarState;
                 foreach (var avatar in avatars)
                 {
                     try
@@ -223,7 +225,15 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         avatarCount++;
                         Console.WriteLine("Migrating {0}/{1}", avatarCount, avatars.Count);
                         var avatarAddress = new Address(avatar);
-                        var avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress);
+                        try
+                        {
+                            avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress);
+                        }
+                        catch (Exception ex)
+                        {
+                            avatarState = ev.OutputStates.GetAvatarState(avatarAddress);
+                        }
+
                         var userEquipments = avatarState.inventory.Equipments;
                         var userCostumes = avatarState.inventory.Costumes;
                         var userMaterials = avatarState.inventory.Materials;
