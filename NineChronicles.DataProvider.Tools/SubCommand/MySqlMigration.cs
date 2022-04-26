@@ -208,26 +208,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             }
 
             connection.Close();
-            var stm2 = $"DELETE FROM {UEDbName}";
-            var stm3 = $"DELETE FROM {UCTDbName}";
-            var stm4 = $"DELETE FROM {UMDbName}";
-            var stm5 = $"DELETE FROM {UCDbName}";
-            var cmd2 = new MySqlCommand(stm2, connection);
-            var cmd3 = new MySqlCommand(stm3, connection);
-            var cmd4 = new MySqlCommand(stm4, connection);
-            var cmd5 = new MySqlCommand(stm5, connection);
-            connection.Open();
-            cmd2.ExecuteScalar();
-            connection.Close();
-            connection.Open();
-            cmd3.ExecuteScalar();
-            connection.Close();
-            connection.Open();
-            cmd4.ExecuteScalar();
-            connection.Close();
-            connection.Open();
-            cmd5.ExecuteScalar();
-            connection.Close();
 
             try
             {
@@ -246,7 +226,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         var avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress);
                         var userEquipments = avatarState.inventory.Equipments;
                         var userCostumes = avatarState.inventory.Costumes;
-                        var userItems = avatarState.inventory.Items;
                         var userMaterials = avatarState.inventory.Materials;
                         var userConsumables = avatarState.inventory.Consumables;
 
@@ -282,6 +261,26 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
+                var stm2 = $"DELETE FROM {UEDbName}";
+                var stm3 = $"DELETE FROM {UCTDbName}";
+                var stm4 = $"DELETE FROM {UMDbName}";
+                var stm5 = $"DELETE FROM {UCDbName}";
+                var cmd2 = new MySqlCommand(stm2, connection);
+                var cmd3 = new MySqlCommand(stm3, connection);
+                var cmd4 = new MySqlCommand(stm4, connection);
+                var cmd5 = new MySqlCommand(stm5, connection);
+                connection.Open();
+                cmd2.ExecuteScalar();
+                connection.Close();
+                connection.Open();
+                cmd3.ExecuteScalar();
+                connection.Close();
+                connection.Open();
+                cmd4.ExecuteScalar();
+                connection.Close();
+                connection.Open();
+                cmd5.ExecuteScalar();
+                connection.Close();
 
                 foreach (var path in _agentFiles)
                 {
