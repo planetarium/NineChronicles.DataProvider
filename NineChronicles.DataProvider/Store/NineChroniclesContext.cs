@@ -33,5 +33,13 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<EquipmentRankingModel>? EquipmentRankings { get; set; }
 
         public DbSet<AbilityRankingModel>? AbilityRankings { get; set; }
+
+        public DbSet<ShopHistoryEquipmentModel>? ShopHistoryEquipments { get; set; }
+
+        public DbSet<ShopHistoryCostumeModel>? ShopHistoryCostumes { get; set; }
+
+        public DbSet<ShopHistoryMaterialModel>? ShopHistoryMaterials { get; set; }
+
+        public DbSet<ShopHistoryConsumableModel>? ShopHistoryConsumables { get; set; }
     }
 }
