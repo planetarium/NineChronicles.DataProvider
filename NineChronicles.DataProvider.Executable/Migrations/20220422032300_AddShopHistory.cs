@@ -1,9 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
-
-namespace NineChronicles.DataProvider.Executable.Migrations
+﻿namespace NineChronicles.DataProvider.Executable.Migrations
 {
+    using Microsoft.EntityFrameworkCore.Migrations;
+
     public partial class AddShopHistory : Migration
     {
+#pragma warning disable MEN003
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropPrimaryKey(
@@ -43,7 +44,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     TradableId = table.Column<string>(type: "TEXT", nullable: true),
                     MainStat = table.Column<string>(type: "TEXT", nullable: true),
                     ItemCount = table.Column<int>(type: "INTEGER", nullable: false),
-                    TimeStamp = table.Column<string>(type: "TEXT", nullable: true)
+                    TimeStamp = table.Column<string>(type: "TEXT", nullable: true),
                 },
                 constraints: table =>
                 {
@@ -74,7 +75,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     NonFungibleId = table.Column<string>(type: "TEXT", nullable: true),
                     TradableId = table.Column<string>(type: "TEXT", nullable: true),
                     ItemCount = table.Column<int>(type: "INTEGER", nullable: false),
-                    TimeStamp = table.Column<string>(type: "TEXT", nullable: true)
+                    TimeStamp = table.Column<string>(type: "TEXT", nullable: true),
                 },
                 constraints: table =>
                 {
@@ -107,7 +108,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     TradableId = table.Column<string>(type: "TEXT", nullable: true),
                     UniqueStatType = table.Column<string>(type: "TEXT", nullable: true),
                     ItemCount = table.Column<int>(type: "INTEGER", nullable: false),
-                    TimeStamp = table.Column<string>(type: "TEXT", nullable: true)
+                    TimeStamp = table.Column<string>(type: "TEXT", nullable: true),
                 },
                 constraints: table =>
                 {
@@ -132,13 +133,14 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     ElementalType = table.Column<string>(type: "TEXT", nullable: true),
                     Grade = table.Column<int>(type: "INTEGER", nullable: false),
                     ItemCount = table.Column<int>(type: "INTEGER", nullable: false),
-                    TimeStamp = table.Column<string>(type: "TEXT", nullable: true)
+                    TimeStamp = table.Column<string>(type: "TEXT", nullable: true),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ShopHistoryMaterials", x => x.OrderId);
                 });
         }
+#pragma warning restore MEN003
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
