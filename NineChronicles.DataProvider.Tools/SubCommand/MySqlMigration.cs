@@ -1,30 +1,24 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Bencodex.Types;
-using Cocona;
-using Lib9c.DevExtensions.Model;
-using Lib9c.Model.Order;
-using Libplanet;
-using Libplanet.Action;
-using Libplanet.Blockchain;
-using Libplanet.Blockchain.Policies;
-using Libplanet.Blocks;
-using Libplanet.RocksDBStore;
-using Libplanet.Store;
-using MySqlConnector;
-using Nekoyume;
-using Nekoyume.Action;
-using Nekoyume.BlockChain.Policy;
-using Nekoyume.Model.Item;
-using Nekoyume.Model.State;
-using Serilog;
-using Serilog.Events;
-
 namespace NineChronicles.DataProvider.Tools.SubCommand
 {
-    using NCAction = PolymorphicAction<ActionBase>;
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using Cocona;
+    using Libplanet;
+    using Libplanet.Blockchain;
+    using Libplanet.Blockchain.Policies;
+    using Libplanet.Blocks;
+    using Libplanet.RocksDBStore;
+    using Libplanet.Store;
+    using MySqlConnector;
+    using Nekoyume.Action;
+    using Nekoyume.BlockChain.Policy;
+    using Nekoyume.Model.Item;
+    using Nekoyume.Model.State;
+    using Serilog;
+    using Serilog.Events;
+    using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     public class MySqlMigration
     {
@@ -279,18 +273,30 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var cmd3 = new MySqlCommand(stm3, connection);
                 var cmd4 = new MySqlCommand(stm4, connection);
                 var cmd5 = new MySqlCommand(stm5, connection);
+                var startDelete = DateTimeOffset.Now;
                 connection.Open();
                 cmd2.ExecuteScalar();
                 connection.Close();
+                var endDelete = DateTimeOffset.Now;
+                Console.WriteLine("Clear UserEquipments Complete! Time Elapsed: {0}", endDelete - startDelete);
+                startDelete = DateTimeOffset.Now;
                 connection.Open();
                 cmd3.ExecuteScalar();
                 connection.Close();
+                endDelete = DateTimeOffset.Now;
+                Console.WriteLine("Clear UserCostumes Complete! Time Elapsed: {0}", endDelete - startDelete);
+                startDelete = DateTimeOffset.Now;
                 connection.Open();
                 cmd4.ExecuteScalar();
                 connection.Close();
+                endDelete = DateTimeOffset.Now;
+                Console.WriteLine("Clear UserMaterials Complete! Time Elapsed: {0}", endDelete - startDelete);
+                startDelete = DateTimeOffset.Now;
                 connection.Open();
                 cmd5.ExecuteScalar();
                 connection.Close();
+                endDelete = DateTimeOffset.Now;
+                Console.WriteLine("Clear UserConsumables Complete! Time Elapsed: {0}", endDelete - startDelete);
 
                 foreach (var path in _agentFiles)
                 {
@@ -500,31 +506,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 Console.WriteLine(ex.Message);
             }
         }
-
-        // private void WriteItem(
-        //     Item uitem,
-        //     Address agentAddress,
-        //     Address avatarAddress)
-        // {
-        //     _uiBulkFile.WriteLine(
-        //         $"{uitem.item...ItemId.ToString()};" +
-        //         $"{agentAddress.ToString()};" +
-        //         $"{avatarAddress.ToString()};" +
-        //         $"{uitem.ItemType.ToString()};" +
-        //         $"{uitem.ItemSubType.ToString()};" +
-        //         $"{uitem.Id};" +
-        //         $"{uitem.BuffSkills.Count};" +
-        //         $"{uitem.ElementalType.ToString()};" +
-        //         $"{uitem.Grade};" +
-        //         $"{uitem.SetId};" +
-        //         $"{uitem.Skills.Count};" +
-        //         $"{uitem.SpineResourcePath};" +
-        //         $"{uitem.RequiredBlockIndex};" +
-        //         $"{uitem.NonFungibleId.ToString()};" +
-        //         $"{uitem.TradableId.ToString()};" +
-        //         $"{uitem.UniqueStatType.ToString()}"
-        //     );
-        // }
 
         private void WriteMaterial(
             Material material,
