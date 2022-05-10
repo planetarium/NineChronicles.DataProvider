@@ -446,7 +446,24 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
-                Console.WriteLine($"Bulk load to {tableName} failed.");
+                Console.WriteLine($"Bulk load to {tableName} failed. Retry bulk insert");
+                DateTimeOffset start = DateTimeOffset.Now;
+                Console.WriteLine($"Start bulk insert to {tableName}.");
+                MySqlBulkLoader loader = new MySqlBulkLoader(connection)
+                {
+                    TableName = tableName,
+                    FileName = filePath,
+                    Timeout = 0,
+                    LineTerminator = "\n",
+                    FieldTerminator = ";",
+                    Local = true,
+                    ConflictOption = MySqlBulkLoaderConflictOption.Ignore,
+                };
+
+                loader.Load();
+                Console.WriteLine($"Bulk load to {tableName} complete.");
+                DateTimeOffset end = DateTimeOffset.Now;
+                Console.WriteLine("Time elapsed: {0}", end - start);
             }
         }
 
