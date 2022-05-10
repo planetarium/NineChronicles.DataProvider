@@ -204,6 +204,43 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             connection.Close();
 
+            var stm2 = $"DELETE FROM {UEDbName}";
+            var stm3 = $"DELETE FROM {UCTDbName}";
+            var stm4 = $"DELETE FROM {UMDbName}";
+            var stm5 = $"DELETE FROM {UCDbName}";
+            var cmd2 = new MySqlCommand(stm2, connection);
+            var cmd3 = new MySqlCommand(stm3, connection);
+            var cmd4 = new MySqlCommand(stm4, connection);
+            var cmd5 = new MySqlCommand(stm5, connection);
+            var startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd2.CommandTimeout = 120;
+            cmd2.ExecuteScalar();
+            connection.Close();
+            var endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Clear UserEquipments Complete! Time Elapsed: {0}", endDelete - startDelete);
+            startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd3.CommandTimeout = 120;
+            cmd3.ExecuteScalar();
+            connection.Close();
+            endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Clear UserCostumes Complete! Time Elapsed: {0}", endDelete - startDelete);
+            startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd4.CommandTimeout = 120;
+            cmd4.ExecuteScalar();
+            connection.Close();
+            endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Clear UserMaterials Complete! Time Elapsed: {0}", endDelete - startDelete);
+            startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd5.CommandTimeout = 120;
+            cmd5.ExecuteScalar();
+            connection.Close();
+            endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Clear UserConsumables Complete! Time Elapsed: {0}", endDelete - startDelete);
+
             try
             {
                 var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, _baseChain.Tip.Index);
@@ -212,11 +249,16 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var ev = exec.First();
                 var avatarCount = 0;
                 AvatarState avatarState;
+                int interval = 10000;
+                int intervalCount = 0;
+
                 foreach (var avatar in avatars)
                 {
                     try
                     {
+                        intervalCount++;
                         avatarCount++;
+                        Console.WriteLine("Interval Count {0}", intervalCount);
                         Console.WriteLine("Migrating {0}/{1}", avatarCount, avatars.Count);
                         var avatarAddress = new Address(avatar);
                         try
@@ -260,47 +302,54 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     {
                         Console.WriteLine(ex.Message);
                     }
+
+                    if (intervalCount == interval)
+                    {
+                        FlushBulkFiles();
+                        foreach (var path in _agentFiles)
+                        {
+                            BulkInsert(AgentDbName, path);
+                        }
+
+                        foreach (var path in _avatarFiles)
+                        {
+                            BulkInsert(AvatarDbName, path);
+                        }
+
+                        foreach (var path in _ueFiles)
+                        {
+                            BulkInsert(UEDbName, path);
+                        }
+
+                        foreach (var path in _uctFiles)
+                        {
+                            BulkInsert(UCTDbName, path);
+                        }
+
+                        foreach (var path in _umFiles)
+                        {
+                            BulkInsert(UMDbName, path);
+                        }
+
+                        foreach (var path in _ucFiles)
+                        {
+                            BulkInsert(UCDbName, path);
+                        }
+
+                        _agentFiles.RemoveAt(0);
+                        _avatarFiles.RemoveAt(0);
+                        _ueFiles.RemoveAt(0);
+                        _uctFiles.RemoveAt(0);
+                        _umFiles.RemoveAt(0);
+                        _ucFiles.RemoveAt(0);
+                        CreateBulkFiles();
+                        intervalCount = 0;
+                    }
                 }
 
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
-                var stm2 = $"DELETE FROM {UEDbName}";
-                var stm3 = $"DELETE FROM {UCTDbName}";
-                var stm4 = $"DELETE FROM {UMDbName}";
-                var stm5 = $"DELETE FROM {UCDbName}";
-                var cmd2 = new MySqlCommand(stm2, connection);
-                var cmd3 = new MySqlCommand(stm3, connection);
-                var cmd4 = new MySqlCommand(stm4, connection);
-                var cmd5 = new MySqlCommand(stm5, connection);
-                var startDelete = DateTimeOffset.Now;
-                connection.Open();
-                cmd2.CommandTimeout = 120;
-                cmd2.ExecuteScalar();
-                connection.Close();
-                var endDelete = DateTimeOffset.Now;
-                Console.WriteLine("Clear UserEquipments Complete! Time Elapsed: {0}", endDelete - startDelete);
-                startDelete = DateTimeOffset.Now;
-                connection.Open();
-                cmd3.CommandTimeout = 120;
-                cmd3.ExecuteScalar();
-                connection.Close();
-                endDelete = DateTimeOffset.Now;
-                Console.WriteLine("Clear UserCostumes Complete! Time Elapsed: {0}", endDelete - startDelete);
-                startDelete = DateTimeOffset.Now;
-                connection.Open();
-                cmd4.CommandTimeout = 120;
-                cmd4.ExecuteScalar();
-                connection.Close();
-                endDelete = DateTimeOffset.Now;
-                Console.WriteLine("Clear UserMaterials Complete! Time Elapsed: {0}", endDelete - startDelete);
-                startDelete = DateTimeOffset.Now;
-                connection.Open();
-                cmd5.CommandTimeout = 120;
-                cmd5.ExecuteScalar();
-                connection.Close();
-                endDelete = DateTimeOffset.Now;
-                Console.WriteLine("Clear UserConsumables Complete! Time Elapsed: {0}", endDelete - startDelete);
 
                 foreach (var path in _agentFiles)
                 {
