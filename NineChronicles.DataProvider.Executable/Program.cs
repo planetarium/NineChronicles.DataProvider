@@ -76,14 +76,14 @@ namespace NineChronicles.DataProvider.Executable
                     bucketSize: headlessConfig.BucketSize,
                     staticPeerStrings: headlessConfig.StaticPeerStrings,
                     render: headlessConfig.Render,
-                    preload: false,
+                    preload: headlessConfig.Preload,
                     transportType: "netmq");
 
             var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
             {
                MinerPrivateKey = null,
                Libplanet = properties,
-               TxQuotaPerSigner = 10,
+               TxQuotaPerSigner = 500,
             };
 
             if (headlessConfig.LogActionRenders)
@@ -98,7 +98,18 @@ namespace NineChronicles.DataProvider.Executable
                 .ConfigureServices((ctx, services) =>
                 {
                     services.AddDbContextFactory<NineChroniclesContext>(
-                        options => options.UseMySQL(headlessConfig.MySqlConnectionString)
+                        options => options.UseMySql(
+                            headlessConfig.MySqlConnectionString,
+                            ServerVersion.AutoDetect(headlessConfig.MySqlConnectionString),
+                            mySqlOptions =>
+                            {
+                                mySqlOptions
+                                    .EnableRetryOnFailure(
+                                        maxRetryCount: 3,
+                                        maxRetryDelay: TimeSpan.FromSeconds(10),
+                                        errorNumbersToAdd: null);
+                            }
+                        )
                     );
                     services.AddHostedService<RenderSubscriber>();
                     services.AddSingleton<MySqlStore>();

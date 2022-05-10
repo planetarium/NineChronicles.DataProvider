@@ -143,3 +143,98 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Equipments` (
     FOREIGN KEY (`AgentAddress`)
     REFERENCES `Agents` (`Address`)
 );
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`ShopHistoryEquipments` (
+    `OrderId` varchar(100) NOT NULL,
+    `TxId` varchar(100) NOT NULL,
+    `BlockIndex`bigint NOT NULL,
+    `BlockHash` varchar(100) NOT NULL,
+    `ItemId` varchar(100) NOT NULL,
+    `SellerAvatarAddress` varchar(100) NOT NULL,
+    `BuyerAvatarAddress` varchar(100) NOT NULL,
+    `Price` decimal(13,2) NOT NULL,
+    `ItemType` varchar(100) NOT NULL,
+    `ItemSubType` varchar(100) NOT NULL,
+    `Id` int NOT NULL,
+    `BuffSkillCount` int NOT NULL,
+    `ElementalType`varchar(100) NOT NULL,
+    `Grade`int NOT NULL,
+    `SetId`int NOT NULL,
+    `SkillsCount`int NOT NULL,
+    `SpineResourcePath`varchar(100) NOT NULL,
+    `RequiredBlockIndex`bigint NOT NULL,
+    `NonFungibleId`varchar(100) NOT NULL,
+    `TradableId`varchar(100) NOT NULL,
+    `UniqueStatType`varchar(100) NOT NULL,
+    `ItemCount` int NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`OrderId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`ShopHistoryCostumes` (
+    `OrderId` varchar(100) NOT NULL,
+    `TxId` varchar(100) NOT NULL,
+    `BlockIndex`bigint NOT NULL,
+    `BlockHash` varchar(100) NOT NULL,
+    `ItemId` varchar(100) NOT NULL,
+    `SellerAvatarAddress` varchar(100) NOT NULL,
+    `BuyerAvatarAddress` varchar(100) NOT NULL,
+    `Price` decimal(13,2) NOT NULL,
+    `ItemType` varchar(100) NOT NULL,
+    `ItemSubType` varchar(100) NOT NULL,
+    `Id` int NOT NULL,
+    `ElementalType`varchar(100) NOT NULL,
+    `Grade`int NOT NULL,
+    `Equipped`bool NOT NULL,
+    `SpineResourcePath`varchar(100) NOT NULL,
+    `RequiredBlockIndex`bigint NOT NULL,
+    `NonFungibleId`varchar(100) NOT NULL,
+    `TradableId`varchar(100) NOT NULL,
+    `ItemCount` int NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`OrderId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`ShopHistoryMaterials` (
+    `OrderId` varchar(100) NOT NULL,
+    `TxId` varchar(100) NOT NULL,
+    `BlockIndex`bigint NOT NULL,
+    `BlockHash` varchar(100) NOT NULL,
+    `ItemId` varchar(100) NOT NULL,
+    `SellerAvatarAddress` varchar(100) NOT NULL,
+    `BuyerAvatarAddress` varchar(100) NOT NULL,
+    `Price` decimal(13,2) NOT NULL,
+    `ItemType` varchar(100) NOT NULL,
+    `ItemSubType` varchar(100) NOT NULL,
+    `Id` int NOT NULL,
+    `ElementalType`varchar(100) NOT NULL,
+    `Grade`int NOT NULL,
+    `ItemCount` int NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`OrderId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`ShopHistoryConsumables` (
+    `OrderId` varchar(100) NOT NULL,
+    `TxId` varchar(100) NOT NULL,
+    `BlockIndex`bigint NOT NULL,
+    `BlockHash` varchar(100) NOT NULL,
+    `ItemId` varchar(100) NOT NULL,
+    `SellerAvatarAddress` varchar(100) NOT NULL,
+    `BuyerAvatarAddress` varchar(100) NOT NULL,
+    `Price` decimal(13,2) NOT NULL,
+    `ItemType` varchar(100) NOT NULL,
+    `ItemSubType` varchar(100) NOT NULL,
+    `Id` int NOT NULL,
+    `BuffSkillCount` int NOT NULL,
+    `ElementalType`varchar(100) NOT NULL,
+    `Grade`int NOT NULL,
+    `SkillsCount`int NOT NULL,
+    `RequiredBlockIndex`bigint NOT NULL,
+    `NonFungibleId`varchar(100) NOT NULL,
+    `TradableId`varchar(100) NOT NULL,
+    `MainStat`varchar(100) NOT NULL,
+    `ItemCount` int NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`OrderId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
