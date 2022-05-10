@@ -13,6 +13,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using Libplanet.Store;
     using MySqlConnector;
     using Nekoyume.Action;
+    using Nekoyume.Battle;
     using Nekoyume.BlockChain.Policy;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
@@ -31,6 +32,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private const string UCTDbName = "UserCostumes";
         private const string UMDbName = "UserMaterials";
         private const string UCDbName = "UserConsumables";
+        private const string EDbName = "Equipments";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
@@ -42,6 +44,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private StreamWriter _uiBulkFile;
         private StreamWriter _umBulkFile;
         private StreamWriter _ucBulkFile;
+        private StreamWriter _eBulkFile;
         private StreamWriter _agentBulkFile;
         private StreamWriter _avatarBulkFile;
         private List<string> _agentList;
@@ -54,6 +57,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private List<string> _uiFiles;
         private List<string> _umFiles;
         private List<string> _ucFiles;
+        private List<string> _eFiles;
         private List<string> _agentFiles;
         private List<string> _avatarFiles;
 
@@ -178,6 +182,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _uiFiles = new List<string>();
             _umFiles = new List<string>();
             _ucFiles = new List<string>();
+            _eFiles = new List<string>();
             _agentFiles = new List<string>();
             _avatarFiles = new List<string>();
 
@@ -208,10 +213,12 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             var stm3 = $"DELETE FROM {UCTDbName}";
             var stm4 = $"DELETE FROM {UMDbName}";
             var stm5 = $"DELETE FROM {UCDbName}";
+            var stm6 = $"DELETE FROM {EDbName}";
             var cmd2 = new MySqlCommand(stm2, connection);
             var cmd3 = new MySqlCommand(stm3, connection);
             var cmd4 = new MySqlCommand(stm4, connection);
             var cmd5 = new MySqlCommand(stm5, connection);
+            var cmd6 = new MySqlCommand(stm6, connection);
             var startDelete = DateTimeOffset.Now;
             connection.Open();
             cmd2.CommandTimeout = 120;
@@ -240,6 +247,14 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             connection.Close();
             endDelete = DateTimeOffset.Now;
             Console.WriteLine("Clear UserConsumables Complete! Time Elapsed: {0}", endDelete - startDelete);
+            startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd6.CommandTimeout = 120;
+            cmd6.ExecuteScalar();
+            connection.Close();
+            endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Clear Equipments Complete! Time Elapsed: {0}", endDelete - startDelete);
+
 
             try
             {
@@ -249,7 +264,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var ev = exec.First();
                 var avatarCount = 0;
                 AvatarState avatarState;
-                int interval = 10000;
+                int interval = 100;
                 int intervalCount = 0;
 
                 foreach (var avatar in avatars)
@@ -277,7 +292,9 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                         foreach (var equipment in userEquipments)
                         {
+                            var equipmentCp = CPHelper.GetCP(equipment);
                             WriteEquipment(equipment, avatarState.agentAddress, avatarAddress);
+                            WriteRankingEquipment(equipment, avatarState.agentAddress, avatarAddress, equipmentCp);
                         }
 
                         foreach (var costume in userCostumes)
@@ -336,12 +353,18 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             BulkInsert(UCDbName, path);
                         }
 
+                        foreach (var path in _eFiles)
+                        {
+                            BulkInsert(EDbName, path);
+                        }
+
                         _agentFiles.RemoveAt(0);
                         _avatarFiles.RemoveAt(0);
                         _ueFiles.RemoveAt(0);
                         _uctFiles.RemoveAt(0);
                         _umFiles.RemoveAt(0);
                         _ucFiles.RemoveAt(0);
+                        _eFiles.RemoveAt(0);
                         CreateBulkFiles();
                         intervalCount = 0;
                     }
@@ -379,6 +402,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 foreach (var path in _ucFiles)
                 {
                     BulkInsert(UCDbName, path);
+                }
+
+                foreach (var path in _eFiles)
+                {
+                    BulkInsert(EDbName, path);
                 }
             }
             catch (Exception e)
@@ -421,6 +449,9 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             _ucBulkFile.Flush();
             _ucBulkFile.Close();
+
+            _eBulkFile.Flush();
+            _eBulkFile.Close();
         }
 
         private void CreateBulkFiles()
@@ -455,6 +486,9 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             string ucFilePath = Path.GetTempFileName();
             _ucBulkFile = new StreamWriter(ucFilePath);
 
+            string eFilePath = Path.GetTempFileName();
+            _eBulkFile = new StreamWriter(eFilePath);
+
             _agentFiles.Add(agentFilePath);
             _avatarFiles.Add(avatarFilePath);
             _ccFiles.Add(ccFilePath);
@@ -465,6 +499,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _uiFiles.Add(uiFilePath);
             _umFiles.Add(umFilePath);
             _ucFiles.Add(ucFilePath);
+            _eFiles.Add(eFilePath);
         }
 
         private void BulkInsert(
@@ -540,6 +575,30 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     $"{equipment.NonFungibleId.ToString()};" +
                     $"{equipment.TradableId.ToString()};" +
                     $"{equipment.UniqueStatType.ToString()}"
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        private void WriteRankingEquipment(
+            Equipment equipment,
+            Address agentAddress,
+            Address avatarAddress,
+            int equipmentCp)
+        {
+            try
+            {
+                _eBulkFile.WriteLine(
+                    $"{equipment.ItemId.ToString()};" +
+                    $"{agentAddress.ToString()};" +
+                    $"{avatarAddress.ToString()};" +
+                    $"{equipment.Id};" +
+                    $"{equipmentCp};" +
+                    $"{equipment.level};" +
+                    $"{equipment.ItemSubType.ToString()}"
                 );
             }
             catch (Exception ex)
