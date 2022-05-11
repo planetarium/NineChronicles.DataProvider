@@ -209,53 +209,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             connection.Close();
 
-            var stm2 = $"DELETE FROM {UEDbName}";
-            var stm3 = $"DELETE FROM {UCTDbName}";
-            var stm4 = $"DELETE FROM {UMDbName}";
-            var stm5 = $"DELETE FROM {UCDbName}";
-            var stm6 = $"DELETE FROM {EDbName}";
-            var cmd2 = new MySqlCommand(stm2, connection);
-            var cmd3 = new MySqlCommand(stm3, connection);
-            var cmd4 = new MySqlCommand(stm4, connection);
-            var cmd5 = new MySqlCommand(stm5, connection);
-            var cmd6 = new MySqlCommand(stm6, connection);
-            var startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd2.CommandTimeout = 120;
-            cmd2.ExecuteScalar();
-            connection.Close();
-            var endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Clear UserEquipments Complete! Time Elapsed: {0}", endDelete - startDelete);
-            startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd3.CommandTimeout = 120;
-            cmd3.ExecuteScalar();
-            connection.Close();
-            endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Clear UserCostumes Complete! Time Elapsed: {0}", endDelete - startDelete);
-            startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd4.CommandTimeout = 120;
-            cmd4.ExecuteScalar();
-            connection.Close();
-            endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Clear UserMaterials Complete! Time Elapsed: {0}", endDelete - startDelete);
-            startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd5.CommandTimeout = 120;
-            cmd5.ExecuteScalar();
-            connection.Close();
-            endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Clear UserConsumables Complete! Time Elapsed: {0}", endDelete - startDelete);
-            startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd6.CommandTimeout = 120;
-            cmd6.ExecuteScalar();
-            connection.Close();
-            endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Clear Equipments Complete! Time Elapsed: {0}", endDelete - startDelete);
-
-
             try
             {
                 var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, _baseChain.Tip.Index);
@@ -264,7 +217,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var ev = exec.First();
                 var avatarCount = 0;
                 AvatarState avatarState;
-                int interval = 100;
+                int interval = 1000000;
                 int intervalCount = 0;
 
                 foreach (var avatar in avatars)
@@ -374,6 +327,17 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
 
+                var stm2 = $"RENAME TABLE {UEDbName} TO {UEDbName}_Dump; CREATE TABLE {UEDbName} LIKE {UEDbName}_Dump;";
+                var stm3 = $"RENAME TABLE {UCTDbName} TO {UCTDbName}_Dump; CREATE TABLE {UCTDbName} LIKE {UCTDbName}_Dump;";
+                var stm4 = $"RENAME TABLE {UMDbName} TO {UMDbName}_Dump; CREATE TABLE {UMDbName} LIKE {UMDbName}_Dump;";
+                var stm5 = $"RENAME TABLE {UCDbName} TO {UCDbName}_Dump; CREATE TABLE {UCDbName} LIKE {UCDbName}_Dump;";
+                var stm6 = $"RENAME TABLE {EDbName} TO {EDbName}_Dump; CREATE TABLE {EDbName} LIKE {EDbName}_Dump;";
+                var cmd2 = new MySqlCommand(stm2, connection);
+                var cmd3 = new MySqlCommand(stm3, connection);
+                var cmd4 = new MySqlCommand(stm4, connection);
+                var cmd5 = new MySqlCommand(stm5, connection);
+                var cmd6 = new MySqlCommand(stm6, connection);
+
                 foreach (var path in _agentFiles)
                 {
                     BulkInsert(AgentDbName, path);
@@ -384,26 +348,62 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     BulkInsert(AvatarDbName, path);
                 }
 
+                var startMove = DateTimeOffset.Now;
+                connection.Open();
+                cmd2.CommandTimeout = 300;
+                cmd2.ExecuteScalar();
+                connection.Close();
+                var endMove = DateTimeOffset.Now;
+                Console.WriteLine("Move UserEquipments Complete! Time Elapsed: {0}", endMove - startMove);
+
                 foreach (var path in _ueFiles)
                 {
                     BulkInsert(UEDbName, path);
                 }
 
+                startMove = DateTimeOffset.Now;
+                connection.Open();
+                cmd3.CommandTimeout = 300;
+                cmd3.ExecuteScalar();
+                connection.Close();
+                endMove = DateTimeOffset.Now;
+                Console.WriteLine("Move UserCostumes Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _uctFiles)
                 {
                     BulkInsert(UCTDbName, path);
                 }
 
+                startMove = DateTimeOffset.Now;
+                connection.Open();
+                cmd4.CommandTimeout = 300;
+                cmd4.ExecuteScalar();
+                connection.Close();
+                endMove = DateTimeOffset.Now;
+                Console.WriteLine("Move UserMaterials Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _umFiles)
                 {
                     BulkInsert(UMDbName, path);
                 }
 
+                startMove = DateTimeOffset.Now;
+                connection.Open();
+                cmd5.CommandTimeout = 300;
+                cmd5.ExecuteScalar();
+                connection.Close();
+                endMove = DateTimeOffset.Now;
+                Console.WriteLine("Move UserConsumables Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _ucFiles)
                 {
                     BulkInsert(UCDbName, path);
                 }
 
+                startMove = DateTimeOffset.Now;
+                connection.Open();
+                cmd6.CommandTimeout = 300;
+                cmd6.ExecuteScalar();
+                connection.Close();
+                endMove = DateTimeOffset.Now;
+                Console.WriteLine("Move Equipments Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _eFiles)
                 {
                     BulkInsert(EDbName, path);
@@ -412,7 +412,99 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Console.WriteLine("Restoring previous tables due to error...");
+                var stm12 = $"DROP TABLE {UEDbName}; RENAME TABLE {UEDbName}_Dump TO {UEDbName};";
+                var stm13 = $"DROP TABLE {EDbName}; RENAME TABLE {UCTDbName}_Dump TO {UCTDbName};";
+                var stm14 = $"DROP TABLE {EDbName}; RENAME TABLE {UMDbName}_Dump TO {UMDbName};";
+                var stm15 = $"DROP TABLE {EDbName}; RENAME TABLE {UCDbName}_Dump TO {UCDbName};";
+                var stm16 = $"DROP TABLE {EDbName}; RENAME TABLE {EDbName}_Dump TO {EDbName};";
+                var cmd12 = new MySqlCommand(stm12, connection);
+                var cmd13 = new MySqlCommand(stm13, connection);
+                var cmd14 = new MySqlCommand(stm14, connection);
+                var cmd15 = new MySqlCommand(stm15, connection);
+                var cmd16 = new MySqlCommand(stm16, connection);
+                var startRestore = DateTimeOffset.Now;
+                connection.Open();
+                cmd12.CommandTimeout = 300;
+                cmd12.ExecuteScalar();
+                connection.Close();
+                var endRestore = DateTimeOffset.Now;
+                Console.WriteLine("Restore UserEquipments Complete! Time Elapsed: {0}", endRestore - startRestore);
+                startRestore = DateTimeOffset.Now;
+                connection.Open();
+                cmd13.CommandTimeout = 300;
+                cmd13.ExecuteScalar();
+                connection.Close();
+                endRestore = DateTimeOffset.Now;
+                Console.WriteLine("Restore UserCostumes Complete! Time Elapsed: {0}", endRestore - startRestore);
+                startRestore = DateTimeOffset.Now;
+                connection.Open();
+                cmd14.CommandTimeout = 300;
+                cmd14.ExecuteScalar();
+                connection.Close();
+                endRestore = DateTimeOffset.Now;
+                Console.WriteLine("Restore UserMaterials Complete! Time Elapsed: {0}", endRestore - startRestore);
+                startRestore = DateTimeOffset.Now;
+                connection.Open();
+                cmd15.CommandTimeout = 300;
+                cmd15.ExecuteScalar();
+                connection.Close();
+                endRestore = DateTimeOffset.Now;
+                Console.WriteLine("Restore UserConsumables Complete! Time Elapsed: {0}", endRestore - startRestore);
+                startRestore = DateTimeOffset.Now;
+                connection.Open();
+                cmd16.CommandTimeout = 300;
+                cmd16.ExecuteScalar();
+                connection.Close();
+                endRestore = DateTimeOffset.Now;
+                Console.WriteLine("Restore Equipments Complete! Time Elapsed: {0}", endRestore - startRestore);
             }
+
+            var stm7 = $"DROP TABLE {UEDbName}_Dump;";
+            var stm8 = $"DROP TABLE {UCTDbName}_Dump;";
+            var stm9 = $"DROP TABLE {UMDbName}_Dump;";
+            var stm10 = $"DROP TABLE {UCDbName}_Dump;";
+            var stm11 = $"DROP TABLE {EDbName}_Dump;";
+            var cmd7 = new MySqlCommand(stm7, connection);
+            var cmd8 = new MySqlCommand(stm8, connection);
+            var cmd9 = new MySqlCommand(stm9, connection);
+            var cmd10 = new MySqlCommand(stm10, connection);
+            var cmd11 = new MySqlCommand(stm11, connection);
+            var startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd7.CommandTimeout = 300;
+            cmd7.ExecuteScalar();
+            connection.Close();
+            var endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Delete UserEquipments_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd8.CommandTimeout = 300;
+            cmd8.ExecuteScalar();
+            connection.Close();
+            endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Delete UserCostumes_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd9.CommandTimeout = 300;
+            cmd9.ExecuteScalar();
+            connection.Close();
+            endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Delete UserMaterials_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd10.CommandTimeout = 300;
+            cmd10.ExecuteScalar();
+            connection.Close();
+            endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Delete UserConsumables_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd11.CommandTimeout = 300;
+            cmd11.ExecuteScalar();
+            connection.Close();
+            endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Delete Equipments_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
