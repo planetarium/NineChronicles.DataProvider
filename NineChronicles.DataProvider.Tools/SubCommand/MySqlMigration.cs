@@ -660,6 +660,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     $"{equipment.BuffSkills.Count};" +
                     $"{equipment.ElementalType.ToString()};" +
                     $"{equipment.Grade};" +
+                    $"{equipment.level};" +
                     $"{equipment.SetId};" +
                     $"{equipment.Skills.Count};" +
                     $"{equipment.SpineResourcePath};" +
