@@ -356,7 +356,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     TableName = tableName,
                     FileName = filePath,
                     Timeout = 0,
-                    LineTerminator = "\r\n",
+                    LineTerminator = "\n",
                     FieldTerminator = ";",
                     Local = true,
                     ConflictOption = MySqlBulkLoaderConflictOption.Ignore,
