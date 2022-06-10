@@ -9,10 +9,13 @@ namespace NineChronicles.DataProvider
     using Lib9c.Model.Order;
     using Lib9c.Renderer;
     using Libplanet;
+    using Libplanet.Action;
+    using Libplanet.Assets;
     using Microsoft.Extensions.Hosting;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Battle;
+    using Nekoyume.Extensions;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
     using Nekoyume.TableData;
@@ -51,6 +54,13 @@ namespace NineChronicles.DataProvider
         private readonly List<ShopHistoryCostumeModel> _buyShopCostumesList = new List<ShopHistoryCostumeModel>();
         private readonly List<ShopHistoryMaterialModel> _buyShopMaterialsList = new List<ShopHistoryMaterialModel>();
         private readonly List<ShopHistoryConsumableModel> _buyShopConsumablesList = new List<ShopHistoryConsumableModel>();
+        private readonly List<AgentModel> _stakeAgentList = new List<AgentModel>();
+        private readonly List<StakeModel> _stakeList = new List<StakeModel>();
+        private readonly List<AgentModel> _claimStakeAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _claimStakeAvatarList = new List<AvatarModel>();
+        private readonly List<ClaimStakeRewardModel> _claimStakeList = new List<ClaimStakeRewardModel>();
+        private readonly List<AgentModel> _mmcAgentList = new List<AgentModel>();
+        private readonly List<MigrateMonsterCollectionModel> _mmcList = new List<MigrateMonsterCollectionModel>();
         private int _renderCount = 0;
 
         public RenderSubscriber(
@@ -107,6 +117,13 @@ namespace NineChronicles.DataProvider
                                 MySqlStore.StoreAgentList(_eqAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.StoreAvatarList(_eqAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.ProcessEquipmentList(_eqList.GroupBy(i => i.ItemId).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAgentList(_stakeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreStakingList(_stakeList.ToList());
+                                MySqlStore.StoreAgentList(_claimStakeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_claimStakeAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreClaimStakeRewardList(_claimStakeList.ToList());
+                                MySqlStore.StoreAgentList(_mmcAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreMigrateMonsterCollectionList(_mmcList.ToList());
                                 _renderCount = 0;
                                 _hasAgentList.Clear();
                                 _hasAvatarList.Clear();
@@ -131,6 +148,13 @@ namespace NineChronicles.DataProvider
                                 _eqAgentList.Clear();
                                 _eqAvatarList.Clear();
                                 _eqList.Clear();
+                                _stakeAgentList.Clear();
+                                _stakeList.Clear();
+                                _claimStakeAgentList.Clear();
+                                _claimStakeAvatarList.Clear();
+                                _claimStakeList.Clear();
+                                _mmcAgentList.Clear();
+                                _mmcList.Clear();
                                 var end = DateTimeOffset.Now;
                                 Log.Debug($"Storing Data Complete. Time Taken: {(end - start).Milliseconds} ms.");
                             }
@@ -636,6 +660,193 @@ namespace NineChronicles.DataProvider
                                     buy.buyerAvatarAddress,
                                     ev.BlockIndex,
                                     (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is Stake stake)
+                            {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
+                                var start = DateTimeOffset.Now;
+                                ev.OutputStates.TryGetStakeState(ev.Signer, out StakeState stakeState);
+                                var prevStakeStartBlockIndex =
+                                    !ev.PreviousStates.TryGetStakeState(ev.Signer, out StakeState prevStakeState)
+                                        ? 0 : prevStakeState.StartedBlockIndex;
+                                var newStakeStartBlockIndex = stakeState.StartedBlockIndex; // 5. new Stake Start Block Index
+                                var currency = ev.OutputStates.GetGoldCurrency();
+                                var balance = ev.OutputStates.GetBalance(ev.Signer, currency); // 3. remaining NCG
+                                var stakeStateAddress = StakeState.DeriveAddress(ev.Signer);
+                                var previousAmount = ev.PreviousStates.GetBalance(stakeStateAddress, currency); // 1. previous Deposit
+                                var currentAmount = ev.OutputStates.GetBalance(stakeStateAddress, currency); // 2. current Deposit
+
+                                _stakeAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _stakeList.Add(new StakeModel()
+                                {
+                                    BlockIndex = ev.BlockIndex,
+                                    AgentAddress = ev.Signer.ToString(),
+                                    PreviousAmount = Convert.ToDecimal(previousAmount.GetQuantityString()),
+                                    CurrentAmount = Convert.ToDecimal(currentAmount.GetQuantityString()),
+                                    RemainingNCG = Convert.ToDecimal(balance.GetQuantityString()),
+                                    PrevStakeStartBlockIndex = prevStakeStartBlockIndex,
+                                    NewStakeStartBlockIndex = newStakeStartBlockIndex,
+                                    TimeStamp = DateTimeOffset.Now,
+                                });
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored Stake action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is ClaimStakeReward claimStakeReward)
+                            {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
+                                var start = DateTimeOffset.Now;
+                                var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
+                                var avatarAddress = plainValue["AvatarAddressKey"].ToAddress();
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                var id = claimStakeReward.Id;
+                                ev.OutputStates.TryGetStakeState(ev.Signer, out StakeState stakeState);
+                                ev.PreviousStates.TryGetStakeState(ev.Signer, out StakeState prevStakeState);
+
+                                var claimStakeStartBlockIndex = prevStakeState.StartedBlockIndex;
+                                var claimStakeEndBlockIndex = prevStakeState.ReceivedBlockIndex;
+                                var currency = ev.OutputStates.GetGoldCurrency();
+                                var stakeStateAddress = StakeState.DeriveAddress(ev.Signer);
+                                var stakedAmount = ev.OutputStates.GetBalance(stakeStateAddress, currency);
+
+                                var sheets = ev.PreviousStates.GetSheets(new[]
+                                {
+                                    typeof(StakeRegularRewardSheet),
+                                    typeof(ConsumableItemSheet),
+                                    typeof(CostumeItemSheet),
+                                    typeof(EquipmentItemSheet),
+                                    typeof(MaterialItemSheet),
+                                });
+                                StakeRegularRewardSheet stakeRegularRewardSheet = sheets.GetSheet<StakeRegularRewardSheet>();
+                                int level = stakeRegularRewardSheet.FindLevelByStakedAmount(ev.Signer, stakedAmount);
+                                var rewards = stakeRegularRewardSheet[level].Rewards;
+                                var accumulatedRewards = stakeState.CalculateAccumulatedRewards(ev.BlockIndex);
+
+                                // Assume previewnet from the NCG's minter address.
+                                bool isPreviewNet = ev.PreviousStates.GetGoldCurrency().Minters!
+                                    .Contains(new Address("340f110b91d0577a9ae0ea69ce15269436f217da"));
+
+                                // https://github.com/planetarium/lib9c/pull/1073
+                                bool addZeroItemForChainConsistency = isPreviewNet && ev.BlockIndex < 1_200_000;
+                                int hourGlassCount = 0;
+                                int apPotionCount = 0;
+                                foreach (var reward in rewards)
+                                {
+                                    var (quantity, _) = stakedAmount.DivRem(currency * reward.Rate);
+                                    if (!addZeroItemForChainConsistency && quantity < 1)
+                                    {
+                                        // If the quantity is zero, it doesn't add the item into inventory.
+                                        continue;
+                                    }
+
+                                    if (reward.ItemId == 400000)
+                                    {
+                                        hourGlassCount += (int)quantity * accumulatedRewards;
+                                    }
+
+                                    if (reward.ItemId == 500000)
+                                    {
+                                        apPotionCount += (int)quantity * accumulatedRewards;
+                                    }
+                                }
+
+                                if (ev.PreviousStates.TryGetSheet<StakeRegularFixedRewardSheet>(
+                                        out var stakeRegularFixedRewardSheet))
+                                {
+                                    var fixedRewards = stakeRegularFixedRewardSheet[level].Rewards;
+                                    foreach (var reward in fixedRewards)
+                                    {
+                                        if (reward.ItemId == 400000)
+                                        {
+                                            hourGlassCount += (int)reward.Count * accumulatedRewards;
+                                        }
+
+                                        if (reward.ItemId == 500000)
+                                        {
+                                            apPotionCount += (int)reward.Count * accumulatedRewards;
+                                        }
+                                    }
+                                }
+
+                                _claimStakeAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _claimStakeAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _claimStakeList.Add(new ClaimStakeRewardModel()
+                                {
+                                    Id = id.ToString(),
+                                    BlockIndex = ev.BlockIndex,
+                                    AgentAddress = ev.Signer.ToString(),
+                                    ClaimRewardAvatarAddress = avatarAddress.ToString(),
+                                    HourGlassCount = hourGlassCount,
+                                    ApPotionCount = apPotionCount,
+                                    ClaimStakeStartBlockIndex = claimStakeStartBlockIndex,
+                                    ClaimStakeEndBlockIndex = claimStakeEndBlockIndex,
+                                    TimeStamp = DateTimeOffset.Now,
+                                });
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored ClaimStakeReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is MigrateMonsterCollection mc)
+                            {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
+                                var start = DateTimeOffset.Now;
+                                ev.OutputStates.TryGetStakeState(ev.Signer, out StakeState stakeState);
+                                var agentState = ev.PreviousStates.GetAgentState(ev.Signer);
+                                Address collectionAddress = MonsterCollectionState.DeriveAddress(ev.Signer, agentState.MonsterCollectionRound);
+                                ev.PreviousStates.TryGetState(collectionAddress, out Dictionary stateDict);
+                                var monsterCollectionState = new MonsterCollectionState(stateDict);
+                                var currency = ev.OutputStates.GetGoldCurrency();
+                                var migrationAmount = ev.PreviousStates.GetBalance(monsterCollectionState.address, currency);
+                                var migrationStartBlockIndex = ev.BlockIndex;
+                                var stakeStartBlockIndex = stakeState.StartedBlockIndex;
+                                _mmcAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _mmcList.Add(new MigrateMonsterCollectionModel()
+                                {
+                                    BlockIndex = ev.BlockIndex,
+                                    AgentAddress = ev.Signer.ToString(),
+                                    MigrationAmount = Convert.ToDecimal(migrationAmount.GetQuantityString()),
+                                    MigrationStartBlockIndex = migrationStartBlockIndex,
+                                    StakeStartBlockIndex = stakeStartBlockIndex,
+                                    TimeStamp = DateTimeOffset.Now,
+                                });
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                         catch (Exception ex)

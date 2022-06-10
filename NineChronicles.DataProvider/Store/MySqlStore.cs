@@ -836,6 +836,90 @@ namespace NineChronicles.DataProvider.Store
             ctx.SaveChanges();
         }
 
+        public void StoreStakingList(List<StakeModel> stakeList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var stake in stakeList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        ctx.Stakings!.AddRange(stake!);
+                        ctx.SaveChanges();
+                        ctx.Dispose();
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreClaimStakeRewardList(List<ClaimStakeRewardModel> claimStakeList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var claimStake in claimStakeList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.ClaimStakeRewards?.Find(claimStake!.Id) is null)
+                        {
+                            ctx.ClaimStakeRewards!.AddRange(claimStake!);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.ClaimStakeRewards!.UpdateRange(claimStake!);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreMigrateMonsterCollectionList(
+            List<MigrateMonsterCollectionModel> mmcList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var mmc in mmcList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        ctx.MigrateMonsterCollections!.AddRange(mmc!);
+                        ctx.SaveChanges();
+                        ctx.Dispose();
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public IEnumerable<CraftRankingOutputModel> GetCraftRanking(
             Address? avatarAddress = null,
             int? limit = null)
