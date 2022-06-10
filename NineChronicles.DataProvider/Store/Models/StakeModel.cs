@@ -14,7 +14,7 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public decimal PreviousAmount { get; set; }
 
-        public decimal CurrentAmount { get; set; }
+        public decimal NewAmount { get; set; }
 
         public decimal RemainingNCG { get; set; }
 

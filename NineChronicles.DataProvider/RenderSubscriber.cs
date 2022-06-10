@@ -671,12 +671,12 @@ namespace NineChronicles.DataProvider
                                 var prevStakeStartBlockIndex =
                                     !ev.PreviousStates.TryGetStakeState(ev.Signer, out StakeState prevStakeState)
                                         ? 0 : prevStakeState.StartedBlockIndex;
-                                var newStakeStartBlockIndex = stakeState.StartedBlockIndex; // 5. new Stake Start Block Index
+                                var newStakeStartBlockIndex = stakeState.StartedBlockIndex;
                                 var currency = ev.OutputStates.GetGoldCurrency();
-                                var balance = ev.OutputStates.GetBalance(ev.Signer, currency); // 3. remaining NCG
+                                var balance = ev.OutputStates.GetBalance(ev.Signer, currency);
                                 var stakeStateAddress = StakeState.DeriveAddress(ev.Signer);
-                                var previousAmount = ev.PreviousStates.GetBalance(stakeStateAddress, currency); // 1. previous Deposit
-                                var currentAmount = ev.OutputStates.GetBalance(stakeStateAddress, currency); // 2. current Deposit
+                                var previousAmount = ev.PreviousStates.GetBalance(stakeStateAddress, currency);
+                                var newAmount = ev.OutputStates.GetBalance(stakeStateAddress, currency);
 
                                 _stakeAgentList.Add(new AgentModel()
                                 {
@@ -687,7 +687,7 @@ namespace NineChronicles.DataProvider
                                     BlockIndex = ev.BlockIndex,
                                     AgentAddress = ev.Signer.ToString(),
                                     PreviousAmount = Convert.ToDecimal(previousAmount.GetQuantityString()),
-                                    CurrentAmount = Convert.ToDecimal(currentAmount.GetQuantityString()),
+                                    NewAmount = Convert.ToDecimal(newAmount.GetQuantityString()),
                                     RemainingNCG = Convert.ToDecimal(balance.GetQuantityString()),
                                     PrevStakeStartBlockIndex = prevStakeStartBlockIndex,
                                     NewStakeStartBlockIndex = newStakeStartBlockIndex,
