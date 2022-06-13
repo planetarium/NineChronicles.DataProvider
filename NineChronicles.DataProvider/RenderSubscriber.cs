@@ -9,8 +9,6 @@ namespace NineChronicles.DataProvider
     using Lib9c.Model.Order;
     using Lib9c.Renderer;
     using Libplanet;
-    using Libplanet.Action;
-    using Libplanet.Assets;
     using Microsoft.Extensions.Hosting;
     using Nekoyume;
     using Nekoyume.Action;
@@ -537,7 +535,7 @@ namespace NineChronicles.DataProvider
                                             TradableId = equipment.TradableId.ToString(),
                                             UniqueStatType = equipment.UniqueStatType.ToString(),
                                             ItemCount = itemCount,
-                                            TimeStamp = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                            TimeStamp = DateTimeOffset.Now,
                                         });
                                     }
 
@@ -565,7 +563,7 @@ namespace NineChronicles.DataProvider
                                             NonFungibleId = costume.NonFungibleId.ToString(),
                                             TradableId = costume.TradableId.ToString(),
                                             ItemCount = itemCount,
-                                            TimeStamp = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                            TimeStamp = DateTimeOffset.Now,
                                         });
                                     }
 
@@ -588,7 +586,7 @@ namespace NineChronicles.DataProvider
                                             ElementalType = material.ElementalType.ToString(),
                                             Grade = material.Grade,
                                             ItemCount = itemCount,
-                                            TimeStamp = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                            TimeStamp = DateTimeOffset.Now,
                                         });
                                     }
 
@@ -617,7 +615,7 @@ namespace NineChronicles.DataProvider
                                             TradableId = consumable.TradableId.ToString(),
                                             MainStat = consumable.MainStat.ToString(),
                                             ItemCount = itemCount,
-                                            TimeStamp = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                            TimeStamp = DateTimeOffset.Now,
                                         });
                                     }
 
@@ -778,12 +776,12 @@ namespace NineChronicles.DataProvider
                                     {
                                         if (reward.ItemId == 400000)
                                         {
-                                            hourGlassCount += (int)reward.Count * accumulatedRewards;
+                                            hourGlassCount += reward.Count * accumulatedRewards;
                                         }
 
                                         if (reward.ItemId == 500000)
                                         {
-                                            apPotionCount += (int)reward.Count * accumulatedRewards;
+                                            apPotionCount += reward.Count * accumulatedRewards;
                                         }
                                     }
                                 }
