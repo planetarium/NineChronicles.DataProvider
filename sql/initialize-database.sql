@@ -277,3 +277,18 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`MigrateMonsterCollections` (
     INDEX (`BlockIndex`, `Timestamp`),
     KEY `fk_MigratMonsterCollections_Agent1_idx` (`AgentAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`Grindings` (
+    `Id` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
+    `AvatarAddress` varchar(100) NOT NULL,
+    `EquipmentItemId` varchar(100) NOT NULL,
+    `EquipmentId` int NOT NULL,
+    `EquipmentLevel` int NOT NULL,
+    `Crystal` decimal(13,2) NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
+    KEY `fk_Grindings_Agent1_idx` (`AgentAddress`),
+    KEY `fk_Grindings_AvatarAddress1_idx` (`AvatarAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

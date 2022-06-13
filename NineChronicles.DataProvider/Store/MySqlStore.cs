@@ -935,6 +935,41 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreGrindList(List<GrindingModel> grindList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var grind in grindList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.Grindings?.Find(grind!.Id) is null)
+                        {
+                            ctx.Grindings!.AddRange(grind!);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.Grindings!.UpdateRange(grind!);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public IEnumerable<CraftRankingOutputModel> GetCraftRanking(
             Address? avatarAddress = null,
             int? limit = null)

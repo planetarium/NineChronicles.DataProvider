@@ -9,14 +9,17 @@ namespace NineChronicles.DataProvider
     using Lib9c.Model.Order;
     using Lib9c.Renderer;
     using Libplanet;
+    using Libplanet.Assets;
     using Microsoft.Extensions.Hosting;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Battle;
     using Nekoyume.Extensions;
+    using Nekoyume.Helper;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
     using Nekoyume.TableData;
+    using Nekoyume.TableData.Crystal;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless;
@@ -60,6 +63,9 @@ namespace NineChronicles.DataProvider
         private readonly List<ClaimStakeRewardModel> _claimStakeList = new List<ClaimStakeRewardModel>();
         private readonly List<AgentModel> _mmcAgentList = new List<AgentModel>();
         private readonly List<MigrateMonsterCollectionModel> _mmcList = new List<MigrateMonsterCollectionModel>();
+        private readonly List<AgentModel> _grindAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _grindAvatarList = new List<AvatarModel>();
+        private readonly List<GrindingModel> _grindList = new List<GrindingModel>();
         private int _renderCount = 0;
 
         public RenderSubscriber(
@@ -117,12 +123,15 @@ namespace NineChronicles.DataProvider
                                 MySqlStore.StoreAvatarList(_eqAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.ProcessEquipmentList(_eqList.GroupBy(i => i.ItemId).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.StoreAgentList(_stakeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreStakingList(_stakeList.ToList());
+                                MySqlStore.StoreStakingList(_stakeList);
                                 MySqlStore.StoreAgentList(_claimStakeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.StoreAvatarList(_claimStakeAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreClaimStakeRewardList(_claimStakeList.ToList());
+                                MySqlStore.StoreClaimStakeRewardList(_claimStakeList);
                                 MySqlStore.StoreAgentList(_mmcAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreMigrateMonsterCollectionList(_mmcList.ToList());
+                                MySqlStore.StoreMigrateMonsterCollectionList(_mmcList);
+                                MySqlStore.StoreAgentList(_grindAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_grindAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreGrindList(_grindList);
                                 _renderCount = 0;
                                 _hasAgentList.Clear();
                                 _hasAvatarList.Clear();
@@ -154,6 +163,9 @@ namespace NineChronicles.DataProvider
                                 _claimStakeList.Clear();
                                 _mmcAgentList.Clear();
                                 _mmcList.Clear();
+                                _grindAgentList.Clear();
+                                _grindAvatarList.Clear();
+                                _grindList.Clear();
                                 var end = DateTimeOffset.Now;
                                 Log.Debug($"Storing Data Complete. Time Taken: {(end - start).Milliseconds} ms.");
                             }
@@ -838,6 +850,107 @@ namespace NineChronicles.DataProvider
                                 });
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is Grinding grind)
+                            {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
+                                var start = DateTimeOffset.Now;
+
+                                AvatarState prevAvatarState = ev.PreviousStates.GetAvatarStateV2(grind.AvatarAddress);
+                                AgentState agentState = ev.PreviousStates.GetAgentState(ev.Signer);
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(grind.AvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+                                Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
+                                    ev.Signer,
+                                    agentState.MonsterCollectionRound
+                                );
+                                Dictionary<Type, (Address, ISheet)> sheets = previousStates.GetSheets(sheetTypes: new[]
+                                {
+                                    typeof(CrystalEquipmentGrindingSheet),
+                                    typeof(CrystalMonsterCollectionMultiplierSheet),
+                                    typeof(MaterialItemSheet),
+                                    typeof(StakeRegularRewardSheet),
+                                });
+
+                                List<Equipment> equipmentList = new List<Equipment>();
+                                foreach (var equipmentId in grind.EquipmentIds)
+                                {
+                                    if (prevAvatarState.inventory.TryGetNonFungibleItem(equipmentId, out Equipment equipment))
+                                    {
+                                        equipmentList.Add(equipment);
+                                    }
+                                }
+
+                                Currency currency = previousStates.GetGoldCurrency();
+                                FungibleAssetValue stakedAmount = 0 * currency;
+                                if (previousStates.TryGetStakeState(ev.Signer, out StakeState stakeState))
+                                {
+                                    stakedAmount = previousStates.GetBalance(stakeState.address, currency);
+                                }
+                                else
+                                {
+                                    if (previousStates.TryGetState(monsterCollectionAddress, out Dictionary _))
+                                    {
+                                        stakedAmount = previousStates.GetBalance(monsterCollectionAddress, currency);
+                                    }
+                                }
+
+                                FungibleAssetValue crystal = CrystalCalculator.CalculateCrystal(
+                                    ev.Signer,
+                                    equipmentList,
+                                    stakedAmount,
+                                    false,
+                                    sheets.GetSheet<CrystalEquipmentGrindingSheet>(),
+                                    sheets.GetSheet<CrystalMonsterCollectionMultiplierSheet>(),
+                                    sheets.GetSheet<StakeRegularRewardSheet>()
+                                );
+
+                                foreach (var equipment in equipmentList)
+                                {
+                                    _grindAgentList.Add(new AgentModel()
+                                    {
+                                        Address = ev.Signer.ToString(),
+                                    });
+                                    _grindAvatarList.Add(new AvatarModel()
+                                    {
+                                        Address = grind.AvatarAddress.ToString(),
+                                        AgentAddress = ev.Signer.ToString(),
+                                        Name = avatarName,
+                                        AvatarLevel = avatarLevel,
+                                        TitleId = avatarTitleId,
+                                        ArmorId = avatarArmorId,
+                                        Cp = avatarCp,
+                                    });
+                                    _grindList.Add(new GrindingModel()
+                                    {
+                                        Id = grind.Id.ToString(),
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = grind.AvatarAddress.ToString(),
+                                        EquipmentItemId = equipment.ItemId.ToString(),
+                                        EquipmentId = equipment.Id,
+                                        EquipmentLevel = equipment.level,
+                                        Crystal = Convert.ToDecimal(crystal.GetQuantityString()),
+                                        BlockIndex = ev.BlockIndex,
+                                        TimeStamp = DateTimeOffset.Now,
+                                    });
+                                }
+
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored Grinding action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                         catch (Exception ex)
