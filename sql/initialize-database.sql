@@ -248,8 +248,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Stakings` (
     `PrevStakeStartBlockIndex` bigint NOT NULL,
     `NewStakeStartBlockIndex` bigint NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX (`BlockIndex`),
-    PRIMARY KEY (`Timestamp`),
+    INDEX (`BlockIndex`, `Timestamp`),
     KEY `fk_Stakings_Agent1_idx` (`AgentAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -263,8 +262,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`ClaimStakeRewards` (
     `ClaimStakeStartBlockIndex` bigint NOT NULL,
     `ClaimStakeEndBlockIndex` bigint NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX (`Id`, `BlockIndex`),
-    PRIMARY KEY (`Timestamp`),
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
     KEY `fk_ClaimStakeRewards_Agent1_idx` (`AgentAddress`),
     KEY `fk_ClaimStakeRewards_ClaimRewardAvatarAddress1_idx` (`ClaimRewardAvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -276,7 +274,6 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`MigrateMonsterCollections` (
     `MigrationStartBlockIndex` bigint NOT NULL,
     `StakeStartBlockIndex` bigint NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX (`BlockIndex`),
-    PRIMARY KEY (`Timestamp`),
+    INDEX (`BlockIndex`, `Timestamp`),
     KEY `fk_MigratMonsterCollections_Agent1_idx` (`AgentAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
