@@ -1,5 +1,6 @@
 namespace NineChronicles.DataProvider.Store.Models
 {
+    using System;
     using System.ComponentModel.DataAnnotations;
 
     public class ShopHistoryMaterialModel
@@ -33,6 +34,6 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public int ItemCount { get; set; }
 
-        public string? TimeStamp { get; set; }
+        public DateTimeOffset TimeStamp { get; set; }
     }
 }
