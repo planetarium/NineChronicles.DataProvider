@@ -292,3 +292,19 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Grindings` (
     KEY `fk_Grindings_Agent1_idx` (`AgentAddress`),
     KEY `fk_Grindings_AvatarAddress1_idx` (`AvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`ItemEnhancementFails` (
+    `Id` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
+    `AvatarAddress` varchar(100) NOT NULL,
+    `EquipmentItemId` varchar(100) NOT NULL,
+    `MaterialItemId` varchar(100) NOT NULL,
+    `EquipmentLevel` int NOT NULL,
+    `GainedCrystal` decimal(13,2) NOT NULL,
+    `BurntNCG` decimal(13,2) NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
+    KEY `fk_Grindings_Agent1_idx` (`AgentAddress`),
+    KEY `fk_Grindings_AvatarAddress1_idx` (`AvatarAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

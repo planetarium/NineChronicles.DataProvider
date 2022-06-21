@@ -970,6 +970,41 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreItemEnhancementFailList(List<ItemEnhancementFailModel> itemEnhancementFailList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var itemEnhancementFail in itemEnhancementFailList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.ItemEnhancementFails?.Find(itemEnhancementFail!.Id) is null)
+                        {
+                            ctx.ItemEnhancementFails!.AddRange(itemEnhancementFail!);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.ItemEnhancementFails!.UpdateRange(itemEnhancementFail!);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public IEnumerable<CraftRankingOutputModel> GetCraftRanking(
             Address? avatarAddress = null,
             int? limit = null)

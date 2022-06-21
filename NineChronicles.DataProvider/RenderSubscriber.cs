@@ -66,6 +66,7 @@ namespace NineChronicles.DataProvider
         private readonly List<AgentModel> _grindAgentList = new List<AgentModel>();
         private readonly List<AvatarModel> _grindAvatarList = new List<AvatarModel>();
         private readonly List<GrindingModel> _grindList = new List<GrindingModel>();
+        private readonly List<ItemEnhancementFailModel> _itemEnhancementFailList = new List<ItemEnhancementFailModel>();
         private int _renderCount = 0;
 
         public RenderSubscriber(
@@ -132,6 +133,7 @@ namespace NineChronicles.DataProvider
                                 MySqlStore.StoreAgentList(_grindAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.StoreAvatarList(_grindAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.StoreGrindList(_grindList);
+                                MySqlStore.StoreItemEnhancementFailList(_itemEnhancementFailList);
                                 _renderCount = 0;
                                 _hasAgentList.Clear();
                                 _hasAvatarList.Clear();
@@ -166,6 +168,7 @@ namespace NineChronicles.DataProvider
                                 _grindAgentList.Clear();
                                 _grindAvatarList.Clear();
                                 _grindList.Clear();
+                                _itemEnhancementFailList.Clear();
                                 var end = DateTimeOffset.Now;
                                 Log.Debug($"Storing Data Complete. Time Taken: {(end - start).Milliseconds} ms.");
                             }
@@ -405,6 +408,7 @@ namespace NineChronicles.DataProvider
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
                                 var previousStates = ev.PreviousStates;
+                                AvatarState prevAvatarState = previousStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
                                 var avatarLevel = avatarState.level;
                                 var avatarArmorId = avatarState.GetArmorId();
@@ -413,6 +417,53 @@ namespace NineChronicles.DataProvider
                                 if (avatarTitleCostume != null)
                                 {
                                     avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                int prevEquipmentLevel = 0;
+                                if (prevAvatarState.inventory.TryGetNonFungibleItem(itemEnhancement.itemId, out ItemUsable prevEnhancementItem)
+                                    && prevEnhancementItem is Equipment prevEnhancementEquipment)
+                                {
+                                       prevEquipmentLevel = prevEnhancementEquipment.level;
+                                }
+
+                                int outputEquipmentLevel = 0;
+                                if (avatarState.inventory.TryGetNonFungibleItem(itemEnhancement.itemId, out ItemUsable outputEnhancementItem)
+                                    && outputEnhancementItem is Equipment outputEnhancementEquipment)
+                                {
+                                    outputEquipmentLevel = outputEnhancementEquipment.level;
+                                }
+
+                                if (prevEquipmentLevel == outputEquipmentLevel)
+                                {
+                                    Currency crystalCurrency = new Currency("CRYSTAL", 18, minters: null);
+                                    Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
+                                    var prevCrystalBalance = previousStates.GetBalance(
+                                        itemEnhancement.avatarAddress,
+                                        crystalCurrency);
+                                    var outputCrystalBalance = ev.OutputStates.GetBalance(
+                                        itemEnhancement.avatarAddress,
+                                        crystalCurrency);
+                                    var prevNCGBalance = previousStates.GetBalance(
+                                        itemEnhancement.avatarAddress,
+                                        ncgCurrency);
+                                    var outputNCGBalance = ev.OutputStates.GetBalance(
+                                        itemEnhancement.avatarAddress,
+                                        ncgCurrency);
+                                    var gainedCrystal = outputCrystalBalance - prevCrystalBalance;
+                                    var burntNCG = prevNCGBalance - outputNCGBalance;
+                                    _itemEnhancementFailList.Add(new ItemEnhancementFailModel()
+                                    {
+                                        Id = itemEnhancement.Id.ToString(),
+                                        BlockIndex = ev.BlockIndex,
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = itemEnhancement.avatarAddress.ToString(),
+                                        EquipmentItemId = itemEnhancement.itemId.ToString(),
+                                        MaterialItemId = itemEnhancement.materialId.ToString(),
+                                        EquipmentLevel = outputEquipmentLevel,
+                                        GainedCrystal = Convert.ToDecimal(gainedCrystal.GetQuantityString()),
+                                        BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
+                                        TimeStamp = DateTimeOffset.Now,
+                                    });
                                 }
 
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);

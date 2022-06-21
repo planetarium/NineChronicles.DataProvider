@@ -49,5 +49,7 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<MigrateMonsterCollectionModel>? MigrateMonsterCollections { get; set; }
 
         public DbSet<GrindingModel>? Grindings { get; set; }
+
+        public DbSet<ItemEnhancementFailModel>? ItemEnhancementFails { get; set; }
     }
 }
