@@ -1040,6 +1040,30 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreUnlockWorldList(List<UnlockWorldModel> unlockWorldList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var unlockWorld in unlockWorldList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        ctx.UnlockWorlds!.AddRange(unlockWorld!);
+                        ctx.SaveChanges();
+                        ctx.Dispose();
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public IEnumerable<CraftRankingOutputModel> GetCraftRanking(
             Address? avatarAddress = null,
             int? limit = null)
