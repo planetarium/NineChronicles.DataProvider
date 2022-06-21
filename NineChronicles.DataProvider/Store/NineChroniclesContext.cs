@@ -57,5 +57,9 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<UnlockWorldModel>? UnlockWorlds { get; set; }
 
         public DbSet<ReplaceCombinationEquipmentMaterialModel>? ReplaceCombinationEquipmentMaterials { get; set; }
+
+        public DbSet<HasRandomBuffModel>? HasRandomBuffs { get; set; }
+
+        public DbSet<HasWithRandomBuffModel>? HasWithRandomBuffs { get; set; }
     }
 }

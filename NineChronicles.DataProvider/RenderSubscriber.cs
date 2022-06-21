@@ -74,6 +74,10 @@ namespace NineChronicles.DataProvider
         private readonly List<AvatarModel> _unlockWorldAvatarList = new List<AvatarModel>();
         private readonly List<UnlockWorldModel> _unlockWorldList = new List<UnlockWorldModel>();
         private readonly List<ReplaceCombinationEquipmentMaterialModel> _replaceCombinationEquipmentMaterialList = new List<ReplaceCombinationEquipmentMaterialModel>();
+        private readonly List<AgentModel> _hasRandomBuffAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _hasRandomBuffAvatarList = new List<AvatarModel>();
+        private readonly List<HasRandomBuffModel> _hasRandomBuffList = new List<HasRandomBuffModel>();
+        private readonly List<HasWithRandomBuffModel> _hasWithRandomBuffList = new List<HasWithRandomBuffModel>();
         private int _renderCount = 0;
 
         public RenderSubscriber(
@@ -148,6 +152,10 @@ namespace NineChronicles.DataProvider
                                 MySqlStore.StoreAvatarList(_unlockWorldAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.StoreUnlockWorldList(_unlockWorldList);
                                 MySqlStore.StoreReplaceCombinationEquipmentMaterialList(_replaceCombinationEquipmentMaterialList);
+                                MySqlStore.StoreAgentList(_hasRandomBuffAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_hasRandomBuffAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreHasRandomBuffList(_hasRandomBuffList);
+                                MySqlStore.StoreHasWithRandomBuffList(_hasWithRandomBuffList);
                                 _renderCount = 0;
                                 _hasAgentList.Clear();
                                 _hasAvatarList.Clear();
@@ -190,6 +198,10 @@ namespace NineChronicles.DataProvider
                                 _unlockWorldAvatarList.Clear();
                                 _unlockWorldList.Clear();
                                 _replaceCombinationEquipmentMaterialList.Clear();
+                                _hasRandomBuffAgentList.Clear();
+                                _hasRandomBuffAvatarList.Clear();
+                                _hasRandomBuffList.Clear();
+                                _hasWithRandomBuffList.Clear();
                                 var end = DateTimeOffset.Now;
                                 Log.Debug($"Storing Data Complete. Time Taken: {(end - start).Milliseconds} ms.");
                             }
@@ -248,6 +260,20 @@ namespace NineChronicles.DataProvider
                                     Mimisbrunnr = has.stageId > 10000000,
                                     BlockIndex = ev.BlockIndex,
                                 });
+                                if (has.stageBuffId.HasValue)
+                                {
+                                    _hasWithRandomBuffList.Add(new HasWithRandomBuffModel()
+                                    {
+                                        Id = has.Id.ToString(),
+                                        BlockIndex = ev.BlockIndex,
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = has.avatarAddress.ToString(),
+                                        StageId = has.stageId,
+                                        BuffId = (int)has.stageBuffId,
+                                        Cleared = isClear,
+                                        TimeStamp = DateTimeOffset.Now,
+                                    });
+                                }
 
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
@@ -1203,6 +1229,65 @@ namespace NineChronicles.DataProvider
 
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored UnlockWorld action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is HackAndSlashRandomBuff hasRandomBuff)
+                            {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
+                                var start = DateTimeOffset.Now;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasRandomBuff.AvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                AvatarState prevAvatarState = previousStates.GetAvatarStateV2(hasRandomBuff.AvatarAddress);
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                prevAvatarState.worldInformation.TryGetLastClearedStageId(out var currentStageId);
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+                                Currency crystalCurrency = new Currency("CRYSTAL", 18, minters: null);
+                                var prevCrystalBalance = previousStates.GetBalance(
+                                    hasRandomBuff.AvatarAddress,
+                                    crystalCurrency);
+                                var outputCrystalBalance = ev.OutputStates.GetBalance(
+                                    hasRandomBuff.AvatarAddress,
+                                    crystalCurrency);
+                                var burntCrystal = prevCrystalBalance - outputCrystalBalance;
+                                _hasRandomBuffAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _hasRandomBuffAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = hasRandomBuff.AvatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _hasRandomBuffList.Add(new HasRandomBuffModel()
+                                {
+                                    Id = hasRandomBuff.Id.ToString(),
+                                    BlockIndex = ev.BlockIndex,
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = hasRandomBuff.AvatarAddress.ToString(),
+                                    HasStageId = currentStageId,
+                                    GachaCount = !hasRandomBuff.AdvancedGacha ? 5 : 10,
+                                    BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
+                                    TimeStamp = DateTimeOffset.Now,
+                                });
+
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored HasRandomBuff action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                         catch (Exception ex)

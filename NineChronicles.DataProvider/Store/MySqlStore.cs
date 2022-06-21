@@ -1015,7 +1015,7 @@ namespace NineChronicles.DataProvider.Store
                     tasks.Add(Task.Run(() =>
                     {
                         using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.UnlockEquipmentRecipes?.Find(unlockEqupimentRecipe!.Id) is null)
+                        if (ctx.UnlockEquipmentRecipes?.Find(unlockEqupimentRecipe.Id) is null)
                         {
                             ctx.UnlockEquipmentRecipes!.AddRange(unlockEqupimentRecipe);
                             ctx.SaveChanges();
@@ -1078,6 +1078,76 @@ namespace NineChronicles.DataProvider.Store
                         ctx.ReplaceCombinationEquipmentMaterials!.AddRange(replaceCombinationEquipmentMaterial);
                         ctx.SaveChanges();
                         ctx.Dispose();
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreHasRandomBuffList(List<HasRandomBuffModel> hasRandomBuffList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var hasRandomBuff in hasRandomBuffList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.HasRandomBuffs?.Find(hasRandomBuff.Id) is null)
+                        {
+                            ctx.HasRandomBuffs!.AddRange(hasRandomBuff);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.HasRandomBuffs!.UpdateRange(hasRandomBuff);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreHasWithRandomBuffList(List<HasWithRandomBuffModel> hasWithRandomBuffList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var hasWithRandomBuff in hasWithRandomBuffList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.HasWithRandomBuffs?.Find(hasWithRandomBuff.Id) is null)
+                        {
+                            ctx.HasWithRandomBuffs!.AddRange(hasWithRandomBuff);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.HasWithRandomBuffs!.UpdateRange(hasWithRandomBuff);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
                     }));
                 }
 
