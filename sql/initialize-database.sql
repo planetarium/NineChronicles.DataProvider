@@ -308,3 +308,16 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`ItemEnhancementFails` (
     KEY `fk_Grindings_Agent1_idx` (`AgentAddress`),
     KEY `fk_Grindings_AvatarAddress1_idx` (`AvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`UnlockEquipmentRecipes` (
+    `Id` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
+    `AvatarAddress` varchar(100) NOT NULL,
+    `UnlockEqupimentRecipeId` int NOT NULL,
+    `BurntCrystal` decimal(13,2) NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
+    KEY `fk_Grindings_Agent1_idx` (`AgentAddress`),
+    KEY `fk_Grindings_AvatarAddress1_idx` (`AvatarAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

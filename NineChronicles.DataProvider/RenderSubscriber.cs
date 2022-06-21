@@ -67,6 +67,9 @@ namespace NineChronicles.DataProvider
         private readonly List<AvatarModel> _grindAvatarList = new List<AvatarModel>();
         private readonly List<GrindingModel> _grindList = new List<GrindingModel>();
         private readonly List<ItemEnhancementFailModel> _itemEnhancementFailList = new List<ItemEnhancementFailModel>();
+        private readonly List<AgentModel> _unlockEquipmentRecipeAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _unlockEquipmentRecipeAvatarList = new List<AvatarModel>();
+        private readonly List<UnlockEquipmentRecipeModel> _unlockEquipmentRecipeList = new List<UnlockEquipmentRecipeModel>();
         private int _renderCount = 0;
 
         public RenderSubscriber(
@@ -134,6 +137,9 @@ namespace NineChronicles.DataProvider
                                 MySqlStore.StoreAvatarList(_grindAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.StoreGrindList(_grindList);
                                 MySqlStore.StoreItemEnhancementFailList(_itemEnhancementFailList);
+                                MySqlStore.StoreAgentList(_unlockEquipmentRecipeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_unlockEquipmentRecipeAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreUnlockEqupimentRecipeList(_unlockEquipmentRecipeList);
                                 _renderCount = 0;
                                 _hasAgentList.Clear();
                                 _hasAvatarList.Clear();
@@ -169,6 +175,9 @@ namespace NineChronicles.DataProvider
                                 _grindAvatarList.Clear();
                                 _grindList.Clear();
                                 _itemEnhancementFailList.Clear();
+                                _unlockEquipmentRecipeAgentList.Clear();
+                                _unlockEquipmentRecipeAvatarList.Clear();
+                                _unlockEquipmentRecipeList.Clear();
                                 var end = DateTimeOffset.Now;
                                 Log.Debug($"Storing Data Complete. Time Taken: {(end - start).Milliseconds} ms.");
                             }
@@ -1002,6 +1011,65 @@ namespace NineChronicles.DataProvider
 
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored Grinding action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is UnlockEquipmentRecipe unlockEquipmentRecipe)
+                            {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
+                                var start = DateTimeOffset.Now;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(unlockEquipmentRecipe.AvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+                                Currency crystalCurrency = new Currency("CRYSTAL", 18, minters: null);
+                                var prevCrystalBalance = previousStates.GetBalance(
+                                    unlockEquipmentRecipe.AvatarAddress,
+                                    crystalCurrency);
+                                var outputCrystalBalance = ev.OutputStates.GetBalance(
+                                    unlockEquipmentRecipe.AvatarAddress,
+                                    crystalCurrency);
+                                var burntCrystal = prevCrystalBalance - outputCrystalBalance;
+                                _unlockEquipmentRecipeAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _unlockEquipmentRecipeAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = unlockEquipmentRecipe.AvatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                foreach (var recipeId in unlockEquipmentRecipe.RecipeIds)
+                                {
+                                    _unlockEquipmentRecipeList.Add(new UnlockEquipmentRecipeModel()
+                                    {
+                                        Id = unlockEquipmentRecipe.Id.ToString(),
+                                        BlockIndex = ev.BlockIndex,
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = unlockEquipmentRecipe.AvatarAddress.ToString(),
+                                        UnlockEquipmentRecipeId = recipeId,
+                                        BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
+                                        TimeStamp = DateTimeOffset.Now,
+                                    });
+                                }
+
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                         catch (Exception ex)

@@ -51,5 +51,7 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<GrindingModel>? Grindings { get; set; }
 
         public DbSet<ItemEnhancementFailModel>? ItemEnhancementFails { get; set; }
+
+        public DbSet<UnlockEquipmentRecipeModel>? UnlockEquipmentRecipes { get; set; }
     }
 }

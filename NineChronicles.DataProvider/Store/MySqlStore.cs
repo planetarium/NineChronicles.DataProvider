@@ -1005,6 +1005,41 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreUnlockEqupimentRecipeList(List<UnlockEquipmentRecipeModel> unlockEqupimentRecipeList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var unlockEqupimentRecipe in unlockEqupimentRecipeList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.UnlockEquipmentRecipes?.Find(unlockEqupimentRecipe!.Id) is null)
+                        {
+                            ctx.UnlockEquipmentRecipes!.AddRange(unlockEqupimentRecipe!);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.UnlockEquipmentRecipes!.UpdateRange(unlockEqupimentRecipe!);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public IEnumerable<CraftRankingOutputModel> GetCraftRanking(
             Address? avatarAddress = null,
             int? limit = null)
