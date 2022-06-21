@@ -16,6 +16,7 @@ namespace NineChronicles.DataProvider
     using Nekoyume.Battle;
     using Nekoyume.Extensions;
     using Nekoyume.Helper;
+    using Nekoyume.Model.Arena;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
     using Nekoyume.TableData;
@@ -78,6 +79,12 @@ namespace NineChronicles.DataProvider
         private readonly List<AvatarModel> _hasRandomBuffAvatarList = new List<AvatarModel>();
         private readonly List<HasRandomBuffModel> _hasRandomBuffList = new List<HasRandomBuffModel>();
         private readonly List<HasWithRandomBuffModel> _hasWithRandomBuffList = new List<HasWithRandomBuffModel>();
+        private readonly List<AgentModel> _joinArenaAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _joinArenaAvatarList = new List<AvatarModel>();
+        private readonly List<JoinArenaModel> _joinArenaList = new List<JoinArenaModel>();
+        private readonly List<AgentModel> _battleArenaAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _battleArenaAvatarList = new List<AvatarModel>();
+        private readonly List<BattleArenaModel> _battleArenaList = new List<BattleArenaModel>();
         private int _renderCount = 0;
 
         public RenderSubscriber(
@@ -156,6 +163,12 @@ namespace NineChronicles.DataProvider
                                 MySqlStore.StoreAvatarList(_hasRandomBuffAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.StoreHasRandomBuffList(_hasRandomBuffList);
                                 MySqlStore.StoreHasWithRandomBuffList(_hasWithRandomBuffList);
+                                MySqlStore.StoreAgentList(_joinArenaAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_joinArenaAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreJoinArenaList(_joinArenaList);
+                                MySqlStore.StoreAgentList(_battleArenaAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_battleArenaAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreBattleArenaList(_battleArenaList);
                                 _renderCount = 0;
                                 _hasAgentList.Clear();
                                 _hasAvatarList.Clear();
@@ -202,6 +215,12 @@ namespace NineChronicles.DataProvider
                                 _hasRandomBuffAvatarList.Clear();
                                 _hasRandomBuffList.Clear();
                                 _hasWithRandomBuffList.Clear();
+                                _joinArenaAgentList.Clear();
+                                _joinArenaAvatarList.Clear();
+                                _joinArenaList.Clear();
+                                _battleArenaAgentList.Clear();
+                                _battleArenaAvatarList.Clear();
+                                _battleArenaList.Clear();
                                 var end = DateTimeOffset.Now;
                                 Log.Debug($"Storing Data Complete. Time Taken: {(end - start).Milliseconds} ms.");
                             }
@@ -1288,6 +1307,121 @@ namespace NineChronicles.DataProvider
 
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored HasRandomBuff action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is JoinArena joinArena)
+                            {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
+                                var start = DateTimeOffset.Now;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(joinArena.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                AvatarState prevAvatarState = previousStates.GetAvatarStateV2(joinArena.avatarAddress);
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                prevAvatarState.worldInformation.TryGetLastClearedStageId(out var currentStageId);
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+                                Currency crystalCurrency = new Currency("CRYSTAL", 18, minters: null);
+                                var prevCrystalBalance = previousStates.GetBalance(
+                                    joinArena.avatarAddress,
+                                    crystalCurrency);
+                                var outputCrystalBalance = ev.OutputStates.GetBalance(
+                                    joinArena.avatarAddress,
+                                    crystalCurrency);
+                                var burntCrystal = prevCrystalBalance - outputCrystalBalance;
+                                _joinArenaAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _joinArenaAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = joinArena.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _joinArenaList.Add(new JoinArenaModel()
+                                {
+                                    Id = joinArena.Id.ToString(),
+                                    BlockIndex = ev.BlockIndex,
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = joinArena.avatarAddress.ToString(),
+                                    AvatarLevel = avatarLevel,
+                                    ArenaRound = joinArena.round,
+                                    ChampionshipId = joinArena.championshipId,
+                                    BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
+                                    TimeStamp = DateTimeOffset.Now,
+                                });
+
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored JoinArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is BattleArena battleArena)
+                            {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
+                                var start = DateTimeOffset.Now;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(battleArena.myAvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                AvatarState prevAvatarState = previousStates.GetAvatarStateV2(battleArena.myAvatarAddress);
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                prevAvatarState.worldInformation.TryGetLastClearedStageId(out var currentStageId);
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+                                var myArenaScoreAdr =
+                                    ArenaScore.DeriveAddress(battleArena.myAvatarAddress, battleArena.championshipId, battleArena.round);
+                                previousStates.TryGetArenaScore(myArenaScoreAdr, out var previousArenaScore);
+                                ev.OutputStates.TryGetArenaScore(myArenaScoreAdr, out var outputArenaScore);
+                                _battleArenaAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _battleArenaAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = battleArena.myAvatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _battleArenaList.Add(new BattleArenaModel()
+                                {
+                                    Id = battleArena.Id.ToString(),
+                                    BlockIndex = ev.BlockIndex,
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = battleArena.myAvatarAddress.ToString(),
+                                    AvatarLevel = avatarLevel,
+                                    EnemyAvatarAddress = battleArena.enemyAvatarAddress.ToString(),
+                                    Victory = outputArenaScore.Score > previousArenaScore.Score,
+                                    TimeStamp = DateTimeOffset.Now,
+                                });
+
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored BattleArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                         catch (Exception ex)

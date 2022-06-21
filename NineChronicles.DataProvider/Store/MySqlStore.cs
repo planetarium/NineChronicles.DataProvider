@@ -1159,6 +1159,76 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreJoinArenaList(List<JoinArenaModel> joinArenaList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var joinArena in joinArenaList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.JoinArenas?.Find(joinArena.Id) is null)
+                        {
+                            ctx.JoinArenas!.AddRange(joinArena);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.JoinArenas!.UpdateRange(joinArena);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreBattleArenaList(List<BattleArenaModel> battleArenaList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var battleArena in battleArenaList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.BattleArenas?.Find(battleArena.Id) is null)
+                        {
+                            ctx.BattleArenas!.AddRange(battleArena);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.BattleArenas!.UpdateRange(battleArena);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public IEnumerable<CraftRankingOutputModel> GetCraftRanking(
             Address? avatarAddress = null,
             int? limit = null)

@@ -61,5 +61,9 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<HasRandomBuffModel>? HasRandomBuffs { get; set; }
 
         public DbSet<HasWithRandomBuffModel>? HasWithRandomBuffs { get; set; }
+
+        public DbSet<JoinArenaModel>? JoinArenas { get; set; }
+
+        public DbSet<BattleArenaModel>? BattleArenas { get; set; }
     }
 }

@@ -347,3 +347,61 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`ReplaceCombinationEquipmentMaterials
     KEY `fk_ReplaceCombinationEquipmentMaterials_Agent1_idx` (`AgentAddress`),
     KEY `fk_ReplaceCombinationEquipmentMaterials_AvatarAddress1_idx` (`AvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`HasRandomBuffs` (
+    `Id` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
+    `AvatarAddress` varchar(100) NOT NULL,
+    `HasStageId` int NOT NULL,
+    `GachaCount` int NOT NULL,
+    `BurntCrystal` decimal(13,2) NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
+    KEY `fk_HasRandomBuffs_Agent1_idx` (`AgentAddress`),
+    KEY `fk_HasRandomBuffs_AvatarAddress1_idx` (`AvatarAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`HasWithRandomBuffs` (
+    `Id` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
+    `AvatarAddress` varchar(100) NOT NULL,
+    `StageId` int NOT NULL,
+    `BuffId` int NOT NULL,
+    `Cleared` boolean NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
+    KEY `fk_HasWithRandomBuffs_Agent1_idx` (`AgentAddress`),
+    KEY `fk_HasWithRandomBuffs_AvatarAddress1_idx` (`AvatarAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`JoinArenas` (
+    `Id` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
+    `AvatarAddress` varchar(100) NOT NULL,
+    `AvatarLevel` int NOT NULL,
+    `ArenaRound` int NOT NULL,
+    `ChampionshipId` int NOT NULL,
+    `BurntCrystal` decimal(13,2) NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
+    KEY `fk_JoinArenas_Agent1_idx` (`AgentAddress`),
+    KEY `fk_JoinArenas_AvatarAddress1_idx` (`AvatarAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`BattleArenas` (
+    `Id` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
+    `AvatarAddress` varchar(100) NOT NULL,
+    `AvatarLevel` int NOT NULL,
+    `EnemyAvatarAddress` varchar(100) NOT NULL,
+    `Victory` boolean NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
+    KEY `fk_BattleArenas_Agent1_idx` (`AgentAddress`),
+    KEY `fk_BattleArenas_AvatarAddress1_idx` (`AvatarAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
