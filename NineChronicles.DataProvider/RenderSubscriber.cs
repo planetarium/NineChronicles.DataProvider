@@ -73,6 +73,7 @@ namespace NineChronicles.DataProvider
         private readonly List<AgentModel> _unlockWorldAgentList = new List<AgentModel>();
         private readonly List<AvatarModel> _unlockWorldAvatarList = new List<AvatarModel>();
         private readonly List<UnlockWorldModel> _unlockWorldList = new List<UnlockWorldModel>();
+        private readonly List<ReplaceCombinationEquipmentMaterialModel> _replaceCombinationEquipmentMaterialList = new List<ReplaceCombinationEquipmentMaterialModel>();
         private int _renderCount = 0;
 
         public RenderSubscriber(
@@ -146,6 +147,7 @@ namespace NineChronicles.DataProvider
                                 MySqlStore.StoreAgentList(_unlockWorldAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.StoreAvatarList(_unlockWorldAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.StoreUnlockWorldList(_unlockWorldList);
+                                MySqlStore.StoreReplaceCombinationEquipmentMaterialList(_replaceCombinationEquipmentMaterialList);
                                 _renderCount = 0;
                                 _hasAgentList.Clear();
                                 _hasAvatarList.Clear();
@@ -187,6 +189,7 @@ namespace NineChronicles.DataProvider
                                 _unlockWorldAgentList.Clear();
                                 _unlockWorldAvatarList.Clear();
                                 _unlockWorldList.Clear();
+                                _replaceCombinationEquipmentMaterialList.Clear();
                                 var end = DateTimeOffset.Now;
                                 Log.Debug($"Storing Data Complete. Time Taken: {(end - start).Milliseconds} ms.");
                             }
@@ -389,6 +392,69 @@ namespace NineChronicles.DataProvider
                                     SubRecipeId = combinationEquipment.subRecipeId ?? 0,
                                     BlockIndex = ev.BlockIndex,
                                 });
+                                if (combinationEquipment.payByCrystal)
+                                {
+                                    Currency crystalCurrency = new Currency("CRYSTAL", 18, minters: null);
+                                    var prevCrystalBalance = previousStates.GetBalance(
+                                        combinationEquipment.avatarAddress,
+                                        crystalCurrency);
+                                    var outputCrystalBalance = ev.OutputStates.GetBalance(
+                                        combinationEquipment.avatarAddress,
+                                        crystalCurrency);
+                                    var burntCrystal = prevCrystalBalance - outputCrystalBalance;
+                                    var requiredFungibleItems = new Dictionary<int, int>();
+                                    Dictionary<Type, (Address, ISheet)> sheets = previousStates.GetSheets(sheetTypes: new[]
+                                    {
+                                        typeof(EquipmentItemRecipeSheet),
+                                        typeof(EquipmentItemSheet),
+                                        typeof(MaterialItemSheet),
+                                        typeof(EquipmentItemSubRecipeSheetV2),
+                                        typeof(EquipmentItemOptionSheet),
+                                        typeof(SkillSheet),
+                                        typeof(CrystalMaterialCostSheet),
+                                        typeof(CrystalFluctuationSheet),
+                                    });
+                                    var materialItemSheet = sheets.GetSheet<MaterialItemSheet>();
+                                    var equipmentItemRecipeSheet = sheets.GetSheet<EquipmentItemRecipeSheet>();
+                                    equipmentItemRecipeSheet.TryGetValue(combinationEquipment.recipeId, out var recipeRow);
+                                    materialItemSheet.TryGetValue(recipeRow.MaterialId, out var materialRow);
+
+                                    if (requiredFungibleItems.ContainsKey(materialRow.Id))
+                                    {
+                                        requiredFungibleItems[materialRow.Id] += recipeRow.MaterialCount;
+                                    }
+                                    else
+                                    {
+                                        requiredFungibleItems[materialRow.Id] = recipeRow.MaterialCount;
+                                    }
+
+                                    var inventory = ev.PreviousStates.GetAvatarStateV2(combinationEquipment.avatarAddress).inventory;
+                                    foreach (var pair in requiredFungibleItems.OrderBy(pair => pair.Key))
+                                    {
+                                        var itemId = pair.Key;
+                                        var requiredCount = pair.Value;
+                                        if (materialItemSheet.TryGetValue(itemId, out materialRow))
+                                        {
+                                            int itemCount = inventory.TryGetItem(itemId, out Inventory.Item item)
+                                                ? item.count
+                                                : 0;
+                                            if (itemCount < requiredCount && combinationEquipment.payByCrystal)
+                                            {
+                                                _replaceCombinationEquipmentMaterialList.Add(new ReplaceCombinationEquipmentMaterialModel()
+                                                {
+                                                    Id = combinationEquipment.Id.ToString(),
+                                                    BlockIndex = ev.BlockIndex,
+                                                    AgentAddress = ev.Signer.ToString(),
+                                                    AvatarAddress = combinationEquipment.avatarAddress.ToString(),
+                                                    ReplacedMaterialId = itemId,
+                                                    ReplacedMaterialCount = requiredCount - itemCount,
+                                                    BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
+                                                    TimeStamp = DateTimeOffset.Now,
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
 
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored CombinationEquipment action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);

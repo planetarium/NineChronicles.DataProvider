@@ -861,7 +861,7 @@ namespace NineChronicles.DataProvider.Store
                     tasks.Add(Task.Run(() =>
                     {
                         using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-                        ctx.Stakings!.AddRange(stake!);
+                        ctx.Stakings!.AddRange(stake);
                         ctx.SaveChanges();
                         ctx.Dispose();
                     }));
@@ -887,7 +887,7 @@ namespace NineChronicles.DataProvider.Store
                         using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
                         if (ctx.ClaimStakeRewards?.Find(claimStake!.Id) is null)
                         {
-                            ctx.ClaimStakeRewards!.AddRange(claimStake!);
+                            ctx.ClaimStakeRewards!.AddRange(claimStake);
                             ctx.SaveChanges();
                             ctx.Dispose();
                         }
@@ -895,7 +895,7 @@ namespace NineChronicles.DataProvider.Store
                         {
                             ctx.Dispose();
                             using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
-                            updateCtx.ClaimStakeRewards!.UpdateRange(claimStake!);
+                            updateCtx.ClaimStakeRewards!.UpdateRange(claimStake);
                             updateCtx.SaveChanges();
                             updateCtx.Dispose();
                         }
@@ -921,7 +921,7 @@ namespace NineChronicles.DataProvider.Store
                     tasks.Add(Task.Run(() =>
                     {
                         using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-                        ctx.MigrateMonsterCollections!.AddRange(mmc!);
+                        ctx.MigrateMonsterCollections!.AddRange(mmc);
                         ctx.SaveChanges();
                         ctx.Dispose();
                     }));
@@ -947,7 +947,7 @@ namespace NineChronicles.DataProvider.Store
                         using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
                         if (ctx.Grindings?.Find(grind!.Id) is null)
                         {
-                            ctx.Grindings!.AddRange(grind!);
+                            ctx.Grindings!.AddRange(grind);
                             ctx.SaveChanges();
                             ctx.Dispose();
                         }
@@ -955,7 +955,7 @@ namespace NineChronicles.DataProvider.Store
                         {
                             ctx.Dispose();
                             using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
-                            updateCtx.Grindings!.UpdateRange(grind!);
+                            updateCtx.Grindings!.UpdateRange(grind);
                             updateCtx.SaveChanges();
                             updateCtx.Dispose();
                         }
@@ -982,7 +982,7 @@ namespace NineChronicles.DataProvider.Store
                         using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
                         if (ctx.ItemEnhancementFails?.Find(itemEnhancementFail!.Id) is null)
                         {
-                            ctx.ItemEnhancementFails!.AddRange(itemEnhancementFail!);
+                            ctx.ItemEnhancementFails!.AddRange(itemEnhancementFail);
                             ctx.SaveChanges();
                             ctx.Dispose();
                         }
@@ -990,7 +990,7 @@ namespace NineChronicles.DataProvider.Store
                         {
                             ctx.Dispose();
                             using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
-                            updateCtx.ItemEnhancementFails!.UpdateRange(itemEnhancementFail!);
+                            updateCtx.ItemEnhancementFails!.UpdateRange(itemEnhancementFail);
                             updateCtx.SaveChanges();
                             updateCtx.Dispose();
                         }
@@ -1017,7 +1017,7 @@ namespace NineChronicles.DataProvider.Store
                         using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
                         if (ctx.UnlockEquipmentRecipes?.Find(unlockEqupimentRecipe!.Id) is null)
                         {
-                            ctx.UnlockEquipmentRecipes!.AddRange(unlockEqupimentRecipe!);
+                            ctx.UnlockEquipmentRecipes!.AddRange(unlockEqupimentRecipe);
                             ctx.SaveChanges();
                             ctx.Dispose();
                         }
@@ -1025,7 +1025,7 @@ namespace NineChronicles.DataProvider.Store
                         {
                             ctx.Dispose();
                             using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
-                            updateCtx.UnlockEquipmentRecipes!.UpdateRange(unlockEqupimentRecipe!);
+                            updateCtx.UnlockEquipmentRecipes!.UpdateRange(unlockEqupimentRecipe);
                             updateCtx.SaveChanges();
                             updateCtx.Dispose();
                         }
@@ -1050,7 +1050,32 @@ namespace NineChronicles.DataProvider.Store
                     tasks.Add(Task.Run(() =>
                     {
                         using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-                        ctx.UnlockWorlds!.AddRange(unlockWorld!);
+                        ctx.UnlockWorlds!.AddRange(unlockWorld);
+                        ctx.SaveChanges();
+                        ctx.Dispose();
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreReplaceCombinationEquipmentMaterialList(
+            List<ReplaceCombinationEquipmentMaterialModel> replaceCombinationEquipmentMaterialList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var replaceCombinationEquipmentMaterial in replaceCombinationEquipmentMaterialList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        ctx.ReplaceCombinationEquipmentMaterials!.AddRange(replaceCombinationEquipmentMaterial);
                         ctx.SaveChanges();
                         ctx.Dispose();
                     }));
