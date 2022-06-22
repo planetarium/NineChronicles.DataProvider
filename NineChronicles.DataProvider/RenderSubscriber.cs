@@ -398,12 +398,14 @@ namespace NineChronicles.DataProvider
                                 _renderCount++;
                                 Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(combinationEquipment.avatarAddress);
+                                AvatarState avatarState =
+                                    ev.OutputStates.GetAvatarStateV2(combinationEquipment.avatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
                                 var avatarLevel = avatarState.level;
                                 var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume =>
+                                    costume.ItemSubType == ItemSubType.Title && costume.equipped);
                                 int? avatarTitleId = null;
                                 if (avatarTitleCostume != null)
                                 {
@@ -448,22 +450,24 @@ namespace NineChronicles.DataProvider
                                         crystalCurrency);
                                     var burntCrystal = prevCrystalBalance - outputCrystalBalance;
                                     var requiredFungibleItems = new Dictionary<int, int>();
-                                    Dictionary<Type, (Address, ISheet)> sheets = previousStates.GetSheets(sheetTypes: new[]
-                                    {
-                                        typeof(EquipmentItemRecipeSheet),
-                                        typeof(EquipmentItemSheet),
-                                        typeof(MaterialItemSheet),
-                                        typeof(EquipmentItemSubRecipeSheetV2),
-                                        typeof(EquipmentItemOptionSheet),
-                                        typeof(SkillSheet),
-                                        typeof(CrystalMaterialCostSheet),
-                                        typeof(CrystalFluctuationSheet),
-                                    });
+                                    Dictionary<Type, (Address, ISheet)> sheets = previousStates.GetSheets(
+                                        sheetTypes: new[]
+                                        {
+                                            typeof(EquipmentItemRecipeSheet),
+                                            typeof(EquipmentItemSheet),
+                                            typeof(MaterialItemSheet),
+                                            typeof(EquipmentItemSubRecipeSheetV2),
+                                            typeof(EquipmentItemOptionSheet),
+                                            typeof(SkillSheet),
+                                            typeof(CrystalMaterialCostSheet),
+                                            typeof(CrystalFluctuationSheet),
+                                        });
                                     var materialItemSheet = sheets.GetSheet<MaterialItemSheet>();
                                     var equipmentItemRecipeSheet = sheets.GetSheet<EquipmentItemRecipeSheet>();
-                                    equipmentItemRecipeSheet.TryGetValue(combinationEquipment.recipeId, out var recipeRow);
+                                    equipmentItemRecipeSheet.TryGetValue(
+                                        combinationEquipment.recipeId,
+                                        out var recipeRow);
                                     materialItemSheet.TryGetValue(recipeRow!.MaterialId, out var materialRow);
-
                                     if (requiredFungibleItems.ContainsKey(materialRow!.Id))
                                     {
                                         requiredFungibleItems[materialRow.Id] += recipeRow.MaterialCount;
@@ -473,7 +477,30 @@ namespace NineChronicles.DataProvider
                                         requiredFungibleItems[materialRow.Id] = recipeRow.MaterialCount;
                                     }
 
-                                    var inventory = ev.PreviousStates.GetAvatarStateV2(combinationEquipment.avatarAddress).inventory;
+                                    if (combinationEquipment.subRecipeId.HasValue)
+                                    {
+                                        var equipmentItemSubRecipeSheetV2 = sheets.GetSheet<EquipmentItemSubRecipeSheetV2>();
+                                        equipmentItemSubRecipeSheetV2.TryGetValue(combinationEquipment.subRecipeId.Value, out var subRecipeRow);
+
+                                        // Validate SubRecipe Material
+                                        for (var i = subRecipeRow!.Materials.Count; i > 0; i--)
+                                        {
+                                            var materialInfo = subRecipeRow.Materials[i - 1];
+                                            materialItemSheet.TryGetValue(materialInfo.Id, out materialRow);
+
+                                            if (requiredFungibleItems.ContainsKey(materialRow!.Id))
+                                            {
+                                                requiredFungibleItems[materialRow.Id] += materialInfo.Count;
+                                            }
+                                            else
+                                            {
+                                                requiredFungibleItems[materialRow.Id] = materialInfo.Count;
+                                            }
+                                        }
+                                    }
+
+                                    var inventory = ev.PreviousStates
+                                        .GetAvatarStateV2(combinationEquipment.avatarAddress).inventory;
                                     foreach (var pair in requiredFungibleItems.OrderBy(pair => pair.Key))
                                     {
                                         var itemId = pair.Key;
@@ -485,24 +512,30 @@ namespace NineChronicles.DataProvider
                                                 : 0;
                                             if (itemCount < requiredCount && combinationEquipment.payByCrystal)
                                             {
-                                                _replaceCombinationEquipmentMaterialList.Add(new ReplaceCombinationEquipmentMaterialModel()
-                                                {
-                                                    Id = combinationEquipment.Id.ToString(),
-                                                    BlockIndex = ev.BlockIndex,
-                                                    AgentAddress = ev.Signer.ToString(),
-                                                    AvatarAddress = combinationEquipment.avatarAddress.ToString(),
-                                                    ReplacedMaterialId = itemId,
-                                                    ReplacedMaterialCount = requiredCount - itemCount,
-                                                    BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                                    TimeStamp = DateTimeOffset.Now,
-                                                });
+                                                _replaceCombinationEquipmentMaterialList.Add(
+                                                    new ReplaceCombinationEquipmentMaterialModel()
+                                                    {
+                                                        Id = combinationEquipment.Id.ToString(),
+                                                        BlockIndex = ev.BlockIndex,
+                                                        AgentAddress = ev.Signer.ToString(),
+                                                        AvatarAddress =
+                                                            combinationEquipment.avatarAddress.ToString(),
+                                                        ReplacedMaterialId = itemId,
+                                                        ReplacedMaterialCount = requiredCount - itemCount,
+                                                        BurntCrystal =
+                                                            Convert.ToDecimal(burntCrystal.GetQuantityString()),
+                                                        TimeStamp = DateTimeOffset.Now,
+                                                    });
                                             }
                                         }
                                     }
                                 }
 
                                 var end = DateTimeOffset.Now;
-                                Log.Debug("Stored CombinationEquipment action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                                Log.Debug(
+                                    "Stored CombinationEquipment action in block #{index}. Time Taken: {time} ms.",
+                                    ev.BlockIndex,
+                                    (end - start).Milliseconds);
                                 start = DateTimeOffset.Now;
 
                                 var slotState = ev.OutputStates.GetCombinationSlotState(
@@ -512,14 +545,14 @@ namespace NineChronicles.DataProvider
                                 if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                                 {
                                     ProcessEquipmentData(
-                                         ev.Signer,
-                                         combinationEquipment.avatarAddress,
-                                         avatarName,
-                                         avatarLevel,
-                                         avatarTitleId,
-                                         avatarArmorId,
-                                         avatarCp,
-                                         (Equipment)slotState.Result.itemUsable);
+                                        ev.Signer,
+                                        combinationEquipment.avatarAddress,
+                                        avatarName,
+                                        avatarLevel,
+                                        avatarTitleId,
+                                        avatarArmorId,
+                                        avatarCp,
+                                        (Equipment)slotState.Result.itemUsable);
                                 }
 
                                 end = DateTimeOffset.Now;

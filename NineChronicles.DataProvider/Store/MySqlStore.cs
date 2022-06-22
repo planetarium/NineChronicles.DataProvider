@@ -1086,9 +1086,20 @@ namespace NineChronicles.DataProvider.Store
                     tasks.Add(Task.Run(() =>
                     {
                         using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-                        ctx.ReplaceCombinationEquipmentMaterials!.AddRange(replaceCombinationEquipmentMaterial);
-                        ctx.SaveChanges();
-                        ctx.Dispose();
+                        if (ctx.ReplaceCombinationEquipmentMaterials?.Find(replaceCombinationEquipmentMaterial.Id) is null)
+                        {
+                            ctx.ReplaceCombinationEquipmentMaterials!.AddRange(replaceCombinationEquipmentMaterial);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.ReplaceCombinationEquipmentMaterials!.UpdateRange(replaceCombinationEquipmentMaterial);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
                     }));
                 }
 
