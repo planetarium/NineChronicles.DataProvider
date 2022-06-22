@@ -314,7 +314,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`UnlockEquipmentRecipes` (
     `BlockIndex` bigint NOT NULL,
     `AgentAddress` varchar(100) NOT NULL,
     `AvatarAddress` varchar(100) NOT NULL,
-    `UnlockEqupimentRecipeId` int NOT NULL,
+    `UnlockEquipmentRecipeId` int NOT NULL,
     `BurntCrystal` decimal(13,2) NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX (`Id`, `BlockIndex`, `Timestamp`),
