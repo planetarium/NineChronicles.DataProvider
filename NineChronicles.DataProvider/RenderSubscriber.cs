@@ -1237,6 +1237,7 @@ namespace NineChronicles.DataProvider
                                 {
                                     _unlockWorldList.Add(new UnlockWorldModel()
                                     {
+                                        Id = unlockWorld.Id.ToString(),
                                         BlockIndex = ev.BlockIndex,
                                         AgentAddress = ev.Signer.ToString(),
                                         AvatarAddress = unlockWorld.AvatarAddress.ToString(),

@@ -1050,9 +1050,20 @@ namespace NineChronicles.DataProvider.Store
                     tasks.Add(Task.Run(() =>
                     {
                         using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-                        ctx.UnlockWorlds!.AddRange(unlockWorld);
-                        ctx.SaveChanges();
-                        ctx.Dispose();
+                        if (ctx.UnlockWorlds?.Find(unlockWorld.Id) is null)
+                        {
+                            ctx.UnlockWorlds!.AddRange(unlockWorld);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.UnlockWorlds!.UpdateRange(unlockWorld);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
                     }));
                 }
 

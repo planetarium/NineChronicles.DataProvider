@@ -323,13 +323,14 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`UnlockEquipmentRecipes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`UnlockWorlds` (
+    `Id` varchar(100) NOT NULL,
     `BlockIndex` bigint NOT NULL,
     `AgentAddress` varchar(100) NOT NULL,
     `AvatarAddress` varchar(100) NOT NULL,
     `UnlockWorldId` int NOT NULL,
     `BurntCrystal` decimal(13,2) NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX (`BlockIndex`, `Timestamp`),
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
     KEY `fk_UnlockWorlds_Agent1_idx` (`AgentAddress`),
     KEY `fk_UnlockWorlds_AvatarAddress1_idx` (`AvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
