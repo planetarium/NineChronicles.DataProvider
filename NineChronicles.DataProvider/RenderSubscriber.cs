@@ -439,7 +439,7 @@ namespace NineChronicles.DataProvider
                                 });
                                 if (combinationEquipment.payByCrystal)
                                 {
-                                    Currency crystalCurrency = new Currency("CRYSTAL", 18, minters: null);
+                                    Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                                     var prevCrystalBalance = previousStates.GetBalance(
                                         combinationEquipment.avatarAddress,
                                         crystalCurrency);
@@ -564,7 +564,7 @@ namespace NineChronicles.DataProvider
 
                                 if (prevEquipmentLevel == outputEquipmentLevel)
                                 {
-                                    Currency crystalCurrency = new Currency("CRYSTAL", 18, minters: null);
+                                    Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                                     Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
                                     var prevCrystalBalance = previousStates.GetBalance(
                                         itemEnhancement.avatarAddress,
@@ -1152,7 +1152,7 @@ namespace NineChronicles.DataProvider
 
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
-                                Currency crystalCurrency = new Currency("CRYSTAL", 18, minters: null);
+                                Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                                 var prevCrystalBalance = previousStates.GetBalance(
                                     unlockEquipmentRecipe.AvatarAddress,
                                     crystalCurrency);
@@ -1211,7 +1211,7 @@ namespace NineChronicles.DataProvider
 
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
-                                Currency crystalCurrency = new Currency("CRYSTAL", 18, minters: null);
+                                Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                                 var prevCrystalBalance = previousStates.GetBalance(
                                     unlockWorld.AvatarAddress,
                                     crystalCurrency);
@@ -1271,7 +1271,7 @@ namespace NineChronicles.DataProvider
 
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
-                                Currency crystalCurrency = new Currency("CRYSTAL", 18, minters: null);
+                                Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                                 var prevCrystalBalance = previousStates.GetBalance(
                                     hasRandomBuff.AvatarAddress,
                                     crystalCurrency);
@@ -1330,7 +1330,7 @@ namespace NineChronicles.DataProvider
 
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
-                                Currency crystalCurrency = new Currency("CRYSTAL", 18, minters: null);
+                                Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                                 var prevCrystalBalance = previousStates.GetBalance(
                                     joinArena.avatarAddress,
                                     crystalCurrency);
