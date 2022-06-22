@@ -154,7 +154,7 @@ namespace NineChronicles.DataProvider
                                 MySqlStore.StoreItemEnhancementFailList(_itemEnhancementFailList);
                                 MySqlStore.StoreAgentList(_unlockEquipmentRecipeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.StoreAvatarList(_unlockEquipmentRecipeAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreUnlockEqupimentRecipeList(_unlockEquipmentRecipeList);
+                                MySqlStore.StoreUnlockEquipmentRecipeList(_unlockEquipmentRecipeList);
                                 MySqlStore.StoreAgentList(_unlockWorldAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.StoreAvatarList(_unlockWorldAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.StoreUnlockWorldList(_unlockWorldList);
@@ -441,10 +441,10 @@ namespace NineChronicles.DataProvider
                                 {
                                     Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                                     var prevCrystalBalance = previousStates.GetBalance(
-                                        combinationEquipment.avatarAddress,
+                                        ev.Signer,
                                         crystalCurrency);
                                     var outputCrystalBalance = ev.OutputStates.GetBalance(
-                                        combinationEquipment.avatarAddress,
+                                        ev.Signer,
                                         crystalCurrency);
                                     var burntCrystal = prevCrystalBalance - outputCrystalBalance;
                                     var requiredFungibleItems = new Dictionary<int, int>();
@@ -462,9 +462,9 @@ namespace NineChronicles.DataProvider
                                     var materialItemSheet = sheets.GetSheet<MaterialItemSheet>();
                                     var equipmentItemRecipeSheet = sheets.GetSheet<EquipmentItemRecipeSheet>();
                                     equipmentItemRecipeSheet.TryGetValue(combinationEquipment.recipeId, out var recipeRow);
-                                    materialItemSheet.TryGetValue(recipeRow.MaterialId, out var materialRow);
+                                    materialItemSheet.TryGetValue(recipeRow!.MaterialId, out var materialRow);
 
-                                    if (requiredFungibleItems.ContainsKey(materialRow.Id))
+                                    if (requiredFungibleItems.ContainsKey(materialRow!.Id))
                                     {
                                         requiredFungibleItems[materialRow.Id] += recipeRow.MaterialCount;
                                     }
@@ -567,16 +567,16 @@ namespace NineChronicles.DataProvider
                                     Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                                     Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
                                     var prevCrystalBalance = previousStates.GetBalance(
-                                        itemEnhancement.avatarAddress,
+                                        ev.Signer,
                                         crystalCurrency);
                                     var outputCrystalBalance = ev.OutputStates.GetBalance(
-                                        itemEnhancement.avatarAddress,
+                                        ev.Signer,
                                         crystalCurrency);
                                     var prevNCGBalance = previousStates.GetBalance(
-                                        itemEnhancement.avatarAddress,
+                                        ev.Signer,
                                         ncgCurrency);
                                     var outputNCGBalance = ev.OutputStates.GetBalance(
-                                        itemEnhancement.avatarAddress,
+                                        ev.Signer,
                                         ncgCurrency);
                                     var gainedCrystal = outputCrystalBalance - prevCrystalBalance;
                                     var burntNCG = prevNCGBalance - outputNCGBalance;
@@ -1154,10 +1154,10 @@ namespace NineChronicles.DataProvider
                                 string avatarName = avatarState.name;
                                 Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                                 var prevCrystalBalance = previousStates.GetBalance(
-                                    unlockEquipmentRecipe.AvatarAddress,
+                                    ev.Signer,
                                     crystalCurrency);
                                 var outputCrystalBalance = ev.OutputStates.GetBalance(
-                                    unlockEquipmentRecipe.AvatarAddress,
+                                    ev.Signer,
                                     crystalCurrency);
                                 var burntCrystal = prevCrystalBalance - outputCrystalBalance;
                                 _unlockEquipmentRecipeAgentList.Add(new AgentModel()
@@ -1213,10 +1213,10 @@ namespace NineChronicles.DataProvider
                                 string avatarName = avatarState.name;
                                 Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                                 var prevCrystalBalance = previousStates.GetBalance(
-                                    unlockWorld.AvatarAddress,
+                                    ev.Signer,
                                     crystalCurrency);
                                 var outputCrystalBalance = ev.OutputStates.GetBalance(
-                                    unlockWorld.AvatarAddress,
+                                    ev.Signer,
                                     crystalCurrency);
                                 var burntCrystal = prevCrystalBalance - outputCrystalBalance;
                                 _unlockWorldAgentList.Add(new AgentModel()
@@ -1274,10 +1274,10 @@ namespace NineChronicles.DataProvider
                                 string avatarName = avatarState.name;
                                 Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                                 var prevCrystalBalance = previousStates.GetBalance(
-                                    hasRandomBuff.AvatarAddress,
+                                    ev.Signer,
                                     crystalCurrency);
                                 var outputCrystalBalance = ev.OutputStates.GetBalance(
-                                    hasRandomBuff.AvatarAddress,
+                                    ev.Signer,
                                     crystalCurrency);
                                 var burntCrystal = prevCrystalBalance - outputCrystalBalance;
                                 _hasRandomBuffAgentList.Add(new AgentModel()
@@ -1333,10 +1333,10 @@ namespace NineChronicles.DataProvider
                                 string avatarName = avatarState.name;
                                 Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                                 var prevCrystalBalance = previousStates.GetBalance(
-                                    joinArena.avatarAddress,
+                                    ev.Signer,
                                     crystalCurrency);
                                 var outputCrystalBalance = ev.OutputStates.GetBalance(
-                                    joinArena.avatarAddress,
+                                    ev.Signer,
                                     crystalCurrency);
                                 var burntCrystal = prevCrystalBalance - outputCrystalBalance;
                                 _joinArenaAgentList.Add(new AgentModel()

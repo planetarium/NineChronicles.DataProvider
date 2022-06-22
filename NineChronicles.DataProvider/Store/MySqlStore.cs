@@ -1005,19 +1005,19 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
-        public void StoreUnlockEqupimentRecipeList(List<UnlockEquipmentRecipeModel> unlockEqupimentRecipeList)
+        public void StoreUnlockEquipmentRecipeList(List<UnlockEquipmentRecipeModel> unlockEquipmentRecipeList)
         {
             try
             {
                 var tasks = new List<Task>();
-                foreach (var unlockEqupimentRecipe in unlockEqupimentRecipeList)
+                foreach (var unlockEquipmentRecipe in unlockEquipmentRecipeList)
                 {
                     tasks.Add(Task.Run(() =>
                     {
                         using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.UnlockEquipmentRecipes?.Find(unlockEqupimentRecipe.Id) is null)
+                        if (ctx.UnlockEquipmentRecipes?.Find(unlockEquipmentRecipe.Id) is null)
                         {
-                            ctx.UnlockEquipmentRecipes!.AddRange(unlockEqupimentRecipe);
+                            ctx.UnlockEquipmentRecipes!.AddRange(unlockEquipmentRecipe);
                             ctx.SaveChanges();
                             ctx.Dispose();
                         }
@@ -1025,7 +1025,7 @@ namespace NineChronicles.DataProvider.Store
                         {
                             ctx.Dispose();
                             using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
-                            updateCtx.UnlockEquipmentRecipes!.UpdateRange(unlockEqupimentRecipe);
+                            updateCtx.UnlockEquipmentRecipes!.UpdateRange(unlockEquipmentRecipe);
                             updateCtx.SaveChanges();
                             updateCtx.Dispose();
                         }
