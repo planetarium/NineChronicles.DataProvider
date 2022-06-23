@@ -290,6 +290,14 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     }
                                                 }
 
+                                                Console.WriteLine(
+                                                    "CSR Agent: {0}, Avatar: {1}, HourGlass: {2}, APPotion: {3}, StartIndex: {4}, EndIndex: {5}",
+                                                    tx.Signer,
+                                                    avatarAddress,
+                                                    hourGlassCount,
+                                                    apPotionCount,
+                                                    claimStakeStartBlockIndex,
+                                                    claimStakeEndBlockIndex);
                                                 _csrBulkFile.WriteLine(
                                                     $"{id.ToString()};" +
                                                     $"{block.Index};" +
