@@ -21,6 +21,7 @@ namespace NineChronicles.DataProvider
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless;
     using Serilog;
+    using static Lib9c.SerializeKeys;
 
     public class RenderSubscriber : BackgroundService
     {
@@ -701,7 +702,7 @@ namespace NineChronicles.DataProvider
                                 Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
-                                var avatarAddress = plainValue["AvatarAddressKey"].ToAddress();
+                                var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
@@ -718,7 +719,6 @@ namespace NineChronicles.DataProvider
                                 string avatarName = avatarState.name;
 
                                 var id = claimStakeReward.Id;
-                                ev.OutputStates.TryGetStakeState(ev.Signer, out StakeState stakeState);
                                 ev.PreviousStates.TryGetStakeState(ev.Signer, out StakeState prevStakeState);
 
                                 var claimStakeStartBlockIndex = prevStakeState.StartedBlockIndex;
@@ -738,7 +738,7 @@ namespace NineChronicles.DataProvider
                                 StakeRegularRewardSheet stakeRegularRewardSheet = sheets.GetSheet<StakeRegularRewardSheet>();
                                 int level = stakeRegularRewardSheet.FindLevelByStakedAmount(ev.Signer, stakedAmount);
                                 var rewards = stakeRegularRewardSheet[level].Rewards;
-                                var accumulatedRewards = stakeState.CalculateAccumulatedRewards(ev.BlockIndex);
+                                var accumulatedRewards = prevStakeState.CalculateAccumulatedRewards(ev.BlockIndex);
                                 int hourGlassCount = 0;
                                 int apPotionCount = 0;
                                 foreach (var reward in rewards)
