@@ -16,8 +16,6 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public string? ClaimRewardAvatarAddress { get; set; }
 
-        public AvatarModel? Avatar { get; set; }
-
         public int HourGlassCount { get; set; }
 
         public int ApPotionCount { get; set; }
