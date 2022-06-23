@@ -1,9 +1,3 @@
-using Nekoyume.Battle;
-using Nekoyume.BlockChain.Policy;
-using Nekoyume.Model.Item;
-using Nekoyume.Model.State;
-using Nekoyume.TableData;
-
 namespace NineChronicles.DataProvider.Tools.SubCommand
 {
     using System;
@@ -21,9 +15,16 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using Libplanet.Store;
     using MySqlConnector;
     using Nekoyume.Action;
+    using Nekoyume.Battle;
     using Nekoyume.BlockChain;
+    using Nekoyume.BlockChain.Policy;
+    using Nekoyume.Extensions;
+    using Nekoyume.Model.Item;
+    using Nekoyume.Model.State;
+    using Nekoyume.TableData;
     using Serilog;
     using Serilog.Events;
+    using static Lib9c.SerializeKeys;
     using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     public class MySqlMigration
@@ -33,12 +34,14 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private const string CCDbName = "CombinationConsumables";
         private const string CEDbName = "CombinationEquipments";
         private const string IEDbName = "ItemEnhancements";
+        private const string CSRDbName = "ClaimStakeRewards";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
         private StreamWriter _ccBulkFile;
         private StreamWriter _ceBulkFile;
         private StreamWriter _ieBulkFile;
+        private StreamWriter _csrBulkFile;
         private StreamWriter _agentBulkFile;
         private StreamWriter _avatarBulkFile;
         private List<string> _agentList;
@@ -46,6 +49,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private List<string> _ccFiles;
         private List<string> _ceFiles;
         private List<string> _ieFiles;
+        private List<string> _csrFiles;
         private List<string> _agentFiles;
         private List<string> _avatarFiles;
 
@@ -165,6 +169,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _ccFiles = new List<string>();
             _ceFiles = new List<string>();
             _ieFiles = new List<string>();
+            _csrFiles = new List<string>();
             _agentFiles = new List<string>();
             _avatarFiles = new List<string>();
 
@@ -203,9 +208,103 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         try
                         {
                             var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
+                            var prevBlock = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, (BlockHash)block.PreviousHash);
                             Console.WriteLine("Migrating {0}/{1} #{2}", item.i, remainingCount, block.Index);
                             foreach (var tx in block.Transactions)
                             {
+                                foreach (var action in tx.Actions)
+                                {
+                                    if (action.InnerAction is ClaimStakeReward csr)
+                                    {
+                                        var prevAeList = _baseChain.ExecuteActions(prevBlock);
+                                        var aeList = _baseChain.ExecuteActions(block);
+                                        foreach (var ae in aeList)
+                                        {
+                                            var aePolymorphicAction = (PolymorphicAction<ActionBase>)ae.Action;
+                                            if (aePolymorphicAction.InnerAction is ClaimStakeReward aecsr)
+                                            {
+                                                var prevAe = prevAeList.First();
+                                                var plainValue = (Bencodex.Types.Dictionary)csr.PlainValue;
+                                                var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
+                                                var previousStates = prevAe.OutputStates;
+
+                                                var id = csr.Id;
+                                                ae.OutputStates.TryGetStakeState(tx.Signer, out StakeState stakeState);
+                                                previousStates.TryGetStakeState(tx.Signer, out StakeState prevStakeState);
+
+                                                var claimStakeStartBlockIndex = prevStakeState.StartedBlockIndex;
+                                                var claimStakeEndBlockIndex = prevStakeState.ReceivedBlockIndex;
+                                                var currency = ae.OutputStates.GetGoldCurrency();
+                                                var stakeStateAddress = StakeState.DeriveAddress(tx.Signer);
+                                                var stakedAmount = ae.OutputStates.GetBalance(stakeStateAddress, currency);
+
+                                                var sheets = previousStates.GetSheets(new[]
+                                                {
+                                                    typeof(StakeRegularRewardSheet),
+                                                    typeof(ConsumableItemSheet),
+                                                    typeof(CostumeItemSheet),
+                                                    typeof(EquipmentItemSheet),
+                                                    typeof(MaterialItemSheet),
+                                                });
+                                                StakeRegularRewardSheet stakeRegularRewardSheet = sheets.GetSheet<StakeRegularRewardSheet>();
+                                                int level = stakeRegularRewardSheet.FindLevelByStakedAmount(tx.Signer, stakedAmount);
+                                                var rewards = stakeRegularRewardSheet[level].Rewards;
+                                                var accumulatedRewards = prevStakeState.CalculateAccumulatedRewards(block.Index);
+                                                int hourGlassCount = 0;
+                                                int apPotionCount = 0;
+                                                foreach (var reward in rewards)
+                                                {
+                                                    var (quantity, _) = stakedAmount.DivRem(currency * reward.Rate);
+                                                    if (quantity < 1)
+                                                    {
+                                                        // If the quantity is zero, it doesn't add the item into inventory.
+                                                        continue;
+                                                    }
+
+                                                    if (reward.ItemId == 400000)
+                                                    {
+                                                        hourGlassCount += (int)quantity * accumulatedRewards;
+                                                    }
+
+                                                    if (reward.ItemId == 500000)
+                                                    {
+                                                        apPotionCount += (int)quantity * accumulatedRewards;
+                                                    }
+                                                }
+
+                                                if (previousStates.TryGetSheet<StakeRegularFixedRewardSheet>(
+                                                        out var stakeRegularFixedRewardSheet))
+                                                {
+                                                    var fixedRewards = stakeRegularFixedRewardSheet[level].Rewards;
+                                                    foreach (var reward in fixedRewards)
+                                                    {
+                                                        if (reward.ItemId == 400000)
+                                                        {
+                                                            hourGlassCount += reward.Count * accumulatedRewards;
+                                                        }
+
+                                                        if (reward.ItemId == 500000)
+                                                        {
+                                                            apPotionCount += reward.Count * accumulatedRewards;
+                                                        }
+                                                    }
+                                                }
+
+                                                _csrBulkFile.WriteLine(
+                                                    $"{id.ToString()};" +
+                                                    $"{block.Index};" +
+                                                    $"{tx.Signer.ToString()};" +
+                                                    $"{avatarAddress.ToString()};" +
+                                                    $"{hourGlassCount};" +
+                                                    $"{apPotionCount};" +
+                                                    $"{claimStakeStartBlockIndex};" +
+                                                    $"{claimStakeEndBlockIndex};" +
+                                                    $"{tx.Timestamp.UtcDateTime:u}");
+                                            }
+                                        }
+                                    }
+                                }
+
                                 if (tx.Signer != block.Miner)
                                 {
                                     var avatarAddresses = ev.OutputStates.GetAgentState(tx.Signer).avatarAddresses;
@@ -288,6 +387,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 {
                     BulkInsert(AvatarDbName, path);
                 }
+
+                foreach (var path in _csrFiles)
+                {
+                    BulkInsert(CSRDbName, path);
+                }
             }
             catch (Exception e)
             {
@@ -314,6 +418,9 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             _ieBulkFile.Flush();
             _ieBulkFile.Close();
+
+            _csrBulkFile.Flush();
+            _csrBulkFile.Close();
         }
 
         private void CreateBulkFiles()
@@ -333,11 +440,15 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             string ieFilePath = Path.GetTempFileName();
             _ieBulkFile = new StreamWriter(ieFilePath);
 
+            string csrFilePath = Path.GetTempFileName();
+            _csrBulkFile = new StreamWriter(csrFilePath);
+
             _agentFiles.Add(agentFilePath);
             _avatarFiles.Add(avatarFilePath);
             _ccFiles.Add(ccFilePath);
             _ceFiles.Add(ceFilePath);
             _ieFiles.Add(ieFilePath);
+            _csrFiles.Add(csrFilePath);
         }
 
         private void BulkInsert(
@@ -354,7 +465,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     TableName = tableName,
                     FileName = filePath,
                     Timeout = 0,
-                    LineTerminator = "\n",
+                    LineTerminator = "\r\n",
                     FieldTerminator = ";",
                     Local = true,
                     ConflictOption = MySqlBulkLoaderConflictOption.Ignore,
