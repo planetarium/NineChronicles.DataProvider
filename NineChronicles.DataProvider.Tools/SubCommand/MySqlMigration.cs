@@ -317,60 +317,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                         }
                                     }
                                 }
-
-                                if (tx.Signer != block.Miner)
-                                {
-                                    var avatar = ev.OutputStates.GetAgentState(tx.Signer);
-                                    if (avatar.avatarAddresses.Count > 0)
-                                    {
-                                        var avatarAddresses = avatar.avatarAddresses;
-                                        foreach (var avatarAddress in avatarAddresses)
-                                        {
-                                            try
-                                            {
-                                                AvatarState avatarState;
-                                                try
-                                                {
-                                                    avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress.Value);
-                                                }
-                                                catch (Exception ex)
-                                                {
-                                                    avatarState = ev.OutputStates.GetAvatarState(avatarAddress.Value);
-                                                }
-
-                                                var previousStates = ev.InputContext.PreviousStates;
-                                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                                var avatarLevel = avatarState.level;
-                                                var avatarArmorId = avatarState.GetArmorId();
-                                                var avatarTitleCostume =
-                                                    avatarState.inventory.Costumes.FirstOrDefault(costume =>
-                                                        costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                                int? avatarTitleId = null;
-                                                if (avatarTitleCostume != null)
-                                                {
-                                                    avatarTitleId = avatarTitleCostume.Id;
-                                                }
-
-                                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                                string avatarName = avatarState.name;
-
-                                                Log.Debug(
-                                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
-                                                    avatarName,
-                                                    avatarLevel,
-                                                    avatarArmorId,
-                                                    avatarTitleId,
-                                                    avatarCp);
-                                                WriteCC(tx.Signer, avatarAddress.Value, avatarName, avatarLevel,
-                                                    avatarTitleId, avatarArmorId, avatarCp);
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                Console.WriteLine(ex.Message);
-                                            }
-                                        }
-                                    }
-                                }
                             }
                         }
                         catch (Exception ex)
@@ -394,16 +340,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
-
-                foreach (var path in _agentFiles)
-                {
-                    BulkInsert(AgentDbName, path);
-                }
-
-                foreach (var path in _avatarFiles)
-                {
-                    BulkInsert(AvatarDbName, path);
-                }
 
                 foreach (var path in _csrFiles)
                 {
