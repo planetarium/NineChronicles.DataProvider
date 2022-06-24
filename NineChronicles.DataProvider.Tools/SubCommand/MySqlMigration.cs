@@ -220,93 +220,153 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                         var aeList = _baseChain.ExecuteActions(block);
                                         foreach (var ae in aeList)
                                         {
-                                            var aePolymorphicAction = (PolymorphicAction<ActionBase>)ae.Action;
-                                            if (aePolymorphicAction.InnerAction is ClaimStakeReward aecsr)
+                                            if (ae.Action is not RewardGold rg)
                                             {
-                                                var prevAe = prevAeList.First();
-                                                var plainValue = (Bencodex.Types.Dictionary)csr.PlainValue;
-                                                var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
-                                                var previousStates = prevAe.OutputStates;
-
-                                                var id = csr.Id;
-                                                previousStates.TryGetStakeState(tx.Signer, out StakeState prevStakeState);
-
-                                                var claimStakeStartBlockIndex = prevStakeState.StartedBlockIndex;
-                                                var claimStakeEndBlockIndex = prevStakeState.ReceivedBlockIndex;
-                                                var currency = ae.OutputStates.GetGoldCurrency();
-                                                var stakeStateAddress = StakeState.DeriveAddress(tx.Signer);
-                                                var stakedAmount = ae.OutputStates.GetBalance(stakeStateAddress, currency);
-
-                                                var sheets = previousStates.GetSheets(new[]
+                                                var aePolymorphicAction = (PolymorphicAction<ActionBase>)ae.Action;
+                                                if (aePolymorphicAction.InnerAction is ClaimStakeReward aecsr)
                                                 {
-                                                    typeof(StakeRegularRewardSheet),
-                                                    typeof(ConsumableItemSheet),
-                                                    typeof(CostumeItemSheet),
-                                                    typeof(EquipmentItemSheet),
-                                                    typeof(MaterialItemSheet),
-                                                });
-                                                StakeRegularRewardSheet stakeRegularRewardSheet = sheets.GetSheet<StakeRegularRewardSheet>();
-                                                int level = stakeRegularRewardSheet.FindLevelByStakedAmount(tx.Signer, stakedAmount);
-                                                var rewards = stakeRegularRewardSheet[level].Rewards;
-                                                var accumulatedRewards = prevStakeState.CalculateAccumulatedRewards(block.Index);
-                                                int hourGlassCount = 0;
-                                                int apPotionCount = 0;
-                                                foreach (var reward in rewards)
-                                                {
-                                                    var (quantity, _) = stakedAmount.DivRem(currency * reward.Rate);
-                                                    if (quantity < 1)
-                                                    {
-                                                        // If the quantity is zero, it doesn't add the item into inventory.
-                                                        continue;
-                                                    }
+                                                    var prevAe = prevAeList.First();
+                                                    var plainValue = (Bencodex.Types.Dictionary)csr.PlainValue;
+                                                    var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
+                                                    var previousStates = prevAe.OutputStates;
 
-                                                    if (reward.ItemId == 400000)
-                                                    {
-                                                        hourGlassCount += (int)quantity * accumulatedRewards;
-                                                    }
+                                                    var id = csr.Id;
+                                                    previousStates.TryGetStakeState(tx.Signer, out StakeState prevStakeState);
 
-                                                    if (reward.ItemId == 500000)
-                                                    {
-                                                        apPotionCount += (int)quantity * accumulatedRewards;
-                                                    }
-                                                }
+                                                    var claimStakeStartBlockIndex = prevStakeState.StartedBlockIndex;
+                                                    var claimStakeEndBlockIndex = prevStakeState.ReceivedBlockIndex;
+                                                    var currency = ae.OutputStates.GetGoldCurrency();
+                                                    var stakeStateAddress = StakeState.DeriveAddress(tx.Signer);
+                                                    var stakedAmount = ae.OutputStates.GetBalance(stakeStateAddress, currency);
 
-                                                if (previousStates.TryGetSheet<StakeRegularFixedRewardSheet>(
-                                                        out var stakeRegularFixedRewardSheet))
-                                                {
-                                                    var fixedRewards = stakeRegularFixedRewardSheet[level].Rewards;
-                                                    foreach (var reward in fixedRewards)
+                                                    var sheets = previousStates.GetSheets(new[]
                                                     {
+                                                        typeof(StakeRegularRewardSheet),
+                                                        typeof(ConsumableItemSheet),
+                                                        typeof(CostumeItemSheet),
+                                                        typeof(EquipmentItemSheet),
+                                                        typeof(MaterialItemSheet),
+                                                    });
+                                                    StakeRegularRewardSheet stakeRegularRewardSheet = sheets.GetSheet<StakeRegularRewardSheet>();
+                                                    int level = stakeRegularRewardSheet.FindLevelByStakedAmount(tx.Signer, stakedAmount);
+                                                    var rewards = stakeRegularRewardSheet[level].Rewards;
+                                                    var accumulatedRewards = prevStakeState.CalculateAccumulatedRewards(block.Index);
+                                                    int hourGlassCount = 0;
+                                                    int apPotionCount = 0;
+                                                    foreach (var reward in rewards)
+                                                    {
+                                                        var (quantity, _) = stakedAmount.DivRem(currency * reward.Rate);
+                                                        if (quantity < 1)
+                                                        {
+                                                            // If the quantity is zero, it doesn't add the item into inventory.
+                                                            continue;
+                                                        }
+
                                                         if (reward.ItemId == 400000)
                                                         {
-                                                            hourGlassCount += reward.Count * accumulatedRewards;
+                                                            hourGlassCount += (int)quantity * accumulatedRewards;
                                                         }
 
                                                         if (reward.ItemId == 500000)
                                                         {
-                                                            apPotionCount += reward.Count * accumulatedRewards;
+                                                            apPotionCount += (int)quantity * accumulatedRewards;
                                                         }
                                                     }
+
+                                                    if (previousStates.TryGetSheet<StakeRegularFixedRewardSheet>(
+                                                            out var stakeRegularFixedRewardSheet))
+                                                    {
+                                                        var fixedRewards = stakeRegularFixedRewardSheet[level].Rewards;
+                                                        foreach (var reward in fixedRewards)
+                                                        {
+                                                            if (reward.ItemId == 400000)
+                                                            {
+                                                                hourGlassCount += reward.Count * accumulatedRewards;
+                                                            }
+
+                                                            if (reward.ItemId == 500000)
+                                                            {
+                                                                apPotionCount += reward.Count * accumulatedRewards;
+                                                            }
+                                                        }
+                                                    }
+
+                                                    if (hourGlassCount > 0 && apPotionCount > 0)
+                                                    {
+                                                        Console.WriteLine(
+                                                            "CSR Agent: {0}, Avatar: {1}, HourGlass: {2}, APPotion: {3}, StartIndex: {4}, EndIndex: {5}",
+                                                            tx.Signer,
+                                                            avatarAddress,
+                                                            hourGlassCount,
+                                                            apPotionCount,
+                                                            claimStakeStartBlockIndex,
+                                                            claimStakeEndBlockIndex);
+                                                        _csrBulkFile.WriteLine(
+                                                            $"{id.ToString()};" +
+                                                            $"{block.Index};" +
+                                                            $"{tx.Signer.ToString()};" +
+                                                            $"{avatarAddress.ToString()};" +
+                                                            $"{hourGlassCount};" +
+                                                            $"{apPotionCount};" +
+                                                            $"{claimStakeStartBlockIndex};" +
+                                                            $"{claimStakeEndBlockIndex};" +
+                                                            $"{tx.Timestamp.UtcDateTime:u}");
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (tx.Signer != block.Miner)
+                                {
+                                    var avatar = ev.OutputStates.GetAgentState(tx.Signer);
+                                    if (avatar.avatarAddresses.Count > 0)
+                                    {
+                                        var avatarAddresses = avatar.avatarAddresses;
+                                        foreach (var avatarAddress in avatarAddresses)
+                                        {
+                                            try
+                                            {
+                                                AvatarState avatarState;
+                                                try
+                                                {
+                                                    avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress.Value);
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    avatarState = ev.OutputStates.GetAvatarState(avatarAddress.Value);
                                                 }
 
-                                                Console.WriteLine(
-                                                    "CSR Agent: {0}, Avatar: {1}, HourGlass: {2}, APPotion: {3}, StartIndex: {4}, EndIndex: {5}",
-                                                    tx.Signer,
-                                                    avatarAddress,
-                                                    hourGlassCount,
-                                                    apPotionCount,
-                                                    claimStakeStartBlockIndex,
-                                                    claimStakeEndBlockIndex);
-                                                _csrBulkFile.WriteLine(
-                                                    $"{id.ToString()};" +
-                                                    $"{block.Index};" +
-                                                    $"{tx.Signer.ToString()};" +
-                                                    $"{avatarAddress.ToString()};" +
-                                                    $"{hourGlassCount};" +
-                                                    $"{apPotionCount};" +
-                                                    $"{claimStakeStartBlockIndex};" +
-                                                    $"{claimStakeEndBlockIndex};" +
-                                                    $"{tx.Timestamp.UtcDateTime:u}");
+                                                var previousStates = ev.InputContext.PreviousStates;
+                                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                                var avatarLevel = avatarState.level;
+                                                var avatarArmorId = avatarState.GetArmorId();
+                                                var avatarTitleCostume =
+                                                    avatarState.inventory.Costumes.FirstOrDefault(costume =>
+                                                        costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                                int? avatarTitleId = null;
+                                                if (avatarTitleCostume != null)
+                                                {
+                                                    avatarTitleId = avatarTitleCostume.Id;
+                                                }
+
+                                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                                string avatarName = avatarState.name;
+
+                                                Log.Debug(
+                                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                                    avatarName,
+                                                    avatarLevel,
+                                                    avatarArmorId,
+                                                    avatarTitleId,
+                                                    avatarCp);
+                                                WriteCC(tx.Signer, avatarAddress.Value, avatarName, avatarLevel,
+                                                    avatarTitleId, avatarArmorId, avatarCp);
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                Console.WriteLine(ex.Message);
                                             }
                                         }
                                     }
@@ -334,6 +394,16 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
+
+                foreach (var path in _agentFiles)
+                {
+                    BulkInsert(AgentDbName, path);
+                }
+
+                foreach (var path in _avatarFiles)
+                {
+                    BulkInsert(AvatarDbName, path);
+                }
 
                 foreach (var path in _csrFiles)
                 {
