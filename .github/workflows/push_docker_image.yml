@@ -7,7 +7,7 @@ on:
       - development
       - rc-*
       - migration
-      - claimstakereward-migration
+      - staking-migration
 
 jobs:
   build_and_push:

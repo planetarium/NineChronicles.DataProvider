@@ -1,3 +1,5 @@
+using Bencodex.Types;
+
 namespace NineChronicles.DataProvider.Tools.SubCommand
 {
     using System;
@@ -34,7 +36,9 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private const string CCDbName = "CombinationConsumables";
         private const string CEDbName = "CombinationEquipments";
         private const string IEDbName = "ItemEnhancements";
-        private const string CSRDbName = "ClaimStakeRewards";
+        private const string CSRDbName = "ClaimStakeRewards_Copy";
+        private const string StakingDbName = "Stakings_Copy";
+        private const string MigrateDbName = "MigrateMonsterCollections_Copy";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
@@ -42,6 +46,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private StreamWriter _ceBulkFile;
         private StreamWriter _ieBulkFile;
         private StreamWriter _csrBulkFile;
+        private StreamWriter _stakingBulkFile;
+        private StreamWriter _migrateBulkFile;
         private StreamWriter _agentBulkFile;
         private StreamWriter _avatarBulkFile;
         private List<string> _agentList;
@@ -50,6 +56,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private List<string> _ceFiles;
         private List<string> _ieFiles;
         private List<string> _csrFiles;
+        private List<string> _stakingFiles;
+        private List<string> _migrateFiles;
         private List<string> _agentFiles;
         private List<string> _avatarFiles;
 
@@ -170,6 +178,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _ceFiles = new List<string>();
             _ieFiles = new List<string>();
             _csrFiles = new List<string>();
+            _stakingFiles = new List<string>();
+            _migrateFiles = new List<string>();
             _agentFiles = new List<string>();
             _avatarFiles = new List<string>();
 
@@ -214,16 +224,16 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             {
                                 foreach (var action in tx.Actions)
                                 {
-                                    if (action.InnerAction is ClaimStakeReward csr)
+                                    if (action.InnerAction is ClaimStakeReward or Stake or MigrateMonsterCollection)
                                     {
                                         var prevAeList = _baseChain.ExecuteActions(prevBlock);
                                         var aeList = _baseChain.ExecuteActions(block);
                                         foreach (var ae in aeList)
                                         {
-                                            if (ae.Action is not RewardGold rg)
+                                            if (ae.Action is not RewardGold rg && ae.Exception == null)
                                             {
                                                 var aePolymorphicAction = (PolymorphicAction<ActionBase>)ae.Action;
-                                                if (aePolymorphicAction.InnerAction is ClaimStakeReward aecsr && ae.Exception == null)
+                                                if (aePolymorphicAction.InnerAction is ClaimStakeReward csr)
                                                 {
                                                     var prevAe = prevAeList.First();
                                                     var plainValue = (Bencodex.Types.Dictionary)csr.PlainValue;
@@ -309,6 +319,69 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                             $"{claimStakeEndBlockIndex};" +
                                                             $"{tx.Timestamp.UtcDateTime:u}");
                                                     }
+                                                }
+
+                                                if (aePolymorphicAction.InnerAction is Stake staking)
+                                                {
+                                                    var prevAe = prevAeList.First();
+                                                    var previousStates = prevAe.OutputStates;
+                                                    ae.OutputStates.TryGetStakeState(tx.Signer, out StakeState stakeState);
+                                                    var prevStakeStartBlockIndex =
+                                                        !previousStates.TryGetStakeState(tx.Signer, out StakeState prevStakeState)
+                                                            ? 0 : prevStakeState.StartedBlockIndex;
+                                                    var newStakeStartBlockIndex = stakeState.StartedBlockIndex;
+                                                    var currency = ae.OutputStates.GetGoldCurrency();
+                                                    var balance = ae.OutputStates.GetBalance(tx.Signer, currency);
+                                                    var stakeStateAddress = StakeState.DeriveAddress(tx.Signer);
+                                                    var previousAmount = previousStates.GetBalance(stakeStateAddress, currency);
+                                                    var newAmount = ae.OutputStates.GetBalance(stakeStateAddress, currency);
+
+                                                    Console.WriteLine(
+                                                        "Staking Agent: {0}, prevAmt: {1}, newAmt: {2}, remainingAmt: {3}, prevIndex: {4}, newIndex: {5}",
+                                                        tx.Signer,
+                                                        Convert.ToDecimal(previousAmount.GetQuantityString()),
+                                                        Convert.ToDecimal(newAmount.GetQuantityString()),
+                                                        Convert.ToDecimal(balance.GetQuantityString()),
+                                                        prevStakeStartBlockIndex,
+                                                        newStakeStartBlockIndex);
+                                                    _stakingBulkFile.WriteLine(
+                                                        $"{block.Index};" +
+                                                        $"{tx.Signer.ToString()};" +
+                                                        $"{Convert.ToDecimal(previousAmount.GetQuantityString())};" +
+                                                        $"{Convert.ToDecimal(newAmount.GetQuantityString())};" +
+                                                        $"{Convert.ToDecimal(balance.GetQuantityString())};" +
+                                                        $"{prevStakeStartBlockIndex};" +
+                                                        $"{newStakeStartBlockIndex};" +
+                                                        $"{tx.Timestamp.UtcDateTime:u}");
+                                                }
+
+                                                if (aePolymorphicAction.InnerAction is MigrateMonsterCollection migrate)
+                                                {
+                                                    var prevAe = prevAeList.First();
+                                                    var previousStates = prevAe.OutputStates;
+                                                    ae.OutputStates.TryGetStakeState(tx.Signer, out StakeState stakeState);
+                                                    var agentState = previousStates.GetAgentState(tx.Signer);
+                                                    Address collectionAddress = MonsterCollectionState.DeriveAddress(tx.Signer, agentState.MonsterCollectionRound);
+                                                    previousStates.TryGetState(collectionAddress, out Dictionary stateDict);
+                                                    var monsterCollectionState = new MonsterCollectionState(stateDict);
+                                                    var currency = ae.OutputStates.GetGoldCurrency();
+                                                    var migrationAmount = previousStates.GetBalance(monsterCollectionState.address, currency);
+                                                    var migrationStartBlockIndex = block.Index;
+                                                    var stakeStartBlockIndex = stakeState.StartedBlockIndex;
+
+                                                    Console.WriteLine(
+                                                        "MMC Agent: {0}, mmcAmt: {1}, mmcIndex: {2}, stakeIndex: {3}",
+                                                        tx.Signer,
+                                                        Convert.ToDecimal(migrationAmount.GetQuantityString()),
+                                                        migrationStartBlockIndex,
+                                                        stakeStartBlockIndex);
+                                                    _migrateBulkFile.WriteLine(
+                                                        $"{block.Index};" +
+                                                        $"{tx.Signer.ToString()};" +
+                                                        $"{Convert.ToDecimal(migrationAmount.GetQuantityString())};" +
+                                                        $"{migrationStartBlockIndex};" +
+                                                        $"{stakeStartBlockIndex};" +
+                                                        $"{tx.Timestamp.UtcDateTime:u}");
                                                 }
                                             }
                                         }
@@ -406,6 +479,16 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 {
                     BulkInsert(CSRDbName, path);
                 }
+
+                foreach (var path in _stakingFiles)
+                {
+                    BulkInsert(StakingDbName, path);
+                }
+
+                foreach (var path in _migrateFiles)
+                {
+                    BulkInsert(MigrateDbName, path);
+                }
             }
             catch (Exception e)
             {
@@ -435,6 +518,12 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             _csrBulkFile.Flush();
             _csrBulkFile.Close();
+
+            _stakingBulkFile.Flush();
+            _stakingBulkFile.Close();
+
+            _migrateBulkFile.Flush();
+            _migrateBulkFile.Close();
         }
 
         private void CreateBulkFiles()
@@ -457,12 +546,20 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             string csrFilePath = Path.GetTempFileName();
             _csrBulkFile = new StreamWriter(csrFilePath);
 
+            string stakingFilePath = Path.GetTempFileName();
+            _stakingBulkFile = new StreamWriter(stakingFilePath);
+
+            string migrateFilePath = Path.GetTempFileName();
+            _migrateBulkFile = new StreamWriter(migrateFilePath);
+
             _agentFiles.Add(agentFilePath);
             _avatarFiles.Add(avatarFilePath);
             _ccFiles.Add(ccFilePath);
             _ceFiles.Add(ceFilePath);
             _ieFiles.Add(ieFilePath);
             _csrFiles.Add(csrFilePath);
+            _stakingFiles.Add(stakingFilePath);
+            _migrateFiles.Add(migrateFilePath);
         }
 
         private void BulkInsert(
