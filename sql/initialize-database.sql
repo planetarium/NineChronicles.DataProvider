@@ -277,3 +277,132 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`MigrateMonsterCollections` (
     INDEX (`BlockIndex`, `Timestamp`),
     KEY `fk_MigratMonsterCollections_Agent1_idx` (`AgentAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`Grindings` (
+    `Id` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
+    `AvatarAddress` varchar(100) NOT NULL,
+    `EquipmentItemId` varchar(100) NOT NULL,
+    `EquipmentId` int NOT NULL,
+    `EquipmentLevel` int NOT NULL,
+    `Crystal` decimal(13,2) NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
+    KEY `fk_Grindings_Agent1_idx` (`AgentAddress`),
+    KEY `fk_Grindings_AvatarAddress1_idx` (`AvatarAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`ItemEnhancementFails` (
+    `Id` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
+    `AvatarAddress` varchar(100) NOT NULL,
+    `EquipmentItemId` varchar(100) NOT NULL,
+    `MaterialItemId` varchar(100) NOT NULL,
+    `EquipmentLevel` int NOT NULL,
+    `GainedCrystal` decimal(13,2) NOT NULL,
+    `BurntNCG` decimal(13,2) NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
+    KEY `fk_ItemEnhancementFails_Agent1_idx` (`AgentAddress`),
+    KEY `fk_ItemEnhancementFails_AvatarAddress1_idx` (`AvatarAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`UnlockEquipmentRecipes` (
+    `Id` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
+    `AvatarAddress` varchar(100) NOT NULL,
+    `UnlockEquipmentRecipeId` int NOT NULL,
+    `BurntCrystal` decimal(13,2) NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
+    KEY `fk_UnlockEquipmentRecipes_Agent1_idx` (`AgentAddress`),
+    KEY `fk_UnlockEquipmentRecipes_AvatarAddress1_idx` (`AvatarAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`UnlockWorlds` (
+    `Id` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
+    `AvatarAddress` varchar(100) NOT NULL,
+    `UnlockWorldId` int NOT NULL,
+    `BurntCrystal` decimal(13,2) NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
+    KEY `fk_UnlockWorlds_Agent1_idx` (`AgentAddress`),
+    KEY `fk_UnlockWorlds_AvatarAddress1_idx` (`AvatarAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`ReplaceCombinationEquipmentMaterials` (
+    `Id` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
+    `AvatarAddress` varchar(100) NOT NULL,
+    `ReplacedMaterialId` int NOT NULL,
+    `ReplacedMaterialCount` int NOT NULL,
+    `BurntCrystal` decimal(13,2) NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
+    KEY `fk_ReplaceCombinationEquipmentMaterials_Agent1_idx` (`AgentAddress`),
+    KEY `fk_ReplaceCombinationEquipmentMaterials_AvatarAddress1_idx` (`AvatarAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`HasRandomBuffs` (
+    `Id` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
+    `AvatarAddress` varchar(100) NOT NULL,
+    `HasStageId` int NOT NULL,
+    `GachaCount` int NOT NULL,
+    `BurntCrystal` decimal(13,2) NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
+    KEY `fk_HasRandomBuffs_Agent1_idx` (`AgentAddress`),
+    KEY `fk_HasRandomBuffs_AvatarAddress1_idx` (`AvatarAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`HasWithRandomBuffs` (
+    `Id` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
+    `AvatarAddress` varchar(100) NOT NULL,
+    `StageId` int NOT NULL,
+    `BuffId` int NOT NULL,
+    `Cleared` boolean NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
+    KEY `fk_HasWithRandomBuffs_Agent1_idx` (`AgentAddress`),
+    KEY `fk_HasWithRandomBuffs_AvatarAddress1_idx` (`AvatarAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`JoinArenas` (
+    `Id` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
+    `AvatarAddress` varchar(100) NOT NULL,
+    `AvatarLevel` int NOT NULL,
+    `ArenaRound` int NOT NULL,
+    `ChampionshipId` int NOT NULL,
+    `BurntCrystal` decimal(13,2) NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
+    KEY `fk_JoinArenas_Agent1_idx` (`AgentAddress`),
+    KEY `fk_JoinArenas_AvatarAddress1_idx` (`AvatarAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`BattleArenas` (
+    `Id` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
+    `AvatarAddress` varchar(100) NOT NULL,
+    `AvatarLevel` int NOT NULL,
+    `EnemyAvatarAddress` varchar(100) NOT NULL,
+    `Victory` boolean NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
+    KEY `fk_BattleArenas_Agent1_idx` (`AgentAddress`),
+    KEY `fk_BattleArenas_AvatarAddress1_idx` (`AvatarAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+

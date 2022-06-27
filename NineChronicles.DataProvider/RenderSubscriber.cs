@@ -9,14 +9,18 @@ namespace NineChronicles.DataProvider
     using Lib9c.Model.Order;
     using Lib9c.Renderer;
     using Libplanet;
+    using Libplanet.Assets;
     using Microsoft.Extensions.Hosting;
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Battle;
     using Nekoyume.Extensions;
+    using Nekoyume.Helper;
+    using Nekoyume.Model.Arena;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
     using Nekoyume.TableData;
+    using Nekoyume.TableData.Crystal;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless;
@@ -60,6 +64,27 @@ namespace NineChronicles.DataProvider
         private readonly List<ClaimStakeRewardModel> _claimStakeList = new List<ClaimStakeRewardModel>();
         private readonly List<AgentModel> _mmcAgentList = new List<AgentModel>();
         private readonly List<MigrateMonsterCollectionModel> _mmcList = new List<MigrateMonsterCollectionModel>();
+        private readonly List<AgentModel> _grindAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _grindAvatarList = new List<AvatarModel>();
+        private readonly List<GrindingModel> _grindList = new List<GrindingModel>();
+        private readonly List<ItemEnhancementFailModel> _itemEnhancementFailList = new List<ItemEnhancementFailModel>();
+        private readonly List<AgentModel> _unlockEquipmentRecipeAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _unlockEquipmentRecipeAvatarList = new List<AvatarModel>();
+        private readonly List<UnlockEquipmentRecipeModel> _unlockEquipmentRecipeList = new List<UnlockEquipmentRecipeModel>();
+        private readonly List<AgentModel> _unlockWorldAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _unlockWorldAvatarList = new List<AvatarModel>();
+        private readonly List<UnlockWorldModel> _unlockWorldList = new List<UnlockWorldModel>();
+        private readonly List<ReplaceCombinationEquipmentMaterialModel> _replaceCombinationEquipmentMaterialList = new List<ReplaceCombinationEquipmentMaterialModel>();
+        private readonly List<AgentModel> _hasRandomBuffAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _hasRandomBuffAvatarList = new List<AvatarModel>();
+        private readonly List<HasRandomBuffModel> _hasRandomBuffList = new List<HasRandomBuffModel>();
+        private readonly List<HasWithRandomBuffModel> _hasWithRandomBuffList = new List<HasWithRandomBuffModel>();
+        private readonly List<AgentModel> _joinArenaAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _joinArenaAvatarList = new List<AvatarModel>();
+        private readonly List<JoinArenaModel> _joinArenaList = new List<JoinArenaModel>();
+        private readonly List<AgentModel> _battleArenaAgentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _battleArenaAvatarList = new List<AvatarModel>();
+        private readonly List<BattleArenaModel> _battleArenaList = new List<BattleArenaModel>();
         private int _renderCount = 0;
 
         public RenderSubscriber(
@@ -117,12 +142,33 @@ namespace NineChronicles.DataProvider
                                 MySqlStore.StoreAvatarList(_eqAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.ProcessEquipmentList(_eqList.GroupBy(i => i.ItemId).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.StoreAgentList(_stakeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreStakingList(_stakeList.ToList());
+                                MySqlStore.StoreStakingList(_stakeList);
                                 MySqlStore.StoreAgentList(_claimStakeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                                 MySqlStore.StoreAvatarList(_claimStakeAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreClaimStakeRewardList(_claimStakeList.ToList());
+                                MySqlStore.StoreClaimStakeRewardList(_claimStakeList);
                                 MySqlStore.StoreAgentList(_mmcAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreMigrateMonsterCollectionList(_mmcList.ToList());
+                                MySqlStore.StoreMigrateMonsterCollectionList(_mmcList);
+                                MySqlStore.StoreAgentList(_grindAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_grindAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreGrindList(_grindList);
+                                MySqlStore.StoreItemEnhancementFailList(_itemEnhancementFailList);
+                                MySqlStore.StoreAgentList(_unlockEquipmentRecipeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_unlockEquipmentRecipeAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreUnlockEquipmentRecipeList(_unlockEquipmentRecipeList);
+                                MySqlStore.StoreAgentList(_unlockWorldAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_unlockWorldAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreUnlockWorldList(_unlockWorldList);
+                                MySqlStore.StoreReplaceCombinationEquipmentMaterialList(_replaceCombinationEquipmentMaterialList);
+                                MySqlStore.StoreAgentList(_hasRandomBuffAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_hasRandomBuffAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreHasRandomBuffList(_hasRandomBuffList);
+                                MySqlStore.StoreHasWithRandomBuffList(_hasWithRandomBuffList);
+                                MySqlStore.StoreAgentList(_joinArenaAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_joinArenaAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreJoinArenaList(_joinArenaList);
+                                MySqlStore.StoreAgentList(_battleArenaAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreAvatarList(_battleArenaAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                                MySqlStore.StoreBattleArenaList(_battleArenaList);
                                 _renderCount = 0;
                                 _hasAgentList.Clear();
                                 _hasAvatarList.Clear();
@@ -154,6 +200,27 @@ namespace NineChronicles.DataProvider
                                 _claimStakeList.Clear();
                                 _mmcAgentList.Clear();
                                 _mmcList.Clear();
+                                _grindAgentList.Clear();
+                                _grindAvatarList.Clear();
+                                _grindList.Clear();
+                                _itemEnhancementFailList.Clear();
+                                _unlockEquipmentRecipeAgentList.Clear();
+                                _unlockEquipmentRecipeAvatarList.Clear();
+                                _unlockEquipmentRecipeList.Clear();
+                                _unlockWorldAgentList.Clear();
+                                _unlockWorldAvatarList.Clear();
+                                _unlockWorldList.Clear();
+                                _replaceCombinationEquipmentMaterialList.Clear();
+                                _hasRandomBuffAgentList.Clear();
+                                _hasRandomBuffAvatarList.Clear();
+                                _hasRandomBuffList.Clear();
+                                _hasWithRandomBuffList.Clear();
+                                _joinArenaAgentList.Clear();
+                                _joinArenaAvatarList.Clear();
+                                _joinArenaList.Clear();
+                                _battleArenaAgentList.Clear();
+                                _battleArenaAvatarList.Clear();
+                                _battleArenaList.Clear();
                                 var end = DateTimeOffset.Now;
                                 Log.Debug($"Storing Data Complete. Time Taken: {(end - start).Milliseconds} ms.");
                             }
@@ -212,6 +279,20 @@ namespace NineChronicles.DataProvider
                                     Mimisbrunnr = has.stageId > 10000000,
                                     BlockIndex = ev.BlockIndex,
                                 });
+                                if (has.stageBuffId.HasValue)
+                                {
+                                    _hasWithRandomBuffList.Add(new HasWithRandomBuffModel()
+                                    {
+                                        Id = has.Id.ToString(),
+                                        BlockIndex = ev.BlockIndex,
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = has.avatarAddress.ToString(),
+                                        StageId = has.stageId,
+                                        BuffId = (int)has.stageBuffId,
+                                        Cleared = isClear,
+                                        TimeStamp = DateTimeOffset.Now,
+                                    });
+                                }
 
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
@@ -317,12 +398,14 @@ namespace NineChronicles.DataProvider
                                 _renderCount++;
                                 Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(combinationEquipment.avatarAddress);
+                                AvatarState avatarState =
+                                    ev.OutputStates.GetAvatarStateV2(combinationEquipment.avatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
                                 var avatarLevel = avatarState.level;
                                 var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume =>
+                                    costume.ItemSubType == ItemSubType.Title && costume.equipped);
                                 int? avatarTitleId = null;
                                 if (avatarTitleCostume != null)
                                 {
@@ -356,9 +439,103 @@ namespace NineChronicles.DataProvider
                                     SubRecipeId = combinationEquipment.subRecipeId ?? 0,
                                     BlockIndex = ev.BlockIndex,
                                 });
+                                if (combinationEquipment.payByCrystal)
+                                {
+                                    Currency crystalCurrency = CrystalCalculator.CRYSTAL;
+                                    var prevCrystalBalance = previousStates.GetBalance(
+                                        ev.Signer,
+                                        crystalCurrency);
+                                    var outputCrystalBalance = ev.OutputStates.GetBalance(
+                                        ev.Signer,
+                                        crystalCurrency);
+                                    var burntCrystal = prevCrystalBalance - outputCrystalBalance;
+                                    var requiredFungibleItems = new Dictionary<int, int>();
+                                    Dictionary<Type, (Address, ISheet)> sheets = previousStates.GetSheets(
+                                        sheetTypes: new[]
+                                        {
+                                            typeof(EquipmentItemRecipeSheet),
+                                            typeof(EquipmentItemSheet),
+                                            typeof(MaterialItemSheet),
+                                            typeof(EquipmentItemSubRecipeSheetV2),
+                                            typeof(EquipmentItemOptionSheet),
+                                            typeof(SkillSheet),
+                                            typeof(CrystalMaterialCostSheet),
+                                            typeof(CrystalFluctuationSheet),
+                                        });
+                                    var materialItemSheet = sheets.GetSheet<MaterialItemSheet>();
+                                    var equipmentItemRecipeSheet = sheets.GetSheet<EquipmentItemRecipeSheet>();
+                                    equipmentItemRecipeSheet.TryGetValue(
+                                        combinationEquipment.recipeId,
+                                        out var recipeRow);
+                                    materialItemSheet.TryGetValue(recipeRow!.MaterialId, out var materialRow);
+                                    if (requiredFungibleItems.ContainsKey(materialRow!.Id))
+                                    {
+                                        requiredFungibleItems[materialRow.Id] += recipeRow.MaterialCount;
+                                    }
+                                    else
+                                    {
+                                        requiredFungibleItems[materialRow.Id] = recipeRow.MaterialCount;
+                                    }
+
+                                    if (combinationEquipment.subRecipeId.HasValue)
+                                    {
+                                        var equipmentItemSubRecipeSheetV2 = sheets.GetSheet<EquipmentItemSubRecipeSheetV2>();
+                                        equipmentItemSubRecipeSheetV2.TryGetValue(combinationEquipment.subRecipeId.Value, out var subRecipeRow);
+
+                                        // Validate SubRecipe Material
+                                        for (var i = subRecipeRow!.Materials.Count; i > 0; i--)
+                                        {
+                                            var materialInfo = subRecipeRow.Materials[i - 1];
+                                            materialItemSheet.TryGetValue(materialInfo.Id, out materialRow);
+
+                                            if (requiredFungibleItems.ContainsKey(materialRow!.Id))
+                                            {
+                                                requiredFungibleItems[materialRow.Id] += materialInfo.Count;
+                                            }
+                                            else
+                                            {
+                                                requiredFungibleItems[materialRow.Id] = materialInfo.Count;
+                                            }
+                                        }
+                                    }
+
+                                    var inventory = ev.PreviousStates
+                                        .GetAvatarStateV2(combinationEquipment.avatarAddress).inventory;
+                                    foreach (var pair in requiredFungibleItems.OrderBy(pair => pair.Key))
+                                    {
+                                        var itemId = pair.Key;
+                                        var requiredCount = pair.Value;
+                                        if (materialItemSheet.TryGetValue(itemId, out materialRow))
+                                        {
+                                            int itemCount = inventory.TryGetItem(itemId, out Inventory.Item item)
+                                                ? item.count
+                                                : 0;
+                                            if (itemCount < requiredCount && combinationEquipment.payByCrystal)
+                                            {
+                                                _replaceCombinationEquipmentMaterialList.Add(
+                                                    new ReplaceCombinationEquipmentMaterialModel()
+                                                    {
+                                                        Id = combinationEquipment.Id.ToString(),
+                                                        BlockIndex = ev.BlockIndex,
+                                                        AgentAddress = ev.Signer.ToString(),
+                                                        AvatarAddress =
+                                                            combinationEquipment.avatarAddress.ToString(),
+                                                        ReplacedMaterialId = itemId,
+                                                        ReplacedMaterialCount = requiredCount - itemCount,
+                                                        BurntCrystal =
+                                                            Convert.ToDecimal(burntCrystal.GetQuantityString()),
+                                                        TimeStamp = DateTimeOffset.Now,
+                                                    });
+                                            }
+                                        }
+                                    }
+                                }
 
                                 var end = DateTimeOffset.Now;
-                                Log.Debug("Stored CombinationEquipment action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                                Log.Debug(
+                                    "Stored CombinationEquipment action in block #{index}. Time Taken: {time} ms.",
+                                    ev.BlockIndex,
+                                    (end - start).Milliseconds);
                                 start = DateTimeOffset.Now;
 
                                 var slotState = ev.OutputStates.GetCombinationSlotState(
@@ -368,14 +545,14 @@ namespace NineChronicles.DataProvider
                                 if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                                 {
                                     ProcessEquipmentData(
-                                         ev.Signer,
-                                         combinationEquipment.avatarAddress,
-                                         avatarName,
-                                         avatarLevel,
-                                         avatarTitleId,
-                                         avatarArmorId,
-                                         avatarCp,
-                                         (Equipment)slotState.Result.itemUsable);
+                                        ev.Signer,
+                                        combinationEquipment.avatarAddress,
+                                        avatarName,
+                                        avatarLevel,
+                                        avatarTitleId,
+                                        avatarArmorId,
+                                        avatarCp,
+                                        (Equipment)slotState.Result.itemUsable);
                                 }
 
                                 end = DateTimeOffset.Now;
@@ -393,6 +570,7 @@ namespace NineChronicles.DataProvider
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
                                 var previousStates = ev.PreviousStates;
+                                AvatarState prevAvatarState = previousStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
                                 var avatarLevel = avatarState.level;
                                 var avatarArmorId = avatarState.GetArmorId();
@@ -401,6 +579,53 @@ namespace NineChronicles.DataProvider
                                 if (avatarTitleCostume != null)
                                 {
                                     avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                int prevEquipmentLevel = 0;
+                                if (prevAvatarState.inventory.TryGetNonFungibleItem(itemEnhancement.itemId, out ItemUsable prevEnhancementItem)
+                                    && prevEnhancementItem is Equipment prevEnhancementEquipment)
+                                {
+                                       prevEquipmentLevel = prevEnhancementEquipment.level;
+                                }
+
+                                int outputEquipmentLevel = 0;
+                                if (avatarState.inventory.TryGetNonFungibleItem(itemEnhancement.itemId, out ItemUsable outputEnhancementItem)
+                                    && outputEnhancementItem is Equipment outputEnhancementEquipment)
+                                {
+                                    outputEquipmentLevel = outputEnhancementEquipment.level;
+                                }
+
+                                if (prevEquipmentLevel == outputEquipmentLevel)
+                                {
+                                    Currency crystalCurrency = CrystalCalculator.CRYSTAL;
+                                    Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
+                                    var prevCrystalBalance = previousStates.GetBalance(
+                                        ev.Signer,
+                                        crystalCurrency);
+                                    var outputCrystalBalance = ev.OutputStates.GetBalance(
+                                        ev.Signer,
+                                        crystalCurrency);
+                                    var prevNCGBalance = previousStates.GetBalance(
+                                        ev.Signer,
+                                        ncgCurrency);
+                                    var outputNCGBalance = ev.OutputStates.GetBalance(
+                                        ev.Signer,
+                                        ncgCurrency);
+                                    var gainedCrystal = outputCrystalBalance - prevCrystalBalance;
+                                    var burntNCG = prevNCGBalance - outputNCGBalance;
+                                    _itemEnhancementFailList.Add(new ItemEnhancementFailModel()
+                                    {
+                                        Id = itemEnhancement.Id.ToString(),
+                                        BlockIndex = ev.BlockIndex,
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = itemEnhancement.avatarAddress.ToString(),
+                                        EquipmentItemId = itemEnhancement.itemId.ToString(),
+                                        MaterialItemId = itemEnhancement.materialId.ToString(),
+                                        EquipmentLevel = outputEquipmentLevel,
+                                        GainedCrystal = Convert.ToDecimal(gainedCrystal.GetQuantityString()),
+                                        BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
+                                        TimeStamp = DateTimeOffset.Now,
+                                    });
                                 }
 
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
@@ -838,6 +1063,399 @@ namespace NineChronicles.DataProvider
                                 });
                                 var end = DateTimeOffset.Now;
                                 Log.Debug("Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is Grinding grind)
+                            {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
+                                var start = DateTimeOffset.Now;
+
+                                AvatarState prevAvatarState = ev.PreviousStates.GetAvatarStateV2(grind.AvatarAddress);
+                                AgentState agentState = ev.PreviousStates.GetAgentState(ev.Signer);
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(grind.AvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+                                Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
+                                    ev.Signer,
+                                    agentState.MonsterCollectionRound
+                                );
+                                Dictionary<Type, (Address, ISheet)> sheets = previousStates.GetSheets(sheetTypes: new[]
+                                {
+                                    typeof(CrystalEquipmentGrindingSheet),
+                                    typeof(CrystalMonsterCollectionMultiplierSheet),
+                                    typeof(MaterialItemSheet),
+                                    typeof(StakeRegularRewardSheet),
+                                });
+
+                                List<Equipment> equipmentList = new List<Equipment>();
+                                foreach (var equipmentId in grind.EquipmentIds)
+                                {
+                                    if (prevAvatarState.inventory.TryGetNonFungibleItem(equipmentId, out Equipment equipment))
+                                    {
+                                        equipmentList.Add(equipment);
+                                    }
+                                }
+
+                                Currency currency = previousStates.GetGoldCurrency();
+                                FungibleAssetValue stakedAmount = 0 * currency;
+                                if (previousStates.TryGetStakeState(ev.Signer, out StakeState stakeState))
+                                {
+                                    stakedAmount = previousStates.GetBalance(stakeState.address, currency);
+                                }
+                                else
+                                {
+                                    if (previousStates.TryGetState(monsterCollectionAddress, out Dictionary _))
+                                    {
+                                        stakedAmount = previousStates.GetBalance(monsterCollectionAddress, currency);
+                                    }
+                                }
+
+                                FungibleAssetValue crystal = CrystalCalculator.CalculateCrystal(
+                                    ev.Signer,
+                                    equipmentList,
+                                    stakedAmount,
+                                    false,
+                                    sheets.GetSheet<CrystalEquipmentGrindingSheet>(),
+                                    sheets.GetSheet<CrystalMonsterCollectionMultiplierSheet>(),
+                                    sheets.GetSheet<StakeRegularRewardSheet>()
+                                );
+
+                                foreach (var equipment in equipmentList)
+                                {
+                                    _grindAgentList.Add(new AgentModel()
+                                    {
+                                        Address = ev.Signer.ToString(),
+                                    });
+                                    _grindAvatarList.Add(new AvatarModel()
+                                    {
+                                        Address = grind.AvatarAddress.ToString(),
+                                        AgentAddress = ev.Signer.ToString(),
+                                        Name = avatarName,
+                                        AvatarLevel = avatarLevel,
+                                        TitleId = avatarTitleId,
+                                        ArmorId = avatarArmorId,
+                                        Cp = avatarCp,
+                                    });
+                                    _grindList.Add(new GrindingModel()
+                                    {
+                                        Id = grind.Id.ToString(),
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = grind.AvatarAddress.ToString(),
+                                        EquipmentItemId = equipment.ItemId.ToString(),
+                                        EquipmentId = equipment.Id,
+                                        EquipmentLevel = equipment.level,
+                                        Crystal = Convert.ToDecimal(crystal.GetQuantityString()),
+                                        BlockIndex = ev.BlockIndex,
+                                        TimeStamp = DateTimeOffset.Now,
+                                    });
+                                }
+
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored Grinding action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is UnlockEquipmentRecipe unlockEquipmentRecipe)
+                            {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
+                                var start = DateTimeOffset.Now;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(unlockEquipmentRecipe.AvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+                                Currency crystalCurrency = CrystalCalculator.CRYSTAL;
+                                var prevCrystalBalance = previousStates.GetBalance(
+                                    ev.Signer,
+                                    crystalCurrency);
+                                var outputCrystalBalance = ev.OutputStates.GetBalance(
+                                    ev.Signer,
+                                    crystalCurrency);
+                                var burntCrystal = prevCrystalBalance - outputCrystalBalance;
+                                _unlockEquipmentRecipeAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _unlockEquipmentRecipeAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = unlockEquipmentRecipe.AvatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                foreach (var recipeId in unlockEquipmentRecipe.RecipeIds)
+                                {
+                                    _unlockEquipmentRecipeList.Add(new UnlockEquipmentRecipeModel()
+                                    {
+                                        Id = unlockEquipmentRecipe.Id.ToString(),
+                                        BlockIndex = ev.BlockIndex,
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = unlockEquipmentRecipe.AvatarAddress.ToString(),
+                                        UnlockEquipmentRecipeId = recipeId,
+                                        BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
+                                        TimeStamp = DateTimeOffset.Now,
+                                    });
+                                }
+
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored UnlockEquipmentRecipe action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is UnlockWorld unlockWorld)
+                            {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
+                                var start = DateTimeOffset.Now;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(unlockWorld.AvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+                                Currency crystalCurrency = CrystalCalculator.CRYSTAL;
+                                var prevCrystalBalance = previousStates.GetBalance(
+                                    ev.Signer,
+                                    crystalCurrency);
+                                var outputCrystalBalance = ev.OutputStates.GetBalance(
+                                    ev.Signer,
+                                    crystalCurrency);
+                                var burntCrystal = prevCrystalBalance - outputCrystalBalance;
+                                _unlockWorldAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _unlockWorldAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = unlockWorld.AvatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                foreach (var worldId in unlockWorld.WorldIds)
+                                {
+                                    _unlockWorldList.Add(new UnlockWorldModel()
+                                    {
+                                        Id = unlockWorld.Id.ToString(),
+                                        BlockIndex = ev.BlockIndex,
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = unlockWorld.AvatarAddress.ToString(),
+                                        UnlockWorldId = worldId,
+                                        BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
+                                        TimeStamp = DateTimeOffset.Now,
+                                    });
+                                }
+
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored UnlockWorld action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is HackAndSlashRandomBuff hasRandomBuff)
+                            {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
+                                var start = DateTimeOffset.Now;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasRandomBuff.AvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                AvatarState prevAvatarState = previousStates.GetAvatarStateV2(hasRandomBuff.AvatarAddress);
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                prevAvatarState.worldInformation.TryGetLastClearedStageId(out var currentStageId);
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+                                Currency crystalCurrency = CrystalCalculator.CRYSTAL;
+                                var prevCrystalBalance = previousStates.GetBalance(
+                                    ev.Signer,
+                                    crystalCurrency);
+                                var outputCrystalBalance = ev.OutputStates.GetBalance(
+                                    ev.Signer,
+                                    crystalCurrency);
+                                var burntCrystal = prevCrystalBalance - outputCrystalBalance;
+                                _hasRandomBuffAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _hasRandomBuffAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = hasRandomBuff.AvatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _hasRandomBuffList.Add(new HasRandomBuffModel()
+                                {
+                                    Id = hasRandomBuff.Id.ToString(),
+                                    BlockIndex = ev.BlockIndex,
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = hasRandomBuff.AvatarAddress.ToString(),
+                                    HasStageId = currentStageId,
+                                    GachaCount = !hasRandomBuff.AdvancedGacha ? 5 : 10,
+                                    BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
+                                    TimeStamp = DateTimeOffset.Now,
+                                });
+
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored HasRandomBuff action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is JoinArena joinArena)
+                            {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
+                                var start = DateTimeOffset.Now;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(joinArena.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                AvatarState prevAvatarState = previousStates.GetAvatarStateV2(joinArena.avatarAddress);
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                prevAvatarState.worldInformation.TryGetLastClearedStageId(out var currentStageId);
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+                                Currency crystalCurrency = CrystalCalculator.CRYSTAL;
+                                var prevCrystalBalance = previousStates.GetBalance(
+                                    ev.Signer,
+                                    crystalCurrency);
+                                var outputCrystalBalance = ev.OutputStates.GetBalance(
+                                    ev.Signer,
+                                    crystalCurrency);
+                                var burntCrystal = prevCrystalBalance - outputCrystalBalance;
+                                _joinArenaAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _joinArenaAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = joinArena.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _joinArenaList.Add(new JoinArenaModel()
+                                {
+                                    Id = joinArena.Id.ToString(),
+                                    BlockIndex = ev.BlockIndex,
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = joinArena.avatarAddress.ToString(),
+                                    AvatarLevel = avatarLevel,
+                                    ArenaRound = joinArena.round,
+                                    ChampionshipId = joinArena.championshipId,
+                                    BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
+                                    TimeStamp = DateTimeOffset.Now,
+                                });
+
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored JoinArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is BattleArena battleArena)
+                            {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
+                                var start = DateTimeOffset.Now;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(battleArena.myAvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                AvatarState prevAvatarState = previousStates.GetAvatarStateV2(battleArena.myAvatarAddress);
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                prevAvatarState.worldInformation.TryGetLastClearedStageId(out var currentStageId);
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+                                var myArenaScoreAdr =
+                                    ArenaScore.DeriveAddress(battleArena.myAvatarAddress, battleArena.championshipId, battleArena.round);
+                                previousStates.TryGetArenaScore(myArenaScoreAdr, out var previousArenaScore);
+                                ev.OutputStates.TryGetArenaScore(myArenaScoreAdr, out var outputArenaScore);
+                                _battleArenaAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _battleArenaAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = battleArena.myAvatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _battleArenaList.Add(new BattleArenaModel()
+                                {
+                                    Id = battleArena.Id.ToString(),
+                                    BlockIndex = ev.BlockIndex,
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = battleArena.myAvatarAddress.ToString(),
+                                    AvatarLevel = avatarLevel,
+                                    EnemyAvatarAddress = battleArena.enemyAvatarAddress.ToString(),
+                                    Victory = outputArenaScore.Score > previousArenaScore.Score,
+                                    TimeStamp = DateTimeOffset.Now,
+                                });
+
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored BattleArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                         catch (Exception ex)
