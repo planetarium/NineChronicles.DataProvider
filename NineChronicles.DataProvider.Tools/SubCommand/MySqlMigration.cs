@@ -1,3 +1,6 @@
+using Nekoyume;
+using Nekoyume.TableData;
+
 namespace NineChronicles.DataProvider.Tools.SubCommand
 {
     using System;
@@ -218,12 +221,19 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             {
                 var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, _baseChain.Tip.Index);
                 var tip = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, (BlockHash)tipHash);
+                var shopTipHash = _baseStore.IndexBlockHash(_baseChain.Id, 4370000);
+                var shopTip = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, (BlockHash)shopTipHash);
                 var exec = _baseChain.ExecuteActions(tip);
                 var ev = exec.First();
+                var shopExec = _baseChain.ExecuteActions(shopTip);
+                var shopEv = shopExec.First();
                 var avatarCount = 0;
                 AvatarState avatarState;
                 int interval = 1000000;
                 int intervalCount = 0;
+                var arenaSheet = shopEv.OutputStates.GetSheet<ArenaSheet>();
+                var arenaData = arenaSheet.GetRoundByBlockIndex(shopTip.Index);
+                var feeStoreAddress = Addresses.GetShopFeeAddress(arenaData.ChampionshipId, arenaData.Round);
 
                 foreach (var avatar in avatars)
                 {
@@ -231,8 +241,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     {
                         intervalCount++;
                         avatarCount++;
-                        Console.WriteLine("Interval Count {0}", intervalCount);
-                        Console.WriteLine("Migrating {0}/{1}", avatarCount, avatars.Count);
+                        Console.WriteLine("Interval Count {0} ShopAddress: {1}", intervalCount, feeStoreAddress);
+                        Console.WriteLine("Migrating {0}/{1} ShopAddress: {2}", avatarCount, avatars.Count, feeStoreAddress);
                         var avatarAddress = new Address(avatar);
                         try
                         {
@@ -289,7 +299,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             }
                         }
 
-                        Console.WriteLine("Migrating Complete {0}/{1}", avatarCount, avatars.Count);
+                        Console.WriteLine("Migrating Complete {0}/{1} ShopAddress: {2}", avatarCount, avatars.Count, feeStoreAddress);
                     }
                     catch (Exception ex)
                     {
