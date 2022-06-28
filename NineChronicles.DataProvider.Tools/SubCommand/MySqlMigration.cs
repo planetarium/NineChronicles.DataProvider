@@ -238,6 +238,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var arenaSheet = shopEv.OutputStates.GetSheet<ArenaSheet>();
                 var arenaData = arenaSheet.GetRoundByBlockIndex(shopTip.Index);
                 var feeStoreAddress = Addresses.GetShopFeeAddress(arenaData.ChampionshipId, arenaData.Round);
+                Console.WriteLine("ShopAddress: {0}", feeStoreAddress);
 
                 // foreach (var avatar in avatars)
                 // {
