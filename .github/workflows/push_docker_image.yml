@@ -6,7 +6,7 @@ on:
       - main
       - development
       - rc-*
-      - crystal-user-migration
+      - user-migration
 
 jobs:
   build_and_push:
