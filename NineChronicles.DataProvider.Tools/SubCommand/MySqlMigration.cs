@@ -223,21 +223,36 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             try
             {
+                Console.WriteLine(index);
+                Console.WriteLine("1");
                 var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, _baseChain.Tip.Index);
+                Console.WriteLine("2");
                 var tip = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, (BlockHash)tipHash);
+                Console.WriteLine("3");
                 var shopTipHash = _baseStore.IndexBlockHash(_baseChain.Id, index);
+                Console.WriteLine("4");
                 var shopTip = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, (BlockHash)shopTipHash);
+                Console.WriteLine("5");
                 var exec = _baseChain.ExecuteActions(tip);
+                Console.WriteLine("6");
                 var ev = exec.First();
+                Console.WriteLine("7");
                 var shopExec = _baseChain.ExecuteActions(shopTip);
+                Console.WriteLine("8");
                 var shopEv = shopExec.First();
+                Console.WriteLine("9");
                 var avatarCount = 0;
+                Console.WriteLine("10");
                 AvatarState avatarState;
+                Console.WriteLine("11");
                 int interval = 1000000;
                 int intervalCount = 0;
                 var arenaSheet = shopEv.OutputStates.GetSheet<ArenaSheet>();
+                Console.WriteLine("12");
                 var arenaData = arenaSheet.GetRoundByBlockIndex(shopTip.Index);
+                Console.WriteLine("13");
                 var feeStoreAddress = Addresses.GetShopFeeAddress(arenaData.ChampionshipId, arenaData.Round);
+                Console.WriteLine("14");
                 Console.WriteLine("ShopAddress: {0}", feeStoreAddress);
 
                 // foreach (var avatar in avatars)
