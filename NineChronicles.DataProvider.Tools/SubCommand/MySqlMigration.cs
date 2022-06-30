@@ -1,3 +1,6 @@
+using Libplanet.Assets;
+using Nekoyume.Helper;
+
 namespace NineChronicles.DataProvider.Tools.SubCommand
 {
     using System;
@@ -33,6 +36,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private const string UMDbName = "UserMaterials";
         private const string UCDbName = "UserConsumables";
         private const string USDbName = "UserStakings";
+        private const string UNCGDbName = "UserNCGs";
+        private const string UCYDbName = "UserCrystals";
         private const string EDbName = "Equipments";
         private string _connectionString;
         private IStore _baseStore;
@@ -46,6 +51,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private StreamWriter _umBulkFile;
         private StreamWriter _ucBulkFile;
         private StreamWriter _usBulkFile;
+        private StreamWriter _uncgBulkFile;
+        private StreamWriter _ucyBulkFile;
         private StreamWriter _eBulkFile;
         private StreamWriter _agentBulkFile;
         private StreamWriter _avatarBulkFile;
@@ -60,6 +67,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private List<string> _umFiles;
         private List<string> _ucFiles;
         private List<string> _usFiles;
+        private List<string> _uncgFiles;
+        private List<string> _ucyFiles;
         private List<string> _eFiles;
         private List<string> _agentFiles;
         private List<string> _avatarFiles;
@@ -186,6 +195,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _umFiles = new List<string>();
             _ucFiles = new List<string>();
             _usFiles = new List<string>();
+            _uncgFiles = new List<string>();
+            _ucyFiles = new List<string>();
             _eFiles = new List<string>();
             _agentFiles = new List<string>();
             _avatarFiles = new List<string>();
@@ -273,6 +284,24 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         if (!agents.Contains(avatarState.agentAddress.ToString()))
                         {
                             agents.Add(avatarState.agentAddress.ToString());
+                            Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
+                            var ncgBalance = ev.OutputStates.GetBalance(
+                                avatarState.agentAddress,
+                                ncgCurrency);
+                            _uncgBulkFile.WriteLine(
+                                $"{tip.Index};" +
+                                $"{avatarState.agentAddress.ToString()};" +
+                                $"{Convert.ToDecimal(ncgBalance.GetQuantityString())}"
+                            );
+                            Currency crystalCurrency = CrystalCalculator.CRYSTAL;
+                            var crystalBalance = ev.OutputStates.GetBalance(
+                                avatarState.agentAddress,
+                                crystalCurrency);
+                            _ucyBulkFile.WriteLine(
+                                $"{tip.Index};" +
+                                $"{avatarState.agentAddress.ToString()};" +
+                                $"{Convert.ToDecimal(crystalBalance.GetQuantityString())}"
+                            );
                             if (ev.OutputStates.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
                             {
                                 var stakeStateAddress = StakeState.DeriveAddress(avatarState.agentAddress);
@@ -339,6 +368,16 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             BulkInsert(USDbName, path);
                         }
 
+                        foreach (var path in _uncgFiles)
+                        {
+                            BulkInsert(UNCGDbName, path);
+                        }
+
+                        foreach (var path in _ucyFiles)
+                        {
+                            BulkInsert(UCYDbName, path);
+                        }
+
                         _agentFiles.RemoveAt(0);
                         _avatarFiles.RemoveAt(0);
                         _ueFiles.RemoveAt(0);
@@ -347,6 +386,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         _ucFiles.RemoveAt(0);
                         _eFiles.RemoveAt(0);
                         _usFiles.RemoveAt(0);
+                        _uncgFiles.RemoveAt(0);
+                        _ucyFiles.RemoveAt(0);
                         CreateBulkFiles();
                         intervalCount = 0;
                     }
@@ -362,12 +403,16 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var stm5 = $"RENAME TABLE {UCDbName} TO {UCDbName}_Dump; CREATE TABLE {UCDbName} LIKE {UCDbName}_Dump;";
                 var stm6 = $"RENAME TABLE {EDbName} TO {EDbName}_Dump; CREATE TABLE {EDbName} LIKE {EDbName}_Dump;";
                 var stm12 = $"RENAME TABLE {USDbName} TO {USDbName}_Dump; CREATE TABLE {USDbName} LIKE {USDbName}_Dump;";
+                var stm13 = $"RENAME TABLE {UNCGDbName} TO {UNCGDbName}_Dump; CREATE TABLE {UNCGDbName} LIKE {UNCGDbName}_Dump;";
+                var stm14 = $"RENAME TABLE {UCYDbName} TO {UCYDbName}_Dump; CREATE TABLE {UCYDbName} LIKE {UCYDbName}_Dump;";
                 var cmd2 = new MySqlCommand(stm2, connection);
                 var cmd3 = new MySqlCommand(stm3, connection);
                 var cmd4 = new MySqlCommand(stm4, connection);
                 var cmd5 = new MySqlCommand(stm5, connection);
                 var cmd6 = new MySqlCommand(stm6, connection);
                 var cmd12 = new MySqlCommand(stm12, connection);
+                var cmd13 = new MySqlCommand(stm13, connection);
+                var cmd14 = new MySqlCommand(stm14, connection);
 
                 foreach (var path in _agentFiles)
                 {
@@ -451,6 +496,30 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 {
                     BulkInsert(USDbName, path);
                 }
+
+                startMove = DateTimeOffset.Now;
+                connection.Open();
+                cmd13.CommandTimeout = 300;
+                cmd13.ExecuteScalar();
+                connection.Close();
+                endMove = DateTimeOffset.Now;
+                Console.WriteLine("Move UserNCGs Complete! Time Elapsed: {0}", endMove - startMove);
+                foreach (var path in _uncgFiles)
+                {
+                    BulkInsert(UNCGDbName, path);
+                }
+
+                startMove = DateTimeOffset.Now;
+                connection.Open();
+                cmd14.CommandTimeout = 300;
+                cmd14.ExecuteScalar();
+                connection.Close();
+                endMove = DateTimeOffset.Now;
+                Console.WriteLine("Move UserCrystals Complete! Time Elapsed: {0}", endMove - startMove);
+                foreach (var path in _ucyFiles)
+                {
+                    BulkInsert(UCYDbName, path);
+                }
             }
             catch (Exception e)
             {
@@ -462,12 +531,16 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var stm15 = $"DROP TABLE {EDbName}; RENAME TABLE {UCDbName}_Dump TO {UCDbName};";
                 var stm16 = $"DROP TABLE {EDbName}; RENAME TABLE {EDbName}_Dump TO {EDbName};";
                 var stm17 = $"DROP TABLE {USDbName}; RENAME TABLE {USDbName}_Dump TO {USDbName};";
+                var stm19 = $"DROP TABLE {UNCGDbName}; RENAME TABLE {UNCGDbName}_Dump TO {UNCGDbName};";
+                var stm20 = $"DROP TABLE {UCYDbName}; RENAME TABLE {UCYDbName}_Dump TO {UCYDbName};";
                 var cmd12 = new MySqlCommand(stm12, connection);
                 var cmd13 = new MySqlCommand(stm13, connection);
                 var cmd14 = new MySqlCommand(stm14, connection);
                 var cmd15 = new MySqlCommand(stm15, connection);
                 var cmd16 = new MySqlCommand(stm16, connection);
                 var cmd17 = new MySqlCommand(stm17, connection);
+                var cmd19 = new MySqlCommand(stm19, connection);
+                var cmd20 = new MySqlCommand(stm20, connection);
                 var startRestore = DateTimeOffset.Now;
                 connection.Open();
                 cmd12.CommandTimeout = 300;
@@ -510,6 +583,20 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 connection.Close();
                 endRestore = DateTimeOffset.Now;
                 Console.WriteLine("Restore UserStakings Complete! Time Elapsed: {0}", endRestore - startRestore);
+                startRestore = DateTimeOffset.Now;
+                connection.Open();
+                cmd19.CommandTimeout = 300;
+                cmd19.ExecuteScalar();
+                connection.Close();
+                endRestore = DateTimeOffset.Now;
+                Console.WriteLine("Restore UserNCGs Complete! Time Elapsed: {0}", endRestore - startRestore);
+                startRestore = DateTimeOffset.Now;
+                connection.Open();
+                cmd20.CommandTimeout = 300;
+                cmd20.ExecuteScalar();
+                connection.Close();
+                endRestore = DateTimeOffset.Now;
+                Console.WriteLine("Restore UserCrystals Complete! Time Elapsed: {0}", endRestore - startRestore);
             }
 
             var stm7 = $"DROP TABLE {UEDbName}_Dump;";
@@ -518,12 +605,16 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             var stm10 = $"DROP TABLE {UCDbName}_Dump;";
             var stm11 = $"DROP TABLE {EDbName}_Dump;";
             var stm18 = $"DROP TABLE {USDbName}_Dump;";
+            var stm21 = $"DROP TABLE {UNCGDbName}_Dump;";
+            var stm22 = $"DROP TABLE {UCYDbName}_Dump;";
             var cmd7 = new MySqlCommand(stm7, connection);
             var cmd8 = new MySqlCommand(stm8, connection);
             var cmd9 = new MySqlCommand(stm9, connection);
             var cmd10 = new MySqlCommand(stm10, connection);
             var cmd11 = new MySqlCommand(stm11, connection);
             var cmd18 = new MySqlCommand(stm18, connection);
+            var cmd21 = new MySqlCommand(stm21, connection);
+            var cmd22 = new MySqlCommand(stm22, connection);
             var startDelete = DateTimeOffset.Now;
             connection.Open();
             cmd7.CommandTimeout = 300;
@@ -566,6 +657,20 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             connection.Close();
             endDelete = DateTimeOffset.Now;
             Console.WriteLine("Delete UserStakings_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd21.CommandTimeout = 300;
+            cmd21.ExecuteScalar();
+            connection.Close();
+            endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Delete UserNCGs_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd22.CommandTimeout = 300;
+            cmd22.ExecuteScalar();
+            connection.Close();
+            endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Delete UserCrystals_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
@@ -608,6 +713,12 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             _usBulkFile.Flush();
             _usBulkFile.Close();
+
+            _uncgBulkFile.Flush();
+            _uncgBulkFile.Close();
+
+            _ucyBulkFile.Flush();
+            _ucyBulkFile.Close();
         }
 
         private void CreateBulkFiles()
@@ -648,6 +759,12 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             string usFilePath = Path.GetTempFileName();
             _usBulkFile = new StreamWriter(usFilePath);
 
+            string uncgFilePath = Path.GetTempFileName();
+            _uncgBulkFile = new StreamWriter(uncgFilePath);
+
+            string ucyFilePath = Path.GetTempFileName();
+            _ucyBulkFile = new StreamWriter(ucyFilePath);
+
             _agentFiles.Add(agentFilePath);
             _avatarFiles.Add(avatarFilePath);
             _ccFiles.Add(ccFilePath);
@@ -660,6 +777,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _ucFiles.Add(ucFilePath);
             _eFiles.Add(eFilePath);
             _usFiles.Add(usFilePath);
+            _uncgFiles.Add(uncgFilePath);
+            _ucyFiles.Add(ucyFilePath);
         }
 
         private void BulkInsert(
