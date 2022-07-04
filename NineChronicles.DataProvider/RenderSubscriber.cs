@@ -13,7 +13,6 @@ namespace NineChronicles.DataProvider
     using Microsoft.Extensions.Hosting;
     using Nekoyume;
     using Nekoyume.Action;
-    using Nekoyume.Arena;
     using Nekoyume.Battle;
     using Nekoyume.Extensions;
     using Nekoyume.Helper;
@@ -1351,13 +1350,11 @@ namespace NineChronicles.DataProvider
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(joinArena.avatarAddress);
                                 var previousStates = ev.PreviousStates;
-                                AvatarState prevAvatarState = previousStates.GetAvatarStateV2(joinArena.avatarAddress);
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
                                 var avatarLevel = avatarState.level;
                                 var avatarArmorId = avatarState.GetArmorId();
                                 var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
                                 int? avatarTitleId = null;
-                                prevAvatarState.worldInformation.TryGetLastClearedStageId(out var currentStageId);
                                 if (avatarTitleCostume != null)
                                 {
                                     avatarTitleId = avatarTitleCostume.Id;
@@ -1411,13 +1408,11 @@ namespace NineChronicles.DataProvider
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(battleArena.myAvatarAddress);
                                 var previousStates = ev.PreviousStates;
-                                AvatarState prevAvatarState = previousStates.GetAvatarStateV2(battleArena.myAvatarAddress);
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
                                 var avatarLevel = avatarState.level;
                                 var avatarArmorId = avatarState.GetArmorId();
                                 var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
                                 int? avatarTitleId = null;
-                                prevAvatarState.worldInformation.TryGetLastClearedStageId(out var currentStageId);
                                 if (avatarTitleCostume != null)
                                 {
                                     avatarTitleId = avatarTitleCostume.Id;
@@ -1429,41 +1424,15 @@ namespace NineChronicles.DataProvider
                                     ArenaScore.DeriveAddress(battleArena.myAvatarAddress, battleArena.championshipId, battleArena.round);
                                 previousStates.TryGetArenaScore(arenaInformationAdr, out var previousArenaScore);
                                 ev.OutputStates.TryGetArenaScore(arenaInformationAdr, out var outputArenaScore);
-                                previousStates.TryGetArenaInformation(arenaInformationAdr, out var arenaInformation);
-                                var sheets = previousStates.GetSheets(
-                                    containArenaSimulatorSheets: true,
-                                    sheetTypes: new[] { typeof(ArenaSheet), typeof(ItemRequirementSheet), typeof(EquipmentItemRecipeSheet), typeof(EquipmentItemSubRecipeSheetV2), typeof(EquipmentItemOptionSheet), typeof(MaterialItemSheet), }
-                                );
-
-                                var arenaSheet = sheets.GetSheet<ArenaSheet>();
-                                arenaSheet.TryGetValue(battleArena.championshipId, out var arenaRow);
-                                arenaRow!.TryGetRound(battleArena.round, out var roundData);
-                                var gameConfigState = previousStates.GetGameConfigState();
-                                var interval = gameConfigState.DailyArenaInterval;
-                                var currentTicketResetCount = ArenaHelper.GetCurrentTicketResetCount(
-                                    ev.BlockIndex, roundData.StartBlockIndex, interval);
-                                if (arenaInformation.TicketResetCount < currentTicketResetCount)
-                                {
-                                    arenaInformation.ResetTicket(currentTicketResetCount);
-                                }
-
-                                int ticketCount = 0;
-                                decimal burntNCG = 0.00m;
-                                if (arenaInformation.Ticket > 0)
-                                {
-                                    ticketCount += battleArena.ticket;
-                                }
-                                else
-                                {
-                                    var goldCurrency = previousStates.GetGoldCurrency();
-                                    for (var i = 0; i < battleArena.ticket; i++)
-                                    {
-                                        burntNCG += Convert.ToDecimal(ArenaHelper.GetTicketPrice(
-                                            roundData,
-                                            arenaInformation,
-                                            goldCurrency).GetQuantityString());
-                                    }
-                                }
+                                Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
+                                var prevNCGBalance = previousStates.GetBalance(
+                                    ev.Signer,
+                                    ncgCurrency);
+                                var outputNCGBalance = ev.OutputStates.GetBalance(
+                                    ev.Signer,
+                                    ncgCurrency);
+                                var burntNCG = prevNCGBalance - outputNCGBalance;
+                                int ticketCount = battleArena.ticket;
 
                                 _battleArenaAgentList.Add(new AgentModel()
                                 {
@@ -1490,7 +1459,7 @@ namespace NineChronicles.DataProvider
                                     ChampionshipId = battleArena.championshipId,
                                     Round = battleArena.round,
                                     TicketCount = ticketCount,
-                                    BurntNCG = burntNCG,
+                                    BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
                                     Victory = outputArenaScore.Score > previousArenaScore.Score,
                                     TimeStamp = DateTimeOffset.Now,
                                 });
