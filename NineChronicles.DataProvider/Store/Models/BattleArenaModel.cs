@@ -22,6 +22,14 @@
 
         public string? EnemyAvatarAddress { get; set; }
 
+        public int ChampionshipId { get; set; }
+
+        public int Round { get; set; }
+
+        public int TicketCount { get; set; }
+
+        public decimal BurntNCG { get; set; }
+
         public bool Victory { get; set; }
 
         public DateTimeOffset TimeStamp { get; set; }
