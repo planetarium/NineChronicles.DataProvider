@@ -13,6 +13,7 @@ namespace NineChronicles.DataProvider
     using Microsoft.Extensions.Hosting;
     using Nekoyume;
     using Nekoyume.Action;
+    using Nekoyume.Arena;
     using Nekoyume.Battle;
     using Nekoyume.Extensions;
     using Nekoyume.Helper;
@@ -1401,6 +1402,97 @@ namespace NineChronicles.DataProvider
                                 Log.Debug("Stored JoinArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
+                            if (ev.Action is BattleArena1 battleArena1)
+                            {
+                                _renderCount++;
+                                Log.Debug($"Render Count: #{_renderCount}");
+                                var start = DateTimeOffset.Now;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(battleArena1.myAvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+                                var arenaInformationAdr =
+                                    ArenaInformation.DeriveAddress(battleArena1.myAvatarAddress, battleArena1.championshipId, battleArena1.round);
+                                var arenaScoreAdr =
+                                    ArenaScore.DeriveAddress(battleArena1.myAvatarAddress, battleArena1.championshipId, battleArena1.round);
+                                Console.WriteLine(arenaScoreAdr);
+                                previousStates.TryGetArenaScore(arenaInformationAdr, out var previousArenaScore);
+                                ev.OutputStates.TryGetArenaScore(arenaInformationAdr, out var outputArenaScore);
+                                Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
+                                var prevNCGBalance = previousStates.GetBalance(
+                                    ev.Signer,
+                                    ncgCurrency);
+                                var outputNCGBalance = ev.OutputStates.GetBalance(
+                                    ev.Signer,
+                                    ncgCurrency);
+                                var burntNCG = prevNCGBalance - outputNCGBalance;
+                                int ticketCount = battleArena1.ticket;
+                                var sheets = previousStates.GetSheets(
+                                    containArenaSimulatorSheets: true,
+                                    sheetTypes: new[] { typeof(ArenaSheet), typeof(ItemRequirementSheet), typeof(EquipmentItemRecipeSheet), typeof(EquipmentItemSubRecipeSheetV2), typeof(EquipmentItemOptionSheet), typeof(MaterialItemSheet), }
+                                );
+                                var materialSheet = sheets.GetSheet<MaterialItemSheet>();
+                                var medal = ArenaHelper.GetMedal(battleArena1.championshipId, battleArena1.round, materialSheet);
+                                Console.WriteLine(medal);
+                                var arenaSheet = ev.OutputStates.GetSheet<ArenaSheet>();
+                                var arenaData = arenaSheet.GetRoundByBlockIndex(ev.BlockIndex);
+                                Console.WriteLine(arenaData.ChampionshipId.ToString(), arenaData.Round.ToString());
+                                previousStates.TryGetArenaInformation(arenaInformationAdr, out var arenaInformation1);
+                                ev.OutputStates.TryGetArenaInformation(arenaInformationAdr, out var arenaInformation2);
+                                List<Material> enumA = new List<Material>();
+                                List<Material> enumB = new List<Material>();
+                                enumA = previousStates.GetAvatarStateV2(battleArena1.myAvatarAddress).inventory
+                                    .Materials.ToList();
+                                enumB = ev.OutputStates.GetAvatarStateV2(battleArena1.myAvatarAddress).inventory
+                                    .Materials.ToList();
+                                var hashSet = new HashSet<Material>(enumA);
+                                hashSet.SymmetricExceptWith(enumB);
+                                Console.WriteLine(hashSet.Count == 0);
+
+                                _battleArenaAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _battleArenaAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = battleArena1.myAvatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _battleArenaList.Add(new BattleArenaModel()
+                                {
+                                    Id = battleArena1.Id.ToString(),
+                                    BlockIndex = ev.BlockIndex,
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = battleArena1.myAvatarAddress.ToString(),
+                                    AvatarLevel = avatarLevel,
+                                    EnemyAvatarAddress = battleArena1.enemyAvatarAddress.ToString(),
+                                    ChampionshipId = battleArena1.championshipId,
+                                    Round = battleArena1.round,
+                                    TicketCount = ticketCount,
+                                    BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
+                                    Victory = outputArenaScore.Score > previousArenaScore.Score,
+                                    TimeStamp = DateTimeOffset.Now,
+                                });
+
+                                var end = DateTimeOffset.Now;
+                                Log.Debug("Stored BattleArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
                             if (ev.Action is BattleArena battleArena)
                             {
                                 _renderCount++;
@@ -1433,6 +1525,13 @@ namespace NineChronicles.DataProvider
                                     ncgCurrency);
                                 var burntNCG = prevNCGBalance - outputNCGBalance;
                                 int ticketCount = battleArena.ticket;
+                                var sheets = previousStates.GetSheets(
+                                    containArenaSimulatorSheets: true,
+                                    sheetTypes: new[] { typeof(ArenaSheet), typeof(ItemRequirementSheet), typeof(EquipmentItemRecipeSheet), typeof(EquipmentItemSubRecipeSheetV2), typeof(EquipmentItemOptionSheet), typeof(MaterialItemSheet), }
+                                );
+                                var materialSheet = sheets.GetSheet<MaterialItemSheet>();
+                                var medal = ArenaHelper.GetMedal(battleArena.championshipId, battleArena.round, materialSheet);
+                                Console.WriteLine(medal);
 
                                 _battleArenaAgentList.Add(new AgentModel()
                                 {
