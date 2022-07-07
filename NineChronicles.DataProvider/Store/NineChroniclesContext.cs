@@ -73,5 +73,7 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<ShopCostumeModel>? ShopCostumes { get; set; }
 
         public DbSet<ShopMaterialModel>? ShopMaterials { get; set; }
+
+        public DbSet<BattleArenaRankingModel>? BattleArenaRanking { get; set; }
     }
 }

@@ -272,6 +272,14 @@ namespace NineChronicles.DataProvider.Store
             return agents.ToList();
         }
 
+        public int GetAgentCount()
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<AgentModel> agents = ctx.Agents!;
+            var agentCount = agents.Count();
+            return agentCount;
+        }
+
         public IEnumerable<AvatarModel> GetAvatars(Address? avatarAddress = null)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
@@ -284,6 +292,14 @@ namespace NineChronicles.DataProvider.Store
             }
 
             return avatars.ToList();
+        }
+
+        public int GetAvatarCount()
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<AvatarModel> avatars = ctx.Avatars!;
+            var avatarCount = avatars.Count();
+            return avatarCount;
         }
 
         public IEnumerable<ShopEquipmentModel> GetShopEquipments(Address? sellerAvatarAddress = null)
@@ -300,6 +316,14 @@ namespace NineChronicles.DataProvider.Store
             return shopEquipments.ToList();
         }
 
+        public int GetShopEquipmentCount()
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<ShopEquipmentModel> shopEquipments = ctx.ShopEquipments!;
+            var shopEquipmentCount = shopEquipments.Count();
+            return shopEquipmentCount;
+        }
+
         public IEnumerable<ShopConsumableModel> GetShopConsumables(Address? sellerAvatarAddress = null)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
@@ -312,6 +336,14 @@ namespace NineChronicles.DataProvider.Store
             }
 
             return shopConsumables.ToList();
+        }
+
+        public int GetShopConsumableCount()
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<ShopConsumableModel> shopConsumables = ctx.ShopConsumables!;
+            var shopConsumableCount = shopConsumables.Count();
+            return shopConsumableCount;
         }
 
         public IEnumerable<ShopCostumeModel> GetShopCostumes(Address? sellerAvatarAddress = null)
@@ -328,6 +360,14 @@ namespace NineChronicles.DataProvider.Store
             return shopCostumes.ToList();
         }
 
+        public int GetShopCostumeCount()
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<ShopCostumeModel> shopCostumes = ctx.ShopCostumes!;
+            var shopCostumeCount = shopCostumes.Count();
+            return shopCostumeCount;
+        }
+
         public IEnumerable<ShopMaterialModel> GetShopMaterials(Address? sellerAvatarAddress = null)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
@@ -340,6 +380,14 @@ namespace NineChronicles.DataProvider.Store
             }
 
             return shopMaterials.ToList();
+        }
+
+        public int GetShopMaterialCount()
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<ShopMaterialModel> shopMaterials = ctx.ShopMaterials!;
+            var shopMaterialCount = shopMaterials.Count();
+            return shopMaterialCount;
         }
 
         public IEnumerable<HackAndSlashModel> GetHackAndSlash(
@@ -1349,6 +1397,55 @@ namespace NineChronicles.DataProvider.Store
                             "(SELECT `a`.`Cp` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Cp`, " +
                             "row_number() over(ORDER BY `CraftCount` DESC, `h`.`BlockIndex`) `Ranking` " +
                             "FROM `CraftRankings` AS `h` ");
+
+            if (avatarAddress is { } avatarAddressNotNull)
+            {
+                query = query.Where(s => s.AvatarAddress == avatarAddressNotNull.ToString());
+            }
+
+            if (limit is { } limitNotNull)
+            {
+                query = query.Take(limitNotNull);
+            }
+
+            return query.ToList();
+        }
+
+        public IEnumerable<BattleArenaRankingModel> GetBattleArenaRanking(
+            int championshipId,
+            int round,
+            string rankingType = "Score",
+            int? limit = null,
+            Address? avatarAddress = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<BattleArenaRankingModel>? query = null;
+            if (rankingType == "Medal")
+            {
+                query = ctx.Set<BattleArenaRankingModel>()
+                    .FromSqlRaw($@"SELECT `h`.`AvatarAddress`, `AgentAddress`, `AvatarLevel`, `BlockIndex`, `ChampionshipId`, 
+                        `Round`, `ArenaType`, `Score`, `WinCount`, `MedalCount`, `LossCount`, `Ticket`, `PurchasedTicketCount`, 
+                        `TicketResetCount`, `EntranceFee`, `TicketPrice`, `AdditionalTicketPrice`, `RequiredMedalCount`, 
+                        `StartBlockIndex`, `EndBlockIndex`, `Timestamp`, 
+                        (SELECT `a`.`Name` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Name`, 
+                        (SELECT `a`.`TitleId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `TitleId`, 
+                        (SELECT `a`.`ArmorId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `ArmorId`, 
+                        (SELECT `a`.`Cp` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Cp`, 
+                        row_number() over(ORDER BY `MedalCount` DESC) `Ranking` FROM `BattleArenaRanking_{championshipId}_{round}` AS `h` ");
+            }
+            else
+            {
+                query = ctx.Set<BattleArenaRankingModel>()
+                    .FromSqlRaw($@"SELECT `h`.`AvatarAddress`, `AgentAddress`, `AvatarLevel`, `BlockIndex`, `ChampionshipId`, 
+                        `Round`, `ArenaType`, `Score`, `WinCount`, `MedalCount`, `LossCount`, `Ticket`, `PurchasedTicketCount`, 
+                        `TicketResetCount`, `EntranceFee`, `TicketPrice`, `AdditionalTicketPrice`, `RequiredMedalCount`, 
+                        `StartBlockIndex`, `EndBlockIndex`, `Timestamp`, 
+                        (SELECT `a`.`Name` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Name`, 
+                        (SELECT `a`.`TitleId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `TitleId`, 
+                        (SELECT `a`.`ArmorId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `ArmorId`, 
+                        (SELECT `a`.`Cp` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Cp`, 
+                        row_number() over(ORDER BY `Score` DESC) `Ranking` FROM `BattleArenaRanking_{championshipId}_{round}` AS `h` ");
+            }
 
             if (avatarAddress is { } avatarAddressNotNull)
             {
