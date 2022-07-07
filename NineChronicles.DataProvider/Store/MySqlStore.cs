@@ -258,6 +258,90 @@ namespace NineChronicles.DataProvider.Store
             ctx.SaveChanges();
         }
 
+        public IEnumerable<AgentModel> GetAgents(Address? agentAddress = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IEnumerable<AgentModel> agents = ctx.Agents!;
+
+            if (agentAddress is { } agentAddressNotNull)
+            {
+                agents = agents
+                    .Where(agent => agent.Address == agentAddressNotNull.ToString());
+            }
+
+            return agents.ToList();
+        }
+
+        public IEnumerable<AvatarModel> GetAvatars(Address? avatarAddress = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IEnumerable<AvatarModel> avatars = ctx.Avatars!;
+
+            if (avatarAddress is { } avatarAddressNotNull)
+            {
+                avatars = avatars
+                    .Where(avatar => avatar.Address == avatarAddressNotNull.ToString());
+            }
+
+            return avatars.ToList();
+        }
+
+        public IEnumerable<ShopEquipmentModel> GetShopEquipments(Address? sellerAvatarAddress = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IEnumerable<ShopEquipmentModel> shopEquipments = ctx.ShopEquipments!;
+
+            if (sellerAvatarAddress is { } sellerAvatarAddressNotNull)
+            {
+                shopEquipments = shopEquipments
+                    .Where(shopEquipment => shopEquipment.SellerAvatarAddress == sellerAvatarAddressNotNull.ToString());
+            }
+
+            return shopEquipments.ToList();
+        }
+
+        public IEnumerable<ShopConsumableModel> GetShopConsumables(Address? sellerAvatarAddress = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IEnumerable<ShopConsumableModel> shopConsumables = ctx.ShopConsumables!;
+
+            if (sellerAvatarAddress is { } sellerAvatarAddressNotNull)
+            {
+                shopConsumables = shopConsumables
+                    .Where(shopConsumable => shopConsumable.SellerAvatarAddress == sellerAvatarAddressNotNull.ToString());
+            }
+
+            return shopConsumables.ToList();
+        }
+
+        public IEnumerable<ShopCostumeModel> GetShopCostumes(Address? sellerAvatarAddress = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IEnumerable<ShopCostumeModel> shopCostumes = ctx.ShopCostumes!;
+
+            if (sellerAvatarAddress is { } sellerAvatarAddressNotNull)
+            {
+                shopCostumes = shopCostumes
+                    .Where(shopCostume => shopCostume.SellerAvatarAddress == sellerAvatarAddressNotNull.ToString());
+            }
+
+            return shopCostumes.ToList();
+        }
+
+        public IEnumerable<ShopMaterialModel> GetShopMaterials(Address? sellerAvatarAddress = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IEnumerable<ShopMaterialModel> shopMaterials = ctx.ShopMaterials!;
+
+            if (sellerAvatarAddress is { } sellerAvatarAddressNotNull)
+            {
+                shopMaterials = shopMaterials
+                    .Where(shopMaterial => shopMaterial.SellerAvatarAddress == sellerAvatarAddressNotNull.ToString());
+            }
+
+            return shopMaterials.ToList();
+        }
+
         public IEnumerable<HackAndSlashModel> GetHackAndSlash(
             Address? agentAddress = null,
             int? limit = null)

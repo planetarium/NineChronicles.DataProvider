@@ -65,5 +65,13 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<JoinArenaModel>? JoinArenas { get; set; }
 
         public DbSet<BattleArenaModel>? BattleArenas { get; set; }
+
+        public DbSet<ShopEquipmentModel>? ShopEquipments { get; set; }
+
+        public DbSet<ShopConsumableModel>? ShopConsumables { get; set; }
+
+        public DbSet<ShopCostumeModel>? ShopCostumes { get; set; }
+
+        public DbSet<ShopMaterialModel>? ShopMaterials { get; set; }
     }
 }
