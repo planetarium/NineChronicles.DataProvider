@@ -1,5 +1,6 @@
 ﻿namespace NineChronicles.DataProvider.GraphQL.Types
 {
+    using System.Linq;
     using global::GraphQL;
     using global::GraphQL.Types;
     using Libplanet;
@@ -13,6 +14,126 @@
             Field<StringGraphType>(
                 name: "test",
                 resolve: context => "Should be done.");
+            Field<IntGraphType>(
+                name: "AgentCount",
+                resolve: context =>
+                {
+                    var agentCount = Store.GetAgents().Count();
+                    return agentCount;
+                });
+            Field<ListGraphType<AgentType>>(
+                name: "Agents",
+                arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType> { Name = "agentAddress" }
+                ),
+                resolve: context =>
+                {
+                    string? address = context.GetArgument<string?>("agentAddress", null);
+                    Address? agentAddress = address == null
+                        ? (Address?)null
+                        : new Address(address.Replace("0x", string.Empty));
+                    return Store.GetAgents(agentAddress);
+                });
+            Field<IntGraphType>(
+                name: "AvatarCount",
+                resolve: context =>
+                {
+                    var avatarCount = Store.GetAvatars().Count();
+                    return avatarCount;
+                });
+            Field<ListGraphType<AvatarType>>(
+                name: "Avatars",
+                arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType> { Name = "avatarAddress" }
+                ),
+                resolve: context =>
+                {
+                    string? address = context.GetArgument<string?>("avatarAddress", null);
+                    Address? avatarAddress = address == null
+                        ? (Address?)null
+                        : new Address(address.Replace("0x", string.Empty));
+                    return Store.GetAvatars(avatarAddress);
+                });
+            Field<IntGraphType>(
+                name: "ShopEquipmentCount",
+                resolve: context =>
+                {
+                    var shopEquipmentCount = Store.GetShopEquipments().Count();
+                    return shopEquipmentCount;
+                });
+            Field<ListGraphType<ShopEquipmentType>>(
+                name: "ShopEquipments",
+                arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType> { Name = "sellerAvatarAddress" }
+                ),
+                resolve: context =>
+                {
+                    string? address = context.GetArgument<string?>("sellerAvatarAddress", null);
+                    Address? sellerAvatarAddress = address == null
+                        ? (Address?)null
+                        : new Address(address.Replace("0x", string.Empty));
+                    return Store.GetShopEquipments(sellerAvatarAddress);
+                });
+            Field<IntGraphType>(
+                name: "ShopConsumableCount",
+                resolve: context =>
+                {
+                    var shopConsumableCount = Store.GetShopConsumables().Count();
+                    return shopConsumableCount;
+                });
+            Field<ListGraphType<AvatarType>>(
+                name: "ShopConsumables",
+                arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType> { Name = "sellerAvatarAddress" }
+                ),
+                resolve: context =>
+                {
+                    string? address = context.GetArgument<string?>("sellerAvatarAddress", null);
+                    Address? sellerAvatarAddress = address == null
+                        ? (Address?)null
+                        : new Address(address.Replace("0x", string.Empty));
+                    return Store.GetShopConsumables(sellerAvatarAddress);
+                });
+            Field<IntGraphType>(
+                name: "ShopCostumeCount",
+                resolve: context =>
+                {
+                    var shopCostumeCount = Store.GetShopCostumes().Count();
+                    return shopCostumeCount;
+                });
+            Field<ListGraphType<AvatarType>>(
+                name: "ShopCostumes",
+                arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType> { Name = "sellerAvatarAddress" }
+                ),
+                resolve: context =>
+                {
+                    string? address = context.GetArgument<string?>("sellerAvatarAddress", null);
+                    Address? sellerAvatarAddress = address == null
+                        ? (Address?)null
+                        : new Address(address.Replace("0x", string.Empty));
+                    return Store.GetShopCostumes(sellerAvatarAddress);
+                });
+            Field<IntGraphType>(
+                name: "ShopMaterialCount",
+                resolve: context =>
+                {
+                    var shopMaterialCount = Store.GetShopMaterials().Count();
+                    return shopMaterialCount;
+                });
+            Field<ListGraphType<AvatarType>>(
+                name: "ShopMaterials",
+                arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType> { Name = "sellerAvatarAddress" }
+                ),
+                resolve: context =>
+                {
+                    string? address = context.GetArgument<string?>("sellerAvatarAddress", null);
+                    Address? sellerAvatarAddress = address == null
+                        ? (Address?)null
+                        : new Address(address.Replace("0x", string.Empty));
+                    return Store.GetShopMaterials(sellerAvatarAddress);
+                });
             Field<ListGraphType<HackAndSlashType>>(
                 name: "HackAndSlash",
                 arguments: new QueryArguments(

@@ -41,5 +41,37 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<ShopHistoryMaterialModel>? ShopHistoryMaterials { get; set; }
 
         public DbSet<ShopHistoryConsumableModel>? ShopHistoryConsumables { get; set; }
+
+        public DbSet<StakeModel>? Stakings { get; set; }
+
+        public DbSet<ClaimStakeRewardModel>? ClaimStakeRewards { get; set; }
+
+        public DbSet<MigrateMonsterCollectionModel>? MigrateMonsterCollections { get; set; }
+
+        public DbSet<GrindingModel>? Grindings { get; set; }
+
+        public DbSet<ItemEnhancementFailModel>? ItemEnhancementFails { get; set; }
+
+        public DbSet<UnlockEquipmentRecipeModel>? UnlockEquipmentRecipes { get; set; }
+
+        public DbSet<UnlockWorldModel>? UnlockWorlds { get; set; }
+
+        public DbSet<ReplaceCombinationEquipmentMaterialModel>? ReplaceCombinationEquipmentMaterials { get; set; }
+
+        public DbSet<HasRandomBuffModel>? HasRandomBuffs { get; set; }
+
+        public DbSet<HasWithRandomBuffModel>? HasWithRandomBuffs { get; set; }
+
+        public DbSet<JoinArenaModel>? JoinArenas { get; set; }
+
+        public DbSet<BattleArenaModel>? BattleArenas { get; set; }
+
+        public DbSet<ShopEquipmentModel>? ShopEquipments { get; set; }
+
+        public DbSet<ShopConsumableModel>? ShopConsumables { get; set; }
+
+        public DbSet<ShopCostumeModel>? ShopCostumes { get; set; }
+
+        public DbSet<ShopMaterialModel>? ShopMaterials { get; set; }
     }
 }
