@@ -6,6 +6,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using System.Linq;
     using Bencodex.Types;
     using Cocona;
+    using Lib9c.Model.Order;
     using Libplanet;
     using Libplanet.Assets;
     using Libplanet.Blockchain;
@@ -14,6 +15,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using Libplanet.RocksDBStore;
     using Libplanet.Store;
     using MySqlConnector;
+    using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Battle;
     using Nekoyume.BlockChain.Policy;
@@ -40,6 +42,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private const string UNCGDbName = "UserNCGs";
         private const string UCYDbName = "UserCrystals";
         private const string EDbName = "Equipments";
+        private const string SCDbName = "ShopConsumables";
+        private const string SEDbName = "ShopEquipments";
+        private const string SCTDbName = "ShopCostumes";
+        private const string SMDbName = "ShopMaterials";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
@@ -56,6 +62,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private StreamWriter _uncgBulkFile;
         private StreamWriter _ucyBulkFile;
         private StreamWriter _eBulkFile;
+        private StreamWriter _scBulkFile;
+        private StreamWriter _seBulkFile;
+        private StreamWriter _sctBulkFile;
+        private StreamWriter _smBulkFile;
         private StreamWriter _agentBulkFile;
         private StreamWriter _avatarBulkFile;
         private List<string> _agentList;
@@ -73,6 +83,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private List<string> _uncgFiles;
         private List<string> _ucyFiles;
         private List<string> _eFiles;
+        private List<string> _scFiles;
+        private List<string> _seFiles;
+        private List<string> _sctFiles;
+        private List<string> _smFiles;
         private List<string> _agentFiles;
         private List<string> _avatarFiles;
 
@@ -202,6 +216,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _uncgFiles = new List<string>();
             _ucyFiles = new List<string>();
             _eFiles = new List<string>();
+            _scFiles = new List<string>();
+            _seFiles = new List<string>();
+            _sctFiles = new List<string>();
+            _smFiles = new List<string>();
             _agentFiles = new List<string>();
             _avatarFiles = new List<string>();
 
@@ -228,6 +246,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             }
 
             connection.Close();
+            int shopOrderCount = 0;
 
             try
             {
@@ -256,6 +275,140 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         catch (Exception ex)
                         {
                             avatarState = ev.OutputStates.GetAvatarState(avatarAddress);
+                        }
+
+                        Address orderReceiptAddress = OrderDigestListState.DeriveAddress(avatarAddress);
+                        var orderReceiptList = ev.OutputStates.TryGetState(orderReceiptAddress, out Dictionary receiptDict)
+                            ? new OrderDigestListState(receiptDict)
+                            : new OrderDigestListState(orderReceiptAddress);
+                        foreach (var orderReceipt in orderReceiptList.OrderDigestList)
+                        {
+                            if (orderReceipt.ExpiredBlockIndex >= tip.Index)
+                            {
+                                var state = ev.OutputStates.GetState(
+                                    Addresses.GetItemAddress(orderReceipt.TradableId));
+                                ITradableItem orderItem =
+                                    (ITradableItem)ItemFactory.Deserialize((Dictionary)state);
+                                if (orderItem.ItemType == ItemType.Equipment)
+                                {
+                                    var equipment = (Equipment)orderItem;
+                                    Console.WriteLine(equipment.ItemId);
+                                    _seBulkFile.WriteLine(
+                                        $"{tip.Index};" +
+                                        $"{equipment.ItemId.ToString()};" +
+                                        $"{orderReceipt.SellerAgentAddress.ToString()};" +
+                                        $"{avatarAddress.ToString()};" +
+                                        $"{equipment.ItemType.ToString()};" +
+                                        $"{equipment.ItemSubType.ToString()};" +
+                                        $"{equipment.Id};" +
+                                        $"{equipment.BuffSkills.Count};" +
+                                        $"{equipment.ElementalType.ToString()};" +
+                                        $"{equipment.Grade};" +
+                                        $"{equipment.level};" +
+                                        $"{equipment.SetId};" +
+                                        $"{equipment.Skills.Count};" +
+                                        $"{equipment.SpineResourcePath};" +
+                                        $"{equipment.RequiredBlockIndex};" +
+                                        $"{equipment.NonFungibleId.ToString()};" +
+                                        $"{equipment.TradableId.ToString()};" +
+                                        $"{equipment.UniqueStatType.ToString()};" +
+                                        $"{Convert.ToDecimal(orderReceipt.Price.GetQuantityString())};" +
+                                        $"{orderReceipt.OrderId};" +
+                                        $"{orderReceipt.CombatPoint};" +
+                                        $"{orderReceipt.ItemCount};" +
+                                        $"{orderReceipt.StartedBlockIndex};" +
+                                        $"{orderReceipt.ExpiredBlockIndex}"
+                                    );
+                                    shopOrderCount += 1;
+                                }
+
+                                if (orderItem.ItemType == ItemType.Costume)
+                                {
+                                    var costume = (Costume)orderItem;
+                                    Console.WriteLine(costume.ItemId);
+                                    _sctBulkFile.WriteLine(
+                                        $"{tip.Index};" +
+                                        $"{costume.ItemId.ToString()};" +
+                                        $"{orderReceipt.SellerAgentAddress.ToString()};" +
+                                        $"{avatarAddress.ToString()};" +
+                                        $"{costume.ItemType.ToString()};" +
+                                        $"{costume.ItemSubType.ToString()};" +
+                                        $"{costume.Id};" +
+                                        $"{costume.ElementalType.ToString()};" +
+                                        $"{costume.Grade};" +
+                                        $"{costume.Equipped};" +
+                                        $"{costume.SpineResourcePath};" +
+                                        $"{costume.RequiredBlockIndex};" +
+                                        $"{costume.NonFungibleId.ToString()};" +
+                                        $"{costume.TradableId.ToString()};" +
+                                        $"{Convert.ToDecimal(orderReceipt.Price.GetQuantityString())};" +
+                                        $"{orderReceipt.OrderId};" +
+                                        $"{orderReceipt.CombatPoint};" +
+                                        $"{orderReceipt.ItemCount};" +
+                                        $"{orderReceipt.StartedBlockIndex};" +
+                                        $"{orderReceipt.ExpiredBlockIndex}"
+                                    );
+                                    shopOrderCount += 1;
+                                }
+
+                                if (orderItem.ItemType == ItemType.Material)
+                                {
+                                    var material = (Material)orderItem;
+                                    Console.WriteLine(material.ItemId);
+                                    _smBulkFile.WriteLine(
+                                        $"{tip.Index};" +
+                                        $"{material.ItemId.ToString()};" +
+                                        $"{orderReceipt.SellerAgentAddress.ToString()};" +
+                                        $"{avatarAddress.ToString()};" +
+                                        $"{material.ItemType.ToString()};" +
+                                        $"{material.ItemSubType.ToString()};" +
+                                        $"{material.Id};" +
+                                        $"{material.ElementalType.ToString()};" +
+                                        $"{material.Grade};" +
+                                        $"{orderReceipt.TradableId};" +
+                                        $"{Convert.ToDecimal(orderReceipt.Price.GetQuantityString())};" +
+                                        $"{orderReceipt.OrderId};" +
+                                        $"{orderReceipt.CombatPoint};" +
+                                        $"{orderReceipt.ItemCount};" +
+                                        $"{orderReceipt.StartedBlockIndex};" +
+                                        $"{orderReceipt.ExpiredBlockIndex}"
+                                    );
+                                    shopOrderCount += 1;
+                                }
+
+                                if (orderItem.ItemType == ItemType.Consumable)
+                                {
+                                    var consumable = (Consumable)orderItem;
+                                    Console.WriteLine(consumable.ItemId);
+                                    _scBulkFile.WriteLine(
+                                        $"{tip.Index};" +
+                                        $"{consumable.ItemId.ToString()};" +
+                                        $"{orderReceipt.SellerAgentAddress.ToString()};" +
+                                        $"{avatarAddress.ToString()};" +
+                                        $"{consumable.ItemType.ToString()};" +
+                                        $"{consumable.ItemSubType.ToString()};" +
+                                        $"{consumable.Id};" +
+                                        $"{consumable.BuffSkills.Count};" +
+                                        $"{consumable.ElementalType.ToString()};" +
+                                        $"{consumable.Grade};" +
+                                        $"{consumable.Skills.Count};" +
+                                        $"{consumable.RequiredBlockIndex};" +
+                                        $"{consumable.NonFungibleId.ToString()};" +
+                                        $"{consumable.TradableId.ToString()};" +
+                                        $"{consumable.MainStat.ToString()};" +
+                                        $"{Convert.ToDecimal(orderReceipt.Price.GetQuantityString())};" +
+                                        $"{orderReceipt.OrderId};" +
+                                        $"{orderReceipt.CombatPoint};" +
+                                        $"{orderReceipt.ItemCount};" +
+                                        $"{orderReceipt.StartedBlockIndex};" +
+                                        $"{orderReceipt.ExpiredBlockIndex}"
+                                    );
+                                    shopOrderCount += 1;
+                                }
+
+                                Console.WriteLine(orderReceipt.OrderId);
+                                Console.WriteLine(orderItem.ItemType);
+                            }
                         }
 
                         var userEquipments = avatarState.inventory.Equipments;
@@ -409,6 +562,26 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             BulkInsert(UCYDbName, path);
                         }
 
+                        foreach (var path in _scFiles)
+                        {
+                            BulkInsert(SCDbName, path);
+                        }
+
+                        foreach (var path in _seFiles)
+                        {
+                            BulkInsert(SEDbName, path);
+                        }
+
+                        foreach (var path in _sctFiles)
+                        {
+                            BulkInsert(SCTDbName, path);
+                        }
+
+                        foreach (var path in _smFiles)
+                        {
+                            BulkInsert(SMDbName, path);
+                        }
+
                         _agentFiles.RemoveAt(0);
                         _avatarFiles.RemoveAt(0);
                         _ueFiles.RemoveAt(0);
@@ -420,6 +593,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         _umcFiles.RemoveAt(0);
                         _uncgFiles.RemoveAt(0);
                         _ucyFiles.RemoveAt(0);
+                        _scFiles.RemoveAt(0);
+                        _seFiles.RemoveAt(0);
+                        _sctFiles.RemoveAt(0);
+                        _smFiles.RemoveAt(0);
                         CreateBulkFiles();
                         intervalCount = 0;
                     }
@@ -438,6 +615,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var stm13 = $"RENAME TABLE {UNCGDbName} TO {UNCGDbName}_Dump; CREATE TABLE {UNCGDbName} LIKE {UNCGDbName}_Dump;";
                 var stm14 = $"RENAME TABLE {UCYDbName} TO {UCYDbName}_Dump; CREATE TABLE {UCYDbName} LIKE {UCYDbName}_Dump;";
                 var stm15 = $"RENAME TABLE {UMCDbName} TO {UMCDbName}_Dump; CREATE TABLE {UMCDbName} LIKE {UMCDbName}_Dump;";
+                var stm16 = $"RENAME TABLE {SCDbName} TO {SCDbName}_Dump; CREATE TABLE {SCDbName} LIKE {SCDbName}_Dump;";
+                var stm17 = $"RENAME TABLE {SEDbName} TO {SEDbName}_Dump; CREATE TABLE {SEDbName} LIKE {SEDbName}_Dump;";
+                var stm19 = $"RENAME TABLE {SCTDbName} TO {SCTDbName}_Dump; CREATE TABLE {SCTDbName} LIKE {SCTDbName}_Dump;";
+                var stm20 = $"RENAME TABLE {SMDbName} TO {SMDbName}_Dump; CREATE TABLE {SMDbName} LIKE {SMDbName}_Dump;";
                 var cmd2 = new MySqlCommand(stm2, connection);
                 var cmd3 = new MySqlCommand(stm3, connection);
                 var cmd4 = new MySqlCommand(stm4, connection);
@@ -447,6 +628,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var cmd13 = new MySqlCommand(stm13, connection);
                 var cmd14 = new MySqlCommand(stm14, connection);
                 var cmd15 = new MySqlCommand(stm15, connection);
+                var cmd16 = new MySqlCommand(stm16, connection);
+                var cmd17 = new MySqlCommand(stm17, connection);
+                var cmd19 = new MySqlCommand(stm19, connection);
+                var cmd20 = new MySqlCommand(stm20, connection);
 
                 foreach (var path in _agentFiles)
                 {
@@ -566,6 +751,54 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 {
                     BulkInsert(UMCDbName, path);
                 }
+
+                startMove = DateTimeOffset.Now;
+                connection.Open();
+                cmd16.CommandTimeout = 300;
+                cmd16.ExecuteScalar();
+                connection.Close();
+                endMove = DateTimeOffset.Now;
+                Console.WriteLine("Move ShopConsumables Complete! Time Elapsed: {0}", endMove - startMove);
+                foreach (var path in _scFiles)
+                {
+                    BulkInsert(SCDbName, path);
+                }
+
+                startMove = DateTimeOffset.Now;
+                connection.Open();
+                cmd17.CommandTimeout = 300;
+                cmd17.ExecuteScalar();
+                connection.Close();
+                endMove = DateTimeOffset.Now;
+                Console.WriteLine("Move ShopEquipments Complete! Time Elapsed: {0}", endMove - startMove);
+                foreach (var path in _seFiles)
+                {
+                    BulkInsert(SEDbName, path);
+                }
+
+                startMove = DateTimeOffset.Now;
+                connection.Open();
+                cmd19.CommandTimeout = 300;
+                cmd19.ExecuteScalar();
+                connection.Close();
+                endMove = DateTimeOffset.Now;
+                Console.WriteLine("Move ShopCostumes Complete! Time Elapsed: {0}", endMove - startMove);
+                foreach (var path in _sctFiles)
+                {
+                    BulkInsert(SCTDbName, path);
+                }
+
+                startMove = DateTimeOffset.Now;
+                connection.Open();
+                cmd20.CommandTimeout = 300;
+                cmd20.ExecuteScalar();
+                connection.Close();
+                endMove = DateTimeOffset.Now;
+                Console.WriteLine("Move ShopMaterials Complete! Time Elapsed: {0}", endMove - startMove);
+                foreach (var path in _smFiles)
+                {
+                    BulkInsert(SMDbName, path);
+                }
             }
             catch (Exception e)
             {
@@ -580,6 +813,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var stm19 = $"DROP TABLE {UNCGDbName}; RENAME TABLE {UNCGDbName}_Dump TO {UNCGDbName};";
                 var stm20 = $"DROP TABLE {UCYDbName}; RENAME TABLE {UCYDbName}_Dump TO {UCYDbName};";
                 var stm23 = $"DROP TABLE {UMCDbName}; RENAME TABLE {UMCDbName}_Dump TO {UMCDbName};";
+                var stm25 = $"DROP TABLE {SCDbName}; RENAME TABLE {SCDbName}_Dump TO {SCDbName};";
+                var stm26 = $"DROP TABLE {SEDbName}; RENAME TABLE {SEDbName}_Dump TO {SEDbName};";
+                var stm27 = $"DROP TABLE {SCTDbName}; RENAME TABLE {SCTDbName}_Dump TO {SCTDbName};";
+                var stm28 = $"DROP TABLE {SMDbName}; RENAME TABLE {SMDbName}_Dump TO {SMDbName};";
                 var cmd12 = new MySqlCommand(stm12, connection);
                 var cmd13 = new MySqlCommand(stm13, connection);
                 var cmd14 = new MySqlCommand(stm14, connection);
@@ -589,6 +826,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var cmd19 = new MySqlCommand(stm19, connection);
                 var cmd20 = new MySqlCommand(stm20, connection);
                 var cmd23 = new MySqlCommand(stm23, connection);
+                var cmd25 = new MySqlCommand(stm25, connection);
+                var cmd26 = new MySqlCommand(stm26, connection);
+                var cmd27 = new MySqlCommand(stm27, connection);
+                var cmd28 = new MySqlCommand(stm28, connection);
                 var startRestore = DateTimeOffset.Now;
                 connection.Open();
                 cmd12.CommandTimeout = 300;
@@ -652,6 +893,34 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 connection.Close();
                 endRestore = DateTimeOffset.Now;
                 Console.WriteLine("Restore UserMonsterCollections Complete! Time Elapsed: {0}", endRestore - startRestore);
+                startRestore = DateTimeOffset.Now;
+                connection.Open();
+                cmd25.CommandTimeout = 300;
+                cmd25.ExecuteScalar();
+                connection.Close();
+                endRestore = DateTimeOffset.Now;
+                Console.WriteLine("Restore ShopConsumables Complete! Time Elapsed: {0}", endRestore - startRestore);
+                startRestore = DateTimeOffset.Now;
+                connection.Open();
+                cmd26.CommandTimeout = 300;
+                cmd26.ExecuteScalar();
+                connection.Close();
+                endRestore = DateTimeOffset.Now;
+                Console.WriteLine("Restore ShopEquipments Complete! Time Elapsed: {0}", endRestore - startRestore);
+                startRestore = DateTimeOffset.Now;
+                connection.Open();
+                cmd27.CommandTimeout = 300;
+                cmd27.ExecuteScalar();
+                connection.Close();
+                endRestore = DateTimeOffset.Now;
+                Console.WriteLine("Restore ShopCostumes Complete! Time Elapsed: {0}", endRestore - startRestore);
+                startRestore = DateTimeOffset.Now;
+                connection.Open();
+                cmd28.CommandTimeout = 300;
+                cmd28.ExecuteScalar();
+                connection.Close();
+                endRestore = DateTimeOffset.Now;
+                Console.WriteLine("Restore ShopMaterials Complete! Time Elapsed: {0}", endRestore - startRestore);
             }
 
             var stm7 = $"DROP TABLE {UEDbName}_Dump;";
@@ -663,6 +932,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             var stm21 = $"DROP TABLE {UNCGDbName}_Dump;";
             var stm22 = $"DROP TABLE {UCYDbName}_Dump;";
             var stm24 = $"DROP TABLE {UMCDbName}_Dump;";
+            var stm29 = $"DROP TABLE {SCDbName}_Dump;";
+            var stm30 = $"DROP TABLE {SEDbName}_Dump;";
+            var stm31 = $"DROP TABLE {SCTDbName}_Dump;";
+            var stm32 = $"DROP TABLE {SMDbName}_Dump;";
             var cmd7 = new MySqlCommand(stm7, connection);
             var cmd8 = new MySqlCommand(stm8, connection);
             var cmd9 = new MySqlCommand(stm9, connection);
@@ -672,6 +945,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             var cmd21 = new MySqlCommand(stm21, connection);
             var cmd22 = new MySqlCommand(stm22, connection);
             var cmd24 = new MySqlCommand(stm24, connection);
+            var cmd29 = new MySqlCommand(stm29, connection);
+            var cmd30 = new MySqlCommand(stm30, connection);
+            var cmd31 = new MySqlCommand(stm31, connection);
+            var cmd32 = new MySqlCommand(stm32, connection);
             var startDelete = DateTimeOffset.Now;
             connection.Open();
             cmd7.CommandTimeout = 300;
@@ -735,9 +1012,38 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             connection.Close();
             endDelete = DateTimeOffset.Now;
             Console.WriteLine("Delete UserMonsterCollections_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd29.CommandTimeout = 300;
+            cmd29.ExecuteScalar();
+            connection.Close();
+            endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Delete ShopConsumables_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd30.CommandTimeout = 300;
+            cmd30.ExecuteScalar();
+            connection.Close();
+            endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Delete ShopEquipments_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd31.CommandTimeout = 300;
+            cmd31.ExecuteScalar();
+            connection.Close();
+            endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Delete ShopCostumes_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd32.CommandTimeout = 300;
+            cmd32.ExecuteScalar();
+            connection.Close();
+            endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Delete ShopMaterials_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
+            Console.WriteLine("Shop Count for {0} avatars: {1}", avatars.Count, shopOrderCount);
         }
 
         private void FlushBulkFiles()
@@ -786,6 +1092,18 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             _ucyBulkFile.Flush();
             _ucyBulkFile.Close();
+
+            _scBulkFile.Flush();
+            _scBulkFile.Close();
+
+            _seBulkFile.Flush();
+            _seBulkFile.Close();
+
+            _sctBulkFile.Flush();
+            _sctBulkFile.Close();
+
+            _smBulkFile.Flush();
+            _smBulkFile.Close();
         }
 
         private void CreateBulkFiles()
@@ -835,6 +1153,18 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             string ucyFilePath = Path.GetTempFileName();
             _ucyBulkFile = new StreamWriter(ucyFilePath);
 
+            string scFilePath = Path.GetTempFileName();
+            _scBulkFile = new StreamWriter(scFilePath);
+
+            string seFilePath = Path.GetTempFileName();
+            _seBulkFile = new StreamWriter(seFilePath);
+
+            string sctFilePath = Path.GetTempFileName();
+            _sctBulkFile = new StreamWriter(sctFilePath);
+
+            string smFilePath = Path.GetTempFileName();
+            _smBulkFile = new StreamWriter(smFilePath);
+
             _agentFiles.Add(agentFilePath);
             _avatarFiles.Add(avatarFilePath);
             _ccFiles.Add(ccFilePath);
@@ -850,6 +1180,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _umcFiles.Add(umcFilePath);
             _uncgFiles.Add(uncgFilePath);
             _ucyFiles.Add(ucyFilePath);
+            _scFiles.Add(scFilePath);
+            _seFiles.Add(seFilePath);
+            _sctFiles.Add(sctFilePath);
+            _smFiles.Add(smFilePath);
         }
 
         private void BulkInsert(
