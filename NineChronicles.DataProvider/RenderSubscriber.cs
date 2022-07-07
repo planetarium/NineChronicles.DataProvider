@@ -1422,10 +1422,10 @@ namespace NineChronicles.DataProvider
 
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
-                                var arenaInformationAdr =
+                                var myArenaScoreAdr =
                                     ArenaScore.DeriveAddress(battleArena.myAvatarAddress, battleArena.championshipId, battleArena.round);
-                                previousStates.TryGetArenaScore(arenaInformationAdr, out var previousArenaScore);
-                                ev.OutputStates.TryGetArenaScore(arenaInformationAdr, out var outputArenaScore);
+                                previousStates.TryGetArenaScore(myArenaScoreAdr, out var previousArenaScore);
+                                ev.OutputStates.TryGetArenaScore(myArenaScoreAdr, out var currentArenaScore);
                                 Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
                                 var prevNCGBalance = previousStates.GetBalance(
                                     ev.Signer,
@@ -1441,6 +1441,8 @@ namespace NineChronicles.DataProvider
                                 );
                                 var arenaSheet = ev.OutputStates.GetSheet<ArenaSheet>();
                                 var arenaData = arenaSheet.GetRoundByBlockIndex(ev.BlockIndex);
+                                var arenaInformationAdr =
+                                    ArenaInformation.DeriveAddress(battleArena.myAvatarAddress, battleArena.championshipId, battleArena.round);
                                 previousStates.TryGetArenaInformation(arenaInformationAdr, out var previousArenaInformation);
                                 ev.OutputStates.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
                                 var winCount = currentArenaInformation.Win - previousArenaInformation.Win;
@@ -1482,7 +1484,7 @@ namespace NineChronicles.DataProvider
                                     Round = battleArena.round,
                                     TicketCount = ticketCount,
                                     BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
-                                    Victory = outputArenaScore.Score > previousArenaScore.Score,
+                                    Victory = currentArenaScore.Score > previousArenaScore.Score,
                                     MedalCount = medalCount,
                                     TimeStamp = DateTimeOffset.Now,
                                 });
