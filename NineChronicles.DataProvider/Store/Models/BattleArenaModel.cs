@@ -32,6 +32,8 @@
 
         public bool Victory { get; set; }
 
+        public int MedalCount { get; set; }
+
         public DateTimeOffset TimeStamp { get; set; }
     }
 }
