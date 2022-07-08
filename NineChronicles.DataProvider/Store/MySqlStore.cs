@@ -346,7 +346,9 @@ namespace NineChronicles.DataProvider.Store
             return shopConsumableCount;
         }
 
-        public IEnumerable<ShopCostumeModel> GetShopCostumes(Address? sellerAvatarAddress = null)
+        public IEnumerable<ShopCostumeModel> GetShopCostumes(
+            Address? sellerAvatarAddress = null,
+            string? itemSubType = null)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             IEnumerable<ShopCostumeModel> shopCostumes = ctx.ShopCostumes!;
@@ -355,6 +357,12 @@ namespace NineChronicles.DataProvider.Store
             {
                 shopCostumes = shopCostumes
                     .Where(shopCostume => shopCostume.SellerAvatarAddress == sellerAvatarAddressNotNull.ToString());
+            }
+
+            if (itemSubType is { } itemSubTypeNotNull)
+            {
+                shopCostumes = shopCostumes
+                    .Where(shopCostume => shopCostume.ItemSubType == itemSubType);
             }
 
             return shopCostumes.ToList();
