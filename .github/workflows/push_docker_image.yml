@@ -6,7 +6,7 @@ on:
       - main
       - development
       - rc-*
-      - user-migration
+      - baranking-migration
 
 jobs:
   build_and_push:
