@@ -65,7 +65,7 @@
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
                         Name = "rankingType",
-                        DefaultValue = "score",
+                        DefaultValue = "Score",
                         Description = "Input \"Score\" or \"Medal\"",
                     },
                     new QueryArgument<IntGraphType> { Name = "limit" },
