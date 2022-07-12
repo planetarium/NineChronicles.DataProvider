@@ -1,11 +1,10 @@
 ﻿namespace NineChronicles.DataProvider.GraphQL.Types
 {
-    using System.Linq;
+    using Bencodex.Types;
     using global::GraphQL;
     using global::GraphQL.Types;
     using Libplanet;
-    using Libplanet.Blocks;
-    using Nekoyume.Action;
+    using Nekoyume;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
@@ -24,21 +23,16 @@
             Field<BattleArenaInfoType>(
                 name: "BattleArenaInfo",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "index" }
+                    new QueryArgument<LongGraphType> { Name = "index" }
                 ),
                 resolve: context =>
                 {
-                    int index = context.GetArgument<int>("index");
-                    var tipHash = StandaloneContext.Store!.IndexBlockHash(
-                        StandaloneContext.BlockChain!.Id,
-                        StandaloneContext.BlockChain!.Tip.Index);
-                    var tip = StandaloneContext.Store!.GetBlock<NCAction>(
-                        StandaloneContext.BlockChain.Policy.GetHashAlgorithm,
-                        (BlockHash)tipHash!);
-                    var exec = StandaloneContext.BlockChain!.ExecuteActions(tip);
-                    var ev = exec.First();
-                    var arenaSheet = ev.OutputStates.GetSheet<ArenaSheet>();
-                    var arenaData = arenaSheet.GetRoundByBlockIndex(index);
+                    long index = context.GetArgument<long>("index", StandaloneContext.BlockChain!.Tip.Index );
+                    var arenaSheetAddress = Addresses.GetSheetAddress<ArenaSheet>();
+                    IValue state = StandaloneContext.BlockChain!.GetState(arenaSheetAddress);
+                    ArenaSheet arenaSheet = new ArenaSheet();
+                    arenaSheet.Set((Bencodex.Types.Text)state);
+                    var arenaData = arenaSheet!.GetRoundByBlockIndex(index);
                     var battleArenaInfo = new BattleArenaInfoModel()
                     {
                         ChampionshipId = arenaData.ChampionshipId,
@@ -51,7 +45,7 @@
                         TicketPrice = arenaData.TicketPrice,
                         AdditionalTicketPrice = arenaData.AdditionalTicketPrice,
                         QueryBlockIndex = index,
-                        StoreTipBlockIndex = tip.Index,
+                        StoreTipBlockIndex = StandaloneContext.BlockChain!.Tip.Index,
                     };
                     return battleArenaInfo;
                 });
