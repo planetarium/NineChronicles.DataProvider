@@ -1,18 +1,54 @@
 ﻿namespace NineChronicles.DataProvider.GraphQL.Types
 {
+    using Bencodex.Types;
     using global::GraphQL;
     using global::GraphQL.Types;
     using Libplanet;
+    using Nekoyume;
+    using Nekoyume.TableData;
     using NineChronicles.DataProvider.Store;
+    using NineChronicles.DataProvider.Store.Models;
+    using NineChronicles.Headless;
+    using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     internal class NineChroniclesSummaryQuery : ObjectGraphType
     {
-        public NineChroniclesSummaryQuery(MySqlStore store)
+        public NineChroniclesSummaryQuery(MySqlStore store, StandaloneContext standaloneContext)
         {
             Store = store;
+            StandaloneContext = standaloneContext;
             Field<StringGraphType>(
                 name: "test",
                 resolve: context => "Should be done.");
+            Field<BattleArenaInfoType>(
+                name: "BattleArenaInfo",
+                arguments: new QueryArguments(
+                    new QueryArgument<LongGraphType> { Name = "index" }
+                ),
+                resolve: context =>
+                {
+                    long index = context.GetArgument<long>("index", StandaloneContext.BlockChain!.Tip.Index );
+                    var arenaSheetAddress = Addresses.GetSheetAddress<ArenaSheet>();
+                    IValue state = StandaloneContext.BlockChain!.GetState(arenaSheetAddress);
+                    ArenaSheet arenaSheet = new ArenaSheet();
+                    arenaSheet.Set((Bencodex.Types.Text)state);
+                    var arenaData = arenaSheet!.GetRoundByBlockIndex(index);
+                    var battleArenaInfo = new BattleArenaInfoModel()
+                    {
+                        ChampionshipId = arenaData.ChampionshipId,
+                        Round = arenaData.Round,
+                        ArenaType = arenaData.ArenaType.ToString(),
+                        StartBlockIndex = arenaData.StartBlockIndex,
+                        EndBlockIndex = arenaData.EndBlockIndex,
+                        RequiredMedalCount = arenaData.RequiredMedalCount,
+                        EntranceFee = arenaData.EntranceFee,
+                        TicketPrice = arenaData.TicketPrice,
+                        AdditionalTicketPrice = arenaData.AdditionalTicketPrice,
+                        QueryBlockIndex = index,
+                        StoreTipBlockIndex = StandaloneContext.BlockChain!.Tip.Index,
+                    };
+                    return battleArenaInfo;
+                });
             Field<IntGraphType>(
                 name: "AgentCount",
                 resolve: context =>
@@ -165,5 +201,7 @@
         }
 
         private MySqlStore Store { get; }
+
+        private StandaloneContext StandaloneContext { get; }
     }
 }
