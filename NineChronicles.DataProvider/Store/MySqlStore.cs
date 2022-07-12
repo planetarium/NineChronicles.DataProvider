@@ -1439,7 +1439,7 @@ namespace NineChronicles.DataProvider.Store
                         (SELECT `a`.`TitleId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `TitleId`, 
                         (SELECT `a`.`ArmorId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `ArmorId`, 
                         (SELECT `a`.`Cp` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Cp`, 
-                        dense_rank() over(ORDER BY `MedalCount` DESC) `Ranking` FROM `BattleArenaRanking_{championshipId}_{round}` AS `h` ");
+                        rank() over(ORDER BY `MedalCount` DESC) `Ranking` FROM `BattleArenaRanking_{championshipId}_{round}` AS `h` ");
             }
             else
             {
@@ -1452,7 +1452,7 @@ namespace NineChronicles.DataProvider.Store
                         (SELECT `a`.`TitleId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `TitleId`, 
                         (SELECT `a`.`ArmorId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `ArmorId`, 
                         (SELECT `a`.`Cp` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Cp`, 
-                        dense_rank() over(ORDER BY `Score` DESC) `Ranking` FROM `BattleArenaRanking_{championshipId}_{round}` AS `h` ");
+                        rank() over(ORDER BY `Score` DESC) `Ranking` FROM `BattleArenaRanking_{championshipId}_{round}` AS `h` ");
             }
 
             if (avatarAddress is { } avatarAddressNotNull)
