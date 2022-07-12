@@ -27,7 +27,7 @@
                 ),
                 resolve: context =>
                 {
-                    long index = context.GetArgument<long>("index", StandaloneContext.BlockChain!.Tip.Index );
+                    long index = context.GetArgument<long>("index", StandaloneContext.BlockChain!.Tip.Index);
                     var arenaSheetAddress = Addresses.GetSheetAddress<ArenaSheet>();
                     IValue state = StandaloneContext.BlockChain!.GetState(arenaSheetAddress);
                     ArenaSheet arenaSheet = new ArenaSheet();
