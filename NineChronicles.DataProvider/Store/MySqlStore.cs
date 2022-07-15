@@ -1424,6 +1424,7 @@ namespace NineChronicles.DataProvider.Store
             int round,
             string rankingType = "Score",
             int? limit = null,
+            int? offset = null,
             Address? avatarAddress = null)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
@@ -1458,6 +1459,13 @@ namespace NineChronicles.DataProvider.Store
             if (avatarAddress is { } avatarAddressNotNull)
             {
                 query = query.Where(s => s.AvatarAddress == avatarAddressNotNull.ToString());
+            }
+            else
+            {
+                if (offset is { } offsetNotNull)
+                {
+                    query = query.Skip(offsetNotNull);
+                }
             }
 
             if (limit is { } limitNotNull)

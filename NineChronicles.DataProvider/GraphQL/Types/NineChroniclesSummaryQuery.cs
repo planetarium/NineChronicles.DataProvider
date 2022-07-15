@@ -105,6 +105,7 @@
                         Description = "Input \"Score\" or \"Medal\"",
                     },
                     new QueryArgument<IntGraphType> { Name = "limit" },
+                    new QueryArgument<IntGraphType> { Name = "offset" },
                     new QueryArgument<StringGraphType> { Name = "avatarAddress" }
                 ),
                 resolve: context =>
@@ -113,11 +114,12 @@
                     int round = context.GetArgument<int>("round" );
                     string rankingType = context.GetArgument<string>("rankingType", "Score");
                     int? limit = context.GetArgument<int?>("limit", null );
+                    int? offset = context.GetArgument<int?>("offset", null );
                     string? address = context.GetArgument<string?>("avatarAddress", null);
                     Address? avatarAddress = address == null
                         ? (Address?)null
                         : new Address(address.Replace("0x", string.Empty));
-                    return Store.GetBattleArenaRanking(championshipId, round, rankingType, limit, avatarAddress);
+                    return Store.GetBattleArenaRanking(championshipId, round, rankingType, limit, offset, avatarAddress);
                 });
             Field<ListGraphType<HackAndSlashType>>(
                 name: "HackAndSlash",
