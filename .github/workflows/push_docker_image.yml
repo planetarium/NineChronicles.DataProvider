@@ -6,6 +6,7 @@ on:
       - main
       - migration
       - development
+      - rc-*
       - craft-equip-migration
 
 jobs:

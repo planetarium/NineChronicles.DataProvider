@@ -60,7 +60,6 @@ namespace NineChronicles.DataProvider.Executable
                     headlessConfig.Host,
                     headlessConfig.Port,
                     headlessConfig.SwarmPrivateKeyString,
-                    headlessConfig.MinimumDifficulty,
                     headlessConfig.StoreType,
                     headlessConfig.StorePath,
                     100,
@@ -70,24 +69,32 @@ namespace NineChronicles.DataProvider.Executable
                     noMiner: true,
                     workers: headlessConfig.Workers,
                     confirmations: headlessConfig.Confirmations,
-                    maximumTransactions: headlessConfig.MaximumTransactions,
                     messageTimeout: headlessConfig.MessageTimeout,
                     tipTimeout: headlessConfig.TipTimeout,
                     demandBuffer: headlessConfig.DemandBuffer,
+                    minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget,
+                    bucketSize: headlessConfig.BucketSize,
                     staticPeerStrings: headlessConfig.StaticPeerStrings,
-                    render: true,
-                    preload: false);
+                    render: headlessConfig.Render,
+                    preload: headlessConfig.Preload,
+                    transportType: "netmq");
 
             var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
             {
                MinerPrivateKey = null,
                Libplanet = properties,
+               TxQuotaPerSigner = 500,
             };
 
             if (headlessConfig.LogActionRenders)
             {
                 properties.LogActionRenders = true;
             }
+
+            hostBuilder.ConfigureServices(services =>
+            {
+                services.AddSingleton(_ => context);
+            });
 
             hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, context);
 
@@ -96,7 +103,18 @@ namespace NineChronicles.DataProvider.Executable
                 .ConfigureServices((ctx, services) =>
                 {
                     services.AddDbContextFactory<NineChroniclesContext>(
-                        options => options.UseMySQL(headlessConfig.MySqlConnectionString)
+                        options => options.UseMySql(
+                            headlessConfig.MySqlConnectionString,
+                            ServerVersion.AutoDetect(headlessConfig.MySqlConnectionString),
+                            mySqlOptions =>
+                            {
+                                mySqlOptions
+                                    .EnableRetryOnFailure(
+                                        maxRetryCount: 3,
+                                        maxRetryDelay: TimeSpan.FromSeconds(10),
+                                        errorNumbersToAdd: null);
+                            }
+                        )
                     );
                     services.AddHostedService<RenderSubscriber>();
                     services.AddSingleton<MySqlStore>();

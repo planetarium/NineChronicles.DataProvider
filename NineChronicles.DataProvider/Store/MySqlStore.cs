@@ -3,10 +3,12 @@ namespace NineChronicles.DataProvider.Store
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using Libplanet;
     using Microsoft.EntityFrameworkCore;
     using Nekoyume.Model.Item;
     using NineChronicles.DataProvider.Store.Models;
+    using Serilog;
 
     public class MySqlStore
     {
@@ -20,38 +22,162 @@ namespace NineChronicles.DataProvider.Store
         public void StoreAvatar(
             Address address,
             Address agentAddress,
-            string name)
+            string name,
+            int? avatarLevel,
+            int? titleId,
+            int? armorId,
+            int? cp)
         {
-            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            if (ctx.Avatars?.Find(address.ToString()) is null)
+            try
             {
-                ctx.Avatars!.Add(
-                    new AvatarModel()
+                using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                if (ctx.Avatars?.Find(address.ToString()) is null)
+                {
+                    ctx.Avatars!.AddRange(
+                        new AvatarModel()
+                        {
+                            Address = address.ToString(),
+                            AgentAddress = agentAddress.ToString(),
+                            Name = name,
+                            AvatarLevel = avatarLevel,
+                            TitleId = titleId,
+                            ArmorId = armorId,
+                            Cp = cp,
+                        }
+                    );
+                    ctx.SaveChanges();
+                }
+                else
+                {
+                    ctx.Dispose();
+                    using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                    if (avatarLevel == null && titleId == null && armorId == null && cp == null)
                     {
-                        Address = address.ToString(),
-                        AgentAddress = agentAddress.ToString(),
-                        Name = name,
+                        updateCtx.Avatars!.UpdateRange(
+                            new AvatarModel()
+                            {
+                                Address = address.ToString(),
+                                AgentAddress = agentAddress.ToString(),
+                                Name = name,
+                            }
+                        );
                     }
-                );
-            }
+                    else
+                    {
+                        updateCtx.Avatars!.UpdateRange(
+                            new AvatarModel()
+                            {
+                                Address = address.ToString(),
+                                AgentAddress = agentAddress.ToString(),
+                                Name = name,
+                                AvatarLevel = avatarLevel,
+                                TitleId = titleId,
+                                ArmorId = armorId,
+                                Cp = cp,
+                            }
+                        );
+                    }
 
-            ctx.SaveChanges();
+                    updateCtx.SaveChanges();
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreAvatarList(List<AvatarModel?> avatarList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var avatar in avatarList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.Avatars?.Find(avatar!.Address) is null)
+                        {
+                            ctx.Avatars!.AddRange(avatar!);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.Avatars!.UpdateRange(avatar!);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
         }
 
         public void StoreAgent(Address address)
         {
-            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            if (ctx.Agents?.Find(address.ToString()) is null)
+            try
             {
-                ctx.Agents!.Add(
-                    new AgentModel()
-                    {
-                        Address = address.ToString(),
-                    }
-                );
-            }
+                using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                if (ctx.Agents?.Find(address.ToString()) is null)
+                {
+                    ctx.Agents!.AddRange(
+                        new AgentModel()
+                        {
+                            Address = address.ToString(),
+                        }
+                    );
 
-            ctx.SaveChanges();
+                    ctx.SaveChanges();
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreAgentList(List<AgentModel?> agentList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var agent in agentList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.Agents?.Find(agent!.Address) is null)
+                        {
+                            ctx.Agents!.AddRange(agent!);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.Agents!.UpdateRange(agent!);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
         }
 
         public void StoreHackAndSlash(
@@ -63,20 +189,62 @@ namespace NineChronicles.DataProvider.Store
             bool isMimisbrunnr,
             long blockIndex)
         {
-            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            ctx.HackAndSlashes!.Add(
-                new HackAndSlashModel()
+            try
+            {
+                using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                ctx.HackAndSlashes!.AddRange(
+                    new HackAndSlashModel()
+                    {
+                        Id = id.ToString(),
+                        AgentAddress = agentAddress.ToString(),
+                        AvatarAddress = avatarAddress.ToString(),
+                        StageId = stageId,
+                        Cleared = cleared,
+                        Mimisbrunnr = isMimisbrunnr,
+                        BlockIndex = blockIndex,
+                    }
+                );
+                ctx.SaveChanges();
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreHackAndSlashList(List<HackAndSlashModel?> hasList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var has in hasList)
                 {
-                    Id = id.ToString(),
-                    AgentAddress = agentAddress.ToString(),
-                    AvatarAddress = avatarAddress.ToString(),
-                    StageId = stageId,
-                    Cleared = cleared,
-                    Mimisbrunnr = isMimisbrunnr,
-                    BlockIndex = blockIndex,
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.HackAndSlashes?.Find(has!.Id) is null)
+                        {
+                            ctx.HackAndSlashes!.AddRange(has!);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.HackAndSlashes!.UpdateRange(has!);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
                 }
-            );
-            ctx.SaveChanges();
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
         }
 
         public void DeleteHackAndSlash(Guid id)
@@ -88,6 +256,146 @@ namespace NineChronicles.DataProvider.Store
             }
 
             ctx.SaveChanges();
+        }
+
+        public IEnumerable<AgentModel> GetAgents(Address? agentAddress = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IEnumerable<AgentModel> agents = ctx.Agents!;
+
+            if (agentAddress is { } agentAddressNotNull)
+            {
+                agents = agents
+                    .Where(agent => agent.Address == agentAddressNotNull.ToString());
+            }
+
+            return agents.ToList();
+        }
+
+        public int GetAgentCount()
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<AgentModel> agents = ctx.Agents!;
+            var agentCount = agents.Count();
+            return agentCount;
+        }
+
+        public IEnumerable<AvatarModel> GetAvatars(Address? avatarAddress = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IEnumerable<AvatarModel> avatars = ctx.Avatars!;
+
+            if (avatarAddress is { } avatarAddressNotNull)
+            {
+                avatars = avatars
+                    .Where(avatar => avatar.Address == avatarAddressNotNull.ToString());
+            }
+
+            return avatars.ToList();
+        }
+
+        public int GetAvatarCount()
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<AvatarModel> avatars = ctx.Avatars!;
+            var avatarCount = avatars.Count();
+            return avatarCount;
+        }
+
+        public IEnumerable<ShopEquipmentModel> GetShopEquipments(Address? sellerAvatarAddress = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IEnumerable<ShopEquipmentModel> shopEquipments = ctx.ShopEquipments!;
+
+            if (sellerAvatarAddress is { } sellerAvatarAddressNotNull)
+            {
+                shopEquipments = shopEquipments
+                    .Where(shopEquipment => shopEquipment.SellerAvatarAddress == sellerAvatarAddressNotNull.ToString());
+            }
+
+            return shopEquipments.ToList();
+        }
+
+        public int GetShopEquipmentCount()
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<ShopEquipmentModel> shopEquipments = ctx.ShopEquipments!;
+            var shopEquipmentCount = shopEquipments.Count();
+            return shopEquipmentCount;
+        }
+
+        public IEnumerable<ShopConsumableModel> GetShopConsumables(Address? sellerAvatarAddress = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IEnumerable<ShopConsumableModel> shopConsumables = ctx.ShopConsumables!;
+
+            if (sellerAvatarAddress is { } sellerAvatarAddressNotNull)
+            {
+                shopConsumables = shopConsumables
+                    .Where(shopConsumable => shopConsumable.SellerAvatarAddress == sellerAvatarAddressNotNull.ToString());
+            }
+
+            return shopConsumables.ToList();
+        }
+
+        public int GetShopConsumableCount()
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<ShopConsumableModel> shopConsumables = ctx.ShopConsumables!;
+            var shopConsumableCount = shopConsumables.Count();
+            return shopConsumableCount;
+        }
+
+        public IEnumerable<ShopCostumeModel> GetShopCostumes(
+            Address? sellerAvatarAddress = null,
+            string? itemSubType = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IEnumerable<ShopCostumeModel> shopCostumes = ctx.ShopCostumes!;
+
+            if (sellerAvatarAddress is { } sellerAvatarAddressNotNull)
+            {
+                shopCostumes = shopCostumes
+                    .Where(shopCostume => shopCostume.SellerAvatarAddress == sellerAvatarAddressNotNull.ToString());
+            }
+
+            if (itemSubType is { } itemSubTypeNotNull)
+            {
+                shopCostumes = shopCostumes
+                    .Where(shopCostume => shopCostume.ItemSubType == itemSubType);
+            }
+
+            return shopCostumes.ToList();
+        }
+
+        public int GetShopCostumeCount()
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<ShopCostumeModel> shopCostumes = ctx.ShopCostumes!;
+            var shopCostumeCount = shopCostumes.Count();
+            return shopCostumeCount;
+        }
+
+        public IEnumerable<ShopMaterialModel> GetShopMaterials(Address? sellerAvatarAddress = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IEnumerable<ShopMaterialModel> shopMaterials = ctx.ShopMaterials!;
+
+            if (sellerAvatarAddress is { } sellerAvatarAddressNotNull)
+            {
+                shopMaterials = shopMaterials
+                    .Where(shopMaterial => shopMaterial.SellerAvatarAddress == sellerAvatarAddressNotNull.ToString());
+            }
+
+            return shopMaterials.ToList();
+        }
+
+        public int GetShopMaterialCount()
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<ShopMaterialModel> shopMaterials = ctx.ShopMaterials!;
+            var shopMaterialCount = shopMaterials.Count();
+            return shopMaterialCount;
         }
 
         public IEnumerable<HackAndSlashModel> GetHackAndSlash(
@@ -117,16 +425,17 @@ namespace NineChronicles.DataProvider.Store
             bool isMimisbrunnr = false)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            var query = ctx.Set<StageRankingModel>()
-                .FromSqlRaw("SELECT `h`.`AvatarAddress`, MAX(`h`.`StageId`) AS `ClearedStageId`, (" +
-                            "SELECT `a`.`Name` " +
-                            "FROM `Avatars` AS `a` " +
-                            "WHERE `a`.`Address` = `h`.`AvatarAddress` " +
-                            "LIMIT 1) AS `Name`, MIN(`h`.`BlockIndex`) AS `BlockIndex`, " +
-                            "row_number() over(ORDER BY MAX(`h`.`StageId`) DESC, MIN(`h`.`BlockIndex`)) Ranking " +
-                            "FROM `HackAndSlashes` AS `h` " +
-                            $"WHERE (`h`.`Mimisbrunnr` = {isMimisbrunnr}) AND `h`.`Cleared` " +
-                            "GROUP BY `h`.`AvatarAddress`");
+            IQueryable<StageRankingModel>? query = null;
+            if (!isMimisbrunnr)
+            {
+                query = ctx.Set<StageRankingModel>()
+                    .FromSqlRaw("SELECT * FROM data_provider.StageRanking ORDER BY Ranking ");
+            }
+            else
+            {
+                query = ctx.Set<StageRankingModel>()
+                    .FromSqlRaw("SELECT * FROM data_provider.StageRankingMimisbrunnr ORDER BY Ranking ");
+            }
 
             if (avatarAddress is { } avatarAddressNotNull)
             {
@@ -162,7 +471,7 @@ namespace NineChronicles.DataProvider.Store
                 }
             );
 
-            if (ctx.CraftRankings?.Find(avatarAddress.ToString()) is { } rankingData)
+            if (ctx.CraftRankings?.FindAsync(avatarAddress.ToString()).Result is { } rankingData)
             {
                 rankingData.CraftCount += 1;
                 rankingData.BlockIndex = blockIndex;
@@ -170,7 +479,7 @@ namespace NineChronicles.DataProvider.Store
             else
             {
                 ctx.CraftRankings!.Add(
-                    new CraftRankingModel()
+                    new CraftRankingInputModel()
                     {
                         AgentAddress = agentAddress.ToString(),
                         AvatarAddress = avatarAddress.ToString(),
@@ -179,7 +488,80 @@ namespace NineChronicles.DataProvider.Store
                     });
             }
 
-            ctx.SaveChanges();
+            ctx.SaveChangesAsync();
+        }
+
+        public void StoreCombinationConsumableList(List<CombinationConsumableModel?> ccList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var cc in ccList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.CombinationConsumables?.Find(cc!.Id) is null)
+                        {
+                            try
+                            {
+                                ctx.CombinationConsumables!.AddRange(cc!);
+                                if (ctx.CraftRankings?.Find(cc!.AvatarAddress) is { } rankingData)
+                                {
+                                    rankingData.CraftCount += 1;
+                                    rankingData.BlockIndex = cc!.BlockIndex;
+                                }
+                                else
+                                {
+                                    ctx.CraftRankings!.Add(
+                                        new CraftRankingInputModel()
+                                        {
+                                            AgentAddress = cc!.AgentAddress,
+                                            AvatarAddress = cc!.AvatarAddress,
+                                            CraftCount = 1,
+                                            BlockIndex = cc!.BlockIndex,
+                                        });
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Log.Debug(e.Message);
+                            }
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.CombinationConsumables!.UpdateRange(cc!);
+                            if (updateCtx.CraftRankings?.Find(cc!.AvatarAddress) is { } rankingData)
+                            {
+                                rankingData.CraftCount += 1;
+                                rankingData.BlockIndex = cc!.BlockIndex;
+                            }
+                            else
+                            {
+                                updateCtx.CraftRankings!.Add(
+                                    new CraftRankingInputModel()
+                                    {
+                                        AgentAddress = cc!.AgentAddress,
+                                        AvatarAddress = cc!.AvatarAddress,
+                                        CraftCount = 1,
+                                        BlockIndex = cc!.BlockIndex,
+                                    });
+                            }
+
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
         }
 
         public void DeleteCombinationConsumable(Guid id)
@@ -223,7 +605,7 @@ namespace NineChronicles.DataProvider.Store
                 }
             );
 
-            if (ctx.CraftRankings?.Find(avatarAddress.ToString()) is { } rankingData)
+            if (ctx.CraftRankings?.FindAsync(avatarAddress.ToString()).Result is { } rankingData)
             {
                 rankingData.CraftCount += 1;
                 rankingData.BlockIndex = blockIndex;
@@ -231,7 +613,7 @@ namespace NineChronicles.DataProvider.Store
             else
             {
                 ctx.CraftRankings!.Add(
-                    new CraftRankingModel()
+                    new CraftRankingInputModel()
                     {
                         AgentAddress = agentAddress.ToString(),
                         AvatarAddress = avatarAddress.ToString(),
@@ -240,7 +622,220 @@ namespace NineChronicles.DataProvider.Store
                     });
             }
 
-            ctx.SaveChanges();
+            ctx.SaveChangesAsync();
+        }
+
+        public void StoreCombinationEquipmentList(List<CombinationEquipmentModel?> ceList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var ce in ceList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.CombinationEquipments?.Find(ce!.Id) is null)
+                        {
+                            try
+                            {
+                                ctx.CombinationEquipments!.AddRange(ce!);
+                                if (ctx.CraftRankings?.Find(ce!.AvatarAddress) is { } rankingData)
+                                {
+                                    rankingData.CraftCount += 1;
+                                    rankingData.BlockIndex = ce!.BlockIndex;
+                                }
+                                else
+                                {
+                                    ctx.CraftRankings!.Add(
+                                        new CraftRankingInputModel()
+                                        {
+                                            AgentAddress = ce!.AgentAddress,
+                                            AvatarAddress = ce!.AvatarAddress,
+                                            CraftCount = 1,
+                                            BlockIndex = ce!.BlockIndex,
+                                        });
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Log.Debug(e.Message);
+                            }
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.CombinationEquipments!.UpdateRange(ce!);
+                            if (updateCtx.CraftRankings?.Find(ce!.AvatarAddress) is { } rankingData)
+                            {
+                                rankingData.CraftCount += 1;
+                                rankingData.BlockIndex = ce!.BlockIndex;
+                            }
+                            else
+                            {
+                                updateCtx.CraftRankings!.Add(
+                                    new CraftRankingInputModel()
+                                    {
+                                        AgentAddress = ce!.AgentAddress,
+                                        AvatarAddress = ce!.AvatarAddress,
+                                        CraftCount = 1,
+                                        BlockIndex = ce!.BlockIndex,
+                                    });
+                            }
+
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreShopHistoryEquipmentList(List<ShopHistoryEquipmentModel?> seList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var se in seList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.ShopHistoryEquipments?.Find(se!.OrderId) is null)
+                        {
+                            ctx.ShopHistoryEquipments!.AddRange(se!);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.ShopHistoryEquipments!.UpdateRange(se!);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreShopHistoryCostumeList(List<ShopHistoryCostumeModel?> sctList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var sct in sctList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.ShopHistoryCostumes?.Find(sct!.OrderId) is null)
+                        {
+                            ctx.ShopHistoryCostumes!.AddRange(sct!);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.ShopHistoryCostumes!.UpdateRange(sct!);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreShopHistoryMaterialList(List<ShopHistoryMaterialModel?> smList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var sm in smList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.ShopHistoryMaterials?.Find(sm!.OrderId) is null)
+                        {
+                            ctx.ShopHistoryMaterials!.AddRange(sm!);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.ShopHistoryMaterials!.UpdateRange(sm!);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreShopHistoryConsumableList(List<ShopHistoryConsumableModel?> scList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var sc in scList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.ShopHistoryConsumables?.Find(sc!.OrderId) is null)
+                        {
+                            ctx.ShopHistoryConsumables!.AddRange(sc!);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.ShopHistoryConsumables!.UpdateRange(sc!);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
         }
 
         public void DeleteCombinationEquipment(Guid id)
@@ -283,7 +878,7 @@ namespace NineChronicles.DataProvider.Store
                 }
             );
 
-            if (ctx.CraftRankings?.Find(avatarAddress.ToString()) is { } rankingData)
+            if (ctx.CraftRankings?.FindAsync(avatarAddress.ToString()).Result is { } rankingData)
             {
                 rankingData.CraftCount += 1;
                 rankingData.BlockIndex = blockIndex;
@@ -291,7 +886,7 @@ namespace NineChronicles.DataProvider.Store
             else
             {
                 ctx.CraftRankings!.Add(
-                    new CraftRankingModel()
+                    new CraftRankingInputModel()
                     {
                         AgentAddress = agentAddress.ToString(),
                         AvatarAddress = avatarAddress.ToString(),
@@ -300,7 +895,83 @@ namespace NineChronicles.DataProvider.Store
                     });
             }
 
-            ctx.SaveChanges();
+            ctx.SaveChangesAsync();
+        }
+
+        public void StoreItemEnhancementList(List<ItemEnhancementModel?> ieList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var ie in ieList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.ItemEnhancements?.Find(ie!.Id) is null)
+                        {
+                            try
+                            {
+                                ctx.ItemEnhancements!.AddRange(ie!);
+                                if (ctx.CraftRankings?.Find(ie!.AvatarAddress) is { } rankingData)
+                                {
+                                    rankingData.CraftCount += 1;
+                                    rankingData.BlockIndex = ie!.BlockIndex;
+                                }
+                                else
+                                {
+                                    ctx.CraftRankings!.Add(
+                                        new CraftRankingInputModel()
+                                        {
+                                            AgentAddress = ie!.AgentAddress,
+                                            AvatarAddress = ie!.AvatarAddress,
+                                            CraftCount = 1,
+                                            BlockIndex = ie!.BlockIndex,
+                                        });
+                                }
+
+                                ctx.SaveChanges();
+                                ctx.Dispose();
+                            }
+                            catch (Exception e)
+                            {
+                                Log.Debug(e.Message);
+                            }
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.ItemEnhancements!.UpdateRange(ie!);
+                            if (updateCtx.CraftRankings?.Find(ie!.AvatarAddress) is { } rankingData)
+                            {
+                                rankingData.CraftCount += 1;
+                                rankingData.BlockIndex = ie!.BlockIndex;
+                            }
+                            else
+                            {
+                                updateCtx.CraftRankings!.Add(
+                                    new CraftRankingInputModel()
+                                    {
+                                        AgentAddress = ie!.AgentAddress,
+                                        AvatarAddress = ie!.AvatarAddress,
+                                        CraftCount = 1,
+                                        BlockIndex = ie!.BlockIndex,
+                                    });
+                            }
+
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
         }
 
         public void DeleteItemEnhancement(Guid id)
@@ -320,19 +991,481 @@ namespace NineChronicles.DataProvider.Store
             ctx.SaveChanges();
         }
 
-        public IEnumerable<CraftRankingModel> GetCraftRanking(
+        public void StoreStakingList(List<StakeModel> stakeList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var stake in stakeList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        ctx.Stakings!.AddRange(stake);
+                        ctx.SaveChanges();
+                        ctx.Dispose();
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreClaimStakeRewardList(List<ClaimStakeRewardModel> claimStakeList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var claimStake in claimStakeList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.ClaimStakeRewards?.Find(claimStake!.Id) is null)
+                        {
+                            ctx.ClaimStakeRewards!.AddRange(claimStake);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.ClaimStakeRewards!.UpdateRange(claimStake);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreMigrateMonsterCollectionList(
+            List<MigrateMonsterCollectionModel> mmcList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var mmc in mmcList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        ctx.MigrateMonsterCollections!.AddRange(mmc);
+                        ctx.SaveChanges();
+                        ctx.Dispose();
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreGrindList(List<GrindingModel> grindList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var grind in grindList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.Grindings?.Find(grind!.Id) is null)
+                        {
+                            ctx.Grindings!.AddRange(grind);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.Grindings!.UpdateRange(grind);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreItemEnhancementFailList(List<ItemEnhancementFailModel> itemEnhancementFailList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var itemEnhancementFail in itemEnhancementFailList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.ItemEnhancementFails?.Find(itemEnhancementFail!.Id) is null)
+                        {
+                            ctx.ItemEnhancementFails!.AddRange(itemEnhancementFail);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.ItemEnhancementFails!.UpdateRange(itemEnhancementFail);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreUnlockEquipmentRecipeList(List<UnlockEquipmentRecipeModel> unlockEquipmentRecipeList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var unlockEquipmentRecipe in unlockEquipmentRecipeList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.UnlockEquipmentRecipes?.Find(unlockEquipmentRecipe.Id) is null)
+                        {
+                            ctx.UnlockEquipmentRecipes!.AddRange(unlockEquipmentRecipe);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.UnlockEquipmentRecipes!.UpdateRange(unlockEquipmentRecipe);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreUnlockWorldList(List<UnlockWorldModel> unlockWorldList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var unlockWorld in unlockWorldList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.UnlockWorlds?.Find(unlockWorld.Id) is null)
+                        {
+                            ctx.UnlockWorlds!.AddRange(unlockWorld);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.UnlockWorlds!.UpdateRange(unlockWorld);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreReplaceCombinationEquipmentMaterialList(
+            List<ReplaceCombinationEquipmentMaterialModel> replaceCombinationEquipmentMaterialList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var replaceCombinationEquipmentMaterial in replaceCombinationEquipmentMaterialList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.ReplaceCombinationEquipmentMaterials?.Find(replaceCombinationEquipmentMaterial.Id) is null)
+                        {
+                            ctx.ReplaceCombinationEquipmentMaterials!.AddRange(replaceCombinationEquipmentMaterial);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.ReplaceCombinationEquipmentMaterials!.UpdateRange(replaceCombinationEquipmentMaterial);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreHasRandomBuffList(List<HasRandomBuffModel> hasRandomBuffList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var hasRandomBuff in hasRandomBuffList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.HasRandomBuffs?.Find(hasRandomBuff.Id) is null)
+                        {
+                            ctx.HasRandomBuffs!.AddRange(hasRandomBuff);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.HasRandomBuffs!.UpdateRange(hasRandomBuff);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreHasWithRandomBuffList(List<HasWithRandomBuffModel> hasWithRandomBuffList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var hasWithRandomBuff in hasWithRandomBuffList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.HasWithRandomBuffs?.Find(hasWithRandomBuff.Id) is null)
+                        {
+                            ctx.HasWithRandomBuffs!.AddRange(hasWithRandomBuff);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.HasWithRandomBuffs!.UpdateRange(hasWithRandomBuff);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreJoinArenaList(List<JoinArenaModel> joinArenaList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var joinArena in joinArenaList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.JoinArenas?.Find(joinArena.Id) is null)
+                        {
+                            ctx.JoinArenas!.AddRange(joinArena);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.JoinArenas!.UpdateRange(joinArena);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreBattleArenaList(List<BattleArenaModel> battleArenaList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var battleArena in battleArenaList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.BattleArenas?.Find(battleArena.Id) is null)
+                        {
+                            ctx.BattleArenas!.AddRange(battleArena);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.BattleArenas!.UpdateRange(battleArena);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public IEnumerable<CraftRankingOutputModel> GetCraftRanking(
             Address? avatarAddress = null,
             int? limit = null)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            var query = ctx.Set<CraftRankingModel>()
+            var query = ctx.Set<CraftRankingOutputModel>()
                 .FromSqlRaw("SELECT `h`.`AvatarAddress`, `AgentAddress`, `CraftCount`, `BlockIndex`, " +
-                    "row_number() over(ORDER BY `CraftCount` DESC, `h`.`BlockIndex`) `Ranking` " +
-                    "FROM `CraftRankings` AS `h` ");
+                            "(SELECT `a`.`Name` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Name`, " +
+                            "(SELECT `a`.`AvatarLevel` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `AvatarLevel`, " +
+                            "(SELECT `a`.`TitleId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `TitleId`, " +
+                            "(SELECT `a`.`ArmorId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `ArmorId`, " +
+                            "(SELECT `a`.`Cp` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Cp`, " +
+                            "row_number() over(ORDER BY `CraftCount` DESC, `h`.`BlockIndex`) `Ranking` " +
+                            "FROM `CraftRankings` AS `h` ");
 
             if (avatarAddress is { } avatarAddressNotNull)
             {
                 query = query.Where(s => s.AvatarAddress == avatarAddressNotNull.ToString());
+            }
+
+            if (limit is { } limitNotNull)
+            {
+                query = query.Take(limitNotNull);
+            }
+
+            return query.ToList();
+        }
+
+        public IEnumerable<BattleArenaRankingModel> GetBattleArenaRanking(
+            int championshipId,
+            int round,
+            string rankingType = "Score",
+            int? limit = null,
+            int? offset = null,
+            Address? avatarAddress = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<BattleArenaRankingModel>? query = null;
+            if (rankingType == "Medal" || rankingType == "medal" || rankingType == "m")
+            {
+                query = ctx.Set<BattleArenaRankingModel>()
+                    .FromSqlRaw($@"SELECT `h`.`AvatarAddress`, `AgentAddress`, `AvatarLevel`, `BlockIndex`, `ChampionshipId`, 
+                        `Round`, `ArenaType`, `Score`, `WinCount`, `MedalCount`, `LossCount`, `Ticket`, `PurchasedTicketCount`, 
+                        `TicketResetCount`, `EntranceFee`, `TicketPrice`, `AdditionalTicketPrice`, `RequiredMedalCount`, 
+                        `StartBlockIndex`, `EndBlockIndex`, `Timestamp`, 
+                        (SELECT `a`.`Name` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Name`, 
+                        (SELECT `a`.`TitleId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `TitleId`, 
+                        (SELECT `a`.`ArmorId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `ArmorId`, 
+                        (SELECT `a`.`Cp` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Cp`, 
+                        rank() over(ORDER BY `MedalCount` DESC) `Ranking` FROM `BattleArenaRanking_{championshipId}_{round}` AS `h` ");
+            }
+            else
+            {
+                query = ctx.Set<BattleArenaRankingModel>()
+                    .FromSqlRaw($@"SELECT `h`.`AvatarAddress`, `AgentAddress`, `AvatarLevel`, `BlockIndex`, `ChampionshipId`, 
+                        `Round`, `ArenaType`, `Score`, `WinCount`, `MedalCount`, `LossCount`, `Ticket`, `PurchasedTicketCount`, 
+                        `TicketResetCount`, `EntranceFee`, `TicketPrice`, `AdditionalTicketPrice`, `RequiredMedalCount`, 
+                        `StartBlockIndex`, `EndBlockIndex`, `Timestamp`, 
+                        (SELECT `a`.`Name` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Name`, 
+                        (SELECT `a`.`TitleId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `TitleId`, 
+                        (SELECT `a`.`ArmorId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `ArmorId`, 
+                        (SELECT `a`.`Cp` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Cp`, 
+                        rank() over(ORDER BY `Score` DESC) `Ranking` FROM `BattleArenaRanking_{championshipId}_{round}` AS `h` ");
+            }
+
+            if (avatarAddress is { } avatarAddressNotNull)
+            {
+                query = query.Where(s => s.AvatarAddress == avatarAddressNotNull.ToString());
+            }
+            else
+            {
+                if (offset is { } offsetNotNull)
+                {
+                    query = query.Skip(offsetNotNull);
+                }
             }
 
             if (limit is { } limitNotNull)
@@ -353,53 +1486,79 @@ namespace NineChronicles.DataProvider.Store
             ItemSubType itemSubType)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            if (ctx.Equipments?.Find(itemId.ToString()) is { } equipmentData)
-            {
-                equipmentData.AgentAddress = agentAddress.ToString();
-                equipmentData.AvatarAddress = avatarAddress.ToString();
-                equipmentData.Cp = cp;
-                equipmentData.Level = level;
-            }
-            else
-            {
-                ctx.Equipments!.Add(
-                    new EquipmentModel()
-                    {
-                        ItemId = itemId.ToString(),
-                        AgentAddress = agentAddress.ToString(),
-                        AvatarAddress = avatarAddress.ToString(),
-                        EquipmentId = equipmentId,
-                        Cp = cp,
-                        Level = level,
-                        ItemSubType = itemSubType.ToString(),
-                    });
-            }
+
+            ctx.Equipments!.Add(
+                new EquipmentModel()
+                {
+                    ItemId = itemId.ToString(),
+                    AgentAddress = agentAddress.ToString(),
+                    AvatarAddress = avatarAddress.ToString(),
+                    EquipmentId = equipmentId,
+                    Cp = cp,
+                    Level = level,
+                    ItemSubType = itemSubType.ToString(),
+                });
 
             ctx.SaveChanges();
         }
 
+        public void ProcessEquipmentList(List<EquipmentModel?> eqList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var eq in eqList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.Equipments?.Find(eq!.ItemId) is null)
+                        {
+                            ctx.Equipments!.AddRange(eq!);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.Equipments!.UpdateRange(eq!);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public IEnumerable<EquipmentRankingModel> GetEquipmentRanking(
+            Address? avatarAddress = null,
             string? itemSubType = null,
             int? limit = null)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             IQueryable<EquipmentRankingModel>? query = null;
+
             if (itemSubType is { } itemSubTypeNotNull)
             {
                 query = ctx.Set<EquipmentRankingModel>()
-                    .FromSqlRaw("SELECT `h`.`ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, " +
-                                "MAX(`h`.`Cp`) AS `Cp`, `Level`, `ItemSubType`, " +
-                                "row_number() over(ORDER BY MAX(`h`.`Cp`) DESC) Ranking " +
-                                $"FROM `Equipments` AS `h` where `ItemSubType` = \"{itemSubTypeNotNull}\" " +
-                                "GROUP BY `h`.`AvatarAddress` ");
+                    .FromSqlRaw($"SELECT * FROM EquipmentRanking{itemSubTypeNotNull} ORDER BY Ranking ");
             }
             else
             {
                 query = ctx.Set<EquipmentRankingModel>()
-                    .FromSqlRaw("SELECT `h`.`ItemId`, `AvatarAddress`, `AgentAddress`, `EquipmentId`, " +
-                                "MAX(`h`.`Cp`) AS `Cp`, `Level`, `ItemSubType`, " +
-                                "row_number() over(ORDER BY MAX(`h`.`Cp`) DESC) Ranking " +
-                                "FROM `Equipments` AS `h` GROUP BY `h`.`AvatarAddress` ");
+                    .FromSqlRaw("SELECT * FROM EquipmentRanking ORDER BY Ranking ");
+            }
+
+            if (avatarAddress is { } avatarAddressNotNull)
+            {
+                query = query.Where(s => s.AvatarAddress == avatarAddressNotNull.ToString());
             }
 
             if (limit is { } limitNotNull)
@@ -407,8 +1566,30 @@ namespace NineChronicles.DataProvider.Store
                 query = query.Take(limitNotNull);
             }
 
-            var list = query.ToList();
-            return list;
+            return query.ToList();
+        }
+
+        public IEnumerable<AbilityRankingModel> GetAbilityRanking(
+            Address? avatarAddress = null,
+            int? limit = null)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            var query = ctx.Set<AbilityRankingModel>()
+                .FromSqlRaw("SELECT `Address` as `AvatarAddress`, `AgentAddress`, `Name`, `TitleId`, `AvatarLevel`, `ArmorId`, `Cp`, " +
+                            "row_number() over(ORDER BY `Cp` DESC) `Ranking` " +
+                            "FROM `Avatars` ");
+
+            if (avatarAddress is { } avatarAddressNotNull)
+            {
+                query = query.Where(s => s.AvatarAddress == avatarAddressNotNull.ToString());
+            }
+
+            if (limit is { } limitNotNull)
+            {
+                query = query.Take(limitNotNull);
+            }
+
+            return query.ToList();
         }
     }
 }

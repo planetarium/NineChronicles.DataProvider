@@ -2,10 +2,9 @@
 {
     using System.ComponentModel.DataAnnotations;
 
-    public class CraftRankingModel
+    public class CraftRankingInputModel
     {
         [Key]
-
         public string? AvatarAddress { get; set; }
 
         public string? AgentAddress { get; set; }
