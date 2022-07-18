@@ -174,7 +174,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             CreateBulkFiles();
             using MySqlConnection connection = new MySqlConnection(_connectionString);
-            IEDbName = $"{IEDbName}_{offset}_{offset + limit}";
             var stm33 =
                 $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{IEDbName}` (
                   `BlockIndex` bigint NOT NULL,
@@ -214,8 +213,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             cmd33.CommandTimeout = 300;
             cmd33.ExecuteScalar();
             connection.Close();
-
-            CEDbName = $"{CEDbName}_{offset}_{offset + limit}";
             var stm34 =
                 $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{CEDbName}` (
                   `BlockIndex` bigint NOT NULL,
