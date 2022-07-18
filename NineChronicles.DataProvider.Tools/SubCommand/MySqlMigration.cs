@@ -1,10 +1,12 @@
 namespace NineChronicles.DataProvider.Tools.SubCommand
 {
+#nullable enable
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
+    using Bencodex.Types;
     using Cocona;
     using Libplanet;
     using Libplanet.Action;
@@ -18,8 +20,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using Nekoyume.Battle;
     using Nekoyume.BlockChain.Policy;
     using Nekoyume.Model.Item;
+    using Nekoyume.Model.Mail;
     using Nekoyume.Model.State;
-    using Nekoyume.TableData;
     using Serilog;
     using Serilog.Events;
     using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -183,14 +185,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                   `OutputCp` int NOT NULL,
                   `PrevLevel` int NOT NULL,
                   `OutputLevel` int NOT NULL,
-                  `UpgradeFail` bool DEFAULT NULL,
+                  `EnhancementResult` varchar(100) NOT NULL,
                   `AgentAddress` varchar(100) NOT NULL,
                   `AvatarAddress` varchar(100) NOT NULL,
                   `Name` varchar(100) NOT NULL,
-                  `AvatarLevel` int DEFAULT NULL,
-                  `TitleId` int DEFAULT NULL,
-                  `ArmorId` int DEFAULT NULL,
-                  `AvatarCp` int DEFAULT NULL,
+                  `AvatarLevel` int NOT NULL,
                   `ItemType` varchar(100) NOT NULL,
                   `ItemSubType` varchar(100) NOT NULL,
                   `Id` int NOT NULL,
@@ -228,10 +227,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                   `AgentAddress` varchar(100) NOT NULL,
                   `AvatarAddress` varchar(100) NOT NULL,
                   `Name` varchar(100) NOT NULL,
-                  `AvatarLevel` int DEFAULT NULL,
-                  `TitleId` int DEFAULT NULL,
-                  `ArmorId` int DEFAULT NULL,
-                  `AvatarCp` int DEFAULT NULL,
+                  `AvatarLevel` int NOT NULL,
                   `ItemType` varchar(100) NOT NULL,
                   `ItemSubType` varchar(100) NOT NULL,
                   `Id` int NOT NULL,
@@ -281,61 +277,44 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
                     {
                         var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
+                        List<string> ceList = new List<string>();
                         Console.WriteLine($"Checking Block #{block.Index}");
                         foreach (var tx in block.Transactions)
                         {
                             if (tx.Actions.FirstOrDefault()?.InnerAction is ItemEnhancement ie)
                             {
-                                Console.WriteLine($"Found IE11 action in #{block.Index}");
                                 try
                                 {
-                                    if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
+                                    Console.WriteLine($"Found IE11 action in #{block.Index}");
+                                    var outputState = _baseChain.GetState(ie.avatarAddress, block.Hash);
+                                    AvatarState avatarState = new AvatarState((Dictionary)outputState);
+                                    foreach (var mail in avatarState.mailBox)
                                     {
-                                        aes = _baseChain.ExecuteActions(block);
-                                    }
-
-                                    foreach (var ev in aes)
-                                    {
-                                        if (ev.Action is not RewardGold && ((NCAction)ev.Action).InnerAction is ItemEnhancement)
+                                        if (mail.ToString() == "Nekoyume.Model.Mail.ItemEnhanceMail" && mail.blockIndex == block.Index)
                                         {
-                                            Console.WriteLine($"ItemEnhancement11 Action in Block #{block.Index}, TxId: {ev.InputContext.TxId}");
-                                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(ie.avatarAddress);
-                                            var previousStates = ev.InputContext.PreviousStates;
-                                            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(ie.avatarAddress);
-                                            var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                            var avatarLevel = avatarState.level;
-                                            var avatarArmorId = avatarState.GetArmorId();
-                                            var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                            int? avatarTitleId = null;
-                                            if (avatarTitleCostume != null)
+                                            var itemEnhanceMail = (ItemEnhanceMail)mail;
+                                            if (itemEnhanceMail.attachment.itemUsable.ItemId == ie.itemId)
                                             {
-                                                avatarTitleId = avatarTitleCostume.Id;
-                                            }
-
-                                            var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                            string avatarName = avatarState.name;
-                                            if (prevAvatarState.inventory.TryGetNonFungibleItem(ie.itemId, out ItemUsable prevEnhancementItem)
-                                                && prevEnhancementItem is Equipment prevEnhancementEquipment
-                                                && avatarState.inventory.TryGetNonFungibleItem(ie.itemId, out ItemUsable outputEnhancementItem)
-                                                && outputEnhancementItem is Equipment outputEnhancementEquipment)
-                                            {
+                                                Console.WriteLine($"ItemEnhancement11 Action in Block #{block.Index}, TxId: {tx.Id}");
+                                                var data = (ItemEnhancement.ResultModel)itemEnhanceMail.attachment;
+                                                var prevEnhancementEquipment = (Equipment)data.preItemUsable;
+                                                var outputEnhancementEquipment = (Equipment)data.itemUsable;
+                                                var avatarLevel = avatarState.level;
+                                                string avatarName = avatarState.name;
                                                 _ieBulkFile.WriteLine(
                                                     $"{block.Index};" +
-                                                    $"{ev.InputContext.TxId};" +
+                                                    $"{tx.Id};" +
                                                     "Item_Enhancement11;" +
                                                     $"{outputEnhancementEquipment.ItemId.ToString()};" +
                                                     $"{CPHelper.GetCP(prevEnhancementEquipment)};" +
                                                     $"{CPHelper.GetCP(outputEnhancementEquipment)};" +
                                                     $"{prevEnhancementEquipment.level};" +
                                                     $"{outputEnhancementEquipment.level};" +
-                                                    $"{prevEnhancementEquipment.level != outputEnhancementEquipment.level};" +
+                                                    $"{data.enhancementResult.ToString()};" +
                                                     $"{tx.Signer.ToString()};" +
                                                     $"{ie.avatarAddress.ToString()};" +
                                                     $"{avatarName};" +
                                                     $"{avatarLevel};" +
-                                                    $"{avatarTitleId ?? 0};" +
-                                                    $"{avatarArmorId};" +
-                                                    $"{avatarCp};" +
                                                     $"{outputEnhancementEquipment.ItemType.ToString()};" +
                                                     $"{outputEnhancementEquipment.ItemSubType.ToString()};" +
                                                     $"{outputEnhancementEquipment.Id};" +
@@ -354,8 +333,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                             }
                                         }
                                     }
-
-                                    break;
                                 }
                                 catch (Exception ex)
                                 {
@@ -365,56 +342,38 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                             if (tx.Actions.FirstOrDefault()?.InnerAction is ItemEnhancement10 ie10)
                             {
-                                Console.WriteLine($"Found IE10 action in #{block.Index}");
                                 try
                                 {
-                                    if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
+                                    Console.WriteLine($"Found IE10 action in #{block.Index}");
+                                    var outputState = _baseChain.GetState(ie10.avatarAddress, block.Hash);
+                                    AvatarState avatarState = new AvatarState((Dictionary)outputState);
+                                    foreach (var mail in avatarState.mailBox)
                                     {
-                                        aes = _baseChain.ExecuteActions(block);
-                                    }
-
-                                    foreach (var ev in aes)
-                                    {
-                                        if (ev.Action is not RewardGold && ((NCAction)ev.Action).InnerAction is ItemEnhancement10)
+                                        if (mail.ToString() == "Nekoyume.Model.Mail.ItemEnhanceMail" && mail.blockIndex == block.Index)
                                         {
-                                            Console.WriteLine($"ItemEnhancement10 Action in Block #{block.Index}, TxId: {ev.InputContext.TxId}");
-                                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(ie10.avatarAddress);
-                                            var previousStates = ev.InputContext.PreviousStates;
-                                            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(ie10.avatarAddress);
-                                            var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                            var avatarLevel = avatarState.level;
-                                            var avatarArmorId = avatarState.GetArmorId();
-                                            var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                            int? avatarTitleId = null;
-                                            if (avatarTitleCostume != null)
+                                            var itemEnhanceMail = (ItemEnhanceMail)mail;
+                                            if (itemEnhanceMail.attachment.itemUsable.ItemId == ie10.itemId)
                                             {
-                                                avatarTitleId = avatarTitleCostume.Id;
-                                            }
-
-                                            var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                            string avatarName = avatarState.name;
-                                            if (prevAvatarState.inventory.TryGetNonFungibleItem(ie10.itemId, out ItemUsable prevEnhancementItem)
-                                                && prevEnhancementItem is Equipment prevEnhancementEquipment
-                                                && avatarState.inventory.TryGetNonFungibleItem(ie10.itemId, out ItemUsable outputEnhancementItem)
-                                                && outputEnhancementItem is Equipment outputEnhancementEquipment)
-                                            {
+                                                Console.WriteLine($"ItemEnhancement10 Action in Block #{block.Index}, TxId: {tx.Id}");
+                                                var data = (ItemEnhancement10.ResultModel)itemEnhanceMail.attachment;
+                                                var prevEnhancementEquipment = (Equipment)data.preItemUsable;
+                                                var outputEnhancementEquipment = (Equipment)data.itemUsable;
+                                                var avatarLevel = avatarState.level;
+                                                string avatarName = avatarState.name;
                                                 _ieBulkFile.WriteLine(
                                                     $"{block.Index};" +
-                                                    $"{ev.InputContext.TxId};" +
+                                                    $"{tx.Id};" +
                                                     "Item_Enhancement10;" +
                                                     $"{outputEnhancementEquipment.ItemId.ToString()};" +
                                                     $"{CPHelper.GetCP(prevEnhancementEquipment)};" +
                                                     $"{CPHelper.GetCP(outputEnhancementEquipment)};" +
                                                     $"{prevEnhancementEquipment.level};" +
                                                     $"{outputEnhancementEquipment.level};" +
-                                                    $"{prevEnhancementEquipment.level != outputEnhancementEquipment.level};" +
+                                                    $"{data.enhancementResult.ToString()};" +
                                                     $"{tx.Signer.ToString()};" +
                                                     $"{ie10.avatarAddress.ToString()};" +
                                                     $"{avatarName};" +
                                                     $"{avatarLevel};" +
-                                                    $"{avatarTitleId ?? 0};" +
-                                                    $"{avatarArmorId};" +
-                                                    $"{avatarCp};" +
                                                     $"{outputEnhancementEquipment.ItemType.ToString()};" +
                                                     $"{outputEnhancementEquipment.ItemSubType.ToString()};" +
                                                     $"{outputEnhancementEquipment.Id};" +
@@ -433,8 +392,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                             }
                                         }
                                     }
-
-                                    break;
                                 }
                                 catch (Exception ex)
                                 {
@@ -444,56 +401,38 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                             if (tx.Actions.FirstOrDefault()?.InnerAction is ItemEnhancement9 ie9)
                             {
-                                Console.WriteLine($"Found IE9 action in #{block.Index}");
                                 try
                                 {
-                                    if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
+                                    Console.WriteLine($"Found IE9 action in #{block.Index}");
+                                    var outputState = _baseChain.GetState(ie9.avatarAddress, block.Hash);
+                                    AvatarState avatarState = new AvatarState((Dictionary)outputState);
+                                    foreach (var mail in avatarState.mailBox)
                                     {
-                                        aes = _baseChain.ExecuteActions(block);
-                                    }
-
-                                    foreach (var ev in aes)
-                                    {
-                                        if (ev.Action is not RewardGold && ((NCAction)ev.Action).InnerAction is ItemEnhancement9)
+                                        if (mail.ToString() == "Nekoyume.Model.Mail.ItemEnhanceMail" && mail.blockIndex == block.Index)
                                         {
-                                            Console.WriteLine($"ItemEnhancement9 Action in Block #{block.Index}, TxId: {ev.InputContext.TxId}");
-                                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(ie9.avatarAddress);
-                                            var previousStates = ev.InputContext.PreviousStates;
-                                            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(ie9.avatarAddress);
-                                            var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                            var avatarLevel = avatarState.level;
-                                            var avatarArmorId = avatarState.GetArmorId();
-                                            var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                            int? avatarTitleId = null;
-                                            if (avatarTitleCostume != null)
+                                            var itemEnhanceMail = (ItemEnhanceMail)mail;
+                                            if (itemEnhanceMail.attachment.itemUsable.ItemId == ie9.itemId)
                                             {
-                                                avatarTitleId = avatarTitleCostume.Id;
-                                            }
-
-                                            var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                            string avatarName = avatarState.name;
-                                            if (prevAvatarState.inventory.TryGetNonFungibleItem(ie9.itemId, out ItemUsable prevEnhancementItem)
-                                                && prevEnhancementItem is Equipment prevEnhancementEquipment
-                                                && avatarState.inventory.TryGetNonFungibleItem(ie9.itemId, out ItemUsable outputEnhancementItem)
-                                                && outputEnhancementItem is Equipment outputEnhancementEquipment)
-                                            {
+                                                Console.WriteLine($"ItemEnhancement9 Action in Block #{block.Index}, TxId: {tx.Id}");
+                                                var data = (ItemEnhancement9.ResultModel)itemEnhanceMail.attachment;
+                                                var prevEnhancementEquipment = (Equipment)data.preItemUsable;
+                                                var outputEnhancementEquipment = (Equipment)data.itemUsable;
+                                                var avatarLevel = avatarState.level;
+                                                string avatarName = avatarState.name;
                                                 _ieBulkFile.WriteLine(
                                                     $"{block.Index};" +
-                                                    $"{ev.InputContext.TxId};" +
+                                                    $"{tx.Id};" +
                                                     "Item_Enhancement9;" +
                                                     $"{outputEnhancementEquipment.ItemId.ToString()};" +
                                                     $"{CPHelper.GetCP(prevEnhancementEquipment)};" +
                                                     $"{CPHelper.GetCP(outputEnhancementEquipment)};" +
                                                     $"{prevEnhancementEquipment.level};" +
                                                     $"{outputEnhancementEquipment.level};" +
-                                                    $"{prevEnhancementEquipment.level != outputEnhancementEquipment.level};" +
+                                                    $"{data.enhancementResult.ToString()};" +
                                                     $"{tx.Signer.ToString()};" +
                                                     $"{ie9.avatarAddress.ToString()};" +
                                                     $"{avatarName};" +
                                                     $"{avatarLevel};" +
-                                                    $"{avatarTitleId ?? 0};" +
-                                                    $"{avatarArmorId};" +
-                                                    $"{avatarCp};" +
                                                     $"{outputEnhancementEquipment.ItemType.ToString()};" +
                                                     $"{outputEnhancementEquipment.ItemSubType.ToString()};" +
                                                     $"{outputEnhancementEquipment.Id};" +
@@ -512,8 +451,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                             }
                                         }
                                     }
-
-                                    break;
                                 }
                                 catch (Exception ex)
                                 {
@@ -523,41 +460,27 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                             if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment ce)
                             {
-                                Console.WriteLine($"Found CE12 action in #{block.Index}");
                                 try
                                 {
-                                    if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
+                                    Console.WriteLine($"Found CE12 action in #{block.Index}");
+                                    var outputState = _baseChain.GetState(ce.avatarAddress, block.Hash);
+                                    AvatarState avatarState = new AvatarState((Dictionary)outputState);
+                                    foreach (var mail in avatarState.mailBox)
                                     {
-                                        aes = _baseChain.ExecuteActions(block);
-                                    }
-
-                                    foreach (var ev in aes)
-                                    {
-                                        if (ev.Action is not RewardGold && ((NCAction)ev.Action).InnerAction is CombinationEquipment)
+                                        if (mail.ToString() == "Nekoyume.Model.Mail.CombinationMail" && mail.blockIndex == block.Index)
                                         {
-                                            Console.WriteLine($"CombinationEquipment12 Action in Block #{block.Index}, TxId: {ev.InputContext.TxId}");
-                                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(ce.avatarAddress);
-                                            var characterSheet = ev.OutputStates.GetSheet<CharacterSheet>();
-                                            var avatarLevel = avatarState.level;
-                                            var avatarArmorId = avatarState.GetArmorId();
-                                            var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                            int? avatarTitleId = null;
-                                            if (avatarTitleCostume != null)
+                                            var combinationMail = (CombinationMail)mail;
+                                            if (!ceList.Contains(combinationMail.attachment.itemUsable.ItemId.ToString()))
                                             {
-                                                avatarTitleId = avatarTitleCostume.Id;
-                                            }
-
-                                            var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                            string avatarName = avatarState.name;
-                                            var slotState = ev.OutputStates.GetCombinationSlotState(
-                                                ce.avatarAddress,
-                                                ce.slotIndex);
-                                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
-                                            {
-                                                var equipment = (Equipment)slotState.Result.itemUsable;
+                                                Console.WriteLine($"CombinationEquipment12 Action in Block #{block.Index}, TxId: {tx.Id}");
+                                                ceList.Add(combinationMail.attachment.itemUsable.ItemId.ToString());
+                                                var data = (CombinationConsumable5.ResultModel)combinationMail.attachment;
+                                                var equipment = (Equipment)data.itemUsable;
+                                                var avatarLevel = avatarState.level;
+                                                string avatarName = avatarState.name;
                                                 _ceBulkFile.WriteLine(
                                                     $"{block.Index};" +
-                                                    $"{ev.InputContext.TxId};" +
+                                                    $"{tx.Id};" +
                                                     "Combination_Equipment12;" +
                                                     $"{equipment.ItemId.ToString()};" +
                                                     $"{CPHelper.GetCP(equipment)};" +
@@ -566,9 +489,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     $"{ce.avatarAddress.ToString()};" +
                                                     $"{avatarName};" +
                                                     $"{avatarLevel};" +
-                                                    $"{avatarTitleId ?? 0};" +
-                                                    $"{avatarArmorId};" +
-                                                    $"{avatarCp};" +
                                                     $"{equipment.ItemType.ToString()};" +
                                                     $"{equipment.ItemSubType.ToString()};" +
                                                     $"{equipment.Id};" +
@@ -584,11 +504,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     $"{equipment.UniqueStatType.ToString()};" +
                                                     $"{block.Timestamp:o}"
                                                 );
+                                                break;
                                             }
                                         }
                                     }
-
-                                    break;
                                 }
                                 catch (Exception ex)
                                 {
@@ -598,41 +517,27 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                             if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment11 ce11)
                             {
-                                Console.WriteLine($"Found CE11 action in #{block.Index}");
                                 try
                                 {
-                                    if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
+                                    Console.WriteLine($"Found CE11 action in #{block.Index}");
+                                    var outputState = _baseChain.GetState(ce11.avatarAddress, block.Hash);
+                                    AvatarState avatarState = new AvatarState((Dictionary)outputState);
+                                    foreach (var mail in avatarState.mailBox)
                                     {
-                                        aes = _baseChain.ExecuteActions(block);
-                                    }
-
-                                    foreach (var ev in aes)
-                                    {
-                                        if (ev.Action is not RewardGold && ((NCAction)ev.Action).InnerAction is CombinationEquipment11)
+                                        if (mail.ToString() == "Nekoyume.Model.Mail.CombinationMail" && mail.blockIndex == block.Index)
                                         {
-                                            Console.WriteLine($"CombinationEquipment11 Action in Block #{block.Index}, TxId: {ev.InputContext.TxId}");
-                                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(ce11.avatarAddress);
-                                            var characterSheet = ev.OutputStates.GetSheet<CharacterSheet>();
-                                            var avatarLevel = avatarState.level;
-                                            var avatarArmorId = avatarState.GetArmorId();
-                                            var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                            int? avatarTitleId = null;
-                                            if (avatarTitleCostume != null)
+                                            var combinationMail = (CombinationMail)mail;
+                                            if (!ceList.Contains(combinationMail.attachment.itemUsable.ItemId.ToString()))
                                             {
-                                                avatarTitleId = avatarTitleCostume.Id;
-                                            }
-
-                                            var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                            string avatarName = avatarState.name;
-                                            var slotState = ev.OutputStates.GetCombinationSlotState(
-                                                ce11.avatarAddress,
-                                                ce11.slotIndex);
-                                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
-                                            {
-                                                var equipment = (Equipment)slotState.Result.itemUsable;
+                                                Console.WriteLine($"CombinationEquipment11 Action in Block #{block.Index}, TxId: {tx.Id}");
+                                                ceList.Add(combinationMail.attachment.itemUsable.ItemId.ToString());
+                                                var data = (CombinationConsumable5.ResultModel)combinationMail.attachment;
+                                                var equipment = (Equipment)data.itemUsable;
+                                                var avatarLevel = avatarState.level;
+                                                string avatarName = avatarState.name;
                                                 _ceBulkFile.WriteLine(
                                                     $"{block.Index};" +
-                                                    $"{ev.InputContext.TxId};" +
+                                                    $"{tx.Id};" +
                                                     "Combination_Equipment11;" +
                                                     $"{equipment.ItemId.ToString()};" +
                                                     $"{CPHelper.GetCP(equipment)};" +
@@ -641,9 +546,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     $"{ce11.avatarAddress.ToString()};" +
                                                     $"{avatarName};" +
                                                     $"{avatarLevel};" +
-                                                    $"{avatarTitleId ?? 0};" +
-                                                    $"{avatarArmorId};" +
-                                                    $"{avatarCp};" +
                                                     $"{equipment.ItemType.ToString()};" +
                                                     $"{equipment.ItemSubType.ToString()};" +
                                                     $"{equipment.Id};" +
@@ -659,11 +561,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     $"{equipment.UniqueStatType.ToString()};" +
                                                     $"{block.Timestamp:o}"
                                                 );
+                                                break;
                                             }
                                         }
                                     }
-
-                                    break;
                                 }
                                 catch (Exception ex)
                                 {
@@ -673,41 +574,27 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                             if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment10 ce10)
                             {
-                                Console.WriteLine($"Found CE10 action in #{block.Index}");
                                 try
                                 {
-                                    if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
+                                    Console.WriteLine($"Found CE10 action in #{block.Index}");
+                                    var outputState = _baseChain.GetState(ce10.avatarAddress, block.Hash);
+                                    AvatarState avatarState = new AvatarState((Dictionary)outputState);
+                                    foreach (var mail in avatarState.mailBox)
                                     {
-                                        aes = _baseChain.ExecuteActions(block);
-                                    }
-
-                                    foreach (var ev in aes)
-                                    {
-                                        if (ev.Action is not RewardGold && ((NCAction)ev.Action).InnerAction is CombinationEquipment10)
+                                        if (mail.ToString() == "Nekoyume.Model.Mail.CombinationMail" && mail.blockIndex == block.Index)
                                         {
-                                            Console.WriteLine($"CombinationEquipment10 Action in Block #{block.Index}, TxId: {ev.InputContext.TxId}");
-                                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(ce10.avatarAddress);
-                                            var characterSheet = ev.OutputStates.GetSheet<CharacterSheet>();
-                                            var avatarLevel = avatarState.level;
-                                            var avatarArmorId = avatarState.GetArmorId();
-                                            var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                            int? avatarTitleId = null;
-                                            if (avatarTitleCostume != null)
+                                            var combinationMail = (CombinationMail)mail;
+                                            if (!ceList.Contains(combinationMail.attachment.itemUsable.ItemId.ToString()))
                                             {
-                                                avatarTitleId = avatarTitleCostume.Id;
-                                            }
-
-                                            var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                            string avatarName = avatarState.name;
-                                            var slotState = ev.OutputStates.GetCombinationSlotState(
-                                                ce10.avatarAddress,
-                                                ce10.slotIndex);
-                                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
-                                            {
-                                                var equipment = (Equipment)slotState.Result.itemUsable;
+                                                Console.WriteLine($"CombinationEquipment10 Action in Block #{block.Index}, TxId: {tx.Id}");
+                                                ceList.Add(combinationMail.attachment.itemUsable.ItemId.ToString());
+                                                var data = (CombinationConsumable5.ResultModel)combinationMail.attachment;
+                                                var equipment = (Equipment)data.itemUsable;
+                                                var avatarLevel = avatarState.level;
+                                                string avatarName = avatarState.name;
                                                 _ceBulkFile.WriteLine(
                                                     $"{block.Index};" +
-                                                    $"{ev.InputContext.TxId};" +
+                                                    $"{tx.Id};" +
                                                     "Combination_Equipment10;" +
                                                     $"{equipment.ItemId.ToString()};" +
                                                     $"{CPHelper.GetCP(equipment)};" +
@@ -716,9 +603,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     $"{ce10.avatarAddress.ToString()};" +
                                                     $"{avatarName};" +
                                                     $"{avatarLevel};" +
-                                                    $"{avatarTitleId ?? 0};" +
-                                                    $"{avatarArmorId};" +
-                                                    $"{avatarCp};" +
                                                     $"{equipment.ItemType.ToString()};" +
                                                     $"{equipment.ItemSubType.ToString()};" +
                                                     $"{equipment.Id};" +
@@ -734,11 +618,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     $"{equipment.UniqueStatType.ToString()};" +
                                                     $"{block.Timestamp:o}"
                                                 );
+                                                break;
                                             }
                                         }
                                     }
-
-                                    break;
                                 }
                                 catch (Exception ex)
                                 {
@@ -748,41 +631,27 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                             if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment9 ce9)
                             {
-                                Console.WriteLine($"Found CE9 action in #{block.Index}");
                                 try
                                 {
-                                    if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
+                                    Console.WriteLine($"Found CE9 action in #{block.Index}");
+                                    var outputState = _baseChain.GetState(ce9.avatarAddress, block.Hash);
+                                    AvatarState avatarState = new AvatarState((Dictionary)outputState);
+                                    foreach (var mail in avatarState.mailBox)
                                     {
-                                        aes = _baseChain.ExecuteActions(block);
-                                    }
-
-                                    foreach (var ev in aes)
-                                    {
-                                        if (ev.Action is not RewardGold && ((NCAction)ev.Action).InnerAction is CombinationEquipment9)
+                                        if (mail.ToString() == "Nekoyume.Model.Mail.CombinationMail" && mail.blockIndex == block.Index)
                                         {
-                                            Console.WriteLine($"CombinationEquipment9 Action in Block #{block.Index}, TxId: {ev.InputContext.TxId}");
-                                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(ce9.avatarAddress);
-                                            var characterSheet = ev.OutputStates.GetSheet<CharacterSheet>();
-                                            var avatarLevel = avatarState.level;
-                                            var avatarArmorId = avatarState.GetArmorId();
-                                            var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                            int? avatarTitleId = null;
-                                            if (avatarTitleCostume != null)
+                                            var combinationMail = (CombinationMail)mail;
+                                            if (!ceList.Contains(combinationMail.attachment.itemUsable.ItemId.ToString()))
                                             {
-                                                avatarTitleId = avatarTitleCostume.Id;
-                                            }
-
-                                            var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                            string avatarName = avatarState.name;
-                                            var slotState = ev.OutputStates.GetCombinationSlotState(
-                                                ce9.avatarAddress,
-                                                ce9.slotIndex);
-                                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
-                                            {
-                                                var equipment = (Equipment)slotState.Result.itemUsable;
+                                                Console.WriteLine($"CombinationEquipment9 Action in Block #{block.Index}, TxId: {tx.Id}");
+                                                ceList.Add(combinationMail.attachment.itemUsable.ItemId.ToString());
+                                                var data = (CombinationConsumable5.ResultModel)combinationMail.attachment;
+                                                var equipment = (Equipment)data.itemUsable;
+                                                var avatarLevel = avatarState.level;
+                                                string avatarName = avatarState.name;
                                                 _ceBulkFile.WriteLine(
                                                     $"{block.Index};" +
-                                                    $"{ev.InputContext.TxId};" +
+                                                    $"{tx.Id};" +
                                                     "Combination_Equipment9;" +
                                                     $"{equipment.ItemId.ToString()};" +
                                                     $"{CPHelper.GetCP(equipment)};" +
@@ -791,9 +660,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     $"{ce9.avatarAddress.ToString()};" +
                                                     $"{avatarName};" +
                                                     $"{avatarLevel};" +
-                                                    $"{avatarTitleId ?? 0};" +
-                                                    $"{avatarArmorId};" +
-                                                    $"{avatarCp};" +
                                                     $"{equipment.ItemType.ToString()};" +
                                                     $"{equipment.ItemSubType.ToString()};" +
                                                     $"{equipment.Id};" +
@@ -809,11 +675,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     $"{equipment.UniqueStatType.ToString()};" +
                                                     $"{block.Timestamp:o}"
                                                 );
+                                                break;
                                             }
                                         }
                                     }
-
-                                    break;
                                 }
                                 catch (Exception ex)
                                 {
@@ -821,6 +686,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
                         }
+
+                        ceList.Clear();
                     }
 
                     if (interval < remainingCount)
