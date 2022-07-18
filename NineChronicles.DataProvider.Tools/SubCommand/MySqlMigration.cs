@@ -15,7 +15,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using Libplanet.Store;
     using MySqlConnector;
     using Nekoyume.Action;
+    using Nekoyume.Battle;
     using Nekoyume.BlockChain.Policy;
+    using Nekoyume.Model.Item;
+    using Nekoyume.Model.State;
+    using Nekoyume.TableData;
     using Serilog;
     using Serilog.Events;
     using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -25,8 +29,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private const string AgentDbName = "Agents";
         private const string AvatarDbName = "Avatars";
         private const string CCDbName = "CombinationConsumables";
-        private const string CEDbName = "CombinationEquipments";
-        private const string IEDbName = "ItemEnhancements";
+        private string CEDbName = "CombinationEquipmentsData";
+        private string IEDbName = "ItemEnhancementsData";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
@@ -167,6 +171,92 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _avatarList = new List<string>();
 
             CreateBulkFiles();
+            using MySqlConnection connection = new MySqlConnection(_connectionString);
+            IEDbName = $"{IEDbName}_{offset}_{offset + limit}";
+            var stm33 =
+                $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{IEDbName}` (
+                  `BlockIndex` bigint NOT NULL,
+                  `TxId` varchar(100) NOT NULL,
+                  `ActionType` varchar(100) NOT NULL,
+                  `ItemId` varchar(100) NOT NULL,
+                  `PreviousCp` int NOT NULL,
+                  `OutputCp` int NOT NULL,
+                  `PrevLevel` int NOT NULL,
+                  `OutputLevel` int NOT NULL,
+                  `UpgradeFail` bool DEFAULT NULL,
+                  `AgentAddress` varchar(100) NOT NULL,
+                  `AvatarAddress` varchar(100) NOT NULL,
+                  `Name` varchar(100) NOT NULL,
+                  `AvatarLevel` int DEFAULT NULL,
+                  `TitleId` int DEFAULT NULL,
+                  `ArmorId` int DEFAULT NULL,
+                  `AvatarCp` int DEFAULT NULL,
+                  `ItemType` varchar(100) NOT NULL,
+                  `ItemSubType` varchar(100) NOT NULL,
+                  `Id` int NOT NULL,
+                  `BuffSkillCount` int NOT NULL,
+                  `ElementalType` varchar(100) NOT NULL,
+                  `Grade` int NOT NULL,
+                  `SetId` int NOT NULL,
+                  `SkillsCount` int NOT NULL,
+                  `SpineResourcePath` varchar(100) NOT NULL,
+                  `RequiredBlockIndex` bigint NOT NULL,
+                  `NonFungibleId` varchar(100) NOT NULL,
+                  `TradableId` varchar(100) NOT NULL,
+                  `UniqueStatType` varchar(100) NOT NULL,
+                  `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  PRIMARY KEY (`TxId`),
+                  INDEX (`BlockIndex`, `Timestamp`),
+                  KEY `fk_ItemEnhancementData_Avatar1_idx` (`AvatarAddress`),
+                  KEY `fk_ItemEnhancementData_Agent1_idx` (`AgentAddress`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+            var cmd33 = new MySqlCommand(stm33, connection);
+            connection.Open();
+            cmd33.CommandTimeout = 300;
+            cmd33.ExecuteScalar();
+            connection.Close();
+
+            CEDbName = $"{CEDbName}_{offset}_{offset + limit}";
+            var stm34 =
+                $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{CEDbName}` (
+                  `BlockIndex` bigint NOT NULL,
+                  `TxId` varchar(100) NOT NULL,
+                  `ActionType` varchar(100) NOT NULL,
+                  `ItemId` varchar(100) NOT NULL,
+                  `OutputCp` int NOT NULL,
+                  `OutputLevel` int NOT NULL,
+                  `AgentAddress` varchar(100) NOT NULL,
+                  `AvatarAddress` varchar(100) NOT NULL,
+                  `Name` varchar(100) NOT NULL,
+                  `AvatarLevel` int DEFAULT NULL,
+                  `TitleId` int DEFAULT NULL,
+                  `ArmorId` int DEFAULT NULL,
+                  `AvatarCp` int DEFAULT NULL,
+                  `ItemType` varchar(100) NOT NULL,
+                  `ItemSubType` varchar(100) NOT NULL,
+                  `Id` int NOT NULL,
+                  `BuffSkillCount` int NOT NULL,
+                  `ElementalType` varchar(100) NOT NULL,
+                  `Grade` int NOT NULL,
+                  `SetId` int NOT NULL,
+                  `SkillsCount` int NOT NULL,
+                  `SpineResourcePath` varchar(100) NOT NULL,
+                  `RequiredBlockIndex` bigint NOT NULL,
+                  `NonFungibleId` varchar(100) NOT NULL,
+                  `TradableId` varchar(100) NOT NULL,
+                  `UniqueStatType` varchar(100) NOT NULL,
+                  `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  PRIMARY KEY (`TxId`),
+                  INDEX (`BlockIndex`, `Timestamp`),
+                  KEY `fk_CombinationEquipmentData_Avatar1_idx` (`AvatarAddress`),
+                  KEY `fk_CombinationEquipmentData_Agent1_idx` (`AgentAddress`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+            var cmd34 = new MySqlCommand(stm34, connection);
+            connection.Open();
+            cmd34.CommandTimeout = 300;
+            cmd34.ExecuteScalar();
+            connection.Close();
+
             try
             {
                 int totalCount = limit ?? (int)_baseStore.CountBlocks();
@@ -177,28 +267,560 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 {
                     int interval = 1000;
                     int limitInterval;
-                    Task<List<ActionEvaluation>>[] taskArray;
                     if (interval < remainingCount)
                     {
-                        taskArray = new Task<List<ActionEvaluation>>[interval];
                         limitInterval = interval;
                     }
                     else
                     {
-                        taskArray = new Task<List<ActionEvaluation>>[remainingCount];
                         limitInterval = remainingCount;
                     }
 
+                    IReadOnlyList<ActionEvaluation> aes = null;
                     foreach (var item in
                         _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
                     {
                         var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
-                        taskArray[item.i] = Task.Factory.StartNew(() =>
+                        Console.WriteLine($"Checking Block #{block.Index}");
+                        foreach (var tx in block.Transactions)
                         {
-                            List<ActionEvaluation> actionEvaluations = EvaluateBlock(block);
-                            Console.WriteLine($"Block progress: {block.Index}/{remainingCount}");
-                            return actionEvaluations;
-                        });
+                            if (tx.Actions.FirstOrDefault()?.InnerAction is ItemEnhancement ie)
+                            {
+                                Console.WriteLine($"Found IE11 action in #{block.Index}");
+                                try
+                                {
+                                    if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
+                                    {
+                                        aes = _baseChain.ExecuteActions(block);
+                                    }
+
+                                    foreach (var ev in aes)
+                                    {
+                                        if (ev.Action is not RewardGold && ((NCAction)ev.Action).InnerAction is ItemEnhancement)
+                                        {
+                                            Console.WriteLine($"ItemEnhancement11 Action in Block #{block.Index}, TxId: {ev.InputContext.TxId}");
+                                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(ie.avatarAddress);
+                                            var previousStates = ev.InputContext.PreviousStates;
+                                            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(ie.avatarAddress);
+                                            var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                            var avatarLevel = avatarState.level;
+                                            var avatarArmorId = avatarState.GetArmorId();
+                                            var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                            int? avatarTitleId = null;
+                                            if (avatarTitleCostume != null)
+                                            {
+                                                avatarTitleId = avatarTitleCostume.Id;
+                                            }
+
+                                            var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                            string avatarName = avatarState.name;
+                                            if (prevAvatarState.inventory.TryGetNonFungibleItem(ie.itemId, out ItemUsable prevEnhancementItem)
+                                                && prevEnhancementItem is Equipment prevEnhancementEquipment
+                                                && avatarState.inventory.TryGetNonFungibleItem(ie.itemId, out ItemUsable outputEnhancementItem)
+                                                && outputEnhancementItem is Equipment outputEnhancementEquipment)
+                                            {
+                                                _ieBulkFile.WriteLine(
+                                                    $"{block.Index};" +
+                                                    $"{ev.InputContext.TxId};" +
+                                                    "Item_Enhancement11;" +
+                                                    $"{outputEnhancementEquipment.ItemId.ToString()};" +
+                                                    $"{CPHelper.GetCP(prevEnhancementEquipment)};" +
+                                                    $"{CPHelper.GetCP(outputEnhancementEquipment)};" +
+                                                    $"{prevEnhancementEquipment.level};" +
+                                                    $"{outputEnhancementEquipment.level};" +
+                                                    $"{prevEnhancementEquipment.level != outputEnhancementEquipment.level};" +
+                                                    $"{tx.Signer.ToString()};" +
+                                                    $"{ie.avatarAddress.ToString()};" +
+                                                    $"{avatarName};" +
+                                                    $"{avatarLevel};" +
+                                                    $"{avatarTitleId ?? 0};" +
+                                                    $"{avatarArmorId};" +
+                                                    $"{avatarCp};" +
+                                                    $"{outputEnhancementEquipment.ItemType.ToString()};" +
+                                                    $"{outputEnhancementEquipment.ItemSubType.ToString()};" +
+                                                    $"{outputEnhancementEquipment.Id};" +
+                                                    $"{outputEnhancementEquipment.BuffSkills.Count};" +
+                                                    $"{outputEnhancementEquipment.ElementalType.ToString()};" +
+                                                    $"{outputEnhancementEquipment.Grade};" +
+                                                    $"{outputEnhancementEquipment.SetId};" +
+                                                    $"{outputEnhancementEquipment.Skills.Count};" +
+                                                    $"{outputEnhancementEquipment.SpineResourcePath};" +
+                                                    $"{outputEnhancementEquipment.RequiredBlockIndex};" +
+                                                    $"{outputEnhancementEquipment.NonFungibleId.ToString()};" +
+                                                    $"{outputEnhancementEquipment.TradableId.ToString()};" +
+                                                    $"{outputEnhancementEquipment.UniqueStatType.ToString()};" +
+                                                    $"{block.Timestamp:o}"
+                                                );
+                                            }
+                                        }
+                                    }
+
+                                    break;
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.Actions.FirstOrDefault()?.InnerAction is ItemEnhancement10 ie10)
+                            {
+                                Console.WriteLine($"Found IE10 action in #{block.Index}");
+                                try
+                                {
+                                    if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
+                                    {
+                                        aes = _baseChain.ExecuteActions(block);
+                                    }
+
+                                    foreach (var ev in aes)
+                                    {
+                                        if (ev.Action is not RewardGold && ((NCAction)ev.Action).InnerAction is ItemEnhancement10)
+                                        {
+                                            Console.WriteLine($"ItemEnhancement10 Action in Block #{block.Index}, TxId: {ev.InputContext.TxId}");
+                                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(ie10.avatarAddress);
+                                            var previousStates = ev.InputContext.PreviousStates;
+                                            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(ie10.avatarAddress);
+                                            var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                            var avatarLevel = avatarState.level;
+                                            var avatarArmorId = avatarState.GetArmorId();
+                                            var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                            int? avatarTitleId = null;
+                                            if (avatarTitleCostume != null)
+                                            {
+                                                avatarTitleId = avatarTitleCostume.Id;
+                                            }
+
+                                            var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                            string avatarName = avatarState.name;
+                                            if (prevAvatarState.inventory.TryGetNonFungibleItem(ie10.itemId, out ItemUsable prevEnhancementItem)
+                                                && prevEnhancementItem is Equipment prevEnhancementEquipment
+                                                && avatarState.inventory.TryGetNonFungibleItem(ie10.itemId, out ItemUsable outputEnhancementItem)
+                                                && outputEnhancementItem is Equipment outputEnhancementEquipment)
+                                            {
+                                                _ieBulkFile.WriteLine(
+                                                    $"{block.Index};" +
+                                                    $"{ev.InputContext.TxId};" +
+                                                    "Item_Enhancement10;" +
+                                                    $"{outputEnhancementEquipment.ItemId.ToString()};" +
+                                                    $"{CPHelper.GetCP(prevEnhancementEquipment)};" +
+                                                    $"{CPHelper.GetCP(outputEnhancementEquipment)};" +
+                                                    $"{prevEnhancementEquipment.level};" +
+                                                    $"{outputEnhancementEquipment.level};" +
+                                                    $"{prevEnhancementEquipment.level != outputEnhancementEquipment.level};" +
+                                                    $"{tx.Signer.ToString()};" +
+                                                    $"{ie10.avatarAddress.ToString()};" +
+                                                    $"{avatarName};" +
+                                                    $"{avatarLevel};" +
+                                                    $"{avatarTitleId ?? 0};" +
+                                                    $"{avatarArmorId};" +
+                                                    $"{avatarCp};" +
+                                                    $"{outputEnhancementEquipment.ItemType.ToString()};" +
+                                                    $"{outputEnhancementEquipment.ItemSubType.ToString()};" +
+                                                    $"{outputEnhancementEquipment.Id};" +
+                                                    $"{outputEnhancementEquipment.BuffSkills.Count};" +
+                                                    $"{outputEnhancementEquipment.ElementalType.ToString()};" +
+                                                    $"{outputEnhancementEquipment.Grade};" +
+                                                    $"{outputEnhancementEquipment.SetId};" +
+                                                    $"{outputEnhancementEquipment.Skills.Count};" +
+                                                    $"{outputEnhancementEquipment.SpineResourcePath};" +
+                                                    $"{outputEnhancementEquipment.RequiredBlockIndex};" +
+                                                    $"{outputEnhancementEquipment.NonFungibleId.ToString()};" +
+                                                    $"{outputEnhancementEquipment.TradableId.ToString()};" +
+                                                    $"{outputEnhancementEquipment.UniqueStatType.ToString()};" +
+                                                    $"{block.Timestamp:o}"
+                                                );
+                                            }
+                                        }
+                                    }
+
+                                    break;
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.Actions.FirstOrDefault()?.InnerAction is ItemEnhancement9 ie9)
+                            {
+                                Console.WriteLine($"Found IE9 action in #{block.Index}");
+                                try
+                                {
+                                    if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
+                                    {
+                                        aes = _baseChain.ExecuteActions(block);
+                                    }
+
+                                    foreach (var ev in aes)
+                                    {
+                                        if (ev.Action is not RewardGold && ((NCAction)ev.Action).InnerAction is ItemEnhancement9)
+                                        {
+                                            Console.WriteLine($"ItemEnhancement9 Action in Block #{block.Index}, TxId: {ev.InputContext.TxId}");
+                                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(ie9.avatarAddress);
+                                            var previousStates = ev.InputContext.PreviousStates;
+                                            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(ie9.avatarAddress);
+                                            var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                            var avatarLevel = avatarState.level;
+                                            var avatarArmorId = avatarState.GetArmorId();
+                                            var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                            int? avatarTitleId = null;
+                                            if (avatarTitleCostume != null)
+                                            {
+                                                avatarTitleId = avatarTitleCostume.Id;
+                                            }
+
+                                            var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                            string avatarName = avatarState.name;
+                                            if (prevAvatarState.inventory.TryGetNonFungibleItem(ie9.itemId, out ItemUsable prevEnhancementItem)
+                                                && prevEnhancementItem is Equipment prevEnhancementEquipment
+                                                && avatarState.inventory.TryGetNonFungibleItem(ie9.itemId, out ItemUsable outputEnhancementItem)
+                                                && outputEnhancementItem is Equipment outputEnhancementEquipment)
+                                            {
+                                                _ieBulkFile.WriteLine(
+                                                    $"{block.Index};" +
+                                                    $"{ev.InputContext.TxId};" +
+                                                    "Item_Enhancement9;" +
+                                                    $"{outputEnhancementEquipment.ItemId.ToString()};" +
+                                                    $"{CPHelper.GetCP(prevEnhancementEquipment)};" +
+                                                    $"{CPHelper.GetCP(outputEnhancementEquipment)};" +
+                                                    $"{prevEnhancementEquipment.level};" +
+                                                    $"{outputEnhancementEquipment.level};" +
+                                                    $"{prevEnhancementEquipment.level != outputEnhancementEquipment.level};" +
+                                                    $"{tx.Signer.ToString()};" +
+                                                    $"{ie9.avatarAddress.ToString()};" +
+                                                    $"{avatarName};" +
+                                                    $"{avatarLevel};" +
+                                                    $"{avatarTitleId ?? 0};" +
+                                                    $"{avatarArmorId};" +
+                                                    $"{avatarCp};" +
+                                                    $"{outputEnhancementEquipment.ItemType.ToString()};" +
+                                                    $"{outputEnhancementEquipment.ItemSubType.ToString()};" +
+                                                    $"{outputEnhancementEquipment.Id};" +
+                                                    $"{outputEnhancementEquipment.BuffSkills.Count};" +
+                                                    $"{outputEnhancementEquipment.ElementalType.ToString()};" +
+                                                    $"{outputEnhancementEquipment.Grade};" +
+                                                    $"{outputEnhancementEquipment.SetId};" +
+                                                    $"{outputEnhancementEquipment.Skills.Count};" +
+                                                    $"{outputEnhancementEquipment.SpineResourcePath};" +
+                                                    $"{outputEnhancementEquipment.RequiredBlockIndex};" +
+                                                    $"{outputEnhancementEquipment.NonFungibleId.ToString()};" +
+                                                    $"{outputEnhancementEquipment.TradableId.ToString()};" +
+                                                    $"{outputEnhancementEquipment.UniqueStatType.ToString()};" +
+                                                    $"{block.Timestamp:o}"
+                                                );
+                                            }
+                                        }
+                                    }
+
+                                    break;
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment ce)
+                            {
+                                Console.WriteLine($"Found CE12 action in #{block.Index}");
+                                try
+                                {
+                                    if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
+                                    {
+                                        aes = _baseChain.ExecuteActions(block);
+                                    }
+
+                                    foreach (var ev in aes)
+                                    {
+                                        if (ev.Action is not RewardGold && ((NCAction)ev.Action).InnerAction is CombinationEquipment)
+                                        {
+                                            Console.WriteLine($"CombinationEquipment12 Action in Block #{block.Index}, TxId: {ev.InputContext.TxId}");
+                                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(ce.avatarAddress);
+                                            var characterSheet = ev.OutputStates.GetSheet<CharacterSheet>();
+                                            var avatarLevel = avatarState.level;
+                                            var avatarArmorId = avatarState.GetArmorId();
+                                            var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                            int? avatarTitleId = null;
+                                            if (avatarTitleCostume != null)
+                                            {
+                                                avatarTitleId = avatarTitleCostume.Id;
+                                            }
+
+                                            var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                            string avatarName = avatarState.name;
+                                            var slotState = ev.OutputStates.GetCombinationSlotState(
+                                                ce.avatarAddress,
+                                                ce.slotIndex);
+                                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
+                                            {
+                                                var equipment = (Equipment)slotState.Result.itemUsable;
+                                                _ceBulkFile.WriteLine(
+                                                    $"{block.Index};" +
+                                                    $"{ev.InputContext.TxId};" +
+                                                    "Combination_Equipment12;" +
+                                                    $"{equipment.ItemId.ToString()};" +
+                                                    $"{CPHelper.GetCP(equipment)};" +
+                                                    $"{equipment.level};" +
+                                                    $"{tx.Signer.ToString()};" +
+                                                    $"{ce.avatarAddress.ToString()};" +
+                                                    $"{avatarName};" +
+                                                    $"{avatarLevel};" +
+                                                    $"{avatarTitleId ?? 0};" +
+                                                    $"{avatarArmorId};" +
+                                                    $"{avatarCp};" +
+                                                    $"{equipment.ItemType.ToString()};" +
+                                                    $"{equipment.ItemSubType.ToString()};" +
+                                                    $"{equipment.Id};" +
+                                                    $"{equipment.BuffSkills.Count};" +
+                                                    $"{equipment.ElementalType.ToString()};" +
+                                                    $"{equipment.Grade};" +
+                                                    $"{equipment.SetId};" +
+                                                    $"{equipment.Skills.Count};" +
+                                                    $"{equipment.SpineResourcePath};" +
+                                                    $"{equipment.RequiredBlockIndex};" +
+                                                    $"{equipment.NonFungibleId.ToString()};" +
+                                                    $"{equipment.TradableId.ToString()};" +
+                                                    $"{equipment.UniqueStatType.ToString()};" +
+                                                    $"{block.Timestamp:o}"
+                                                );
+                                            }
+                                        }
+                                    }
+
+                                    break;
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment11 ce11)
+                            {
+                                Console.WriteLine($"Found CE11 action in #{block.Index}");
+                                try
+                                {
+                                    if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
+                                    {
+                                        aes = _baseChain.ExecuteActions(block);
+                                    }
+
+                                    foreach (var ev in aes)
+                                    {
+                                        if (ev.Action is not RewardGold && ((NCAction)ev.Action).InnerAction is CombinationEquipment11)
+                                        {
+                                            Console.WriteLine($"CombinationEquipment11 Action in Block #{block.Index}, TxId: {ev.InputContext.TxId}");
+                                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(ce11.avatarAddress);
+                                            var characterSheet = ev.OutputStates.GetSheet<CharacterSheet>();
+                                            var avatarLevel = avatarState.level;
+                                            var avatarArmorId = avatarState.GetArmorId();
+                                            var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                            int? avatarTitleId = null;
+                                            if (avatarTitleCostume != null)
+                                            {
+                                                avatarTitleId = avatarTitleCostume.Id;
+                                            }
+
+                                            var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                            string avatarName = avatarState.name;
+                                            var slotState = ev.OutputStates.GetCombinationSlotState(
+                                                ce11.avatarAddress,
+                                                ce11.slotIndex);
+                                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
+                                            {
+                                                var equipment = (Equipment)slotState.Result.itemUsable;
+                                                _ceBulkFile.WriteLine(
+                                                    $"{block.Index};" +
+                                                    $"{ev.InputContext.TxId};" +
+                                                    "Combination_Equipment11;" +
+                                                    $"{equipment.ItemId.ToString()};" +
+                                                    $"{CPHelper.GetCP(equipment)};" +
+                                                    $"{equipment.level};" +
+                                                    $"{tx.Signer.ToString()};" +
+                                                    $"{ce11.avatarAddress.ToString()};" +
+                                                    $"{avatarName};" +
+                                                    $"{avatarLevel};" +
+                                                    $"{avatarTitleId ?? 0};" +
+                                                    $"{avatarArmorId};" +
+                                                    $"{avatarCp};" +
+                                                    $"{equipment.ItemType.ToString()};" +
+                                                    $"{equipment.ItemSubType.ToString()};" +
+                                                    $"{equipment.Id};" +
+                                                    $"{equipment.BuffSkills.Count};" +
+                                                    $"{equipment.ElementalType.ToString()};" +
+                                                    $"{equipment.Grade};" +
+                                                    $"{equipment.SetId};" +
+                                                    $"{equipment.Skills.Count};" +
+                                                    $"{equipment.SpineResourcePath};" +
+                                                    $"{equipment.RequiredBlockIndex};" +
+                                                    $"{equipment.NonFungibleId.ToString()};" +
+                                                    $"{equipment.TradableId.ToString()};" +
+                                                    $"{equipment.UniqueStatType.ToString()};" +
+                                                    $"{block.Timestamp:o}"
+                                                );
+                                            }
+                                        }
+                                    }
+
+                                    break;
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment10 ce10)
+                            {
+                                Console.WriteLine($"Found CE10 action in #{block.Index}");
+                                try
+                                {
+                                    if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
+                                    {
+                                        aes = _baseChain.ExecuteActions(block);
+                                    }
+
+                                    foreach (var ev in aes)
+                                    {
+                                        if (ev.Action is not RewardGold && ((NCAction)ev.Action).InnerAction is CombinationEquipment10)
+                                        {
+                                            Console.WriteLine($"CombinationEquipment10 Action in Block #{block.Index}, TxId: {ev.InputContext.TxId}");
+                                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(ce10.avatarAddress);
+                                            var characterSheet = ev.OutputStates.GetSheet<CharacterSheet>();
+                                            var avatarLevel = avatarState.level;
+                                            var avatarArmorId = avatarState.GetArmorId();
+                                            var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                            int? avatarTitleId = null;
+                                            if (avatarTitleCostume != null)
+                                            {
+                                                avatarTitleId = avatarTitleCostume.Id;
+                                            }
+
+                                            var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                            string avatarName = avatarState.name;
+                                            var slotState = ev.OutputStates.GetCombinationSlotState(
+                                                ce10.avatarAddress,
+                                                ce10.slotIndex);
+                                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
+                                            {
+                                                var equipment = (Equipment)slotState.Result.itemUsable;
+                                                _ceBulkFile.WriteLine(
+                                                    $"{block.Index};" +
+                                                    $"{ev.InputContext.TxId};" +
+                                                    "Combination_Equipment10;" +
+                                                    $"{equipment.ItemId.ToString()};" +
+                                                    $"{CPHelper.GetCP(equipment)};" +
+                                                    $"{equipment.level};" +
+                                                    $"{tx.Signer.ToString()};" +
+                                                    $"{ce10.avatarAddress.ToString()};" +
+                                                    $"{avatarName};" +
+                                                    $"{avatarLevel};" +
+                                                    $"{avatarTitleId ?? 0};" +
+                                                    $"{avatarArmorId};" +
+                                                    $"{avatarCp};" +
+                                                    $"{equipment.ItemType.ToString()};" +
+                                                    $"{equipment.ItemSubType.ToString()};" +
+                                                    $"{equipment.Id};" +
+                                                    $"{equipment.BuffSkills.Count};" +
+                                                    $"{equipment.ElementalType.ToString()};" +
+                                                    $"{equipment.Grade};" +
+                                                    $"{equipment.SetId};" +
+                                                    $"{equipment.Skills.Count};" +
+                                                    $"{equipment.SpineResourcePath};" +
+                                                    $"{equipment.RequiredBlockIndex};" +
+                                                    $"{equipment.NonFungibleId.ToString()};" +
+                                                    $"{equipment.TradableId.ToString()};" +
+                                                    $"{equipment.UniqueStatType.ToString()};" +
+                                                    $"{block.Timestamp:o}"
+                                                );
+                                            }
+                                        }
+                                    }
+
+                                    break;
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment9 ce9)
+                            {
+                                Console.WriteLine($"Found CE9 action in #{block.Index}");
+                                try
+                                {
+                                    if (aes == null || aes.FirstOrDefault().InputContext.BlockIndex != block.Index)
+                                    {
+                                        aes = _baseChain.ExecuteActions(block);
+                                    }
+
+                                    foreach (var ev in aes)
+                                    {
+                                        if (ev.Action is not RewardGold && ((NCAction)ev.Action).InnerAction is CombinationEquipment9)
+                                        {
+                                            Console.WriteLine($"CombinationEquipment9 Action in Block #{block.Index}, TxId: {ev.InputContext.TxId}");
+                                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(ce9.avatarAddress);
+                                            var characterSheet = ev.OutputStates.GetSheet<CharacterSheet>();
+                                            var avatarLevel = avatarState.level;
+                                            var avatarArmorId = avatarState.GetArmorId();
+                                            var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                            int? avatarTitleId = null;
+                                            if (avatarTitleCostume != null)
+                                            {
+                                                avatarTitleId = avatarTitleCostume.Id;
+                                            }
+
+                                            var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                            string avatarName = avatarState.name;
+                                            var slotState = ev.OutputStates.GetCombinationSlotState(
+                                                ce9.avatarAddress,
+                                                ce9.slotIndex);
+                                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
+                                            {
+                                                var equipment = (Equipment)slotState.Result.itemUsable;
+                                                _ceBulkFile.WriteLine(
+                                                    $"{block.Index};" +
+                                                    $"{ev.InputContext.TxId};" +
+                                                    "Combination_Equipment9;" +
+                                                    $"{equipment.ItemId.ToString()};" +
+                                                    $"{CPHelper.GetCP(equipment)};" +
+                                                    $"{equipment.level};" +
+                                                    $"{tx.Signer.ToString()};" +
+                                                    $"{ce9.avatarAddress.ToString()};" +
+                                                    $"{avatarName};" +
+                                                    $"{avatarLevel};" +
+                                                    $"{avatarTitleId ?? 0};" +
+                                                    $"{avatarArmorId};" +
+                                                    $"{avatarCp};" +
+                                                    $"{equipment.ItemType.ToString()};" +
+                                                    $"{equipment.ItemSubType.ToString()};" +
+                                                    $"{equipment.Id};" +
+                                                    $"{equipment.BuffSkills.Count};" +
+                                                    $"{equipment.ElementalType.ToString()};" +
+                                                    $"{equipment.Grade};" +
+                                                    $"{equipment.SetId};" +
+                                                    $"{equipment.Skills.Count};" +
+                                                    $"{equipment.SpineResourcePath};" +
+                                                    $"{equipment.RequiredBlockIndex};" +
+                                                    $"{equipment.NonFungibleId.ToString()};" +
+                                                    $"{equipment.TradableId.ToString()};" +
+                                                    $"{equipment.UniqueStatType.ToString()};" +
+                                                    $"{block.Timestamp:o}"
+                                                );
+                                            }
+                                        }
+                                    }
+
+                                    break;
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+                        }
                     }
 
                     if (interval < remainingCount)
@@ -211,29 +833,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         remainingCount = 0;
                         offsetIdx += remainingCount;
                     }
-
-                    Task.WaitAll(taskArray);
-                    ProcessTasks(taskArray);
                 }
 
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
-
-                foreach (var path in _agentFiles)
-                {
-                    BulkInsert(AgentDbName, path);
-                }
-
-                foreach (var path in _avatarFiles)
-                {
-                    BulkInsert(AvatarDbName, path);
-                }
-
-                foreach (var path in _ccFiles)
-                {
-                    BulkInsert(CCDbName, path);
-                }
 
                 foreach (var path in _ceFiles)
                 {
