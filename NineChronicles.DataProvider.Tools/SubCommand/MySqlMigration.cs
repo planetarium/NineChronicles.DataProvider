@@ -15,7 +15,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using Libplanet.Store;
     using MySqlConnector;
     using Nekoyume.Action;
-    using Nekoyume.BlockChain;
+    using Nekoyume.BlockChain.Policy;
     using Serilog;
     using Serilog.Events;
     using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -101,10 +101,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     storePath,
                     dbConnectionCacheSize: 10000);
             }
-            else if (rocksdbStoreType == "mono")
-            {
-                _baseStore = new MonoRocksDBStore(storePath);
-            }
             else
             {
                 throw new CommandExitedException("Invalid rocksdb-storetype. Please enter 'new' or 'mono'", -1);
@@ -132,20 +128,18 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             }
 
             // Setup base store
-            RocksDBKeyValueStore baseStateRootKeyValueStore = new RocksDBKeyValueStore(Path.Combine(storePath, "state_hashes"));
             RocksDBKeyValueStore baseStateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(storePath, "states"));
             TrieStateStore baseStateStore =
-                new TrieStateStore(baseStateKeyValueStore, baseStateRootKeyValueStore);
+                new TrieStateStore(baseStateKeyValueStore);
 
             // Setup block policy
-            const int minimumDifficulty = 5000000, maximumTransactions = 100;
             IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
-            IBlockPolicy<NCAction> blockPolicy = blockPolicySource.GetPolicy(minimumDifficulty, maximumTransactions);
+            IBlockPolicy<NCAction> blockPolicy = blockPolicySource.GetPolicy();
 
             // Setup base chain & new chain
-            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(gHash);
+            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, gHash);
             _baseChain = new BlockChain<NCAction>(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis);
 
             // Prepare block hashes to append to new chain
@@ -198,7 +192,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     foreach (var item in
                         _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
                     {
-                        var block = _baseStore.GetBlock<NCAction>(item.value);
+                        var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
                         taskArray[item.i] = Task.Factory.StartNew(() =>
                         {
                             List<ActionEvaluation> actionEvaluations = EvaluateBlock(block);
@@ -275,7 +269,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 WriteCC(
                                     cc.Id,
                                     ae.InputContext.Signer,
-                                    cc.AvatarAddress,
+                                    cc.avatarAddress,
                                     cc.recipeId,
                                     cc.slotIndex,
                                     ae.InputContext.BlockIndex);
@@ -330,10 +324,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 WriteCE(
                                     ce.Id,
                                     ae.InputContext.Signer,
-                                    ce.AvatarAddress,
-                                    ce.RecipeId,
-                                    ce.SlotIndex,
-                                    ce.SubRecipeId ?? 0,
+                                    ce.avatarAddress,
+                                    ce.recipeId,
+                                    ce.slotIndex,
+                                    ce.subRecipeId ?? 0,
                                     ae.InputContext.BlockIndex);
                             }
 
@@ -447,17 +441,14 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                             if (action.InnerAction is ItemEnhancement6 ie6)
                             {
-                                foreach (var materialId in ie6.materialIds)
-                                {
-                                    WriteIE(
-                                        ie6.Id,
-                                        ae.InputContext.Signer,
-                                        ie6.avatarAddress,
-                                        ie6.itemId,
-                                        materialId,
-                                        ie6.slotIndex,
-                                        ae.InputContext.BlockIndex);
-                                }
+                                WriteIE(
+                                    ie6.Id,
+                                    ae.InputContext.Signer,
+                                    ie6.avatarAddress,
+                                    ie6.itemId,
+                                    ie6.materialId,
+                                    ie6.slotIndex,
+                                    ae.InputContext.BlockIndex);
                             }
                         }
                     }
@@ -467,11 +458,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
         private List<ActionEvaluation> EvaluateBlock(Block<NCAction> block)
         {
-            var evList = block.Evaluate(
-                DateTimeOffset.Now,
-                address => _baseChain.GetState(address, block.Hash),
-                (address, currency) =>
-                    _baseChain.GetBalance(address, currency, block.Hash)).ToList();
+            var evList = _baseChain.ExecuteActions(block).ToList();
             return evList;
         }
 
