@@ -174,45 +174,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             CreateBulkFiles();
             using MySqlConnection connection = new MySqlConnection(_connectionString);
-            var stm33 =
-                $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{IEDbName}` (
-                  `BlockIndex` bigint NOT NULL,
-                  `TxId` varchar(100) NOT NULL,
-                  `ActionType` varchar(100) NOT NULL,
-                  `ItemId` varchar(100) NOT NULL,
-                  `PreviousCp` int NOT NULL,
-                  `OutputCp` int NOT NULL,
-                  `PrevLevel` int NOT NULL,
-                  `OutputLevel` int NOT NULL,
-                  `EnhancementResult` varchar(100) NOT NULL,
-                  `AgentAddress` varchar(100) NOT NULL,
-                  `AvatarAddress` varchar(100) NOT NULL,
-                  `Name` varchar(100) NOT NULL,
-                  `AvatarLevel` int NOT NULL,
-                  `ItemType` varchar(100) NOT NULL,
-                  `ItemSubType` varchar(100) NOT NULL,
-                  `Id` int NOT NULL,
-                  `BuffSkillCount` int NOT NULL,
-                  `ElementalType` varchar(100) NOT NULL,
-                  `Grade` int NOT NULL,
-                  `SetId` int NOT NULL,
-                  `SkillsCount` int NOT NULL,
-                  `SpineResourcePath` varchar(100) NOT NULL,
-                  `RequiredBlockIndex` bigint NOT NULL,
-                  `NonFungibleId` varchar(100) NOT NULL,
-                  `TradableId` varchar(100) NOT NULL,
-                  `UniqueStatType` varchar(100) NOT NULL,
-                  `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                  PRIMARY KEY (`TxId`),
-                  INDEX (`BlockIndex`, `Timestamp`),
-                  KEY `fk_ItemEnhancementData_Avatar1_idx` (`AvatarAddress`),
-                  KEY `fk_ItemEnhancementData_Agent1_idx` (`AgentAddress`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
-            var cmd33 = new MySqlCommand(stm33, connection);
-            connection.Open();
-            cmd33.CommandTimeout = 300;
-            cmd33.ExecuteScalar();
-            connection.Close();
+            CEDbName = $"{CEDbName}_{offset}_{offset + limit}";
             var stm34 =
                 $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{CEDbName}` (
                   `BlockIndex` bigint NOT NULL,
@@ -233,6 +195,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                   `Grade` int NOT NULL,
                   `SetId` int NOT NULL,
                   `SkillsCount` int NOT NULL,
+                  `HasAdditionalStats` bool NOT NULL,
                   `SpineResourcePath` varchar(100) NOT NULL,
                   `RequiredBlockIndex` bigint NOT NULL,
                   `NonFungibleId` varchar(100) NOT NULL,
@@ -278,183 +241,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         Console.WriteLine($"Checking Block #{block.Index}");
                         foreach (var tx in block.Transactions)
                         {
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is ItemEnhancement ie)
-                            {
-                                try
-                                {
-                                    Console.WriteLine($"Found IE11 action in #{block.Index}");
-                                    var outputState = _baseChain.GetState(ie.avatarAddress, block.Hash);
-                                    AvatarState avatarState = new AvatarState((Dictionary)outputState);
-                                    foreach (var mail in avatarState.mailBox)
-                                    {
-                                        if (mail.ToString() == "Nekoyume.Model.Mail.ItemEnhanceMail" && mail.blockIndex == block.Index)
-                                        {
-                                            var itemEnhanceMail = (ItemEnhanceMail)mail;
-                                            if (itemEnhanceMail.attachment.itemUsable.ItemId == ie.itemId)
-                                            {
-                                                Console.WriteLine($"ItemEnhancement11 Action in Block #{block.Index}, TxId: {tx.Id}");
-                                                var data = (ItemEnhancement.ResultModel)itemEnhanceMail.attachment;
-                                                var prevEnhancementEquipment = (Equipment)data.preItemUsable;
-                                                var outputEnhancementEquipment = (Equipment)data.itemUsable;
-                                                var avatarLevel = avatarState.level;
-                                                string avatarName = avatarState.name;
-                                                _ieBulkFile.WriteLine(
-                                                    $"{block.Index};" +
-                                                    $"{tx.Id};" +
-                                                    "Item_Enhancement11;" +
-                                                    $"{outputEnhancementEquipment.ItemId.ToString()};" +
-                                                    $"{CPHelper.GetCP(prevEnhancementEquipment)};" +
-                                                    $"{CPHelper.GetCP(outputEnhancementEquipment)};" +
-                                                    $"{prevEnhancementEquipment.level};" +
-                                                    $"{outputEnhancementEquipment.level};" +
-                                                    $"{data.enhancementResult.ToString()};" +
-                                                    $"{tx.Signer.ToString()};" +
-                                                    $"{ie.avatarAddress.ToString()};" +
-                                                    $"{avatarName};" +
-                                                    $"{avatarLevel};" +
-                                                    $"{outputEnhancementEquipment.ItemType.ToString()};" +
-                                                    $"{outputEnhancementEquipment.ItemSubType.ToString()};" +
-                                                    $"{outputEnhancementEquipment.Id};" +
-                                                    $"{outputEnhancementEquipment.BuffSkills.Count};" +
-                                                    $"{outputEnhancementEquipment.ElementalType.ToString()};" +
-                                                    $"{outputEnhancementEquipment.Grade};" +
-                                                    $"{outputEnhancementEquipment.SetId};" +
-                                                    $"{outputEnhancementEquipment.Skills.Count};" +
-                                                    $"{outputEnhancementEquipment.SpineResourcePath};" +
-                                                    $"{outputEnhancementEquipment.RequiredBlockIndex};" +
-                                                    $"{outputEnhancementEquipment.NonFungibleId.ToString()};" +
-                                                    $"{outputEnhancementEquipment.TradableId.ToString()};" +
-                                                    $"{outputEnhancementEquipment.UniqueStatType.ToString()};" +
-                                                    $"{block.Timestamp:o}"
-                                                );
-                                            }
-                                        }
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine(ex.Message);
-                                }
-                            }
-
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is ItemEnhancement10 ie10)
-                            {
-                                try
-                                {
-                                    Console.WriteLine($"Found IE10 action in #{block.Index}");
-                                    var outputState = _baseChain.GetState(ie10.avatarAddress, block.Hash);
-                                    AvatarState avatarState = new AvatarState((Dictionary)outputState);
-                                    foreach (var mail in avatarState.mailBox)
-                                    {
-                                        if (mail.ToString() == "Nekoyume.Model.Mail.ItemEnhanceMail" && mail.blockIndex == block.Index)
-                                        {
-                                            var itemEnhanceMail = (ItemEnhanceMail)mail;
-                                            if (itemEnhanceMail.attachment.itemUsable.ItemId == ie10.itemId)
-                                            {
-                                                Console.WriteLine($"ItemEnhancement10 Action in Block #{block.Index}, TxId: {tx.Id}");
-                                                var data = (ItemEnhancement10.ResultModel)itemEnhanceMail.attachment;
-                                                var prevEnhancementEquipment = (Equipment)data.preItemUsable;
-                                                var outputEnhancementEquipment = (Equipment)data.itemUsable;
-                                                var avatarLevel = avatarState.level;
-                                                string avatarName = avatarState.name;
-                                                _ieBulkFile.WriteLine(
-                                                    $"{block.Index};" +
-                                                    $"{tx.Id};" +
-                                                    "Item_Enhancement10;" +
-                                                    $"{outputEnhancementEquipment.ItemId.ToString()};" +
-                                                    $"{CPHelper.GetCP(prevEnhancementEquipment)};" +
-                                                    $"{CPHelper.GetCP(outputEnhancementEquipment)};" +
-                                                    $"{prevEnhancementEquipment.level};" +
-                                                    $"{outputEnhancementEquipment.level};" +
-                                                    $"{data.enhancementResult.ToString()};" +
-                                                    $"{tx.Signer.ToString()};" +
-                                                    $"{ie10.avatarAddress.ToString()};" +
-                                                    $"{avatarName};" +
-                                                    $"{avatarLevel};" +
-                                                    $"{outputEnhancementEquipment.ItemType.ToString()};" +
-                                                    $"{outputEnhancementEquipment.ItemSubType.ToString()};" +
-                                                    $"{outputEnhancementEquipment.Id};" +
-                                                    $"{outputEnhancementEquipment.BuffSkills.Count};" +
-                                                    $"{outputEnhancementEquipment.ElementalType.ToString()};" +
-                                                    $"{outputEnhancementEquipment.Grade};" +
-                                                    $"{outputEnhancementEquipment.SetId};" +
-                                                    $"{outputEnhancementEquipment.Skills.Count};" +
-                                                    $"{outputEnhancementEquipment.SpineResourcePath};" +
-                                                    $"{outputEnhancementEquipment.RequiredBlockIndex};" +
-                                                    $"{outputEnhancementEquipment.NonFungibleId.ToString()};" +
-                                                    $"{outputEnhancementEquipment.TradableId.ToString()};" +
-                                                    $"{outputEnhancementEquipment.UniqueStatType.ToString()};" +
-                                                    $"{block.Timestamp:o}"
-                                                );
-                                            }
-                                        }
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine(ex.Message);
-                                }
-                            }
-
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is ItemEnhancement9 ie9)
-                            {
-                                try
-                                {
-                                    Console.WriteLine($"Found IE9 action in #{block.Index}");
-                                    var outputState = _baseChain.GetState(ie9.avatarAddress, block.Hash);
-                                    AvatarState avatarState = new AvatarState((Dictionary)outputState);
-                                    foreach (var mail in avatarState.mailBox)
-                                    {
-                                        if (mail.ToString() == "Nekoyume.Model.Mail.ItemEnhanceMail" && mail.blockIndex == block.Index)
-                                        {
-                                            var itemEnhanceMail = (ItemEnhanceMail)mail;
-                                            if (itemEnhanceMail.attachment.itemUsable.ItemId == ie9.itemId)
-                                            {
-                                                Console.WriteLine($"ItemEnhancement9 Action in Block #{block.Index}, TxId: {tx.Id}");
-                                                var data = (ItemEnhancement9.ResultModel)itemEnhanceMail.attachment;
-                                                var prevEnhancementEquipment = (Equipment)data.preItemUsable;
-                                                var outputEnhancementEquipment = (Equipment)data.itemUsable;
-                                                var avatarLevel = avatarState.level;
-                                                string avatarName = avatarState.name;
-                                                _ieBulkFile.WriteLine(
-                                                    $"{block.Index};" +
-                                                    $"{tx.Id};" +
-                                                    "Item_Enhancement9;" +
-                                                    $"{outputEnhancementEquipment.ItemId.ToString()};" +
-                                                    $"{CPHelper.GetCP(prevEnhancementEquipment)};" +
-                                                    $"{CPHelper.GetCP(outputEnhancementEquipment)};" +
-                                                    $"{prevEnhancementEquipment.level};" +
-                                                    $"{outputEnhancementEquipment.level};" +
-                                                    $"{data.enhancementResult.ToString()};" +
-                                                    $"{tx.Signer.ToString()};" +
-                                                    $"{ie9.avatarAddress.ToString()};" +
-                                                    $"{avatarName};" +
-                                                    $"{avatarLevel};" +
-                                                    $"{outputEnhancementEquipment.ItemType.ToString()};" +
-                                                    $"{outputEnhancementEquipment.ItemSubType.ToString()};" +
-                                                    $"{outputEnhancementEquipment.Id};" +
-                                                    $"{outputEnhancementEquipment.BuffSkills.Count};" +
-                                                    $"{outputEnhancementEquipment.ElementalType.ToString()};" +
-                                                    $"{outputEnhancementEquipment.Grade};" +
-                                                    $"{outputEnhancementEquipment.SetId};" +
-                                                    $"{outputEnhancementEquipment.Skills.Count};" +
-                                                    $"{outputEnhancementEquipment.SpineResourcePath};" +
-                                                    $"{outputEnhancementEquipment.RequiredBlockIndex};" +
-                                                    $"{outputEnhancementEquipment.NonFungibleId.ToString()};" +
-                                                    $"{outputEnhancementEquipment.TradableId.ToString()};" +
-                                                    $"{outputEnhancementEquipment.UniqueStatType.ToString()};" +
-                                                    $"{block.Timestamp:o}"
-                                                );
-                                            }
-                                        }
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine(ex.Message);
-                                }
-                            }
-
                             if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment ce)
                             {
                                 try
@@ -494,6 +280,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     $"{equipment.Grade};" +
                                                     $"{equipment.SetId};" +
                                                     $"{equipment.Skills.Count};" +
+                                                    $"{equipment.StatsMap.HasAdditionalStats};" +
                                                     $"{equipment.SpineResourcePath};" +
                                                     $"{equipment.RequiredBlockIndex};" +
                                                     $"{equipment.NonFungibleId.ToString()};" +
@@ -551,6 +338,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     $"{equipment.Grade};" +
                                                     $"{equipment.SetId};" +
                                                     $"{equipment.Skills.Count};" +
+                                                    $"{equipment.StatsMap.HasAdditionalStats};" +
                                                     $"{equipment.SpineResourcePath};" +
                                                     $"{equipment.RequiredBlockIndex};" +
                                                     $"{equipment.NonFungibleId.ToString()};" +
@@ -608,6 +396,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     $"{equipment.Grade};" +
                                                     $"{equipment.SetId};" +
                                                     $"{equipment.Skills.Count};" +
+                                                    $"{equipment.StatsMap.HasAdditionalStats};" +
                                                     $"{equipment.SpineResourcePath};" +
                                                     $"{equipment.RequiredBlockIndex};" +
                                                     $"{equipment.NonFungibleId.ToString()};" +
@@ -665,6 +454,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     $"{equipment.Grade};" +
                                                     $"{equipment.SetId};" +
                                                     $"{equipment.Skills.Count};" +
+                                                    $"{equipment.StatsMap.HasAdditionalStats};" +
                                                     $"{equipment.SpineResourcePath};" +
                                                     $"{equipment.RequiredBlockIndex};" +
                                                     $"{equipment.NonFungibleId.ToString()};" +
@@ -706,11 +496,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 foreach (var path in _ceFiles)
                 {
                     BulkInsert(CEDbName, path);
-                }
-
-                foreach (var path in _ieFiles)
-                {
-                    BulkInsert(IEDbName, path);
                 }
             }
             catch (Exception e)
