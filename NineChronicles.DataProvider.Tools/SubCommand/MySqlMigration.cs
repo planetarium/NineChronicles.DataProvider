@@ -280,7 +280,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     $"{equipment.Grade};" +
                                                     $"{equipment.SetId};" +
                                                     $"{equipment.Skills.Count};" +
-                                                    $"{equipment.StatsMap.HasAdditionalStats};" +
+                                                    $"{(equipment.StatsMap.HasAdditionalStats ? 1 : 0)};" +
                                                     $"{equipment.SpineResourcePath};" +
                                                     $"{equipment.RequiredBlockIndex};" +
                                                     $"{equipment.NonFungibleId.ToString()};" +
@@ -338,7 +338,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     $"{equipment.Grade};" +
                                                     $"{equipment.SetId};" +
                                                     $"{equipment.Skills.Count};" +
-                                                    $"{equipment.StatsMap.HasAdditionalStats};" +
+                                                    $"{(equipment.StatsMap.HasAdditionalStats ? 1 : 0)};" +
                                                     $"{equipment.SpineResourcePath};" +
                                                     $"{equipment.RequiredBlockIndex};" +
                                                     $"{equipment.NonFungibleId.ToString()};" +
@@ -396,7 +396,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     $"{equipment.Grade};" +
                                                     $"{equipment.SetId};" +
                                                     $"{equipment.Skills.Count};" +
-                                                    $"{equipment.StatsMap.HasAdditionalStats};" +
+                                                    $"{(equipment.StatsMap.HasAdditionalStats ? 1 : 0)};" +
                                                     $"{equipment.SpineResourcePath};" +
                                                     $"{equipment.RequiredBlockIndex};" +
                                                     $"{equipment.NonFungibleId.ToString()};" +
@@ -454,7 +454,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                     $"{equipment.Grade};" +
                                                     $"{equipment.SetId};" +
                                                     $"{equipment.Skills.Count};" +
-                                                    $"{equipment.StatsMap.HasAdditionalStats};" +
+                                                    $"{(equipment.StatsMap.HasAdditionalStats ? 1 : 0)};" +
                                                     $"{equipment.SpineResourcePath};" +
                                                     $"{equipment.RequiredBlockIndex};" +
                                                     $"{equipment.NonFungibleId.ToString()};" +
