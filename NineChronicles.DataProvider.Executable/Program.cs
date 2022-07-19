@@ -91,6 +91,11 @@ namespace NineChronicles.DataProvider.Executable
                 properties.LogActionRenders = true;
             }
 
+            hostBuilder.ConfigureServices(services =>
+            {
+                services.AddSingleton(_ => context);
+            });
+
             hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, context);
 
             // ConfigureServices must come before Configure for now
