@@ -31,7 +31,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private const string AgentDbName = "Agents";
         private const string AvatarDbName = "Avatars";
         private const string CCDbName = "CombinationConsumables";
-        private string CEDbName = "CombinationEquipmentsData";
+        private string CEDbName = "CombinationEquipmentsDataV2";
         private string IEDbName = "ItemEnhancementsData";
         private string _connectionString;
         private IStore _baseStore;
@@ -174,7 +174,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             CreateBulkFiles();
             using MySqlConnection connection = new MySqlConnection(_connectionString);
-            CEDbName = $"{CEDbName}_{offset}_{offset + limit}";
+
+            // CEDbName = $"{CEDbName}_{offset}_{offset + limit}";
             var stm34 =
                 $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{CEDbName}` (
                   `BlockIndex` bigint NOT NULL,
