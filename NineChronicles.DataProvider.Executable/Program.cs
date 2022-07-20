@@ -76,7 +76,7 @@ namespace NineChronicles.DataProvider.Executable
                     bucketSize: headlessConfig.BucketSize,
                     staticPeerStrings: headlessConfig.StaticPeerStrings,
                     render: headlessConfig.Render,
-                    preload: headlessConfig.Preload,
+                    preload: false,
                     transportType: "netmq");
 
             var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
@@ -131,9 +131,13 @@ namespace NineChronicles.DataProvider.Executable
                 {
                     services.AddDbContextFactory<NineChroniclesContext>(options =>
                     {
-                        if (args.Length == 1)
+                        var configurationBuilder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
+                        IConfiguration config = configurationBuilder.Build();
+                        var headlessConfig = new Configuration();
+                        config.Bind(headlessConfig);
+                        if (!string.IsNullOrEmpty(headlessConfig.MySqlConnectionString))
                         {
-                            options.UseMySQL(args[0],  b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable"));
+                            options.UseMySQL(headlessConfig.MySqlConnectionString,  b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable"));
                         }
                         else
                         {
