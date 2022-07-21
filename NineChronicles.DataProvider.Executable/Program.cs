@@ -131,9 +131,25 @@ namespace NineChronicles.DataProvider.Executable
                 {
                     services.AddDbContextFactory<NineChroniclesContext>(options =>
                     {
+                        string[] input = new string[1];
+                        Console.Write("Please enter your MySql connection string (Just press \"Enter\" to use SqlLite): ");
+                        for (int i = 0; i < input.Length; i++)
+                        {
+                            var response = Console.ReadLine();
+                            if (response != string.Empty)
+                            {
+                                input[i] = response;
+                                args = input;
+                            }
+                        }
+
                         if (args.Length == 1)
                         {
-                            options.UseMySQL(args[0],  b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable"));
+                            options.UseMySql(
+                                args[0],
+                                ServerVersion.AutoDetect(
+                                    args[0]),
+                                b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable"));
                         }
                         else
                         {
