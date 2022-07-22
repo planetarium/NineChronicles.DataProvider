@@ -188,6 +188,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             int shopOrderCount = 0;
             _usBulkFile.WriteLine(
                      "BlockIndex;" +
+                     "StakeVersion;" +
                      "AgentAddress;" +
                      "StakingAmount;" +
                      "StartedBlockIndex;" +
@@ -231,6 +232,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             var stm33 =
                             $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{USDbName}` (
                               `BlockIndex` bigint NOT NULL,
+                              `StakeVersion` varchar(100) NOT NULL,
                               `AgentAddress` varchar(100) NOT NULL,
                               `StakingAmount` decimal(13,2) NOT NULL,
                               `StartedBlockIndex` bigint NOT NULL,
@@ -246,19 +248,46 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             checkBARankingTable = true;
                         }
 
-                        if (ev.OutputStates.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
+                        if (!agents.Contains(avatarState.agentAddress.ToString()))
                         {
-                            var stakeStateAddress = StakeState.DeriveAddress(avatarState.agentAddress);
-                            var currency = ev.OutputStates.GetGoldCurrency();
-                            var stakedBalance = ev.OutputStates.GetBalance(stakeStateAddress, currency);
-                            _usBulkFile.WriteLine(
-                                $"{tip.Index};" +
-                                $"{avatarState.agentAddress.ToString()};" +
-                                $"{Convert.ToDecimal(stakedBalance.GetQuantityString())};" +
-                                $"{stakeState.StartedBlockIndex};" +
-                                $"{stakeState.ReceivedBlockIndex};" +
-                                $"{stakeState.CancellableBlockIndex}"
+                            agents.Add(avatarState.agentAddress.ToString());
+                            if (ev.OutputStates.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
+                            {
+                                var stakeStateAddress = StakeState.DeriveAddress(avatarState.agentAddress);
+                                var currency = ev.OutputStates.GetGoldCurrency();
+                                var stakedBalance = ev.OutputStates.GetBalance(stakeStateAddress, currency);
+                                _usBulkFile.WriteLine(
+                                    $"{tip.Index};" +
+                                    "V2;" +
+                                    $"{avatarState.agentAddress.ToString()};" +
+                                    $"{Convert.ToDecimal(stakedBalance.GetQuantityString())};" +
+                                    $"{stakeState.StartedBlockIndex};" +
+                                    $"{stakeState.ReceivedBlockIndex};" +
+                                    $"{stakeState.CancellableBlockIndex}"
+                                );
+                            }
+
+                            var agentState = ev.OutputStates.GetAgentState(avatarState.agentAddress);
+                            Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
+                                avatarState.agentAddress,
+                                agentState.MonsterCollectionRound
                             );
+                            if (ev.OutputStates.TryGetState(monsterCollectionAddress, out Dictionary stateDict))
+                            {
+                                var mcStates = new MonsterCollectionState(stateDict);
+                                var currency = ev.OutputStates.GetGoldCurrency();
+                                FungibleAssetValue mcBalance =
+                                    ev.OutputStates.GetBalance(monsterCollectionAddress, currency);
+                                _usBulkFile.WriteLine(
+                                    $"{tip.Index};" +
+                                    "V1;" +
+                                    $"{avatarState.agentAddress.ToString()};" +
+                                    $"{Convert.ToDecimal(mcBalance.GetQuantityString())};" +
+                                    $"{mcStates.StartedBlockIndex};" +
+                                    $"{mcStates.ReceivedBlockIndex};" +
+                                    $"{mcStates.ExpiredBlockIndex}"
+                                );
+                            }
                         }
 
                         Console.WriteLine("Migrating Complete {0}/{1}", avatarCount, avatars.Count);
