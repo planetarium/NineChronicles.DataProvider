@@ -1591,5 +1591,12 @@ namespace NineChronicles.DataProvider.Store
 
             return query.ToList();
         }
+
+        public void StoreRaider(RaiderModel model)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            ctx.Raiders?.Add(model);
+            ctx.SaveChanges();
+        }
     }
 }
