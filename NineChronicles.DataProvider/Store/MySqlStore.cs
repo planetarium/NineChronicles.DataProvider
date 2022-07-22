@@ -1675,9 +1675,17 @@ namespace NineChronicles.DataProvider.Store
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             var query = ctx.Set<AgentModel>()
-                .FromSqlRaw($"SELECT Signer as Address FROM `TRANSACTIONS` WHERE Timestamp > \"{lowerDate}%\" and Timestamp < \"{upperDate}%\" GROUP BY Signer");
+                .FromSqlRaw(
+                    $"SELECT Signer as Address FROM `TRANSACTIONS` WHERE Timestamp > \"{lowerDate}%\" and Timestamp < \"{upperDate}%\" GROUP BY Signer");
 
             return query.ToList();
+        }
+
+        public void StoreRaider(RaiderModel model)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            ctx.Raiders?.Add(model);
+            ctx.SaveChanges();
         }
     }
 }
