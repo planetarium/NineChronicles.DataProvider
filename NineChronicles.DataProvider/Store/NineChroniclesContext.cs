@@ -80,6 +80,8 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<TransactionModel>? Transactions { get; set; }
 
+        public DbSet<RaiderModel> Raiders => Set<RaiderModel>();
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.
@@ -91,6 +93,9 @@ namespace NineChronicles.DataProvider.Store
             modelBuilder.Entity<EquipmentRankingModel>().HasNoKey();
             modelBuilder.Entity<AbilityRankingModel>().HasNoKey();
             modelBuilder.Entity<BattleArenaRankingModel>().HasNoKey();
+            modelBuilder.Entity<WorldBossRankingModel>()
+                .HasNoKey()
+                .ToTable("WorldBossRankings", t => t.ExcludeFromMigrations());
         }
     }
 }
