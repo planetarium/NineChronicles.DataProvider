@@ -410,3 +410,34 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`BattleArenas` (
     KEY `fk_BattleArenas_AvatarAddress1_idx` (`AvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE IF NOT EXISTS `data_provider`.`Blocks` (
+    `Index` bigint NOT NULL,
+    `Hash` varchar(100) NOT NULL,
+    `Miner` varchar(100) NOT NULL,
+    `Difficulty` bigint NOT NULL,
+    `Nonce` varchar(100) NOT NULL,
+    `PreviousHash` varchar(100) NOT NULL,
+    `ProtocolVersion` int NOT NULL,
+    `PublicKey` varchar(100) NOT NULL,
+    `StateRootHash` varchar(100) NOT NULL,
+    `TotalDifficulty` bigint NOT NULL,
+    `TxCount` int NOT NULL,
+    `TxHash` varchar(100) NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`Hash`),
+    INDEX (`Index`, `Timestamp`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`Transactions` (
+    `BlockIndex` bigint NOT NULL,
+    `BlockHash` varchar(100) NOT NULL,
+    `TxId` varchar(100) NOT NULL,
+    `Signer` varchar(100) NOT NULL,
+    `ActionType` varchar(100) NOT NULL,
+    `Nonce` bigint NOT NULL,
+    `PublicKey` varchar(100) NOT NULL,
+    `UpdatedAddressesCount` int NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`TxId`),
+    INDEX (`BlockIndex`, `Signer`, `Timestamp`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

@@ -2,6 +2,7 @@ namespace NineChronicles.DataProvider
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -31,7 +32,7 @@ namespace NineChronicles.DataProvider
 
     public class RenderSubscriber : BackgroundService
     {
-        private const int InsertInterval = 500;
+        private const int BlockInterval = 30;
         private readonly BlockRenderer _blockRenderer;
         private readonly ActionRenderer _actionRenderer;
         private readonly ExceptionRenderer _exceptionRenderer;
@@ -87,7 +88,9 @@ namespace NineChronicles.DataProvider
         private readonly List<AgentModel> _battleArenaAgentList = new List<AgentModel>();
         private readonly List<AvatarModel> _battleArenaAvatarList = new List<AvatarModel>();
         private readonly List<BattleArenaModel> _battleArenaList = new List<BattleArenaModel>();
-        private int _renderCount = 0;
+        private readonly List<BlockModel> _blockList = new List<BlockModel>();
+        private readonly List<TransactionModel> _transactionList = new List<TransactionModel>();
+        private int _renderedBlockCount = 0;
 
         public RenderSubscriber(
             NineChroniclesNodeService nodeService,
@@ -105,6 +108,176 @@ namespace NineChronicles.DataProvider
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _blockRenderer.BlockSubject.Subscribe(b =>
+            {
+                var block = b.NewTip;
+                _blockList.Add(new BlockModel()
+                {
+                    Index = block.Index,
+                    Hash = block.Hash.ToString(),
+                    Miner = block.Miner.ToString(),
+                    Difficulty = block.Difficulty,
+                    Nonce = block.Nonce.ToString(),
+                    PreviousHash = block.PreviousHash.ToString(),
+                    ProtocolVersion = block.ProtocolVersion,
+                    PublicKey = block.PublicKey!.ToString(),
+                    StateRootHash = block.StateRootHash.ToString(),
+                    TotalDifficulty = (long)block.TotalDifficulty,
+                    TxCount = block.Transactions.Count(),
+                    TxHash = block.TxHash.ToString(),
+                    TimeStamp = block.Timestamp,
+                });
+                foreach (var transaction in block.Transactions)
+                {
+                    var actionType = transaction.Actions.Select(action => action.ToString()!.Split('.')
+                        .LastOrDefault()?.Replace(">", string.Empty));
+                    _transactionList.Add(new TransactionModel()
+                    {
+                        BlockIndex = block.Index,
+                        BlockHash = block.Hash.ToString(),
+                        TxId = transaction.Id.ToString(),
+                        Signer = transaction.Signer.ToString(),
+                        ActionType = actionType.FirstOrDefault(),
+                        Nonce = transaction.Nonce,
+                        PublicKey = transaction.PublicKey.ToString(),
+                        UpdatedAddressesCount = transaction.UpdatedAddresses.Count(),
+                        TimeStamp = transaction.Timestamp,
+                    });
+                }
+
+                _renderedBlockCount++;
+                Log.Debug($"Rendered Block Count: #{_renderedBlockCount}");
+
+                if (_renderedBlockCount == BlockInterval)
+                {
+                    var start = DateTimeOffset.Now;
+                    Log.Debug("Storing Data");
+                    MySqlStore.StoreAgentList(_hasAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAvatarList(_hasAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreHackAndSlashList(_hasList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAgentList(_rbAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAvatarList(_rbAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAgentList(_ccAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAvatarList(_ccAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreCombinationConsumableList(_ccList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAgentList(_ceAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAvatarList(_ceAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreCombinationEquipmentList(_ceList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAgentList(_ieAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAvatarList(_ieAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreItemEnhancementList(_ieList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAgentList(_buyAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAvatarList(_buyAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreShopHistoryEquipmentList(_buyShopEquipmentsList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreShopHistoryCostumeList(_buyShopCostumesList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreShopHistoryMaterialList(_buyShopMaterialsList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreShopHistoryConsumableList(_buyShopConsumablesList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAgentList(_eqAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAvatarList(_eqAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.ProcessEquipmentList(_eqList.GroupBy(i => i.ItemId).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAgentList(_stakeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreStakingList(_stakeList);
+                    MySqlStore.StoreAgentList(_claimStakeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAvatarList(_claimStakeAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreClaimStakeRewardList(_claimStakeList);
+                    MySqlStore.StoreAgentList(_mmcAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreMigrateMonsterCollectionList(_mmcList);
+                    MySqlStore.StoreAgentList(_grindAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAvatarList(_grindAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreGrindList(_grindList);
+                    MySqlStore.StoreItemEnhancementFailList(_itemEnhancementFailList);
+                    MySqlStore.StoreAgentList(_unlockEquipmentRecipeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAvatarList(_unlockEquipmentRecipeAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreUnlockEquipmentRecipeList(_unlockEquipmentRecipeList);
+                    MySqlStore.StoreAgentList(_unlockWorldAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAvatarList(_unlockWorldAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreUnlockWorldList(_unlockWorldList);
+                    MySqlStore.StoreReplaceCombinationEquipmentMaterialList(_replaceCombinationEquipmentMaterialList);
+                    MySqlStore.StoreAgentList(_hasRandomBuffAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAvatarList(_hasRandomBuffAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreHasRandomBuffList(_hasRandomBuffList);
+                    MySqlStore.StoreHasWithRandomBuffList(_hasWithRandomBuffList);
+                    MySqlStore.StoreAgentList(_joinArenaAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAvatarList(_joinArenaAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreJoinArenaList(_joinArenaList);
+                    MySqlStore.StoreAgentList(_battleArenaAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAvatarList(_battleArenaAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreBattleArenaList(_battleArenaList);
+                    MySqlStore.StoreBlockList(_blockList);
+                    MySqlStore.StoreTransactionList(_transactionList);
+                    _renderedBlockCount = 0;
+                    _hasAgentList.Clear();
+                    _hasAvatarList.Clear();
+                    _hasList.Clear();
+                    _rbAgentList.Clear();
+                    _rbAvatarList.Clear();
+                    _ccAgentList.Clear();
+                    _ccAvatarList.Clear();
+                    _ccList.Clear();
+                    _ceAgentList.Clear();
+                    _ceAvatarList.Clear();
+                    _ceList.Clear();
+                    _ieAgentList.Clear();
+                    _ieAvatarList.Clear();
+                    _ieList.Clear();
+                    _buyAgentList.Clear();
+                    _buyAvatarList.Clear();
+                    _buyShopEquipmentsList.Clear();
+                    _buyShopCostumesList.Clear();
+                    _buyShopMaterialsList.Clear();
+                    _buyShopConsumablesList.Clear();
+                    _eqAgentList.Clear();
+                    _eqAvatarList.Clear();
+                    _eqList.Clear();
+                    _stakeAgentList.Clear();
+                    _stakeList.Clear();
+                    _claimStakeAgentList.Clear();
+                    _claimStakeAvatarList.Clear();
+                    _claimStakeList.Clear();
+                    _mmcAgentList.Clear();
+                    _mmcList.Clear();
+                    _grindAgentList.Clear();
+                    _grindAvatarList.Clear();
+                    _grindList.Clear();
+                    _itemEnhancementFailList.Clear();
+                    _unlockEquipmentRecipeAgentList.Clear();
+                    _unlockEquipmentRecipeAvatarList.Clear();
+                    _unlockEquipmentRecipeList.Clear();
+                    _unlockWorldAgentList.Clear();
+                    _unlockWorldAvatarList.Clear();
+                    _unlockWorldList.Clear();
+                    _replaceCombinationEquipmentMaterialList.Clear();
+                    _hasRandomBuffAgentList.Clear();
+                    _hasRandomBuffAvatarList.Clear();
+                    _hasRandomBuffList.Clear();
+                    _hasWithRandomBuffList.Clear();
+                    _joinArenaAgentList.Clear();
+                    _joinArenaAvatarList.Clear();
+                    _joinArenaList.Clear();
+                    _battleArenaAgentList.Clear();
+                    _battleArenaAvatarList.Clear();
+                    _battleArenaList.Clear();
+                    _blockList.Clear();
+                    _transactionList.Clear();
+                    var end = DateTimeOffset.Now;
+                    long? blockIndex = null;
+                    string dataPath = Environment.GetEnvironmentVariable("NC_BlockIndexFilePath")
+                                      ?? Path.GetTempPath();
+                    string blockIndexFilePath = Path.Combine(dataPath, "blockIndex.txt");
+                    if (File.Exists(blockIndexFilePath))
+                    {
+                        File.Delete(blockIndexFilePath);
+                    }
+
+                    StreamWriter blockIndexFile = new StreamWriter(blockIndexFilePath);
+                    blockIndex = b.OldTip.Index;
+                    blockIndexFile.Write(blockIndex);
+                    blockIndexFile.Flush();
+                    blockIndexFile.Close();
+                    Log.Debug($"Storing Data Complete. Time Taken: {(end - start).Milliseconds} ms.");
+                }
+            });
+
             _actionRenderer.EveryRender<ActionBase>()
                 .Subscribe(
                     ev =>
@@ -116,121 +289,8 @@ namespace NineChronicles.DataProvider
                                 return;
                             }
 
-                            if (_renderCount == InsertInterval)
-                            {
-                                var start = DateTimeOffset.Now;
-                                Log.Debug("Storing Data");
-                                MySqlStore.StoreAgentList(_hasAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAvatarList(_hasAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreHackAndSlashList(_hasList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAgentList(_rbAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAvatarList(_rbAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAgentList(_ccAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAvatarList(_ccAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreCombinationConsumableList(_ccList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAgentList(_ceAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAvatarList(_ceAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreCombinationEquipmentList(_ceList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAgentList(_ieAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAvatarList(_ieAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreItemEnhancementList(_ieList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAgentList(_buyAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAvatarList(_buyAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreShopHistoryEquipmentList(_buyShopEquipmentsList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreShopHistoryCostumeList(_buyShopCostumesList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreShopHistoryMaterialList(_buyShopMaterialsList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreShopHistoryConsumableList(_buyShopConsumablesList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAgentList(_eqAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAvatarList(_eqAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.ProcessEquipmentList(_eqList.GroupBy(i => i.ItemId).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAgentList(_stakeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreStakingList(_stakeList);
-                                MySqlStore.StoreAgentList(_claimStakeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAvatarList(_claimStakeAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreClaimStakeRewardList(_claimStakeList);
-                                MySqlStore.StoreAgentList(_mmcAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreMigrateMonsterCollectionList(_mmcList);
-                                MySqlStore.StoreAgentList(_grindAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAvatarList(_grindAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreGrindList(_grindList);
-                                MySqlStore.StoreItemEnhancementFailList(_itemEnhancementFailList);
-                                MySqlStore.StoreAgentList(_unlockEquipmentRecipeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAvatarList(_unlockEquipmentRecipeAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreUnlockEquipmentRecipeList(_unlockEquipmentRecipeList);
-                                MySqlStore.StoreAgentList(_unlockWorldAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAvatarList(_unlockWorldAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreUnlockWorldList(_unlockWorldList);
-                                MySqlStore.StoreReplaceCombinationEquipmentMaterialList(_replaceCombinationEquipmentMaterialList);
-                                MySqlStore.StoreAgentList(_hasRandomBuffAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAvatarList(_hasRandomBuffAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreHasRandomBuffList(_hasRandomBuffList);
-                                MySqlStore.StoreHasWithRandomBuffList(_hasWithRandomBuffList);
-                                MySqlStore.StoreAgentList(_joinArenaAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAvatarList(_joinArenaAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreJoinArenaList(_joinArenaList);
-                                MySqlStore.StoreAgentList(_battleArenaAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreAvatarList(_battleArenaAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                                MySqlStore.StoreBattleArenaList(_battleArenaList);
-                                _renderCount = 0;
-                                _hasAgentList.Clear();
-                                _hasAvatarList.Clear();
-                                _hasList.Clear();
-                                _rbAgentList.Clear();
-                                _rbAvatarList.Clear();
-                                _ccAgentList.Clear();
-                                _ccAvatarList.Clear();
-                                _ccList.Clear();
-                                _ceAgentList.Clear();
-                                _ceAvatarList.Clear();
-                                _ceList.Clear();
-                                _ieAgentList.Clear();
-                                _ieAvatarList.Clear();
-                                _ieList.Clear();
-                                _buyAgentList.Clear();
-                                _buyAvatarList.Clear();
-                                _buyShopEquipmentsList.Clear();
-                                _buyShopCostumesList.Clear();
-                                _buyShopMaterialsList.Clear();
-                                _buyShopConsumablesList.Clear();
-                                _eqAgentList.Clear();
-                                _eqAvatarList.Clear();
-                                _eqList.Clear();
-                                _stakeAgentList.Clear();
-                                _stakeList.Clear();
-                                _claimStakeAgentList.Clear();
-                                _claimStakeAvatarList.Clear();
-                                _claimStakeList.Clear();
-                                _mmcAgentList.Clear();
-                                _mmcList.Clear();
-                                _grindAgentList.Clear();
-                                _grindAvatarList.Clear();
-                                _grindList.Clear();
-                                _itemEnhancementFailList.Clear();
-                                _unlockEquipmentRecipeAgentList.Clear();
-                                _unlockEquipmentRecipeAvatarList.Clear();
-                                _unlockEquipmentRecipeList.Clear();
-                                _unlockWorldAgentList.Clear();
-                                _unlockWorldAvatarList.Clear();
-                                _unlockWorldList.Clear();
-                                _replaceCombinationEquipmentMaterialList.Clear();
-                                _hasRandomBuffAgentList.Clear();
-                                _hasRandomBuffAvatarList.Clear();
-                                _hasRandomBuffList.Clear();
-                                _hasWithRandomBuffList.Clear();
-                                _joinArenaAgentList.Clear();
-                                _joinArenaAvatarList.Clear();
-                                _joinArenaList.Clear();
-                                _battleArenaAgentList.Clear();
-                                _battleArenaAvatarList.Clear();
-                                _battleArenaList.Clear();
-                                var end = DateTimeOffset.Now;
-                                Log.Debug($"Storing Data Complete. Time Taken: {(end - start).Milliseconds} ms.");
-                            }
-
                             if (ev.Action is HackAndSlash has)
                             {
-                                _renderCount++;
-                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has.avatarAddress);
                                 var previousStates = ev.PreviousStates;
@@ -302,8 +362,6 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is RankingBattle rb)
                             {
-                                _renderCount++;
-                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(rb.avatarAddress);
                                 var previousStates = ev.PreviousStates;
@@ -349,8 +407,6 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is CombinationConsumable combinationConsumable)
                             {
-                                _renderCount++;
-                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(combinationConsumable.avatarAddress);
                                 var previousStates = ev.PreviousStates;
@@ -397,8 +453,6 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is CombinationEquipment combinationEquipment)
                             {
-                                _renderCount++;
-                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState =
                                     ev.OutputStates.GetAvatarStateV2(combinationEquipment.avatarAddress);
@@ -567,8 +621,6 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is ItemEnhancement itemEnhancement)
                             {
-                                _renderCount++;
-                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
                                 var previousStates = ev.PreviousStates;
@@ -689,8 +741,6 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is Buy buy)
                             {
-                                _renderCount++;
-                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
                                 var previousStates = ev.PreviousStates;
@@ -890,8 +940,6 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is Stake stake)
                             {
-                                _renderCount++;
-                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 ev.OutputStates.TryGetStakeState(ev.Signer, out StakeState stakeState);
                                 var prevStakeStartBlockIndex =
@@ -925,8 +973,6 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is ClaimStakeReward claimStakeReward)
                             {
-                                _renderCount++;
-                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
                                 var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
@@ -1038,8 +1084,6 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is MigrateMonsterCollection mc)
                             {
-                                _renderCount++;
-                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 ev.OutputStates.TryGetStakeState(ev.Signer, out StakeState stakeState);
                                 var agentState = ev.PreviousStates.GetAgentState(ev.Signer);
@@ -1069,8 +1113,6 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is Grinding grind)
                             {
-                                _renderCount++;
-                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
 
                                 AvatarState prevAvatarState = ev.PreviousStates.GetAvatarStateV2(grind.AvatarAddress);
@@ -1170,8 +1212,6 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is UnlockEquipmentRecipe unlockEquipmentRecipe)
                             {
-                                _renderCount++;
-                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(unlockEquipmentRecipe.AvatarAddress);
                                 var previousStates = ev.PreviousStates;
@@ -1229,8 +1269,6 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is UnlockWorld unlockWorld)
                             {
-                                _renderCount++;
-                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(unlockWorld.AvatarAddress);
                                 var previousStates = ev.PreviousStates;
@@ -1288,8 +1326,6 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is HackAndSlashRandomBuff hasRandomBuff)
                             {
-                                _renderCount++;
-                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasRandomBuff.AvatarAddress);
                                 var previousStates = ev.PreviousStates;
@@ -1347,8 +1383,6 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is JoinArena joinArena)
                             {
-                                _renderCount++;
-                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(joinArena.avatarAddress);
                                 var previousStates = ev.PreviousStates;
@@ -1405,8 +1439,6 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is BattleArena battleArena)
                             {
-                                _renderCount++;
-                                Log.Debug($"Render Count: #{_renderCount}");
                                 var start = DateTimeOffset.Now;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(battleArena.myAvatarAddress);
                                 var previousStates = ev.PreviousStates;
