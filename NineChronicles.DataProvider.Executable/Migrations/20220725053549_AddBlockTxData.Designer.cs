@@ -11,7 +11,7 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    [Migration("20220724120629_AddBlockTxData")]
+    [Migration("20220725053549_AddBlockTxData")]
     partial class AddBlockTxData
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
