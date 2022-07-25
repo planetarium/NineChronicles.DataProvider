@@ -150,7 +150,7 @@ namespace NineChronicles.DataProvider
 
                 if (_renderedBlockCount == BlockInterval)
                 {
-                    var start = DateTimeOffset.Now;
+                    var start = DateTimeOffset.UtcNow;
                     Log.Debug("Storing Data");
                     MySqlStore.StoreAgentList(_hasAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreAvatarList(_hasAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
@@ -259,7 +259,7 @@ namespace NineChronicles.DataProvider
                     _battleArenaList.Clear();
                     _blockList.Clear();
                     _transactionList.Clear();
-                    var end = DateTimeOffset.Now;
+                    var end = DateTimeOffset.UtcNow;
                     long? blockIndex = null;
                     string dataPath = Environment.GetEnvironmentVariable("NC_BlockIndexFilePath")
                                       ?? Path.GetTempPath();
@@ -291,7 +291,7 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is HackAndSlash has)
                             {
-                                var start = DateTimeOffset.Now;
+                                var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has.avatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
@@ -352,17 +352,17 @@ namespace NineChronicles.DataProvider
                                         StageId = has.stageId,
                                         BuffId = (int)has.stageBuffId,
                                         Cleared = isClear,
-                                        TimeStamp = DateTimeOffset.Now,
+                                        TimeStamp = DateTimeOffset.UtcNow,
                                     });
                                 }
 
-                                var end = DateTimeOffset.Now;
+                                var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is RankingBattle rb)
                             {
-                                var start = DateTimeOffset.Now;
+                                var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(rb.avatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
@@ -401,13 +401,13 @@ namespace NineChronicles.DataProvider
                                     Cp = avatarCp,
                                 });
 
-                                var end = DateTimeOffset.Now;
+                                var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored RankingBattle avatar data in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is CombinationConsumable combinationConsumable)
                             {
-                                var start = DateTimeOffset.Now;
+                                var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(combinationConsumable.avatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
@@ -447,13 +447,13 @@ namespace NineChronicles.DataProvider
                                     BlockIndex = ev.BlockIndex,
                                 });
 
-                                var end = DateTimeOffset.Now;
+                                var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored CombinationConsumable action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is CombinationEquipment combinationEquipment)
                             {
-                                var start = DateTimeOffset.Now;
+                                var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState =
                                     ev.OutputStates.GetAvatarStateV2(combinationEquipment.avatarAddress);
                                 var previousStates = ev.PreviousStates;
@@ -580,19 +580,19 @@ namespace NineChronicles.DataProvider
                                                         ReplacedMaterialCount = requiredCount - itemCount,
                                                         BurntCrystal =
                                                             Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                                        TimeStamp = DateTimeOffset.Now,
+                                                        TimeStamp = DateTimeOffset.UtcNow,
                                                     });
                                             }
                                         }
                                     }
                                 }
 
-                                var end = DateTimeOffset.Now;
+                                var end = DateTimeOffset.UtcNow;
                                 Log.Debug(
                                     "Stored CombinationEquipment action in block #{index}. Time Taken: {time} ms.",
                                     ev.BlockIndex,
                                     (end - start).Milliseconds);
-                                start = DateTimeOffset.Now;
+                                start = DateTimeOffset.UtcNow;
 
                                 var slotState = ev.OutputStates.GetCombinationSlotState(
                                     combinationEquipment.avatarAddress,
@@ -611,7 +611,7 @@ namespace NineChronicles.DataProvider
                                         (Equipment)slotState.Result.itemUsable);
                                 }
 
-                                end = DateTimeOffset.Now;
+                                end = DateTimeOffset.UtcNow;
                                 Log.Debug(
                                     "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
                                     combinationEquipment.avatarAddress,
@@ -621,7 +621,7 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is ItemEnhancement itemEnhancement)
                             {
-                                var start = DateTimeOffset.Now;
+                                var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 AvatarState prevAvatarState = previousStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
@@ -678,7 +678,7 @@ namespace NineChronicles.DataProvider
                                         EquipmentLevel = outputEquipmentLevel,
                                         GainedCrystal = Convert.ToDecimal(gainedCrystal.GetQuantityString()),
                                         BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
-                                        TimeStamp = DateTimeOffset.Now,
+                                        TimeStamp = DateTimeOffset.UtcNow,
                                     });
                                 }
 
@@ -710,9 +710,9 @@ namespace NineChronicles.DataProvider
                                     BlockIndex = ev.BlockIndex,
                                 });
 
-                                var end = DateTimeOffset.Now;
+                                var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                                start = DateTimeOffset.Now;
+                                start = DateTimeOffset.UtcNow;
 
                                 var slotState = ev.OutputStates.GetCombinationSlotState(
                                     itemEnhancement.avatarAddress,
@@ -731,7 +731,7 @@ namespace NineChronicles.DataProvider
                                         (Equipment)slotState.Result.itemUsable);
                                 }
 
-                                end = DateTimeOffset.Now;
+                                end = DateTimeOffset.UtcNow;
                                 Log.Debug(
                                     "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
                                     itemEnhancement.avatarAddress,
@@ -741,7 +741,7 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is Buy buy)
                             {
-                                var start = DateTimeOffset.Now;
+                                var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
@@ -813,7 +813,7 @@ namespace NineChronicles.DataProvider
                                             TradableId = equipment.TradableId.ToString(),
                                             UniqueStatType = equipment.UniqueStatType.ToString(),
                                             ItemCount = itemCount,
-                                            TimeStamp = DateTimeOffset.Now,
+                                            TimeStamp = DateTimeOffset.UtcNow,
                                         });
                                     }
 
@@ -841,7 +841,7 @@ namespace NineChronicles.DataProvider
                                             NonFungibleId = costume.NonFungibleId.ToString(),
                                             TradableId = costume.TradableId.ToString(),
                                             ItemCount = itemCount,
-                                            TimeStamp = DateTimeOffset.Now,
+                                            TimeStamp = DateTimeOffset.UtcNow,
                                         });
                                     }
 
@@ -864,7 +864,7 @@ namespace NineChronicles.DataProvider
                                             ElementalType = material.ElementalType.ToString(),
                                             Grade = material.Grade,
                                             ItemCount = itemCount,
-                                            TimeStamp = DateTimeOffset.Now,
+                                            TimeStamp = DateTimeOffset.UtcNow,
                                         });
                                     }
 
@@ -893,7 +893,7 @@ namespace NineChronicles.DataProvider
                                             TradableId = consumable.TradableId.ToString(),
                                             MainStat = consumable.MainStat.ToString(),
                                             ItemCount = itemCount,
-                                            TimeStamp = DateTimeOffset.Now,
+                                            TimeStamp = DateTimeOffset.UtcNow,
                                         });
                                     }
 
@@ -930,7 +930,7 @@ namespace NineChronicles.DataProvider
                                     }
                                 }
 
-                                var end = DateTimeOffset.Now;
+                                var end = DateTimeOffset.UtcNow;
                                 Log.Debug(
                                     "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
                                     buy.buyerAvatarAddress,
@@ -940,7 +940,7 @@ namespace NineChronicles.DataProvider
 
                             if (ev.Action is Stake stake)
                             {
-                                var start = DateTimeOffset.Now;
+                                var start = DateTimeOffset.UtcNow;
                                 ev.OutputStates.TryGetStakeState(ev.Signer, out StakeState stakeState);
                                 var prevStakeStartBlockIndex =
                                     !ev.PreviousStates.TryGetStakeState(ev.Signer, out StakeState prevStakeState)
@@ -965,15 +965,15 @@ namespace NineChronicles.DataProvider
                                     RemainingNCG = Convert.ToDecimal(balance.GetQuantityString()),
                                     PrevStakeStartBlockIndex = prevStakeStartBlockIndex,
                                     NewStakeStartBlockIndex = newStakeStartBlockIndex,
-                                    TimeStamp = DateTimeOffset.Now,
+                                    TimeStamp = DateTimeOffset.UtcNow,
                                 });
-                                var end = DateTimeOffset.Now;
+                                var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored Stake action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is ClaimStakeReward claimStakeReward)
                             {
-                                var start = DateTimeOffset.Now;
+                                var start = DateTimeOffset.UtcNow;
                                 var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
                                 var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress);
@@ -1076,15 +1076,15 @@ namespace NineChronicles.DataProvider
                                     ApPotionCount = apPotionCount,
                                     ClaimStakeStartBlockIndex = claimStakeStartBlockIndex,
                                     ClaimStakeEndBlockIndex = claimStakeEndBlockIndex,
-                                    TimeStamp = DateTimeOffset.Now,
+                                    TimeStamp = DateTimeOffset.UtcNow,
                                 });
-                                var end = DateTimeOffset.Now;
+                                var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored ClaimStakeReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is MigrateMonsterCollection mc)
                             {
-                                var start = DateTimeOffset.Now;
+                                var start = DateTimeOffset.UtcNow;
                                 ev.OutputStates.TryGetStakeState(ev.Signer, out StakeState stakeState);
                                 var agentState = ev.PreviousStates.GetAgentState(ev.Signer);
                                 Address collectionAddress = MonsterCollectionState.DeriveAddress(ev.Signer, agentState.MonsterCollectionRound);
@@ -1105,15 +1105,15 @@ namespace NineChronicles.DataProvider
                                     MigrationAmount = Convert.ToDecimal(migrationAmount.GetQuantityString()),
                                     MigrationStartBlockIndex = migrationStartBlockIndex,
                                     StakeStartBlockIndex = stakeStartBlockIndex,
-                                    TimeStamp = DateTimeOffset.Now,
+                                    TimeStamp = DateTimeOffset.UtcNow,
                                 });
-                                var end = DateTimeOffset.Now;
+                                var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is Grinding grind)
                             {
-                                var start = DateTimeOffset.Now;
+                                var start = DateTimeOffset.UtcNow;
 
                                 AvatarState prevAvatarState = ev.PreviousStates.GetAvatarStateV2(grind.AvatarAddress);
                                 AgentState agentState = ev.PreviousStates.GetAgentState(ev.Signer);
@@ -1202,17 +1202,17 @@ namespace NineChronicles.DataProvider
                                         EquipmentLevel = equipment.level,
                                         Crystal = Convert.ToDecimal(crystal.GetQuantityString()),
                                         BlockIndex = ev.BlockIndex,
-                                        TimeStamp = DateTimeOffset.Now,
+                                        TimeStamp = DateTimeOffset.UtcNow,
                                     });
                                 }
 
-                                var end = DateTimeOffset.Now;
+                                var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored Grinding action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is UnlockEquipmentRecipe unlockEquipmentRecipe)
                             {
-                                var start = DateTimeOffset.Now;
+                                var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(unlockEquipmentRecipe.AvatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
@@ -1259,17 +1259,17 @@ namespace NineChronicles.DataProvider
                                         AvatarAddress = unlockEquipmentRecipe.AvatarAddress.ToString(),
                                         UnlockEquipmentRecipeId = recipeId,
                                         BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                        TimeStamp = DateTimeOffset.Now,
+                                        TimeStamp = DateTimeOffset.UtcNow,
                                     });
                                 }
 
-                                var end = DateTimeOffset.Now;
+                                var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored UnlockEquipmentRecipe action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is UnlockWorld unlockWorld)
                             {
-                                var start = DateTimeOffset.Now;
+                                var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(unlockWorld.AvatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
@@ -1316,17 +1316,17 @@ namespace NineChronicles.DataProvider
                                         AvatarAddress = unlockWorld.AvatarAddress.ToString(),
                                         UnlockWorldId = worldId,
                                         BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                        TimeStamp = DateTimeOffset.Now,
+                                        TimeStamp = DateTimeOffset.UtcNow,
                                     });
                                 }
 
-                                var end = DateTimeOffset.Now;
+                                var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored UnlockWorld action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is HackAndSlashRandomBuff hasRandomBuff)
                             {
-                                var start = DateTimeOffset.Now;
+                                var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasRandomBuff.AvatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 AvatarState prevAvatarState = previousStates.GetAvatarStateV2(hasRandomBuff.AvatarAddress);
@@ -1374,16 +1374,16 @@ namespace NineChronicles.DataProvider
                                     HasStageId = currentStageId,
                                     GachaCount = !hasRandomBuff.AdvancedGacha ? 5 : 10,
                                     BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                    TimeStamp = DateTimeOffset.Now,
+                                    TimeStamp = DateTimeOffset.UtcNow,
                                 });
 
-                                var end = DateTimeOffset.Now;
+                                var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored HasRandomBuff action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is JoinArena joinArena)
                             {
-                                var start = DateTimeOffset.Now;
+                                var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(joinArena.avatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
@@ -1430,16 +1430,16 @@ namespace NineChronicles.DataProvider
                                     ArenaRound = joinArena.round,
                                     ChampionshipId = joinArena.championshipId,
                                     BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                    TimeStamp = DateTimeOffset.Now,
+                                    TimeStamp = DateTimeOffset.UtcNow,
                                 });
 
-                                var end = DateTimeOffset.Now;
+                                var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored JoinArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is BattleArena battleArena)
                             {
-                                var start = DateTimeOffset.Now;
+                                var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(battleArena.myAvatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
@@ -1518,10 +1518,10 @@ namespace NineChronicles.DataProvider
                                     BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
                                     Victory = currentArenaScore.Score > previousArenaScore.Score,
                                     MedalCount = medalCount,
-                                    TimeStamp = DateTimeOffset.Now,
+                                    TimeStamp = DateTimeOffset.UtcNow,
                                 });
 
-                                var end = DateTimeOffset.Now;
+                                var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored BattleArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
                         }
