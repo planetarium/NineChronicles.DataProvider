@@ -192,7 +192,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             $"{block.TotalDifficulty};" +
                             $"{block.Transactions.Count};" +
                             $"{block.TxHash.ToString()};" +
-                            $"{block.Timestamp:o}");
+                            $"{block.Timestamp.UtcDateTime:o}");
                         foreach (var tx in block.Transactions)
                         {
                             _txBulkFile.WriteLine(
@@ -204,7 +204,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 $"{tx.Nonce};" +
                                 $"{tx.PublicKey};" +
                                 $"{tx.UpdatedAddresses.Count};" +
-                                $"{tx.Timestamp:o}");
+                                $"{tx.Timestamp.UtcDateTime:o}");
                         }
 
                         Console.WriteLine("Migrating Done {0}/{1} #{2}", item.i, count, block.Index);
