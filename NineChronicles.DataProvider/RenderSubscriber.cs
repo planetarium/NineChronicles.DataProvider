@@ -125,7 +125,7 @@ namespace NineChronicles.DataProvider
                     TotalDifficulty = (long)block.TotalDifficulty,
                     TxCount = block.Transactions.Count(),
                     TxHash = block.TxHash.ToString(),
-                    TimeStamp = block.Timestamp,
+                    TimeStamp = block.Timestamp.UtcDateTime,
                 });
                 foreach (var transaction in block.Transactions)
                 {
@@ -141,7 +141,7 @@ namespace NineChronicles.DataProvider
                         Nonce = transaction.Nonce,
                         PublicKey = transaction.PublicKey.ToString(),
                         UpdatedAddressesCount = transaction.UpdatedAddresses.Count(),
-                        TimeStamp = transaction.Timestamp,
+                        TimeStamp = transaction.Timestamp.UtcDateTime,
                     });
                 }
 
