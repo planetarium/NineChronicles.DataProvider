@@ -14,7 +14,7 @@ public class AgentQueryTest : TestBase, IDisposable
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
-    public async Task ShopEquipmentCount(int expected)
+    public async Task AgentCount(int expected)
     {
         const string query = @"query {
         agentCount
