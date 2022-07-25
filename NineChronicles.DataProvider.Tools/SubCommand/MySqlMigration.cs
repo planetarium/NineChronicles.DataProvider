@@ -195,12 +195,22 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             $"{block.Timestamp.UtcDateTime:o}");
                         foreach (var tx in block.Transactions)
                         {
+                            string actionType = null;
+                            if (tx.Actions.Count == 0)
+                            {
+                                actionType = string.Empty;
+                            }
+                            else
+                            {
+                                actionType = tx.Actions[0].InnerAction.ToString()!.Split(".").Last();
+                            }
+
                             _txBulkFile.WriteLine(
                                 $"{block.Index};" +
                                 $"{block.Hash.ToString()};" +
                                 $"{tx.Id.ToString()};" +
                                 $"{tx.Signer.ToString()};" +
-                                $"{tx.Actions[0].InnerAction.ToString()!.Split(".").Last()};" +
+                                $"{actionType};" +
                                 $"{tx.Nonce};" +
                                 $"{tx.PublicKey};" +
                                 $"{tx.UpdatedAddresses.Count};" +
