@@ -146,7 +146,7 @@ namespace NineChronicles.DataProvider
                 }
 
                 _renderedBlockCount++;
-                Log.Debug($"Rendered Block Count: #{_renderedBlockCount}");
+                Log.Debug($"Rendered Block Count: #{_renderedBlockCount} at Block #{block.Index}");
 
                 if (_renderedBlockCount == BlockInterval)
                 {
