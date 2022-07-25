@@ -49,7 +49,7 @@ namespace NineChronicles.DataProvider.Executable
 
             hostBuilder.ConfigureWebHostDefaults(builder =>
             {
-                builder.UseStartup<GraphQL.GraphQLStartup>();
+                builder.UseStartup<GraphQLStartup>();
                 builder.UseUrls($"http://{headlessConfig.GraphQLHost}:{headlessConfig.GraphQLPort}/");
             });
 

@@ -1,13 +1,13 @@
-﻿namespace NineChronicles.DataProvider.GraphQL
+﻿namespace NineChronicles.DataProvider
 {
     using System;
-    using global::GraphQL.Server;
+    using GraphQL.Server;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using NineChronicles.DataProvider.GraphQL.Types;
+    using NineChronicles.DataProvider.GraphTypes;
     using NineChronicles.Headless;
     using NineChronicles.Headless.GraphTypes;
     using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;

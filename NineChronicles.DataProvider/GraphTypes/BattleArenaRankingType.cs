@@ -1,6 +1,6 @@
-﻿namespace NineChronicles.DataProvider.GraphQL.Types
+﻿namespace NineChronicles.DataProvider.GraphTypes
 {
-    using global::GraphQL.Types;
+    using GraphQL.Types;
     using NineChronicles.DataProvider.Store.Models;
 
     public class BattleArenaRankingType : ObjectGraphType<BattleArenaRankingModel>
@@ -11,10 +11,10 @@
             Field(x => x.AgentAddress);
             Field(x => x.AvatarAddress);
             Field(x => x.Name);
-            Field(x => x.TitleId, nullable: true);
-            Field(x => x.ArmorId, nullable: true);
-            Field(x => x.AvatarLevel, nullable: true);
-            Field(x => x.Cp, nullable: true);
+            Field(x => x.TitleId, true);
+            Field(x => x.ArmorId, true);
+            Field(x => x.AvatarLevel, true);
+            Field(x => x.Cp, true);
             Field(x => x.ChampionshipId);
             Field(x => x.Round);
             Field(x => x.ArenaType);
