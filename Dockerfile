@@ -25,14 +25,14 @@ RUN dotnet publish NineChronicles.DataProvider.Executable/NineChronicles.DataPro
     -r linux-x64 \
     -o out \
     --self-contained \
-    --version-suffix $COMMIT \
+    --version-suffix $COMMIT
 
 RUN dotnet publish NineChronicles.Headless/NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj \
     -c Release \
     -r linux-x64 \
     -o out2 \
     --self-contained \
-    --version-suffix 1
+    --version-suffix $COMMIT
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:6.0
