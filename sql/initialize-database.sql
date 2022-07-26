@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Agents` (
 
     PRIMARY KEY (`Address`),
     UNIQUE INDEX `Address_UNIQUE` (`Address`)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`Avatars` (
     `Address` VARCHAR(100) NOT NULL,
@@ -14,14 +14,14 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Avatars` (
     `ArmorId` INT,
     `Cp` INT,
     `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
+
     PRIMARY KEY (`Address`),
     INDEX `fk_Avatars_Agent_idx` (`AgentAddress`),
     UNIQUE INDEX `Address_UNIQUE` (`Address`),
     CONSTRAINT `fk_Avatars_Agent`
-        FOREIGN KEY (`AgentAddress`)
-            REFERENCES `Agents` (`Address`)
-);
+    FOREIGN KEY (`AgentAddress`)
+    REFERENCES `Agents` (`Address`)
+    );
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`HackAndSlashes` (
     `Id` VARCHAR(100) NOT NULL,
@@ -37,12 +37,12 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`HackAndSlashes` (
     INDEX `fk_HackAndSlashes_Avatar1_idx` (`AvatarAddress`),
     INDEX `fk_HackAndSlashes_Agent1_idx` (`AgentAddress`),
     CONSTRAINT `fk_HackAndSlashes_Avatar1`
-        FOREIGN KEY (`AvatarAddress`)
-            REFERENCES `Avatars` (`Address`),
+    FOREIGN KEY (`AvatarAddress`)
+    REFERENCES `Avatars` (`Address`),
     CONSTRAINT `fk_HackAndSlashes_Agent1`
-        FOREIGN KEY (`AgentAddress`)
-            REFERENCES `Agents` (`Address`)
-);
+    FOREIGN KEY (`AgentAddress`)
+    REFERENCES `Agents` (`Address`)
+    );
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`CombinationConsumables` (
     `Id` VARCHAR(100) NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`CombinationConsumables` (
     CONSTRAINT `fk_CombinationConsumables_Agent1`
     FOREIGN KEY (`AgentAddress`)
     REFERENCES `Agents` (`Address`)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`CombinationEquipments` (
     `Id` VARCHAR(100) NOT NULL,
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`CombinationEquipments` (
     CONSTRAINT `fk_CombinationEquipments_Agent1`
     FOREIGN KEY (`AgentAddress`)
     REFERENCES `Agents` (`Address`)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`ItemEnhancements` (
     `Id` VARCHAR(100) NOT NULL,
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`ItemEnhancements` (
     CONSTRAINT `fk_ItemEnhancements_Agent1`
     FOREIGN KEY (`AgentAddress`)
     REFERENCES `Agents` (`Address`)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`CraftRankings` (
     `AvatarAddress` VARCHAR(100) NOT NULL,
@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`CraftRankings` (
     CONSTRAINT `fk_CrafRankings_Avatar1`
     FOREIGN KEY (`AvatarAddress`)
     REFERENCES `Avatars` (`Address`)
-);
+    );
 CREATE TABLE IF NOT EXISTS `data_provider`.`Equipments` (
     `ItemId` VARCHAR(100) NOT NULL,
     `AgentAddress` VARCHAR(100) NOT NULL,
@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Equipments` (
     CONSTRAINT `fk_Equipments_Agent1`
     FOREIGN KEY (`AgentAddress`)
     REFERENCES `Agents` (`Address`)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`ShopHistoryEquipments` (
     `OrderId` varchar(100) NOT NULL,
@@ -240,16 +240,15 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`ShopHistoryConsumables` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`Stakings` (
-    `BlockIndex` bigint NOT NULL,
-    `AgentAddress` varchar(100) NOT NULL,
+                                                          `BlockIndex` bigint NOT NULL,
+                                                          `AgentAddress` varchar(100) NOT NULL,
     `PreviousAmount` decimal(13,2) NOT NULL,
     `NewAmount` decimal(13,2) NOT NULL,
     `RemainingNCG` decimal(13,2) NOT NULL,
     `PrevStakeStartBlockIndex` bigint NOT NULL,
     `NewStakeStartBlockIndex` bigint NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX (`BlockIndex`),
-    INDEX (`Timestamp`),
+    INDEX (`BlockIndex`, `Timestamp`),
     KEY `fk_Stakings_Agent1_idx` (`AgentAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -263,22 +262,19 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`ClaimStakeRewards` (
     `ClaimStakeStartBlockIndex` bigint NOT NULL,
     `ClaimStakeEndBlockIndex` bigint NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX (`Id`),
-    INDEX (`BlockIndex`),
-    INDEX (`Timestamp`),
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
     KEY `fk_ClaimStakeRewards_Agent1_idx` (`AgentAddress`),
     KEY `fk_ClaimStakeRewards_ClaimRewardAvatarAddress1_idx` (`ClaimRewardAvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`MigrateMonsterCollections` (
-    `BlockIndex` bigint NOT NULL,
-    `AgentAddress` varchar(100) NOT NULL,
+                                                                           `BlockIndex` bigint NOT NULL,
+                                                                           `AgentAddress` varchar(100) NOT NULL,
     `MigrationAmount` decimal(13,2) NOT NULL,
     `MigrationStartBlockIndex` bigint NOT NULL,
     `StakeStartBlockIndex` bigint NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX (`BlockIndex`),
-    INDEX (`Timestamp`),
+    INDEX (`BlockIndex`, `Timestamp`),
     KEY `fk_MigratMonsterCollections_Agent1_idx` (`AgentAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -292,9 +288,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Grindings` (
     `EquipmentLevel` int NOT NULL,
     `Crystal` decimal(13,2) NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX (`Id`),
-    INDEX (`BlockIndex`),
-    INDEX (`Timestamp`),
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
     KEY `fk_Grindings_Agent1_idx` (`AgentAddress`),
     KEY `fk_Grindings_AvatarAddress1_idx` (`AvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -310,9 +304,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`ItemEnhancementFails` (
     `GainedCrystal` decimal(13,2) NOT NULL,
     `BurntNCG` decimal(13,2) NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX (`Id`),
-    INDEX (`BlockIndex`),
-    INDEX (`Timestamp`),
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
     KEY `fk_ItemEnhancementFails_Agent1_idx` (`AgentAddress`),
     KEY `fk_ItemEnhancementFails_AvatarAddress1_idx` (`AvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -325,9 +317,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`UnlockEquipmentRecipes` (
     `UnlockEquipmentRecipeId` int NOT NULL,
     `BurntCrystal` decimal(13,2) NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX (`Id`),
-    INDEX (`BlockIndex`),
-    INDEX (`Timestamp`),
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
     KEY `fk_UnlockEquipmentRecipes_Agent1_idx` (`AgentAddress`),
     KEY `fk_UnlockEquipmentRecipes_AvatarAddress1_idx` (`AvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -340,9 +330,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`UnlockWorlds` (
     `UnlockWorldId` int NOT NULL,
     `BurntCrystal` decimal(13,2) NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX (`Id`),
-    INDEX (`BlockIndex`),
-    INDEX (`Timestamp`),
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
     KEY `fk_UnlockWorlds_Agent1_idx` (`AgentAddress`),
     KEY `fk_UnlockWorlds_AvatarAddress1_idx` (`AvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -356,9 +344,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`ReplaceCombinationEquipmentMaterials
     `ReplacedMaterialCount` int NOT NULL,
     `BurntCrystal` decimal(13,2) NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX (`Id`),
-    INDEX (`BlockIndex`),
-    INDEX (`Timestamp`),
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
     KEY `fk_ReplaceCombinationEquipmentMaterials_Agent1_idx` (`AgentAddress`),
     KEY `fk_ReplaceCombinationEquipmentMaterials_AvatarAddress1_idx` (`AvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -372,9 +358,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`HasRandomBuffs` (
     `GachaCount` int NOT NULL,
     `BurntCrystal` decimal(13,2) NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX (`Id`),
-    INDEX (`BlockIndex`),
-    INDEX (`Timestamp`),
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
     KEY `fk_HasRandomBuffs_Agent1_idx` (`AgentAddress`),
     KEY `fk_HasRandomBuffs_AvatarAddress1_idx` (`AvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -388,9 +372,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`HasWithRandomBuffs` (
     `BuffId` int NOT NULL,
     `Cleared` boolean NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX (`Id`),
-    INDEX (`BlockIndex`),
-    INDEX (`Timestamp`),
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
     KEY `fk_HasWithRandomBuffs_Agent1_idx` (`AgentAddress`),
     KEY `fk_HasWithRandomBuffs_AvatarAddress1_idx` (`AvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -405,9 +387,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`JoinArenas` (
     `ChampionshipId` int NOT NULL,
     `BurntCrystal` decimal(13,2) NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX (`Id`),
-    INDEX (`BlockIndex`),
-    INDEX (`Timestamp`),
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
     KEY `fk_JoinArenas_Agent1_idx` (`AgentAddress`),
     KEY `fk_JoinArenas_AvatarAddress1_idx` (`AvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -425,9 +405,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`BattleArenas` (
     `BurntNCG` decimal(13,2) NOT NULL,
     `Victory` boolean NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX (`Id`),
-    INDEX (`BlockIndex`),
-    INDEX (`Timestamp`),
+    INDEX (`Id`, `BlockIndex`, `Timestamp`),
     KEY `fk_BattleArenas_Agent1_idx` (`AgentAddress`),
     KEY `fk_BattleArenas_AvatarAddress1_idx` (`AvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -447,8 +425,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Blocks` (
     `TxHash` varchar(100) NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`Hash`),
-    INDEX (`Index`),
-    INDEX (`Timestamp`)
+    INDEX (`Index`, `Timestamp`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`Transactions` (
@@ -462,7 +439,5 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Transactions` (
     `UpdatedAddressesCount` int NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`TxId`),
-    INDEX (`BlockIndex`),
-    INDEX (`Signer`),
-    INDEX (`Timestamp`)
+    INDEX (`Timestamp`, `Signer`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
