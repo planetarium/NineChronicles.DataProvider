@@ -1590,5 +1590,13 @@ namespace NineChronicles.DataProvider.Store
             ctx.Raiders?.Add(model);
             ctx.SaveChanges();
         }
+
+        public List<WorldBossRankingModel> GetWorldBossRanking(int raidId)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            var query = ctx.Set<WorldBossRankingModel>()
+                .FromSqlRaw(@"SELECT `AvatarName`, `HighScore`, `TotalScore`, `Cp`, `Level`, `Address`, `IconId`, row_number() over(ORDER BY `HighScore` DESC) as `Ranking` FROM `Raiders` WHERE `RaidId` = {0}", raidId);
+            return query.ToList();
+        }
     }
 }

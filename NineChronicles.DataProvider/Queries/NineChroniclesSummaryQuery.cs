@@ -1,9 +1,11 @@
 ﻿namespace NineChronicles.DataProvider.Queries
 {
+    using System.Linq;
     using Bencodex.Types;
     using GraphQL;
     using GraphQL.Types;
     using Libplanet;
+    using Libplanet.Explorer.GraphTypes;
     using Nekoyume;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.GraphTypes;
@@ -205,6 +207,46 @@
                 name: "dauQuery",
                 resolve: context => new DauQuery(store)
             );
+            Field<ListGraphType<WorldBossRankingType>>(
+                name: "worldBossRanking",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "raidId",
+                        Description = "world boss season id.",
+                    },
+                    new QueryArgument<StringGraphType>
+                    {
+                        Name = "avatarAddress",
+                        Description = "Hex encoded avatar address",
+                    },
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "limit",
+                        Description = "query limit.",
+                        DefaultValue = 100,
+                    }
+                ),
+                resolve: context =>
+                {
+                    var raidId = context.GetArgument<int>("raidId");
+                    var avatarAddress = context.GetArgument<string?>("avatarAddress");
+                    var limit = context.GetArgument<int>("limit");
+                    var raiders = Store.GetWorldBossRanking(raidId);
+                    var result = raiders
+                        .Take(limit)
+                        .ToList();
+                    if (!(avatarAddress is null) && result.All(r => r.Address != avatarAddress))
+                    {
+                        var myAvatar = result.FirstOrDefault(r => r.Address == avatarAddress);
+                        if (!(myAvatar is null))
+                        {
+                            result.Add(myAvatar);
+                        }
+                    }
+
+                    return result;
+                });
         }
 
         private MySqlStore Store { get; }
