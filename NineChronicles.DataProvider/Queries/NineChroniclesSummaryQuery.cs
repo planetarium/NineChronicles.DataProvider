@@ -247,6 +247,20 @@
 
                     return result;
                 });
+            Field<IntGraphType>(
+                name: "worldBossTotalUsers",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "raidId",
+                        Description = "world boss season id.",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var raidId = context.GetArgument<int>("raidId");
+                    return Store.GetTotalRaiders(raidId);
+                });
         }
 
         private MySqlStore Store { get; }

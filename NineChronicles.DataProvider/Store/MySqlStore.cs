@@ -1695,5 +1695,11 @@ namespace NineChronicles.DataProvider.Store
                 .FromSqlRaw(@"SELECT `AvatarName`, `HighScore`, `TotalScore`, `Cp`, `Level`, `Address`, `IconId`, row_number() over(ORDER BY `HighScore` DESC) as `Ranking` FROM `Raiders` WHERE `RaidId` = {0}", raidId);
             return query.ToList();
         }
+
+        public int GetTotalRaiders(int raidId)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            return ctx.Raiders.Count(r => r.RaidId == raidId);
+        }
     }
 }

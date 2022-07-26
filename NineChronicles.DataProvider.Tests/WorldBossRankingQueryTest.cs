@@ -46,6 +46,35 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
         Assert.Equal(100, models.Length);
     }
 
+    [Fact]
+    public async Task WorldBossTotalUsers()
+    {
+        const string query = @"query {
+        worldBossTotalUsers(raidId: 1)
+    }";
+        var context = CreateContext();
+        for (int i = 0; i < 200; i++)
+        {
+            var model = new RaiderModel(
+                1,
+                i.ToString(),
+                i,
+                i + 1,
+                i + 2,
+                GameConfig.DefaultAvatarArmorId,
+                i,
+                new PrivateKey().ToAddress().ToHex()
+            );
+            context.Raiders.Add(model);
+        }
+
+        await context.SaveChangesAsync();
+        var result = await ExecuteAsync(query);
+        var count = (int)((Dictionary<string, object>) ((ExecutionNode) result.Data).ToValue())["worldBossTotalUsers"];
+        Assert.Equal(200, count);
+
+    }
+
     public void Dispose()
     {
         CleanUp();
