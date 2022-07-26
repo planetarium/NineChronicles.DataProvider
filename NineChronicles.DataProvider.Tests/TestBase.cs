@@ -3,9 +3,11 @@ using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Server;
 using GraphQL.Types;
+using Libplanet.Action;
 using Libplanet.KeyStore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Nekoyume.Action;
 using NineChronicles.DataProvider.GraphTypes;
 using NineChronicles.DataProvider.Store;
 using NineChronicles.Headless;
@@ -46,7 +48,8 @@ public class TestBase
         services
             .AddSingleton(context)
             .AddGraphQL()
-            .AddGraphTypes(typeof(NineChroniclesSummarySchema));
+            .AddGraphTypes(typeof(NineChroniclesSummarySchema))
+            .AddLibplanetExplorer<PolymorphicAction<ActionBase>>();
         services.AddSingleton<NineChroniclesSummarySchema>();
         var serviceProvider = services.BuildServiceProvider();
         Schema = new NineChroniclesSummarySchema(serviceProvider);
