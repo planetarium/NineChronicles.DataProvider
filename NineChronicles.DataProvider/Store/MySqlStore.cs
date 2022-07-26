@@ -1391,6 +1391,76 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreBlockList(List<BlockModel> blockList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var block in blockList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.Blocks?.Find(block.Hash) is null)
+                        {
+                            ctx.Blocks!.AddRange(block);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.Blocks!.UpdateRange(block);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreTransactionList(List<TransactionModel> transactionList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var transaction in transactionList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.Transactions?.Find(transaction.TxId) is null)
+                        {
+                            ctx.Transactions!.AddRange(transaction);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.Transactions!.UpdateRange(transaction);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public IEnumerable<CraftRankingOutputModel> GetCraftRanking(
             Address? avatarAddress = null,
             int? limit = null)
@@ -1588,6 +1658,24 @@ namespace NineChronicles.DataProvider.Store
             {
                 query = query.Take(limitNotNull);
             }
+
+            return query.ToList();
+        }
+
+        public int GetDauCount(string lowerDate, string upperDate)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            var query = ctx.Set<TransactionModel>()
+                .FromSqlRaw($"SELECT * FROM `TRANSACTIONS` WHERE Timestamp > \"{lowerDate}%\" and Timestamp < \"{upperDate}%\" GROUP BY Signer");
+
+            return query.ToList().Count;
+        }
+
+        public IEnumerable<AgentModel> GetDauAgents(string lowerDate, string upperDate)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            var query = ctx.Set<AgentModel>()
+                .FromSqlRaw($"SELECT Signer as Address FROM `TRANSACTIONS` WHERE Timestamp > \"{lowerDate}%\" and Timestamp < \"{upperDate}%\" GROUP BY Signer");
 
             return query.ToList();
         }

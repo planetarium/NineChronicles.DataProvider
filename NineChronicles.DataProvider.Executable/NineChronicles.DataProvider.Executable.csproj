@@ -19,7 +19,7 @@
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.1" />
     <PackageReference Include="Serilog.Expressions" Version="1.1.1" />
     <PackageReference Include="Serilog.Formatting.Compact" Version="1.1.0" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="3.1.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0" />
     <PackageReference Include="Serilog.Sinks.PeriodicBatching" Version="2.3.*" />
     <PackageReference Include="SonarAnalyzer.CSharp" Version="8.18.0.27296" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />

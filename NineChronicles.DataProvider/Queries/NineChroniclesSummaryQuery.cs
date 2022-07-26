@@ -201,6 +201,10 @@
                     int? limit = context.GetArgument<int?>("limit", null);
                     return Store.GetAbilityRanking(avatarAddress, limit);
                 });
+            Field<NonNullGraphType<DauQuery>>(
+                name: "dauQuery",
+                resolve: context => new DauQuery(store)
+            );
         }
 
         private MySqlStore Store { get; }
