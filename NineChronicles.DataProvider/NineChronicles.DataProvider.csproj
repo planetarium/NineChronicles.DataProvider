@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless\NineChronicles.Headless.csproj" />
+    <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless.Executable\NineChronicles.Headless.Executable.csproj" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.1" />
 	<PackageReference Include="SonarAnalyzer.CSharp" Version="8.18.0.27296">
