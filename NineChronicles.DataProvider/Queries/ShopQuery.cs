@@ -1,8 +1,9 @@
-﻿namespace NineChronicles.DataProvider.GraphQL.Types
+﻿namespace NineChronicles.DataProvider.Queries
 {
-    using global::GraphQL;
-    using global::GraphQL.Types;
+    using GraphQL;
+    using GraphQL.Types;
     using Libplanet;
+    using NineChronicles.DataProvider.GraphTypes;
     using NineChronicles.DataProvider.Store;
 
     internal class ShopQuery : ObjectGraphType

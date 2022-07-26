@@ -6,7 +6,7 @@ using GraphQL.Types;
 using Libplanet.KeyStore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using NineChronicles.DataProvider.GraphQL.Types;
+using NineChronicles.DataProvider.GraphTypes;
 using NineChronicles.DataProvider.Store;
 using NineChronicles.Headless;
 
