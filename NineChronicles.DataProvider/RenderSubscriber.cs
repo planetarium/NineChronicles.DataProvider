@@ -32,7 +32,9 @@ namespace NineChronicles.DataProvider
 
     public class RenderSubscriber : BackgroundService
     {
-        private const int BlockInterval = 30;
+        private const int DefaultInsertInterval = 30;
+        private readonly int _blockInsertInterval;
+        private readonly string _blockIndexFilePath;
         private readonly BlockRenderer _blockRenderer;
         private readonly ActionRenderer _actionRenderer;
         private readonly ExceptionRenderer _exceptionRenderer;
@@ -90,7 +92,7 @@ namespace NineChronicles.DataProvider
         private readonly List<BattleArenaModel> _battleArenaList = new List<BattleArenaModel>();
         private readonly List<BlockModel> _blockList = new List<BlockModel>();
         private readonly List<TransactionModel> _transactionList = new List<TransactionModel>();
-        private int _renderedBlockCount = 0;
+        private int _renderedBlockCount;
 
         public RenderSubscriber(
             NineChroniclesNodeService nodeService,
@@ -102,6 +104,32 @@ namespace NineChronicles.DataProvider
             _exceptionRenderer = nodeService.ExceptionRenderer;
             _nodeStatusRenderer = nodeService.NodeStatusRenderer;
             MySqlStore = mySqlStore;
+            _renderedBlockCount = 0;
+            string dataPath = Environment.GetEnvironmentVariable("NC_BlockIndexFilePath")
+                              ?? Path.GetTempPath();
+            if (!Directory.Exists(dataPath))
+            {
+                dataPath = Path.GetTempPath();
+            }
+
+            _blockIndexFilePath = Path.Combine(dataPath, "blockIndex.txt");
+            if (File.Exists(_blockIndexFilePath))
+            {
+                File.Delete(_blockIndexFilePath);
+            }
+
+            try
+            {
+                _blockInsertInterval = Convert.ToInt32(Environment.GetEnvironmentVariable("NC_BlockInsertInterval"));
+                if (_blockInsertInterval < 1)
+                {
+                    _blockInsertInterval = DefaultInsertInterval;
+                }
+            }
+            catch (Exception)
+            {
+                _blockInsertInterval = DefaultInsertInterval;
+            }
         }
 
         internal MySqlStore MySqlStore { get; }
@@ -148,9 +176,9 @@ namespace NineChronicles.DataProvider
                 _renderedBlockCount++;
                 Log.Debug($"Rendered Block Count: #{_renderedBlockCount} at Block #{block.Index}");
 
-                if (_renderedBlockCount == BlockInterval)
+                if (_renderedBlockCount == _blockInsertInterval)
                 {
-                    var start = DateTimeOffset.UtcNow;
+                    var start = DateTimeOffset.Now;
                     Log.Debug("Storing Data");
                     MySqlStore.StoreAgentList(_hasAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreAvatarList(_hasAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
@@ -259,18 +287,9 @@ namespace NineChronicles.DataProvider
                     _battleArenaList.Clear();
                     _blockList.Clear();
                     _transactionList.Clear();
-                    var end = DateTimeOffset.UtcNow;
-                    long? blockIndex = null;
-                    string dataPath = Environment.GetEnvironmentVariable("NC_BlockIndexFilePath")
-                                      ?? Path.GetTempPath();
-                    string blockIndexFilePath = Path.Combine(dataPath, "blockIndex.txt");
-                    if (File.Exists(blockIndexFilePath))
-                    {
-                        File.Delete(blockIndexFilePath);
-                    }
-
-                    StreamWriter blockIndexFile = new StreamWriter(blockIndexFilePath);
-                    blockIndex = b.OldTip.Index;
+                    var end = DateTimeOffset.Now;
+                    long blockIndex = b.OldTip.Index;
+                    StreamWriter blockIndexFile = new StreamWriter(_blockIndexFilePath);
                     blockIndexFile.Write(blockIndex);
                     blockIndexFile.Flush();
                     blockIndexFile.Close();
