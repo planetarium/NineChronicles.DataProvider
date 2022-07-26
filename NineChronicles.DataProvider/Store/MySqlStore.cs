@@ -1662,20 +1662,20 @@ namespace NineChronicles.DataProvider.Store
             return query.ToList();
         }
 
-        public int GetDauCount(string date)
+        public int GetDauCount(string lowerDate, string upperDate)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             var query = ctx.Set<TransactionModel>()
-                .FromSqlRaw($"SELECT * FROM `TRANSACTIONS` WHERE Timestamp like \"{date}%\" GROUP BY Signer");
+                .FromSqlRaw($"SELECT * FROM `TRANSACTIONS` WHERE Timestamp > \"{lowerDate}%\" and Timestamp < \"{upperDate}%\" GROUP BY Signer");
 
             return query.ToList().Count;
         }
 
-        public IEnumerable<AgentModel> GetDauAgents(string date)
+        public IEnumerable<AgentModel> GetDauAgents(string lowerDate, string upperDate)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             var query = ctx.Set<AgentModel>()
-                .FromSqlRaw($"SELECT Signer as Address FROM `TRANSACTIONS` WHERE Timestamp like \"{date}%\" GROUP BY Signer");
+                .FromSqlRaw($"SELECT Signer as Address FROM `TRANSACTIONS` WHERE Timestamp > \"{lowerDate}%\" and Timestamp < \"{upperDate}%\" GROUP BY Signer");
 
             return query.ToList();
         }
