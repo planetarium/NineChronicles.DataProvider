@@ -27,7 +27,6 @@
   <ItemGroup>
     <ProjectReference Include="..\NineChronicles.DataProvider\NineChronicles.DataProvider.csproj" />
     <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless\NineChronicles.Headless.csproj" />
-    <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless.Executable\NineChronicles.Headless.Executable.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">

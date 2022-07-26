@@ -14,7 +14,7 @@ RUN dotnet restore Lib9c
 RUN dotnet restore Libplanet.Headless
 RUN dotnet restore NineChronicles.RPC.Shared
 RUN dotnet restore NineChronicles.Headless
-RUN dotnet restore NineChronicles.Headless.Executable -r linux-x64
+RUN dotnet restore NineChronicles.Headless.Executable
 RUN dotnet restore NineChronicles.DataProvider
 RUN dotnet restore NineChronicles.DataProvider.Executable
 
