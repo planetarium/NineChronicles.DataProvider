@@ -151,23 +151,6 @@ namespace NineChronicles.DataProvider
                     TxHash = block.TxHash.ToString(),
                     TimeStamp = block.Timestamp.UtcDateTime,
                 });
-                foreach (var transaction in block.Transactions)
-                {
-                    var actionType = transaction.Actions.Select(action => action.ToString()!.Split('.')
-                        .LastOrDefault()?.Replace(">", string.Empty));
-                    _transactionList.Add(new TransactionModel()
-                    {
-                        BlockIndex = block.Index,
-                        BlockHash = block.Hash.ToString(),
-                        TxId = transaction.Id.ToString(),
-                        Signer = transaction.Signer.ToString(),
-                        ActionType = actionType.FirstOrDefault(),
-                        Nonce = transaction.Nonce,
-                        PublicKey = transaction.PublicKey.ToString(),
-                        UpdatedAddressesCount = transaction.UpdatedAddresses.Count(),
-                        TimeStamp = transaction.Timestamp.UtcDateTime,
-                    });
-                }
 
                 _renderedBlockCount++;
                 Log.Debug($"Rendered Block Count: #{_renderedBlockCount} at Block #{block.Index}");
