@@ -528,31 +528,6 @@ namespace NineChronicles.DataProvider.Store
                                 Log.Debug(e.Message);
                             }
                         }
-                        else
-                        {
-                            ctx.Dispose();
-                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
-                            updateCtx.CombinationConsumables!.UpdateRange(cc!);
-                            if (updateCtx.CraftRankings?.Find(cc!.AvatarAddress) is { } rankingData)
-                            {
-                                rankingData.CraftCount += 1;
-                                rankingData.BlockIndex = cc!.BlockIndex;
-                            }
-                            else
-                            {
-                                updateCtx.CraftRankings!.Add(
-                                    new CraftRankingInputModel()
-                                    {
-                                        AgentAddress = cc!.AgentAddress,
-                                        AvatarAddress = cc!.AvatarAddress,
-                                        CraftCount = 1,
-                                        BlockIndex = cc!.BlockIndex,
-                                    });
-                            }
-
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
-                        }
                     }));
                 }
 
@@ -661,31 +636,6 @@ namespace NineChronicles.DataProvider.Store
                             {
                                 Log.Debug(e.Message);
                             }
-                        }
-                        else
-                        {
-                            ctx.Dispose();
-                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
-                            updateCtx.CombinationEquipments!.UpdateRange(ce!);
-                            if (updateCtx.CraftRankings?.Find(ce!.AvatarAddress) is { } rankingData)
-                            {
-                                rankingData.CraftCount += 1;
-                                rankingData.BlockIndex = ce!.BlockIndex;
-                            }
-                            else
-                            {
-                                updateCtx.CraftRankings!.Add(
-                                    new CraftRankingInputModel()
-                                    {
-                                        AgentAddress = ce!.AgentAddress,
-                                        AvatarAddress = ce!.AvatarAddress,
-                                        CraftCount = 1,
-                                        BlockIndex = ce!.BlockIndex,
-                                    });
-                            }
-
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
                         }
                     }));
                 }
@@ -937,31 +887,6 @@ namespace NineChronicles.DataProvider.Store
                             {
                                 Log.Debug(e.Message);
                             }
-                        }
-                        else
-                        {
-                            ctx.Dispose();
-                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
-                            updateCtx.ItemEnhancements!.UpdateRange(ie!);
-                            if (updateCtx.CraftRankings?.Find(ie!.AvatarAddress) is { } rankingData)
-                            {
-                                rankingData.CraftCount += 1;
-                                rankingData.BlockIndex = ie!.BlockIndex;
-                            }
-                            else
-                            {
-                                updateCtx.CraftRankings!.Add(
-                                    new CraftRankingInputModel()
-                                    {
-                                        AgentAddress = ie!.AgentAddress,
-                                        AvatarAddress = ie!.AvatarAddress,
-                                        CraftCount = 1,
-                                        BlockIndex = ie!.BlockIndex,
-                                    });
-                            }
-
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
                         }
                     }));
                 }
