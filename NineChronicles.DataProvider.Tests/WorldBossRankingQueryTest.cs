@@ -21,7 +21,6 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
             avatarName
         }
     }";
-        var context = CreateContext();
         for (int idx = 0; idx < 2; idx++)
         {
             for (int i = 0; i < 200; i++)
@@ -36,11 +35,11 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
                     i,
                     new PrivateKey().ToAddress().ToHex()
                 );
-                context.Raiders.Add(model);
+                Context.Raiders.Add(model);
             }
         }
 
-        await context.SaveChangesAsync();
+        await Context.SaveChangesAsync();
         var result = await ExecuteAsync(query);
         var models = (object[])((Dictionary<string, object>) ((ExecutionNode) result.Data).ToValue())["worldBossRanking"];
         Assert.Equal(100, models.Length);
@@ -52,7 +51,6 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
         const string query = @"query {
         worldBossTotalUsers(raidId: 1)
     }";
-        var context = CreateContext();
         for (int i = 0; i < 200; i++)
         {
             var model = new RaiderModel(
@@ -65,10 +63,10 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
                 i,
                 new PrivateKey().ToAddress().ToHex()
             );
-            context.Raiders.Add(model);
+            Context.Raiders.Add(model);
         }
 
-        await context.SaveChangesAsync();
+        await Context.SaveChangesAsync();
         var result = await ExecuteAsync(query);
         var count = (int)((Dictionary<string, object>) ((ExecutionNode) result.Data).ToValue())["worldBossTotalUsers"];
         Assert.Equal(200, count);
