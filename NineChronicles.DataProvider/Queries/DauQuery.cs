@@ -1,6 +1,7 @@
 ﻿namespace NineChronicles.DataProvider.Queries
 {
     using System;
+    using System.Linq;
     using GraphQL;
     using GraphQL.Types;
     using NineChronicles.DataProvider.GraphTypes;
@@ -24,10 +25,9 @@
                 {
                     string date = context.GetArgument<string>("date");
                     DateTimeOffset offsetDate = DateTimeOffset.Parse(date);
-                    var dauCount = Store.GetDauCount(
-                        offsetDate.AddDays(-1).ToString("yyyy-MM-dd"),
-                        offsetDate.AddDays(1).ToString("yyyy-MM-dd"));
-                    return dauCount;
+                    var dau = Store.GetDau(
+                        offsetDate.ToString("yyyy-MM-dd"));
+                    return dau.Count();
                 });
             Field<ListGraphType<AgentType>>(
                 name: "DauAgents",
@@ -42,9 +42,8 @@
                 {
                     string date = context.GetArgument<string>("date");
                     DateTimeOffset offsetDate = DateTimeOffset.Parse(date);
-                    var agents = Store.GetDauAgents(
-                        offsetDate.AddDays(-1).ToString("yyyy-MM-dd"),
-                        offsetDate.AddDays(1).ToString("yyyy-MM-dd"));
+                    var agents = Store.GetDau(
+                        offsetDate.ToString("yyyy-MM-dd"));
                     return agents;
                 });
         }

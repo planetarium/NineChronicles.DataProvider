@@ -437,7 +437,8 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Transactions` (
     `Nonce` bigint NOT NULL,
     `PublicKey` varchar(100) NOT NULL,
     `UpdatedAddressesCount` int NOT NULL,
+    `Date` date NOT NULL,
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`TxId`),
-    INDEX (`Timestamp`, `Signer`)
+    KEY `Date` (`Date`,`Signer`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
