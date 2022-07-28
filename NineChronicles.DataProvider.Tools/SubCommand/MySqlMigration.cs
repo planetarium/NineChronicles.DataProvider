@@ -214,6 +214,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 $"{tx.Nonce};" +
                                 $"{tx.PublicKey};" +
                                 $"{tx.UpdatedAddresses.Count};" +
+                                $"{tx.Timestamp.UtcDateTime:yyyy-MM-dd};" +
                                 $"{tx.Timestamp.UtcDateTime:o}");
                         }
 
