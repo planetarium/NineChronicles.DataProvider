@@ -16,26 +16,29 @@ namespace NineChronicles.DataProvider.Tests;
 
 public class TestBase
 {
-    private const string ConnectionString = "server=localhost;database=dp-test;uid=root;port=3306;";
+    protected const string ConnectionStringFormat = "server=localhost;database={0};uid=root;port=3306;";
 
     protected DocumentExecuter DocumentExecuter;
     protected Schema Schema;
+    protected NineChroniclesContext Context;
 
     protected TestBase()
     {
-        using var ctx = CreateContext();
+        var connectionString = string.Format(ConnectionStringFormat, GetType().Name);
+        if (Context is null)
         {
-            ctx.Database.EnsureDeleted();
-            ctx.Database.EnsureCreated();
+            Context = CreateContext(connectionString);
+            Context.Database.EnsureDeleted();
+            Context.Database.EnsureCreated();
         }
 
         var services = new ServiceCollection();
         services.AddDbContextFactory<NineChroniclesContext>(options =>
         {
             options.UseMySql(
-                ConnectionString,
+                connectionString,
                 ServerVersion.AutoDetect(
-                    ConnectionString),
+                    connectionString),
                 b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable"));
         });
         services.AddSingleton<MySqlStore>();
@@ -56,17 +59,14 @@ public class TestBase
         DocumentExecuter = new DocumentExecuter();
     }
 
-    protected NineChroniclesContext CreateContext()
+    private NineChroniclesContext CreateContext(string connectionString)
         => new(
             new DbContextOptionsBuilder<NineChroniclesContext>()
-                .UseMySql(ConnectionString, ServerVersion.AutoDetect(ConnectionString)).Options);
+                .UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)).Options);
 
     protected void CleanUp()
     {
-        using var ctx = CreateContext();
-        {
-            ctx.Database.EnsureDeleted();
-        }
+        Context.Database.EnsureDeleted();
     }
 
     public async Task<ExecutionResult> ExecuteAsync(string query)
