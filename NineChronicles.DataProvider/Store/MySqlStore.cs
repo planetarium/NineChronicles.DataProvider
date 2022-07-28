@@ -1666,7 +1666,7 @@ namespace NineChronicles.DataProvider.Store
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             var query = ctx.Set<AgentModel>()
-                .FromSqlRaw($"SELECT Signer as Address FROM `TRANSACTIONS` WHERE Date = \"{date}%\" GROUP BY Signer");
+                .FromSqlRaw($"SELECT Signer as Address FROM `TRANSACTIONS` WHERE Date = \"{date}\" GROUP BY Signer");
 
             return query.ToList();
         }
