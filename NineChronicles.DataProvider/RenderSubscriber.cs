@@ -113,10 +113,6 @@ namespace NineChronicles.DataProvider
             }
 
             _blockIndexFilePath = Path.Combine(dataPath, "blockIndex.txt");
-            if (File.Exists(_blockIndexFilePath))
-            {
-                File.Delete(_blockIndexFilePath);
-            }
 
             try
             {
