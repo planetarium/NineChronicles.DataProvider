@@ -211,77 +211,76 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                     _agentBulkFile.WriteLine(
                                         $"{tx.Signer.ToString()}"
                                     );
-                                }
-
-                                if (tx.Signer != block.Miner)
-                                {
-                                    var agentState = ev.OutputStates.GetAgentState(tx.Signer);
-                                    if (agentState is { } ag)
+                                    if (tx.Signer != block.Miner)
                                     {
-                                        var avatarAddresses = ag.avatarAddresses;
-                                        foreach (var avatarAddress in avatarAddresses)
+                                        var agentState = ev.OutputStates.GetAgentState(tx.Signer);
+                                        if (agentState is { } ag)
                                         {
-                                            try
+                                            var avatarAddresses = ag.avatarAddresses;
+                                            foreach (var avatarAddress in avatarAddresses)
                                             {
-                                                AvatarState avatarState;
                                                 try
                                                 {
-                                                    avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress.Value);
-                                                }
-                                                catch (Exception ex)
-                                                {
-                                                    avatarState = ev.OutputStates.GetAvatarState(avatarAddress.Value);
-                                                }
-
-                                                if (avatarState != null)
-                                                {
-                                                    var previousStates = ev.InputContext.PreviousStates;
-                                                    var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                                    var avatarLevel = avatarState.level;
-                                                    var avatarArmorId = avatarState.GetArmorId();
-                                                    Costume avatarTitleCostume;
+                                                    AvatarState avatarState;
                                                     try
                                                     {
-                                                        avatarTitleCostume =
-                                                            avatarState.inventory.Costumes.FirstOrDefault(costume =>
-                                                                costume.ItemSubType == ItemSubType.Title &&
-                                                                costume.equipped);
+                                                        avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress.Value);
                                                     }
                                                     catch (Exception ex)
                                                     {
-                                                        avatarTitleCostume = null;
+                                                        avatarState = ev.OutputStates.GetAvatarState(avatarAddress.Value);
                                                     }
 
-                                                    int? avatarTitleId = null;
-                                                    if (avatarTitleCostume != null)
+                                                    if (avatarState != null)
                                                     {
-                                                        avatarTitleId = avatarTitleCostume.Id;
+                                                        var previousStates = ev.InputContext.PreviousStates;
+                                                        var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                                        var avatarLevel = avatarState.level;
+                                                        var avatarArmorId = avatarState.GetArmorId();
+                                                        Costume avatarTitleCostume;
+                                                        try
+                                                        {
+                                                            avatarTitleCostume =
+                                                                avatarState.inventory.Costumes.FirstOrDefault(costume =>
+                                                                    costume.ItemSubType == ItemSubType.Title &&
+                                                                    costume.equipped);
+                                                        }
+                                                        catch (Exception ex)
+                                                        {
+                                                            avatarTitleCostume = null;
+                                                        }
+
+                                                        int? avatarTitleId = null;
+                                                        if (avatarTitleCostume != null)
+                                                        {
+                                                            avatarTitleId = avatarTitleCostume.Id;
+                                                        }
+
+                                                        var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                                        string avatarName = avatarState.name;
+
+                                                        Log.Debug(
+                                                            "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                                            avatarName,
+                                                            avatarLevel,
+                                                            avatarArmorId,
+                                                            avatarTitleId,
+                                                            avatarCp);
+                                                        WriteCC(
+                                                            tx.Signer,
+                                                            avatarAddress.Value,
+                                                            avatarName,
+                                                            avatarLevel,
+                                                            avatarTitleId,
+                                                            avatarArmorId,
+                                                            avatarCp,
+                                                            tx.Timestamp);
                                                     }
-
-                                                    var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                                    string avatarName = avatarState.name;
-
-                                                    Log.Debug(
-                                                        "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
-                                                        avatarName,
-                                                        avatarLevel,
-                                                        avatarArmorId,
-                                                        avatarTitleId,
-                                                        avatarCp);
-                                                    WriteCC(
-                                                        tx.Signer,
-                                                        avatarAddress.Value,
-                                                        avatarName,
-                                                        avatarLevel,
-                                                        avatarTitleId,
-                                                        avatarArmorId,
-                                                        avatarCp,
-                                                        tx.Timestamp);
                                                 }
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                Console.WriteLine(ex.Message);
+                                                catch (Exception ex)
+                                                {
+                                                    Console.WriteLine(ex.Message);
+                                                }
                                             }
                                         }
                                     }
