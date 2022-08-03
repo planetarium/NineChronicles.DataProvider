@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
@@ -10,9 +11,10 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20220721055412_DataProviderMigration")]
+    partial class DataProviderMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -219,52 +221,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                         .HasColumnType("int");
 
                     b.ToTable("BattleArenaRanking");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.BlockModel", b =>
-                {
-                    b.Property<string>("Hash")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<long>("Difficulty")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("Index")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Miner")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Nonce")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("PreviousHash")
-                        .HasColumnType("longtext");
-
-                    b.Property<int?>("ProtocolVersion")
-                        .HasColumnType("int");
-
-                    b.Property<string>("PublicKey")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("StateRootHash")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTimeOffset>("TimeStamp")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long?>("TotalDifficulty")
-                        .HasColumnType("bigint");
-
-                    b.Property<int?>("TxCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TxHash")
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Hash");
-
-                    b.ToTable("Blocks");
                 });
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.ClaimStakeRewardModel", b =>
@@ -1424,43 +1380,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.HasIndex("AgentAddress");
 
                     b.ToTable("Stakings");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.TransactionModel", b =>
-                {
-                    b.Property<string>("TxId")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("ActionType")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("BlockHash")
-                        .HasColumnType("longtext");
-
-                    b.Property<long>("BlockIndex")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTimeOffset>("Date")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long>("Nonce")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("PublicKey")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Signer")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTimeOffset>("TimeStamp")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int?>("UpdatedAddressesCount")
-                        .HasColumnType("int");
-
-                    b.HasKey("TxId");
-
-                    b.ToTable("Transactions");
                 });
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.UnlockEquipmentRecipeModel", b =>
