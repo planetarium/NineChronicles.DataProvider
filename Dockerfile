@@ -11,11 +11,6 @@ COPY ./NineChronicles.Headless/NineChronicles.Headless.Executable/NineChronicles
 COPY ./NineChronicles.DataProvider/NineChronicles.DataProvider.csproj ./NineChronicles.DataProvider/
 COPY ./NineChronicles.DataProvider.Executable/NineChronicles.DataProvider.Executable.csproj ./NineChronicles.DataProvider.Executable/
 COPY ./NineChronicles.DataProvider.Tools/NineChronicles.DataProvider.Tools.csproj ./NineChronicles.DataProvider.Tools/
-RUN dotnet restore Lib9c
-RUN dotnet restore Libplanet.Headless
-RUN dotnet restore NineChronicles.RPC.Shared
-RUN dotnet restore NineChronicles.Headless
-RUN dotnet restore NineChronicles.Headless.Executable
 RUN dotnet restore NineChronicles.Headless/Lib9c/Lib9c
 RUN dotnet restore NineChronicles.Headless/Libplanet.Headless
 RUN dotnet restore NineChronicles.Headless/NineChronicles.RPC.Shared/NineChronicles.RPC.Shared
