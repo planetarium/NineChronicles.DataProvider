@@ -1,3 +1,5 @@
+using System.IO;
+using Lib9c.DevExtensions;
 using Libplanet;
 using Libplanet.Action;
 using Libplanet.Crypto;
@@ -105,9 +107,16 @@ namespace NineChronicles.DataProvider.Executable
                 properties.LogActionRenders = true;
             }
 
+            var path = string.Format("..{0}..{0}..{0}..{0}NineChronicles.Headless{0}Lib9c{0}Lib9c{0}TableCSV", Path.DirectorySeparatorChar);
+            var sheets = new Sheets
+            {
+                Map = Utils.ImportSheets(path)
+            };
+
             hostBuilder.ConfigureServices(services =>
             {
                 services.AddSingleton(_ => context);
+                services.AddSingleton(sheets);
             });
 
             hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, context);
