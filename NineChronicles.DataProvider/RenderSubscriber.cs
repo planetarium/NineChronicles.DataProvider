@@ -65,6 +65,7 @@ namespace NineChronicles.DataProvider
         private readonly List<BlockModel> _blockList = new List<BlockModel>();
         private readonly List<TransactionModel> _transactionList = new List<TransactionModel>();
         private int _renderedBlockCount;
+        private DateTimeOffset _blockTimeOffset;
 
         public RenderSubscriber(
             NineChroniclesNodeService nodeService,
@@ -107,6 +108,7 @@ namespace NineChronicles.DataProvider
             _blockRenderer.BlockSubject.Subscribe(b =>
             {
                 var block = b.NewTip;
+                _blockTimeOffset = block.Timestamp;
                 _blockList.Add(new BlockModel()
                 {
                     Index = block.Index,
@@ -263,6 +265,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _hasList.Add(new HackAndSlashModel()
                                 {
@@ -332,6 +335,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
 
                                 var end = DateTimeOffset.UtcNow;
@@ -369,6 +373,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _ccList.Add(new CombinationConsumableModel()
                                 {
@@ -417,6 +422,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _ceList.Add(new CombinationEquipmentModel()
                                 {
@@ -631,6 +637,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _ieList.Add(new ItemEnhancementModel()
                                 {
@@ -703,6 +710,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
 
                                 var buyerInventory = avatarState.inventory;
@@ -998,6 +1006,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _claimStakeList.Add(new ClaimStakeRewardModel()
                                 {
@@ -1124,6 +1133,7 @@ namespace NineChronicles.DataProvider
                                         TitleId = avatarTitleId,
                                         ArmorId = avatarArmorId,
                                         Cp = avatarCp,
+                                        Timestamp = _blockTimeOffset,
                                     });
                                     _grindList.Add(new GrindingModel()
                                     {
@@ -1181,6 +1191,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 foreach (var recipeId in unlockEquipmentRecipe.RecipeIds)
                                 {
@@ -1238,6 +1249,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 foreach (var worldId in unlockWorld.WorldIds)
                                 {
@@ -1297,6 +1309,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _hasRandomBuffList.Add(new HasRandomBuffModel()
                                 {
@@ -1352,6 +1365,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _joinArenaList.Add(new JoinArenaModel()
                                 {
@@ -1436,6 +1450,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _battleArenaList.Add(new BattleArenaModel()
                                 {
@@ -1668,6 +1683,7 @@ namespace NineChronicles.DataProvider
                 TitleId = avatarTitleId,
                 ArmorId = avatarArmorId,
                 Cp = avatarCp,
+                Timestamp = _blockTimeOffset,
             });
             _eqList.Add(new EquipmentModel()
             {
