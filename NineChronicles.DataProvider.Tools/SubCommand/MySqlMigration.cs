@@ -5,6 +5,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
+    using Bencodex.Types;
     using Cocona;
     using Libplanet;
     using Libplanet.Action;
@@ -14,8 +15,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using Libplanet.RocksDBStore;
     using Libplanet.Store;
     using MySqlConnector;
+    using Nekoyume;
     using Nekoyume.Action;
+    using Nekoyume.Battle;
     using Nekoyume.BlockChain.Policy;
+    using Nekoyume.Model.Item;
+    using Nekoyume.Model.State;
+    using Nekoyume.TableData;
     using Serilog;
     using Serilog.Events;
     using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -27,6 +33,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private const string CCDbName = "CombinationConsumables";
         private const string CEDbName = "CombinationEquipments";
         private const string IEDbName = "ItemEnhancements";
+        private const string EQDbName = "Equipments";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
@@ -35,6 +42,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private StreamWriter _ieBulkFile;
         private StreamWriter _agentBulkFile;
         private StreamWriter _avatarBulkFile;
+        private StreamWriter _eqBulkFile;
         private List<string> _agentList;
         private List<string> _avatarList;
         private List<string> _ccFiles;
@@ -42,6 +50,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private List<string> _ieFiles;
         private List<string> _agentFiles;
         private List<string> _avatarFiles;
+        private List<string> _eqFiles;
 
         [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
         public void Migration(
@@ -144,6 +153,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             // Prepare block hashes to append to new chain
             long height = _baseChain.Tip.Index;
+            var ev = _baseChain.ExecuteActions(_baseChain.Tip).Last();
             if (offset + limit > (int)height)
             {
                 Console.Error.WriteLine(
@@ -161,6 +171,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _ieFiles = new List<string>();
             _agentFiles = new List<string>();
             _avatarFiles = new List<string>();
+            _eqFiles = new List<string>();
 
             // lists to keep track of inserted addresses to minimize duplicates
             _agentList = new List<string>();
@@ -177,28 +188,301 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 {
                     int interval = 1000;
                     int limitInterval;
-                    Task<List<ActionEvaluation>>[] taskArray;
                     if (interval < remainingCount)
                     {
-                        taskArray = new Task<List<ActionEvaluation>>[interval];
                         limitInterval = interval;
                     }
                     else
                     {
-                        taskArray = new Task<List<ActionEvaluation>>[remainingCount];
                         limitInterval = remainingCount;
                     }
 
+                    var count = remainingCount;
                     foreach (var item in
                         _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
                     {
                         var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
-                        taskArray[item.i] = Task.Factory.StartNew(() =>
+                        Console.WriteLine("Migrating {0}/{1} #{2}", item.i, count, block.Index);
+
+                        if (block.Index == 4285218)
                         {
-                            List<ActionEvaluation> actionEvaluations = EvaluateBlock(block);
-                            Console.WriteLine($"Block progress: {block.Index}/{remainingCount}");
-                            return actionEvaluations;
-                        });
+                            Console.WriteLine("hi");
+                        }
+
+                        foreach (var tx in block.Transactions)
+                        {
+                            if (!_agentList.Contains(tx.Signer.ToString()))
+                            {
+                                _agentList.Add(tx.Signer.ToString());
+                                _agentBulkFile.WriteLine(
+                                    $"{tx.Signer.ToString()}"
+                                );
+                            }
+
+                            var agentState = ev.OutputStates.GetAgentState(tx.Signer);
+                            if (agentState is { } ag)
+                            {
+                                var avatars = ag.avatarAddresses;
+                                foreach (var avatar in avatars)
+                                {
+                                    if (!_avatarList.Contains(avatar.Value.ToString()))
+                                    {
+                                        _avatarList.Add(avatar.Value.ToString());
+                                        AvatarState avatarState;
+                                        try
+                                        {
+                                            avatarState = ev.OutputStates.GetAvatarStateV2(avatar.Value);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            avatarState = ev.OutputStates.GetAvatarState(avatar.Value);
+                                        }
+
+                                        var characterSheet = ev.OutputStates.GetSheet<CharacterSheet>();
+                                        var avatarLevel = avatarState.level;
+                                        var avatarArmorId = avatarState.GetArmorId();
+                                        Costume avatarTitleCostume;
+                                        try
+                                        {
+                                            avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            avatarTitleCostume = null;
+                                        }
+
+                                        int? avatarTitleId = null;
+                                        if (avatarTitleCostume != null)
+                                        {
+                                            avatarTitleId = avatarTitleCostume.Id;
+                                        }
+
+                                        var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                        string avatarName = avatarState.name;
+                                        _avatarBulkFile.WriteLine(
+                                            $"{avatar.Value.ToString()};" +
+                                            $"{tx.Signer.ToString()};" +
+                                            $"{avatarName};" +
+                                            $"{avatarLevel};" +
+                                            $"{avatarTitleId ?? 0};" +
+                                            $"{avatarArmorId};" +
+                                            $"{avatarCp}");
+                                    }
+                                }
+                            }
+
+                            if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment ce)
+                            {
+                                try
+                                {
+                                    _ceBulkFile.WriteLine(
+                                        $"{ce.Id.ToString()};" +
+                                        $"{ce.avatarAddress.ToString()};" +
+                                        $"{tx.Signer.ToString()};" +
+                                        $"{ce.recipeId};" +
+                                        $"{ce.slotIndex};" +
+                                        $"{ce.subRecipeId ?? 0};" +
+                                        $"{block.Index};" +
+                                        $"{tx.Timestamp:yyyy-MM-dd HH:mm:ss}"
+                                    );
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment11 ce11)
+                            {
+                                try
+                                {
+                                    _ceBulkFile.WriteLine(
+                                        $"{ce11.Id.ToString()};" +
+                                        $"{ce11.avatarAddress.ToString()};" +
+                                        $"{tx.Signer.ToString()};" +
+                                        $"{ce11.recipeId};" +
+                                        $"{ce11.slotIndex};" +
+                                        $"{ce11.subRecipeId ?? 0};" +
+                                        $"{block.Index};" +
+                                        $"{tx.Timestamp:yyyy-MM-dd HH:mm:ss}"
+                                    );
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment10 ce10)
+                            {
+                                try
+                                {
+                                    _ceBulkFile.WriteLine(
+                                        $"{ce10.Id.ToString()};" +
+                                        $"{ce10.avatarAddress.ToString()};" +
+                                        $"{tx.Signer.ToString()};" +
+                                        $"{ce10.recipeId};" +
+                                        $"{ce10.slotIndex};" +
+                                        $"{ce10.subRecipeId ?? 0};" +
+                                        $"{block.Index};" +
+                                        $"{tx.Timestamp:yyyy-MM-dd HH:mm:ss}"
+                                    );
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationConsumable cc)
+                            {
+                                try
+                                {
+                                    _ccBulkFile.WriteLine(
+                                        $"{cc.Id.ToString()};" +
+                                        $"{cc.avatarAddress.ToString()};" +
+                                        $"{tx.Signer.ToString()};" +
+                                        $"{cc.recipeId};" +
+                                        $"{cc.slotIndex};" +
+                                        $"{block.Index};" +
+                                        $"{tx.Timestamp:yyyy-MM-dd HH:mm:ss}"
+                                    );
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.Actions.FirstOrDefault()?.InnerAction is ItemEnhancement ie)
+                            {
+                                try
+                                {
+                                    var state = ev.OutputStates.GetState(
+                                        Addresses.GetItemAddress(ie.itemId));
+                                    ITradableItem orderItem =
+                                        (ITradableItem)ItemFactory.Deserialize((Dictionary)state);
+                                    if (orderItem.ItemType == ItemType.Equipment)
+                                    {
+                                        var equipment = (Equipment)orderItem;
+                                        var cp = CPHelper.GetCP(equipment);
+                                        _eqBulkFile.WriteLine(
+                                            $"{orderItem.TradableId.ToString()};" +
+                                            $"{tx.Signer.ToString()};" +
+                                            $"{ie.avatarAddress.ToString()};" +
+                                            $"{equipment.Id};" +
+                                            $"{cp};" +
+                                            $"{equipment.level};" +
+                                            $"{equipment.ItemSubType.ToString()};" +
+                                            $"{tx.Timestamp:yyyy-MM-dd HH:mm:ss}");
+                                    }
+
+                                    _ieBulkFile.WriteLine(
+                                        $"{ie.Id.ToString()};" +
+                                        $"{ie.avatarAddress.ToString()};" +
+                                        $"{tx.Signer.ToString()};" +
+                                        $"{ie.itemId.ToString()};" +
+                                        $"{ie.materialId.ToString()};" +
+                                        $"{ie.slotIndex};" +
+                                        $"{block.Index};" +
+                                        $"{tx.Timestamp:yyyy-MM-dd HH:mm:ss}"
+                                    );
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.Actions.FirstOrDefault()?.InnerAction is ItemEnhancement10 ie10)
+                            {
+                                try
+                                {
+                                    var state = ev.OutputStates.GetState(
+                                        Addresses.GetItemAddress(ie10.itemId));
+                                    ITradableItem orderItem =
+                                        (ITradableItem)ItemFactory.Deserialize((Dictionary)state);
+                                    if (orderItem.ItemType == ItemType.Equipment)
+                                    {
+                                        var equipment = (Equipment)orderItem;
+                                        var cp = CPHelper.GetCP(equipment);
+                                        _eqBulkFile.WriteLine(
+                                            $"{orderItem.TradableId.ToString()};" +
+                                            $"{tx.Signer.ToString()};" +
+                                            $"{ie10.avatarAddress.ToString()};" +
+                                            $"{equipment.Id};" +
+                                            $"{cp};" +
+                                            $"{equipment.level};" +
+                                            $"{equipment.ItemSubType.ToString()};" +
+                                            $"{tx.Timestamp:yyyy-MM-dd HH:mm:ss}");
+                                    }
+
+                                    _ieBulkFile.WriteLine(
+                                        $"{ie10.Id.ToString()};" +
+                                        $"{ie10.avatarAddress.ToString()};" +
+                                        $"{tx.Signer.ToString()};" +
+                                        $"{ie10.itemId.ToString()};" +
+                                        $"{ie10.materialId.ToString()};" +
+                                        $"{ie10.slotIndex};" +
+                                        $"{block.Index};" +
+                                        $"{tx.Timestamp:yyyy-MM-dd HH:mm:ss}"
+                                    );
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.Actions.FirstOrDefault()?.InnerAction is ItemEnhancement9 ie9)
+                            {
+                                try
+                                {
+                                    try
+                                    {
+                                        var state = ev.OutputStates.GetState(
+                                            Addresses.GetItemAddress(ie9.itemId));
+                                        ITradableItem orderItem =
+                                            (ITradableItem) ItemFactory.Deserialize((Dictionary) state);
+                                        if (orderItem.ItemType == ItemType.Equipment)
+                                        {
+                                            var equipment = (Equipment) orderItem;
+                                            var cp = CPHelper.GetCP(equipment);
+                                            _eqBulkFile.WriteLine(
+                                                $"{orderItem.TradableId.ToString()};" +
+                                                $"{tx.Signer.ToString()};" +
+                                                $"{ie9.avatarAddress.ToString()};" +
+                                                $"{equipment.Id};" +
+                                                $"{cp};" +
+                                                $"{equipment.level};" +
+                                                $"{equipment.ItemSubType.ToString()};" +
+                                                $"{tx.Timestamp:yyyy-MM-dd HH:mm:ss}");
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine(ex.Message);
+                                    }
+
+                                    _ieBulkFile.WriteLine(
+                                        $"{ie9.Id.ToString()};" +
+                                        $"{ie9.avatarAddress.ToString()};" +
+                                        $"{tx.Signer.ToString()};" +
+                                        $"{ie9.itemId.ToString()};" +
+                                        $"{ie9.materialId.ToString()};" +
+                                        $"{ie9.slotIndex};" +
+                                        $"{block.Index};" +
+                                        $"{tx.Timestamp:yyyy-MM-dd HH:mm:ss}"
+                                    );
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+                        }
+
+                        Console.WriteLine("Migrating Done {0}/{1} #{2}", item.i, count, block.Index);
                     }
 
                     if (interval < remainingCount)
@@ -211,9 +495,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         remainingCount = 0;
                         offsetIdx += remainingCount;
                     }
-
-                    Task.WaitAll(taskArray);
-                    ProcessTasks(taskArray);
                 }
 
                 FlushBulkFiles();
@@ -243,6 +524,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 foreach (var path in _ieFiles)
                 {
                     BulkInsert(IEDbName, path);
+                }
+
+                foreach (var path in _eqFiles)
+                {
+                    BulkInsert(EQDbName, path);
                 }
             }
             catch (Exception e)
@@ -478,6 +764,9 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             _ieBulkFile.Flush();
             _ieBulkFile.Close();
+
+            _eqBulkFile.Flush();
+            _eqBulkFile.Close();
         }
 
         private void CreateBulkFiles()
@@ -497,11 +786,15 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             string ieFilePath = Path.GetTempFileName();
             _ieBulkFile = new StreamWriter(ieFilePath);
 
+            string eqFilePath = Path.GetTempFileName();
+            _eqBulkFile = new StreamWriter(eqFilePath);
+
             _agentFiles.Add(agentFilePath);
             _avatarFiles.Add(avatarFilePath);
             _ccFiles.Add(ccFilePath);
             _ceFiles.Add(ceFilePath);
             _ieFiles.Add(ieFilePath);
+            _eqFiles.Add(eqFilePath);
         }
 
         private void BulkInsert(
