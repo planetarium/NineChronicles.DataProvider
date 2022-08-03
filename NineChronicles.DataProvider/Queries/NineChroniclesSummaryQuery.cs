@@ -1,11 +1,12 @@
-﻿namespace NineChronicles.DataProvider.GraphQL.Types
+﻿namespace NineChronicles.DataProvider.Queries
 {
     using Bencodex.Types;
-    using global::GraphQL;
-    using global::GraphQL.Types;
+    using GraphQL;
+    using GraphQL.Types;
     using Libplanet;
     using Nekoyume;
     using Nekoyume.TableData;
+    using NineChronicles.DataProvider.GraphTypes;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless;
@@ -200,6 +201,10 @@
                     int? limit = context.GetArgument<int?>("limit", null);
                     return Store.GetAbilityRanking(avatarAddress, limit);
                 });
+            Field<NonNullGraphType<DauQuery>>(
+                name: "dauQuery",
+                resolve: context => new DauQuery(store)
+            );
         }
 
         private MySqlStore Store { get; }

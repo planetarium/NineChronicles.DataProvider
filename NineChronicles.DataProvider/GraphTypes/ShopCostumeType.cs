@@ -1,6 +1,6 @@
-﻿namespace NineChronicles.DataProvider.GraphQL.Types
+﻿namespace NineChronicles.DataProvider.GraphTypes
 {
-    using global::GraphQL.Types;
+    using GraphQL.Types;
     using NineChronicles.DataProvider.Store.Models;
 
     public class ShopCostumeType : ObjectGraphType<ShopCostumeModel>
