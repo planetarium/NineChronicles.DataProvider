@@ -1,9 +1,9 @@
-﻿namespace NineChronicles.DataProvider.GraphQL.Types
+﻿namespace NineChronicles.DataProvider.GraphTypes
 {
     using System;
-    using global::GraphQL.Types;
-    using global::GraphQL.Utilities;
+    using GraphQL.Types;
     using Microsoft.Extensions.DependencyInjection;
+    using NineChronicles.DataProvider.Queries;
 
     public class NineChroniclesSummarySchema : Schema
     {
