@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Server;
 using GraphQL.Types;
+using Lib9c.DevExtensions;
 using Libplanet.Action;
 using Libplanet.KeyStore;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ using Nekoyume.Action;
 using NineChronicles.DataProvider.GraphTypes;
 using NineChronicles.DataProvider.Store;
 using NineChronicles.Headless;
+using NineChronicles.Headless.GraphTypes;
 
 namespace NineChronicles.DataProvider.Tests;
 
@@ -44,14 +46,21 @@ public class TestBase
         services.AddSingleton<MySqlStore>();
         var tempKeyStorePath = Path.Join(Path.GetTempPath(), Path.GetRandomFileName());
         var keyStore = new Web3KeyStore(tempKeyStorePath);
-        var context = new StandaloneContext
+        var standaloneContext = new StandaloneContext
         {
             KeyStore = keyStore,
         };
+        var path = string.Format("..{0}..{0}..{0}..{0}NineChronicles.Headless{0}Lib9c{0}Lib9c{0}TableCSV", Path.DirectorySeparatorChar);
+        var sheets = new Sheets
+        {
+            Map = Utils.ImportSheets(path)
+        };
         services
-            .AddSingleton(context)
+            .AddSingleton(sheets)
+            .AddSingleton(standaloneContext)
             .AddGraphQL()
             .AddGraphTypes(typeof(NineChroniclesSummarySchema))
+            .AddGraphTypes(typeof(StandaloneSchema))
             .AddLibplanetExplorer<PolymorphicAction<ActionBase>>();
         services.AddSingleton<NineChroniclesSummarySchema>();
         var serviceProvider = services.BuildServiceProvider();

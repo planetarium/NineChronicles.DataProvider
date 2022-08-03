@@ -4,24 +4,26 @@
     using System.Linq;
     using Bencodex.Types;
     using GraphQL;
+    using GraphQL.Execution;
     using GraphQL.Types;
     using Libplanet;
     using Libplanet.Crypto;
-    using Libplanet.Explorer.GraphTypes;
     using Nekoyume;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.GraphTypes;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless;
+    using NineChronicles.Headless.GraphTypes;
     using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     internal class NineChroniclesSummaryQuery : ObjectGraphType
     {
-        public NineChroniclesSummaryQuery(MySqlStore store, StandaloneContext standaloneContext)
+        public NineChroniclesSummaryQuery(MySqlStore store, StandaloneContext standaloneContext, Sheets sheets)
         {
             Store = store;
             StandaloneContext = standaloneContext;
+            Sheets = sheets;
             Field<StringGraphType>(
                 name: "test",
                 resolve: context => "Should be done.");
@@ -264,6 +266,41 @@
                     return Store.GetTotalRaiders(raidId);
                 });
 
+            Field<ListGraphType<FungibleAssetValueWithCurrencyType>>(
+                "worldBossRankingReward",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "raidId",
+                        Description = "world boss season id.",
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "address of avatar state.",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var raidId = context.GetArgument<int>("raidId");
+                    var avatarAddress = context.GetArgument<string>("avatarAddress");
+
+                    // Validation?
+
+                    // Check ranking.
+                    var raiders = Store.GetWorldBossRanking(raidId);
+                    var raider = raiders.First(r => r.Address == avatarAddress);
+                    var ranking = raider.Ranking;
+                    var rate = ranking / raiders.Count * 100;
+
+                    // calculate rewards.
+                    RuneSheet runeSheet = sheets.GetSheet<RuneSheet>();
+                    WorldBossRankingRewardSheet rankingRewardSheet = sheets.GetSheet<WorldBossRankingRewardSheet>();
+                    var row = rankingRewardSheet.FindRow(ranking, rate);
+                    return row.GetRewards(runeSheet);
+                }
+            );
+
             // mutation for test.
             Field<BooleanGraphType>(
                 name: "insertRanking",
@@ -308,5 +345,7 @@
         private MySqlStore Store { get; }
 
         private StandaloneContext StandaloneContext { get; }
+
+        private Sheets Sheets { get; }
     }
 }
