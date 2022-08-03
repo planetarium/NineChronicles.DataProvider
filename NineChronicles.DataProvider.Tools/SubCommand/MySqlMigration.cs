@@ -1,9 +1,3 @@
-using Nekoyume.Battle;
-using Nekoyume.BlockChain.Policy;
-using Nekoyume.Model.Item;
-using Nekoyume.Model.State;
-using Nekoyume.TableData;
-
 namespace NineChronicles.DataProvider.Tools.SubCommand
 {
     using System;
@@ -21,7 +15,12 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using Libplanet.Store;
     using MySqlConnector;
     using Nekoyume.Action;
+    using Nekoyume.Battle;
     using Nekoyume.BlockChain;
+    using Nekoyume.BlockChain.Policy;
+    using Nekoyume.Model.Item;
+    using Nekoyume.Model.State;
+    using Nekoyume.TableData;
     using Serilog;
     using Serilog.Events;
     using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
@@ -185,7 +184,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                 while (remainingCount > 0)
                 {
-                    int interval = 100000;
+                    int interval = 10000000;
                     int limitInterval;
                     Task<int>[] taskArray;
                     if (interval < remainingCount)
@@ -223,31 +222,48 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                 avatarState = ev.OutputStates.GetAvatarState(avatarAddress.Value);
                                             }
 
-                                            var previousStates = ev.InputContext.PreviousStates;
-                                            var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                            var avatarLevel = avatarState.level;
-                                            var avatarArmorId = avatarState.GetArmorId();
-                                            var avatarTitleCostume =
-                                                avatarState.inventory.Costumes.FirstOrDefault(costume =>
-                                                    costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                            int? avatarTitleId = null;
-                                            if (avatarTitleCostume != null)
+                                            if (avatarState != null)
                                             {
-                                                avatarTitleId = avatarTitleCostume.Id;
+                                                var previousStates = ev.InputContext.PreviousStates;
+                                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                                var avatarLevel = avatarState.level;
+                                                var avatarArmorId = avatarState.GetArmorId();
+                                                Costume avatarTitleCostume;
+                                                try
+                                                {
+                                                    avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    avatarTitleCostume = null;
+                                                }
+
+                                                int? avatarTitleId = null;
+                                                if (avatarTitleCostume != null)
+                                                {
+                                                    avatarTitleId = avatarTitleCostume.Id;
+                                                }
+
+                                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                                string avatarName = avatarState.name;
+
+                                                Log.Debug(
+                                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                                    avatarName,
+                                                    avatarLevel,
+                                                    avatarArmorId,
+                                                    avatarTitleId,
+                                                    avatarCp);
+                                                WriteCC(
+                                                    tx.Signer,
+                                                    avatarAddress.Value,
+                                                    avatarName,
+                                                    avatarLevel,
+                                                    avatarTitleId,
+                                                    avatarArmorId,
+                                                    avatarCp,
+                                                    tx.Timestamp);
                                             }
-
-                                            var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                            string avatarName = avatarState.name;
-
-                                            Log.Debug(
-                                                "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
-                                                avatarName,
-                                                avatarLevel,
-                                                avatarArmorId,
-                                                avatarTitleId,
-                                                avatarCp);
-                                            WriteCC(tx.Signer, avatarAddress.Value, avatarName, avatarLevel,
-                                                avatarTitleId, avatarArmorId, avatarCp);
                                         }
                                         catch (Exception ex)
                                         {
@@ -379,7 +395,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             int level,
             int? titleId,
             int armorId,
-            int cp)
+            int cp,
+            DateTimeOffset timestamp)
         {
             if (agentAddress == null)
             {
@@ -404,7 +421,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     $"{level};" +
                     $"{titleId ?? 0};" +
                     $"{armorId};" +
-                    $"{cp}");
+                    $"{cp};" +
+                    $"{timestamp::yyyy-MM-dd HH:mm:ss}");
                 _avatarList.Add(avatarAddress.ToString());
             }
         }
