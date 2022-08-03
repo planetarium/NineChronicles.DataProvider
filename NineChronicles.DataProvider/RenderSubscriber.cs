@@ -377,6 +377,134 @@ namespace NineChronicles.DataProvider
                                 Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
+                            if (ev.Action is HackAndSlash13 has13)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has13.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                Log.Debug(
+                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                    avatarName,
+                                    avatarLevel,
+                                    avatarArmorId,
+                                    avatarTitleId,
+                                    avatarCp);
+
+                                bool isClear = avatarState.stageMap.ContainsKey(has13.stageId);
+
+                                _hasAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _hasAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = has13.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _hasList.Add(new HackAndSlashModel()
+                                {
+                                    Id = has13.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = has13.avatarAddress.ToString(),
+                                    StageId = has13.stageId,
+                                    Cleared = isClear,
+                                    Mimisbrunnr = has13.stageId > 10000000,
+                                    BlockIndex = ev.BlockIndex,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is HackAndSlash14 has14)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has14.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                Log.Debug(
+                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                    avatarName,
+                                    avatarLevel,
+                                    avatarArmorId,
+                                    avatarTitleId,
+                                    avatarCp);
+
+                                bool isClear = avatarState.stageMap.ContainsKey(has14.stageId);
+
+                                _hasAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _hasAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = has14.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _hasList.Add(new HackAndSlashModel()
+                                {
+                                    Id = has14.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = has14.avatarAddress.ToString(),
+                                    StageId = has14.stageId,
+                                    Cleared = isClear,
+                                    Mimisbrunnr = has14.stageId > 10000000,
+                                    BlockIndex = ev.BlockIndex,
+                                });
+                                if (has14.stageBuffId.HasValue)
+                                {
+                                    _hasWithRandomBuffList.Add(new HasWithRandomBuffModel()
+                                    {
+                                        Id = has14.Id.ToString(),
+                                        BlockIndex = ev.BlockIndex,
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = has14.avatarAddress.ToString(),
+                                        StageId = has14.stageId,
+                                        BuffId = (int)has14.stageBuffId,
+                                        Cleared = isClear,
+                                        TimeStamp = DateTimeOffset.UtcNow,
+                                    });
+                                }
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
                             if (ev.Action is RankingBattle rb)
                             {
                                 var start = DateTimeOffset.UtcNow;
@@ -545,6 +673,160 @@ namespace NineChronicles.DataProvider
                                     (end - start).Milliseconds);
                             }
 
+                            if (ev.Action is CombinationEquipment10 combinationEquipment10)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState =
+                                    ev.OutputStates.GetAvatarStateV2(combinationEquipment10.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume =>
+                                    costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                _ceAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _ceAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = combinationEquipment10.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _ceList.Add(new CombinationEquipmentModel()
+                                {
+                                    Id = combinationEquipment10.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = combinationEquipment10.avatarAddress.ToString(),
+                                    RecipeId = combinationEquipment10.recipeId,
+                                    SlotIndex = combinationEquipment10.slotIndex,
+                                    SubRecipeId = combinationEquipment10.subRecipeId ?? 0,
+                                    BlockIndex = ev.BlockIndex,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug(
+                                    "Stored CombinationEquipment action in block #{index}. Time Taken: {time} ms.",
+                                    ev.BlockIndex,
+                                    (end - start).Milliseconds);
+                                start = DateTimeOffset.UtcNow;
+
+                                var slotState = ev.OutputStates.GetCombinationSlotState(
+                                    combinationEquipment10.avatarAddress,
+                                    combinationEquipment10.slotIndex);
+
+                                if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
+                                {
+                                    ProcessEquipmentData(
+                                        ev.Signer,
+                                        combinationEquipment10.avatarAddress,
+                                        avatarName,
+                                        avatarLevel,
+                                        avatarTitleId,
+                                        avatarArmorId,
+                                        avatarCp,
+                                        (Equipment)slotState.Result.itemUsable);
+                                }
+
+                                end = DateTimeOffset.UtcNow;
+                                Log.Debug(
+                                    "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
+                                    combinationEquipment10.avatarAddress,
+                                    ev.BlockIndex,
+                                    (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is CombinationEquipment11 combinationEquipment11)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState =
+                                    ev.OutputStates.GetAvatarStateV2(combinationEquipment11.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume =>
+                                    costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                _ceAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _ceAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = combinationEquipment11.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _ceList.Add(new CombinationEquipmentModel()
+                                {
+                                    Id = combinationEquipment11.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = combinationEquipment11.avatarAddress.ToString(),
+                                    RecipeId = combinationEquipment11.recipeId,
+                                    SlotIndex = combinationEquipment11.slotIndex,
+                                    SubRecipeId = combinationEquipment11.subRecipeId ?? 0,
+                                    BlockIndex = ev.BlockIndex,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug(
+                                    "Stored CombinationEquipment action in block #{index}. Time Taken: {time} ms.",
+                                    ev.BlockIndex,
+                                    (end - start).Milliseconds);
+                                start = DateTimeOffset.UtcNow;
+
+                                var slotState = ev.OutputStates.GetCombinationSlotState(
+                                    combinationEquipment11.avatarAddress,
+                                    combinationEquipment11.slotIndex);
+
+                                if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
+                                {
+                                    ProcessEquipmentData(
+                                        ev.Signer,
+                                        combinationEquipment11.avatarAddress,
+                                        avatarName,
+                                        avatarLevel,
+                                        avatarTitleId,
+                                        avatarArmorId,
+                                        avatarCp,
+                                        (Equipment)slotState.Result.itemUsable);
+                                }
+
+                                end = DateTimeOffset.UtcNow;
+                                Log.Debug(
+                                    "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
+                                    combinationEquipment11.avatarAddress,
+                                    ev.BlockIndex,
+                                    (end - start).Milliseconds);
+                            }
+
                             if (ev.Action is ItemEnhancement itemEnhancement)
                             {
                                 var start = DateTimeOffset.UtcNow;
@@ -661,6 +943,246 @@ namespace NineChronicles.DataProvider
                                 Log.Debug(
                                     "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
                                     itemEnhancement.avatarAddress,
+                                    ev.BlockIndex,
+                                    (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is ItemEnhancement9 itemEnhancement9)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(itemEnhancement9.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                AvatarState prevAvatarState = previousStates.GetAvatarStateV2(itemEnhancement9.avatarAddress);
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                int prevEquipmentLevel = 0;
+                                if (prevAvatarState.inventory.TryGetNonFungibleItem(itemEnhancement9.itemId, out ItemUsable prevEnhancementItem)
+                                    && prevEnhancementItem is Equipment prevEnhancementEquipment)
+                                {
+                                       prevEquipmentLevel = prevEnhancementEquipment.level;
+                                }
+
+                                int outputEquipmentLevel = 0;
+                                if (avatarState.inventory.TryGetNonFungibleItem(itemEnhancement9.itemId, out ItemUsable outputEnhancementItem)
+                                    && outputEnhancementItem is Equipment outputEnhancementEquipment)
+                                {
+                                    outputEquipmentLevel = outputEnhancementEquipment.level;
+                                }
+
+                                if (prevEquipmentLevel == outputEquipmentLevel)
+                                {
+                                    Currency crystalCurrency = CrystalCalculator.CRYSTAL;
+                                    Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
+                                    var prevCrystalBalance = previousStates.GetBalance(
+                                        ev.Signer,
+                                        crystalCurrency);
+                                    var outputCrystalBalance = ev.OutputStates.GetBalance(
+                                        ev.Signer,
+                                        crystalCurrency);
+                                    var prevNCGBalance = previousStates.GetBalance(
+                                        ev.Signer,
+                                        ncgCurrency);
+                                    var outputNCGBalance = ev.OutputStates.GetBalance(
+                                        ev.Signer,
+                                        ncgCurrency);
+                                    var gainedCrystal = outputCrystalBalance - prevCrystalBalance;
+                                    var burntNCG = prevNCGBalance - outputNCGBalance;
+                                    _itemEnhancementFailList.Add(new ItemEnhancementFailModel()
+                                    {
+                                        Id = itemEnhancement9.Id.ToString(),
+                                        BlockIndex = ev.BlockIndex,
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = itemEnhancement9.avatarAddress.ToString(),
+                                        EquipmentItemId = itemEnhancement9.itemId.ToString(),
+                                        MaterialItemId = itemEnhancement9.materialId.ToString(),
+                                        EquipmentLevel = outputEquipmentLevel,
+                                        GainedCrystal = Convert.ToDecimal(gainedCrystal.GetQuantityString()),
+                                        BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
+                                        TimeStamp = DateTimeOffset.UtcNow,
+                                    });
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                _ieAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _ieAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = itemEnhancement9.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _ieList.Add(new ItemEnhancementModel()
+                                {
+                                    Id = itemEnhancement9.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = itemEnhancement9.avatarAddress.ToString(),
+                                    ItemId = itemEnhancement9.itemId.ToString(),
+                                    MaterialId = itemEnhancement9.materialId.ToString(),
+                                    SlotIndex = itemEnhancement9.slotIndex,
+                                    BlockIndex = ev.BlockIndex,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                                start = DateTimeOffset.UtcNow;
+
+                                var slotState = ev.OutputStates.GetCombinationSlotState(
+                                    itemEnhancement9.avatarAddress,
+                                    itemEnhancement9.slotIndex);
+
+                                if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
+                                {
+                                    ProcessEquipmentData(
+                                        ev.Signer,
+                                        itemEnhancement9.avatarAddress,
+                                        avatarName,
+                                        avatarLevel,
+                                        avatarTitleId,
+                                        avatarArmorId,
+                                        avatarCp,
+                                        (Equipment)slotState.Result.itemUsable);
+                                }
+
+                                end = DateTimeOffset.UtcNow;
+                                Log.Debug(
+                                    "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
+                                    itemEnhancement9.avatarAddress,
+                                    ev.BlockIndex,
+                                    (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is ItemEnhancement10 itemEnhancement10)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(itemEnhancement10.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                AvatarState prevAvatarState = previousStates.GetAvatarStateV2(itemEnhancement10.avatarAddress);
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                int prevEquipmentLevel = 0;
+                                if (prevAvatarState.inventory.TryGetNonFungibleItem(itemEnhancement10.itemId, out ItemUsable prevEnhancementItem)
+                                    && prevEnhancementItem is Equipment prevEnhancementEquipment)
+                                {
+                                       prevEquipmentLevel = prevEnhancementEquipment.level;
+                                }
+
+                                int outputEquipmentLevel = 0;
+                                if (avatarState.inventory.TryGetNonFungibleItem(itemEnhancement10.itemId, out ItemUsable outputEnhancementItem)
+                                    && outputEnhancementItem is Equipment outputEnhancementEquipment)
+                                {
+                                    outputEquipmentLevel = outputEnhancementEquipment.level;
+                                }
+
+                                if (prevEquipmentLevel == outputEquipmentLevel)
+                                {
+                                    Currency crystalCurrency = CrystalCalculator.CRYSTAL;
+                                    Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
+                                    var prevCrystalBalance = previousStates.GetBalance(
+                                        ev.Signer,
+                                        crystalCurrency);
+                                    var outputCrystalBalance = ev.OutputStates.GetBalance(
+                                        ev.Signer,
+                                        crystalCurrency);
+                                    var prevNCGBalance = previousStates.GetBalance(
+                                        ev.Signer,
+                                        ncgCurrency);
+                                    var outputNCGBalance = ev.OutputStates.GetBalance(
+                                        ev.Signer,
+                                        ncgCurrency);
+                                    var gainedCrystal = outputCrystalBalance - prevCrystalBalance;
+                                    var burntNCG = prevNCGBalance - outputNCGBalance;
+                                    _itemEnhancementFailList.Add(new ItemEnhancementFailModel()
+                                    {
+                                        Id = itemEnhancement10.Id.ToString(),
+                                        BlockIndex = ev.BlockIndex,
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = itemEnhancement10.avatarAddress.ToString(),
+                                        EquipmentItemId = itemEnhancement10.itemId.ToString(),
+                                        MaterialItemId = itemEnhancement10.materialId.ToString(),
+                                        EquipmentLevel = outputEquipmentLevel,
+                                        GainedCrystal = Convert.ToDecimal(gainedCrystal.GetQuantityString()),
+                                        BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
+                                        TimeStamp = DateTimeOffset.UtcNow,
+                                    });
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                _ieAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _ieAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = itemEnhancement10.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+                                _ieList.Add(new ItemEnhancementModel()
+                                {
+                                    Id = itemEnhancement10.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = itemEnhancement10.avatarAddress.ToString(),
+                                    ItemId = itemEnhancement10.itemId.ToString(),
+                                    MaterialId = itemEnhancement10.materialId.ToString(),
+                                    SlotIndex = itemEnhancement10.slotIndex,
+                                    BlockIndex = ev.BlockIndex,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                                start = DateTimeOffset.UtcNow;
+
+                                var slotState = ev.OutputStates.GetCombinationSlotState(
+                                    itemEnhancement10.avatarAddress,
+                                    itemEnhancement10.slotIndex);
+
+                                if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
+                                {
+                                    ProcessEquipmentData(
+                                        ev.Signer,
+                                        itemEnhancement10.avatarAddress,
+                                        avatarName,
+                                        avatarLevel,
+                                        avatarTitleId,
+                                        avatarArmorId,
+                                        avatarCp,
+                                        (Equipment)slotState.Result.itemUsable);
+                                }
+
+                                end = DateTimeOffset.UtcNow;
+                                Log.Debug(
+                                    "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
+                                    itemEnhancement10.avatarAddress,
                                     ev.BlockIndex,
                                     (end - start).Milliseconds);
                             }
@@ -860,6 +1382,404 @@ namespace NineChronicles.DataProvider
                                 Log.Debug(
                                     "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
                                     buy.buyerAvatarAddress,
+                                    ev.BlockIndex,
+                                    (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is Buy10 buy10)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(buy10.buyerAvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                _buyAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _buyAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = buy10.buyerAvatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+
+                                var buyerInventory = avatarState.inventory;
+                                foreach (var purchaseInfo in buy10.purchaseInfos)
+                                {
+                                    var state = ev.OutputStates.GetState(
+                                    Addresses.GetItemAddress(purchaseInfo.TradableId));
+                                    ITradableItem orderItem =
+                                        (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
+                                    Order order =
+                                        OrderFactory.Deserialize(
+                                            (Dictionary)ev.OutputStates.GetState(
+                                                Order.DeriveAddress(purchaseInfo.OrderId))!);
+                                    int itemCount = order is FungibleOrder fungibleOrder
+                                        ? fungibleOrder.ItemCount
+                                        : 1;
+                                    if (orderItem.ItemType == ItemType.Equipment)
+                                    {
+                                        Equipment equipment = (Equipment)orderItem;
+                                        _buyShopEquipmentsList.Add(new ShopHistoryEquipmentModel()
+                                        {
+                                            OrderId = purchaseInfo.OrderId.ToString(),
+                                            TxId = string.Empty,
+                                            BlockIndex = ev.BlockIndex,
+                                            BlockHash = string.Empty,
+                                            ItemId = equipment.ItemId.ToString(),
+                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
+                                            BuyerAvatarAddress = buy10.buyerAvatarAddress.ToString(),
+                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                            ItemType = equipment.ItemType.ToString(),
+                                            ItemSubType = equipment.ItemSubType.ToString(),
+                                            Id = equipment.Id,
+                                            BuffSkillCount = equipment.BuffSkills.Count,
+                                            ElementalType = equipment.ElementalType.ToString(),
+                                            Grade = equipment.Grade,
+                                            SetId = equipment.SetId,
+                                            SkillsCount = equipment.Skills.Count,
+                                            SpineResourcePath = equipment.SpineResourcePath,
+                                            RequiredBlockIndex = equipment.RequiredBlockIndex,
+                                            NonFungibleId = equipment.NonFungibleId.ToString(),
+                                            TradableId = equipment.TradableId.ToString(),
+                                            UniqueStatType = equipment.UniqueStatType.ToString(),
+                                            ItemCount = itemCount,
+                                            TimeStamp = DateTimeOffset.UtcNow,
+                                        });
+                                    }
+
+                                    if (orderItem.ItemType == ItemType.Costume)
+                                    {
+                                        Costume costume = (Costume)orderItem;
+                                        _buyShopCostumesList.Add(new ShopHistoryCostumeModel()
+                                        {
+                                            OrderId = purchaseInfo.OrderId.ToString(),
+                                            TxId = string.Empty,
+                                            BlockIndex = ev.BlockIndex,
+                                            BlockHash = string.Empty,
+                                            ItemId = costume.ItemId.ToString(),
+                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
+                                            BuyerAvatarAddress = buy10.buyerAvatarAddress.ToString(),
+                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                            ItemType = costume.ItemType.ToString(),
+                                            ItemSubType = costume.ItemSubType.ToString(),
+                                            Id = costume.Id,
+                                            ElementalType = costume.ElementalType.ToString(),
+                                            Grade = costume.Grade,
+                                            Equipped = costume.Equipped,
+                                            SpineResourcePath = costume.SpineResourcePath,
+                                            RequiredBlockIndex = costume.RequiredBlockIndex,
+                                            NonFungibleId = costume.NonFungibleId.ToString(),
+                                            TradableId = costume.TradableId.ToString(),
+                                            ItemCount = itemCount,
+                                            TimeStamp = DateTimeOffset.UtcNow,
+                                        });
+                                    }
+
+                                    if (orderItem.ItemType == ItemType.Material)
+                                    {
+                                        Material material = (Material)orderItem;
+                                        _buyShopMaterialsList.Add(new ShopHistoryMaterialModel()
+                                        {
+                                            OrderId = purchaseInfo.OrderId.ToString(),
+                                            TxId = string.Empty,
+                                            BlockIndex = ev.BlockIndex,
+                                            BlockHash = string.Empty,
+                                            ItemId = material.ItemId.ToString(),
+                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
+                                            BuyerAvatarAddress = buy10.buyerAvatarAddress.ToString(),
+                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                            ItemType = material.ItemType.ToString(),
+                                            ItemSubType = material.ItemSubType.ToString(),
+                                            Id = material.Id,
+                                            ElementalType = material.ElementalType.ToString(),
+                                            Grade = material.Grade,
+                                            ItemCount = itemCount,
+                                            TimeStamp = DateTimeOffset.UtcNow,
+                                        });
+                                    }
+
+                                    if (orderItem.ItemType == ItemType.Consumable)
+                                    {
+                                        Consumable consumable = (Consumable)orderItem;
+                                        _buyShopConsumablesList.Add(new ShopHistoryConsumableModel()
+                                        {
+                                            OrderId = purchaseInfo.OrderId.ToString(),
+                                            TxId = string.Empty,
+                                            BlockIndex = ev.BlockIndex,
+                                            BlockHash = string.Empty,
+                                            ItemId = consumable.ItemId.ToString(),
+                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
+                                            BuyerAvatarAddress = buy10.buyerAvatarAddress.ToString(),
+                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                            ItemType = consumable.ItemType.ToString(),
+                                            ItemSubType = consumable.ItemSubType.ToString(),
+                                            Id = consumable.Id,
+                                            BuffSkillCount = consumable.BuffSkills.Count,
+                                            ElementalType = consumable.ElementalType.ToString(),
+                                            Grade = consumable.Grade,
+                                            SkillsCount = consumable.Skills.Count,
+                                            RequiredBlockIndex = consumable.RequiredBlockIndex,
+                                            NonFungibleId = consumable.NonFungibleId.ToString(),
+                                            TradableId = consumable.TradableId.ToString(),
+                                            MainStat = consumable.MainStat.ToString(),
+                                            ItemCount = itemCount,
+                                            TimeStamp = DateTimeOffset.UtcNow,
+                                        });
+                                    }
+
+                                    if (purchaseInfo.ItemSubType == ItemSubType.Armor
+                                        || purchaseInfo.ItemSubType == ItemSubType.Belt
+                                        || purchaseInfo.ItemSubType == ItemSubType.Necklace
+                                        || purchaseInfo.ItemSubType == ItemSubType.Ring
+                                        || purchaseInfo.ItemSubType == ItemSubType.Weapon)
+                                    {
+                                        var sellerState = ev.OutputStates.GetAvatarStateV2(purchaseInfo.SellerAvatarAddress);
+                                        var sellerInventory = sellerState.inventory;
+
+                                        if (buyerInventory.Equipments == null || sellerInventory.Equipments == null)
+                                        {
+                                            continue;
+                                        }
+
+                                        Equipment? equipment = buyerInventory.Equipments.SingleOrDefault(i =>
+                                            i.TradableId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
+                                            i.TradableId == purchaseInfo.TradableId);
+
+                                        if (equipment is { } equipmentNotNull)
+                                        {
+                                            ProcessEquipmentData(
+                                                ev.Signer,
+                                                buy10.buyerAvatarAddress,
+                                                avatarName,
+                                                avatarLevel,
+                                                avatarTitleId,
+                                                avatarArmorId,
+                                                avatarCp,
+                                                equipmentNotNull);
+                                        }
+                                    }
+                                }
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug(
+                                    "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
+                                    buy10.buyerAvatarAddress,
+                                    ev.BlockIndex,
+                                    (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is Buy11 buy11)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(buy11.buyerAvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                _buyAgentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _buyAvatarList.Add(new AvatarModel()
+                                {
+                                    Address = buy11.buyerAvatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                });
+
+                                var buyerInventory = avatarState.inventory;
+                                foreach (var purchaseInfo in buy11.purchaseInfos)
+                                {
+                                    var state = ev.OutputStates.GetState(
+                                    Addresses.GetItemAddress(purchaseInfo.TradableId));
+                                    ITradableItem orderItem =
+                                        (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
+                                    Order order =
+                                        OrderFactory.Deserialize(
+                                            (Dictionary)ev.OutputStates.GetState(
+                                                Order.DeriveAddress(purchaseInfo.OrderId))!);
+                                    int itemCount = order is FungibleOrder fungibleOrder
+                                        ? fungibleOrder.ItemCount
+                                        : 1;
+                                    if (orderItem.ItemType == ItemType.Equipment)
+                                    {
+                                        Equipment equipment = (Equipment)orderItem;
+                                        _buyShopEquipmentsList.Add(new ShopHistoryEquipmentModel()
+                                        {
+                                            OrderId = purchaseInfo.OrderId.ToString(),
+                                            TxId = string.Empty,
+                                            BlockIndex = ev.BlockIndex,
+                                            BlockHash = string.Empty,
+                                            ItemId = equipment.ItemId.ToString(),
+                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
+                                            BuyerAvatarAddress = buy11.buyerAvatarAddress.ToString(),
+                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                            ItemType = equipment.ItemType.ToString(),
+                                            ItemSubType = equipment.ItemSubType.ToString(),
+                                            Id = equipment.Id,
+                                            BuffSkillCount = equipment.BuffSkills.Count,
+                                            ElementalType = equipment.ElementalType.ToString(),
+                                            Grade = equipment.Grade,
+                                            SetId = equipment.SetId,
+                                            SkillsCount = equipment.Skills.Count,
+                                            SpineResourcePath = equipment.SpineResourcePath,
+                                            RequiredBlockIndex = equipment.RequiredBlockIndex,
+                                            NonFungibleId = equipment.NonFungibleId.ToString(),
+                                            TradableId = equipment.TradableId.ToString(),
+                                            UniqueStatType = equipment.UniqueStatType.ToString(),
+                                            ItemCount = itemCount,
+                                            TimeStamp = DateTimeOffset.UtcNow,
+                                        });
+                                    }
+
+                                    if (orderItem.ItemType == ItemType.Costume)
+                                    {
+                                        Costume costume = (Costume)orderItem;
+                                        _buyShopCostumesList.Add(new ShopHistoryCostumeModel()
+                                        {
+                                            OrderId = purchaseInfo.OrderId.ToString(),
+                                            TxId = string.Empty,
+                                            BlockIndex = ev.BlockIndex,
+                                            BlockHash = string.Empty,
+                                            ItemId = costume.ItemId.ToString(),
+                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
+                                            BuyerAvatarAddress = buy11.buyerAvatarAddress.ToString(),
+                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                            ItemType = costume.ItemType.ToString(),
+                                            ItemSubType = costume.ItemSubType.ToString(),
+                                            Id = costume.Id,
+                                            ElementalType = costume.ElementalType.ToString(),
+                                            Grade = costume.Grade,
+                                            Equipped = costume.Equipped,
+                                            SpineResourcePath = costume.SpineResourcePath,
+                                            RequiredBlockIndex = costume.RequiredBlockIndex,
+                                            NonFungibleId = costume.NonFungibleId.ToString(),
+                                            TradableId = costume.TradableId.ToString(),
+                                            ItemCount = itemCount,
+                                            TimeStamp = DateTimeOffset.UtcNow,
+                                        });
+                                    }
+
+                                    if (orderItem.ItemType == ItemType.Material)
+                                    {
+                                        Material material = (Material)orderItem;
+                                        _buyShopMaterialsList.Add(new ShopHistoryMaterialModel()
+                                        {
+                                            OrderId = purchaseInfo.OrderId.ToString(),
+                                            TxId = string.Empty,
+                                            BlockIndex = ev.BlockIndex,
+                                            BlockHash = string.Empty,
+                                            ItemId = material.ItemId.ToString(),
+                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
+                                            BuyerAvatarAddress = buy11.buyerAvatarAddress.ToString(),
+                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                            ItemType = material.ItemType.ToString(),
+                                            ItemSubType = material.ItemSubType.ToString(),
+                                            Id = material.Id,
+                                            ElementalType = material.ElementalType.ToString(),
+                                            Grade = material.Grade,
+                                            ItemCount = itemCount,
+                                            TimeStamp = DateTimeOffset.UtcNow,
+                                        });
+                                    }
+
+                                    if (orderItem.ItemType == ItemType.Consumable)
+                                    {
+                                        Consumable consumable = (Consumable)orderItem;
+                                        _buyShopConsumablesList.Add(new ShopHistoryConsumableModel()
+                                        {
+                                            OrderId = purchaseInfo.OrderId.ToString(),
+                                            TxId = string.Empty,
+                                            BlockIndex = ev.BlockIndex,
+                                            BlockHash = string.Empty,
+                                            ItemId = consumable.ItemId.ToString(),
+                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
+                                            BuyerAvatarAddress = buy11.buyerAvatarAddress.ToString(),
+                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                            ItemType = consumable.ItemType.ToString(),
+                                            ItemSubType = consumable.ItemSubType.ToString(),
+                                            Id = consumable.Id,
+                                            BuffSkillCount = consumable.BuffSkills.Count,
+                                            ElementalType = consumable.ElementalType.ToString(),
+                                            Grade = consumable.Grade,
+                                            SkillsCount = consumable.Skills.Count,
+                                            RequiredBlockIndex = consumable.RequiredBlockIndex,
+                                            NonFungibleId = consumable.NonFungibleId.ToString(),
+                                            TradableId = consumable.TradableId.ToString(),
+                                            MainStat = consumable.MainStat.ToString(),
+                                            ItemCount = itemCount,
+                                            TimeStamp = DateTimeOffset.UtcNow,
+                                        });
+                                    }
+
+                                    if (purchaseInfo.ItemSubType == ItemSubType.Armor
+                                        || purchaseInfo.ItemSubType == ItemSubType.Belt
+                                        || purchaseInfo.ItemSubType == ItemSubType.Necklace
+                                        || purchaseInfo.ItemSubType == ItemSubType.Ring
+                                        || purchaseInfo.ItemSubType == ItemSubType.Weapon)
+                                    {
+                                        var sellerState = ev.OutputStates.GetAvatarStateV2(purchaseInfo.SellerAvatarAddress);
+                                        var sellerInventory = sellerState.inventory;
+
+                                        if (buyerInventory.Equipments == null || sellerInventory.Equipments == null)
+                                        {
+                                            continue;
+                                        }
+
+                                        Equipment? equipment = buyerInventory.Equipments.SingleOrDefault(i =>
+                                            i.TradableId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
+                                            i.TradableId == purchaseInfo.TradableId);
+
+                                        if (equipment is { } equipmentNotNull)
+                                        {
+                                            ProcessEquipmentData(
+                                                ev.Signer,
+                                                buy11.buyerAvatarAddress,
+                                                avatarName,
+                                                avatarLevel,
+                                                avatarTitleId,
+                                                avatarArmorId,
+                                                avatarCp,
+                                                equipmentNotNull);
+                                        }
+                                    }
+                                }
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug(
+                                    "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
+                                    buy11.buyerAvatarAddress,
                                     ev.BlockIndex,
                                     (end - start).Milliseconds);
                             }
