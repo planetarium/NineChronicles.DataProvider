@@ -1752,7 +1752,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
-                                    TimeStamp = _blockTimeOffset,
+                                    Timestamp = _blockTimeOffset,
                                 });
 
                                 var buyerInventory = avatarState.inventory;
