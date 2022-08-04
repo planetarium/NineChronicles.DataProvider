@@ -251,6 +251,41 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreHackAndSlashSweepList(List<HackAndSlashSweepModel> hasSweepList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var hasSweep in hasSweepList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.HackAndSlashSweeps?.Find(hasSweep!.Id) is null)
+                        {
+                            ctx.HackAndSlashSweeps!.AddRange(hasSweep!);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.HackAndSlashSweeps!.UpdateRange(hasSweep);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public void DeleteHackAndSlash(Guid id)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();

@@ -64,6 +64,7 @@ namespace NineChronicles.DataProvider
         private readonly List<BattleArenaModel> _battleArenaList = new List<BattleArenaModel>();
         private readonly List<BlockModel> _blockList = new List<BlockModel>();
         private readonly List<TransactionModel> _transactionList = new List<TransactionModel>();
+        private readonly List<HackAndSlashSweepModel> _hasSweepList = new List<HackAndSlashSweepModel>();
         private int _renderedBlockCount;
         private DateTimeOffset _blockTimeOffset;
 
@@ -177,6 +178,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreBattleArenaList(_battleArenaList);
                     MySqlStore.StoreBlockList(_blockList);
                     MySqlStore.StoreTransactionList(_transactionList);
+                    MySqlStore.StoreHackAndSlashSweepList(_hasSweepList);
                     _renderedBlockCount = 0;
                     _agentList.Clear();
                     _avatarList.Clear();
@@ -203,6 +205,7 @@ namespace NineChronicles.DataProvider
                     _battleArenaList.Clear();
                     _blockList.Clear();
                     _transactionList.Clear();
+                    _hasSweepList.Clear();
                     var end = DateTimeOffset.Now;
                     long blockIndex = b.OldTip.Index;
                     StreamWriter blockIndexFile = new StreamWriter(_blockIndexFilePath);
@@ -294,6 +297,70 @@ namespace NineChronicles.DataProvider
 
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is HackAndSlashSweep hasSweep)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                Log.Debug(
+                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                    avatarName,
+                                    avatarLevel,
+                                    avatarArmorId,
+                                    avatarTitleId,
+                                    avatarCp);
+
+                                bool isClear = avatarState.stageMap.ContainsKey(hasSweep.stageId);
+
+                                _agentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _avatarList.Add(new AvatarModel()
+                                {
+                                    Address = hasSweep.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
+                                });
+                                _hasSweepList.Add(new HackAndSlashSweepModel()
+                                {
+                                    Id = hasSweep.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = hasSweep.avatarAddress.ToString(),
+                                    WorldId = hasSweep.worldId,
+                                    StageId = hasSweep.stageId,
+                                    ApStoneCount = hasSweep.actionPoint,
+                                    ActionPoint = hasSweep.actionPoint,
+                                    CostumesCount = hasSweep.costumes.Count,
+                                    EquipmentsCount = hasSweep.equipments.Count,
+                                    Cleared = isClear,
+                                    Mimisbrunnr = hasSweep.stageId > 10000000,
+                                    BlockIndex = ev.BlockIndex,
+                                    Timestamp = _blockTimeOffset,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored HackAndSlashSweep action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is RankingBattle rb)
