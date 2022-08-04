@@ -1,5 +1,6 @@
 namespace NineChronicles.DataProvider.Store.Models
 {
+    using System;
     using System.ComponentModel.DataAnnotations;
 
     public class AvatarModel
@@ -20,5 +21,7 @@ namespace NineChronicles.DataProvider.Store.Models
         public int? ArmorId { get; set; }
 
         public int? Cp { get; set; }
+
+        public DateTimeOffset? Timestamp { get; set; }
     }
 }

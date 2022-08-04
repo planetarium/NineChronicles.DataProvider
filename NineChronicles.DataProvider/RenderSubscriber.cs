@@ -39,60 +39,34 @@ namespace NineChronicles.DataProvider
         private readonly ActionRenderer _actionRenderer;
         private readonly ExceptionRenderer _exceptionRenderer;
         private readonly NodeStatusRenderer _nodeStatusRenderer;
-        private readonly List<AgentModel> _hasAgentList = new List<AgentModel>();
-        private readonly List<AvatarModel> _hasAvatarList = new List<AvatarModel>();
+        private readonly List<AgentModel> _agentList = new List<AgentModel>();
+        private readonly List<AvatarModel> _avatarList = new List<AvatarModel>();
         private readonly List<HackAndSlashModel> _hasList = new List<HackAndSlashModel>();
-        private readonly List<AgentModel> _rbAgentList = new List<AgentModel>();
-        private readonly List<AvatarModel> _rbAvatarList = new List<AvatarModel>();
-        private readonly List<AgentModel> _ccAgentList = new List<AgentModel>();
-        private readonly List<AvatarModel> _ccAvatarList = new List<AvatarModel>();
         private readonly List<CombinationConsumableModel> _ccList = new List<CombinationConsumableModel>();
-        private readonly List<AgentModel> _ceAgentList = new List<AgentModel>();
-        private readonly List<AvatarModel> _ceAvatarList = new List<AvatarModel>();
         private readonly List<CombinationEquipmentModel> _ceList = new List<CombinationEquipmentModel>();
-        private readonly List<AgentModel> _eqAgentList = new List<AgentModel>();
-        private readonly List<AvatarModel> _eqAvatarList = new List<AvatarModel>();
         private readonly List<EquipmentModel> _eqList = new List<EquipmentModel>();
-        private readonly List<AgentModel> _ieAgentList = new List<AgentModel>();
-        private readonly List<AvatarModel> _ieAvatarList = new List<AvatarModel>();
         private readonly List<ItemEnhancementModel> _ieList = new List<ItemEnhancementModel>();
-        private readonly List<AgentModel> _buyAgentList = new List<AgentModel>();
-        private readonly List<AvatarModel> _buyAvatarList = new List<AvatarModel>();
         private readonly List<ShopHistoryEquipmentModel> _buyShopEquipmentsList = new List<ShopHistoryEquipmentModel>();
         private readonly List<ShopHistoryCostumeModel> _buyShopCostumesList = new List<ShopHistoryCostumeModel>();
         private readonly List<ShopHistoryMaterialModel> _buyShopMaterialsList = new List<ShopHistoryMaterialModel>();
         private readonly List<ShopHistoryConsumableModel> _buyShopConsumablesList = new List<ShopHistoryConsumableModel>();
-        private readonly List<AgentModel> _stakeAgentList = new List<AgentModel>();
         private readonly List<StakeModel> _stakeList = new List<StakeModel>();
-        private readonly List<AgentModel> _claimStakeAgentList = new List<AgentModel>();
-        private readonly List<AvatarModel> _claimStakeAvatarList = new List<AvatarModel>();
         private readonly List<ClaimStakeRewardModel> _claimStakeList = new List<ClaimStakeRewardModel>();
-        private readonly List<AgentModel> _mmcAgentList = new List<AgentModel>();
         private readonly List<MigrateMonsterCollectionModel> _mmcList = new List<MigrateMonsterCollectionModel>();
-        private readonly List<AgentModel> _grindAgentList = new List<AgentModel>();
-        private readonly List<AvatarModel> _grindAvatarList = new List<AvatarModel>();
         private readonly List<GrindingModel> _grindList = new List<GrindingModel>();
         private readonly List<ItemEnhancementFailModel> _itemEnhancementFailList = new List<ItemEnhancementFailModel>();
-        private readonly List<AgentModel> _unlockEquipmentRecipeAgentList = new List<AgentModel>();
-        private readonly List<AvatarModel> _unlockEquipmentRecipeAvatarList = new List<AvatarModel>();
         private readonly List<UnlockEquipmentRecipeModel> _unlockEquipmentRecipeList = new List<UnlockEquipmentRecipeModel>();
-        private readonly List<AgentModel> _unlockWorldAgentList = new List<AgentModel>();
-        private readonly List<AvatarModel> _unlockWorldAvatarList = new List<AvatarModel>();
         private readonly List<UnlockWorldModel> _unlockWorldList = new List<UnlockWorldModel>();
         private readonly List<ReplaceCombinationEquipmentMaterialModel> _replaceCombinationEquipmentMaterialList = new List<ReplaceCombinationEquipmentMaterialModel>();
-        private readonly List<AgentModel> _hasRandomBuffAgentList = new List<AgentModel>();
-        private readonly List<AvatarModel> _hasRandomBuffAvatarList = new List<AvatarModel>();
         private readonly List<HasRandomBuffModel> _hasRandomBuffList = new List<HasRandomBuffModel>();
         private readonly List<HasWithRandomBuffModel> _hasWithRandomBuffList = new List<HasWithRandomBuffModel>();
-        private readonly List<AgentModel> _joinArenaAgentList = new List<AgentModel>();
-        private readonly List<AvatarModel> _joinArenaAvatarList = new List<AvatarModel>();
         private readonly List<JoinArenaModel> _joinArenaList = new List<JoinArenaModel>();
-        private readonly List<AgentModel> _battleArenaAgentList = new List<AgentModel>();
-        private readonly List<AvatarModel> _battleArenaAvatarList = new List<AvatarModel>();
         private readonly List<BattleArenaModel> _battleArenaList = new List<BattleArenaModel>();
         private readonly List<BlockModel> _blockList = new List<BlockModel>();
         private readonly List<TransactionModel> _transactionList = new List<TransactionModel>();
+        private readonly List<HackAndSlashSweepModel> _hasSweepList = new List<HackAndSlashSweepModel>();
         private int _renderedBlockCount;
+        private DateTimeOffset _blockTimeOffset;
 
         public RenderSubscriber(
             NineChroniclesNodeService nodeService,
@@ -135,6 +109,7 @@ namespace NineChronicles.DataProvider
             _blockRenderer.BlockSubject.Subscribe(b =>
             {
                 var block = b.NewTip;
+                _blockTimeOffset = block.Timestamp;
                 _blockList.Add(new BlockModel()
                 {
                     Index = block.Index,
@@ -178,113 +153,59 @@ namespace NineChronicles.DataProvider
                 {
                     var start = DateTimeOffset.Now;
                     Log.Debug("Storing Data");
-                    MySqlStore.StoreAgentList(_hasAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAvatarList(_hasAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAgentList(_agentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreAvatarList(_avatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreHackAndSlashList(_hasList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAgentList(_rbAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAvatarList(_rbAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAgentList(_ccAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAvatarList(_ccAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreCombinationConsumableList(_ccList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAgentList(_ceAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAvatarList(_ceAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreCombinationEquipmentList(_ceList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAgentList(_ieAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAvatarList(_ieAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreItemEnhancementList(_ieList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAgentList(_buyAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAvatarList(_buyAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreShopHistoryEquipmentList(_buyShopEquipmentsList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreShopHistoryCostumeList(_buyShopCostumesList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreShopHistoryMaterialList(_buyShopMaterialsList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreShopHistoryConsumableList(_buyShopConsumablesList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAgentList(_eqAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAvatarList(_eqAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.ProcessEquipmentList(_eqList.GroupBy(i => i.ItemId).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAgentList(_stakeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreStakingList(_stakeList);
-                    MySqlStore.StoreAgentList(_claimStakeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAvatarList(_claimStakeAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreClaimStakeRewardList(_claimStakeList);
-                    MySqlStore.StoreAgentList(_mmcAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreMigrateMonsterCollectionList(_mmcList);
-                    MySqlStore.StoreAgentList(_grindAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAvatarList(_grindAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreGrindList(_grindList);
                     MySqlStore.StoreItemEnhancementFailList(_itemEnhancementFailList);
-                    MySqlStore.StoreAgentList(_unlockEquipmentRecipeAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAvatarList(_unlockEquipmentRecipeAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreUnlockEquipmentRecipeList(_unlockEquipmentRecipeList);
-                    MySqlStore.StoreAgentList(_unlockWorldAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAvatarList(_unlockWorldAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreUnlockWorldList(_unlockWorldList);
                     MySqlStore.StoreReplaceCombinationEquipmentMaterialList(_replaceCombinationEquipmentMaterialList);
-                    MySqlStore.StoreAgentList(_hasRandomBuffAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAvatarList(_hasRandomBuffAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreHasRandomBuffList(_hasRandomBuffList);
                     MySqlStore.StoreHasWithRandomBuffList(_hasWithRandomBuffList);
-                    MySqlStore.StoreAgentList(_joinArenaAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAvatarList(_joinArenaAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreJoinArenaList(_joinArenaList);
-                    MySqlStore.StoreAgentList(_battleArenaAgentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAvatarList(_battleArenaAvatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreBattleArenaList(_battleArenaList);
                     MySqlStore.StoreBlockList(_blockList);
                     MySqlStore.StoreTransactionList(_transactionList);
+                    MySqlStore.StoreHackAndSlashSweepList(_hasSweepList);
                     _renderedBlockCount = 0;
-                    _hasAgentList.Clear();
-                    _hasAvatarList.Clear();
+                    _agentList.Clear();
+                    _avatarList.Clear();
                     _hasList.Clear();
-                    _rbAgentList.Clear();
-                    _rbAvatarList.Clear();
-                    _ccAgentList.Clear();
-                    _ccAvatarList.Clear();
                     _ccList.Clear();
-                    _ceAgentList.Clear();
-                    _ceAvatarList.Clear();
                     _ceList.Clear();
-                    _ieAgentList.Clear();
-                    _ieAvatarList.Clear();
                     _ieList.Clear();
-                    _buyAgentList.Clear();
-                    _buyAvatarList.Clear();
                     _buyShopEquipmentsList.Clear();
                     _buyShopCostumesList.Clear();
                     _buyShopMaterialsList.Clear();
                     _buyShopConsumablesList.Clear();
-                    _eqAgentList.Clear();
-                    _eqAvatarList.Clear();
                     _eqList.Clear();
-                    _stakeAgentList.Clear();
                     _stakeList.Clear();
-                    _claimStakeAgentList.Clear();
-                    _claimStakeAvatarList.Clear();
                     _claimStakeList.Clear();
-                    _mmcAgentList.Clear();
                     _mmcList.Clear();
-                    _grindAgentList.Clear();
-                    _grindAvatarList.Clear();
                     _grindList.Clear();
                     _itemEnhancementFailList.Clear();
-                    _unlockEquipmentRecipeAgentList.Clear();
-                    _unlockEquipmentRecipeAvatarList.Clear();
                     _unlockEquipmentRecipeList.Clear();
-                    _unlockWorldAgentList.Clear();
-                    _unlockWorldAvatarList.Clear();
                     _unlockWorldList.Clear();
                     _replaceCombinationEquipmentMaterialList.Clear();
-                    _hasRandomBuffAgentList.Clear();
-                    _hasRandomBuffAvatarList.Clear();
                     _hasRandomBuffList.Clear();
                     _hasWithRandomBuffList.Clear();
-                    _joinArenaAgentList.Clear();
-                    _joinArenaAvatarList.Clear();
                     _joinArenaList.Clear();
-                    _battleArenaAgentList.Clear();
-                    _battleArenaAvatarList.Clear();
                     _battleArenaList.Clear();
                     _blockList.Clear();
                     _transactionList.Clear();
+                    _hasSweepList.Clear();
                     var end = DateTimeOffset.Now;
                     long blockIndex = b.OldTip.Index;
                     StreamWriter blockIndexFile = new StreamWriter(_blockIndexFilePath);
@@ -334,11 +255,11 @@ namespace NineChronicles.DataProvider
 
                                 bool isClear = avatarState.stageMap.ContainsKey(has.stageId);
 
-                                _hasAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _hasAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = has.avatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -347,6 +268,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _hasList.Add(new HackAndSlashModel()
                                 {
@@ -369,7 +291,7 @@ namespace NineChronicles.DataProvider
                                         StageId = has.stageId,
                                         BuffId = (int)has.stageBuffId,
                                         Cleared = isClear,
-                                        TimeStamp = DateTimeOffset.UtcNow,
+                                        TimeStamp = _blockTimeOffset,
                                     });
                                 }
 
@@ -405,11 +327,11 @@ namespace NineChronicles.DataProvider
 
                                 bool isClear = avatarState.stageMap.ContainsKey(has13.stageId);
 
-                                _hasAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _hasAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = has13.avatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -418,6 +340,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _hasList.Add(new HackAndSlashModel()
                                 {
@@ -432,6 +355,316 @@ namespace NineChronicles.DataProvider
 
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is HackAndSlashSweep hasSweep)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                Log.Debug(
+                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                    avatarName,
+                                    avatarLevel,
+                                    avatarArmorId,
+                                    avatarTitleId,
+                                    avatarCp);
+                                bool isClear = avatarState.stageMap.ContainsKey(hasSweep.stageId);
+                                _agentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _avatarList.Add(new AvatarModel()
+                                {
+                                    Address = hasSweep.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
+                                });
+                                _hasSweepList.Add(new HackAndSlashSweepModel()
+                                {
+                                    Id = hasSweep.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = hasSweep.avatarAddress.ToString(),
+                                    WorldId = hasSweep.worldId,
+                                    StageId = hasSweep.stageId,
+                                    ApStoneCount = hasSweep.actionPoint,
+                                    ActionPoint = hasSweep.actionPoint,
+                                    CostumesCount = hasSweep.costumes.Count,
+                                    EquipmentsCount = hasSweep.equipments.Count,
+                                    Cleared = isClear,
+                                    Mimisbrunnr = hasSweep.stageId > 10000000,
+                                    BlockIndex = ev.BlockIndex,
+                                    Timestamp = _blockTimeOffset,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored HackAndSlashSweep action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is HackAndSlashSweep4 hasSweep4)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep4.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                Log.Debug(
+                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                    avatarName,
+                                    avatarLevel,
+                                    avatarArmorId,
+                                    avatarTitleId,
+                                    avatarCp);
+                                bool isClear = avatarState.stageMap.ContainsKey(hasSweep4.stageId);
+                                _agentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _avatarList.Add(new AvatarModel()
+                                {
+                                    Address = hasSweep4.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
+                                });
+                                _hasSweepList.Add(new HackAndSlashSweepModel()
+                                {
+                                    Id = hasSweep4.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = hasSweep4.avatarAddress.ToString(),
+                                    WorldId = hasSweep4.worldId,
+                                    StageId = hasSweep4.stageId,
+                                    ApStoneCount = hasSweep4.actionPoint,
+                                    ActionPoint = hasSweep4.actionPoint,
+                                    CostumesCount = hasSweep4.costumes.Count,
+                                    EquipmentsCount = hasSweep4.equipments.Count,
+                                    Cleared = isClear,
+                                    Mimisbrunnr = hasSweep4.stageId > 10000000,
+                                    BlockIndex = ev.BlockIndex,
+                                    Timestamp = _blockTimeOffset,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored HackAndSlashSweep action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is HackAndSlashSweep3 hasSweep3)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep3.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                Log.Debug(
+                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                    avatarName,
+                                    avatarLevel,
+                                    avatarArmorId,
+                                    avatarTitleId,
+                                    avatarCp);
+                                bool isClear = avatarState.stageMap.ContainsKey(hasSweep3.stageId);
+                                _agentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _avatarList.Add(new AvatarModel()
+                                {
+                                    Address = hasSweep3.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
+                                });
+                                _hasSweepList.Add(new HackAndSlashSweepModel()
+                                {
+                                    Id = hasSweep3.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = hasSweep3.avatarAddress.ToString(),
+                                    WorldId = hasSweep3.worldId,
+                                    StageId = hasSweep3.stageId,
+                                    ApStoneCount = hasSweep3.actionPoint,
+                                    ActionPoint = hasSweep3.actionPoint,
+                                    CostumesCount = hasSweep3.costumes.Count,
+                                    EquipmentsCount = hasSweep3.equipments.Count,
+                                    Cleared = isClear,
+                                    Mimisbrunnr = hasSweep3.stageId > 10000000,
+                                    BlockIndex = ev.BlockIndex,
+                                    Timestamp = _blockTimeOffset,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored HackAndSlashSweep action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is HackAndSlashSweep2 hasSweep2)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep2.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                Log.Debug(
+                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                    avatarName,
+                                    avatarLevel,
+                                    avatarArmorId,
+                                    avatarTitleId,
+                                    avatarCp);
+                                bool isClear = avatarState.stageMap.ContainsKey(hasSweep2.stageId);
+                                _agentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _avatarList.Add(new AvatarModel()
+                                {
+                                    Address = hasSweep2.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
+                                });
+                                _hasSweepList.Add(new HackAndSlashSweepModel()
+                                {
+                                    Id = hasSweep2.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = hasSweep2.avatarAddress.ToString(),
+                                    WorldId = hasSweep2.worldId,
+                                    StageId = hasSweep2.stageId,
+                                    ApStoneCount = 0,
+                                    ActionPoint = 0,
+                                    CostumesCount = 0,
+                                    EquipmentsCount = 0,
+                                    Cleared = isClear,
+                                    Mimisbrunnr = hasSweep2.stageId > 10000000,
+                                    BlockIndex = ev.BlockIndex,
+                                    Timestamp = _blockTimeOffset,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored HackAndSlashSweep action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is HackAndSlashSweep1 hasSweep1)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep1.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                Log.Debug(
+                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                    avatarName,
+                                    avatarLevel,
+                                    avatarArmorId,
+                                    avatarTitleId,
+                                    avatarCp);
+                                bool isClear = avatarState.stageMap.ContainsKey(hasSweep1.stageId);
+                                _agentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _avatarList.Add(new AvatarModel()
+                                {
+                                    Address = hasSweep1.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
+                                });
+                                _hasSweepList.Add(new HackAndSlashSweepModel()
+                                {
+                                    Id = hasSweep1.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = hasSweep1.avatarAddress.ToString(),
+                                    WorldId = hasSweep1.worldId,
+                                    StageId = hasSweep1.stageId,
+                                    ApStoneCount = 0,
+                                    ActionPoint = 0,
+                                    CostumesCount = 0,
+                                    EquipmentsCount = 0,
+                                    Cleared = isClear,
+                                    Mimisbrunnr = hasSweep1.stageId > 10000000,
+                                    BlockIndex = ev.BlockIndex,
+                                    Timestamp = _blockTimeOffset,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored HackAndSlashSweep action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is HackAndSlash14 has14)
@@ -462,11 +695,11 @@ namespace NineChronicles.DataProvider
 
                                 bool isClear = avatarState.stageMap.ContainsKey(has14.stageId);
 
-                                _hasAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _hasAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = has14.avatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -475,6 +708,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _hasList.Add(new HackAndSlashModel()
                                 {
@@ -531,11 +765,11 @@ namespace NineChronicles.DataProvider
                                     avatarTitleId,
                                     avatarCp);
 
-                                _rbAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _rbAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = rb.avatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -544,6 +778,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
 
                                 var end = DateTimeOffset.UtcNow;
@@ -568,11 +803,11 @@ namespace NineChronicles.DataProvider
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
 
-                                _ccAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _ccAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = combinationConsumable.avatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -581,6 +816,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _ccList.Add(new CombinationConsumableModel()
                                 {
@@ -616,11 +852,11 @@ namespace NineChronicles.DataProvider
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
 
-                                _ceAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _ceAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = combinationEquipment.avatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -629,6 +865,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _ceList.Add(new CombinationEquipmentModel()
                                 {
@@ -640,6 +877,98 @@ namespace NineChronicles.DataProvider
                                     SubRecipeId = combinationEquipment.subRecipeId ?? 0,
                                     BlockIndex = ev.BlockIndex,
                                 });
+
+                                if (combinationEquipment.payByCrystal)
+                                {
+                                    Currency crystalCurrency = CrystalCalculator.CRYSTAL;
+                                    var prevCrystalBalance = previousStates.GetBalance(
+                                        ev.Signer,
+                                        crystalCurrency);
+                                    var outputCrystalBalance = ev.OutputStates.GetBalance(
+                                        ev.Signer,
+                                        crystalCurrency);
+                                    var burntCrystal = prevCrystalBalance - outputCrystalBalance;
+                                    var requiredFungibleItems = new Dictionary<int, int>();
+                                    Dictionary<Type, (Address, ISheet)> sheets = previousStates.GetSheets(
+                                        sheetTypes: new[]
+                                        {
+                                            typeof(EquipmentItemRecipeSheet),
+                                            typeof(EquipmentItemSheet),
+                                            typeof(MaterialItemSheet),
+                                            typeof(EquipmentItemSubRecipeSheetV2),
+                                            typeof(EquipmentItemOptionSheet),
+                                            typeof(SkillSheet),
+                                            typeof(CrystalMaterialCostSheet),
+                                            typeof(CrystalFluctuationSheet),
+                                        });
+                                    var materialItemSheet = sheets.GetSheet<MaterialItemSheet>();
+                                    var equipmentItemRecipeSheet = sheets.GetSheet<EquipmentItemRecipeSheet>();
+                                    equipmentItemRecipeSheet.TryGetValue(
+                                        combinationEquipment.recipeId,
+                                        out var recipeRow);
+                                    materialItemSheet.TryGetValue(recipeRow!.MaterialId, out var materialRow);
+                                    if (requiredFungibleItems.ContainsKey(materialRow!.Id))
+                                    {
+                                        requiredFungibleItems[materialRow.Id] += recipeRow.MaterialCount;
+                                    }
+                                    else
+                                    {
+                                        requiredFungibleItems[materialRow.Id] = recipeRow.MaterialCount;
+                                    }
+
+                                    if (combinationEquipment.subRecipeId.HasValue)
+                                    {
+                                        var equipmentItemSubRecipeSheetV2 = sheets.GetSheet<EquipmentItemSubRecipeSheetV2>();
+                                        equipmentItemSubRecipeSheetV2.TryGetValue(combinationEquipment.subRecipeId.Value, out var subRecipeRow);
+
+                                        // Validate SubRecipe Material
+                                        for (var i = subRecipeRow!.Materials.Count; i > 0; i--)
+                                        {
+                                            var materialInfo = subRecipeRow.Materials[i - 1];
+                                            materialItemSheet.TryGetValue(materialInfo.Id, out materialRow);
+
+                                            if (requiredFungibleItems.ContainsKey(materialRow!.Id))
+                                            {
+                                                requiredFungibleItems[materialRow.Id] += materialInfo.Count;
+                                            }
+                                            else
+                                            {
+                                                requiredFungibleItems[materialRow.Id] = materialInfo.Count;
+                                            }
+                                        }
+                                    }
+
+                                    var inventory = ev.PreviousStates
+                                        .GetAvatarStateV2(combinationEquipment.avatarAddress).inventory;
+                                    foreach (var pair in requiredFungibleItems.OrderBy(pair => pair.Key))
+                                    {
+                                        var itemId = pair.Key;
+                                        var requiredCount = pair.Value;
+                                        if (materialItemSheet.TryGetValue(itemId, out materialRow))
+                                        {
+                                            int itemCount = inventory.TryGetItem(itemId, out Inventory.Item item)
+                                                ? item.count
+                                                : 0;
+                                            if (itemCount < requiredCount && combinationEquipment.payByCrystal)
+                                            {
+                                                _replaceCombinationEquipmentMaterialList.Add(
+                                                    new ReplaceCombinationEquipmentMaterialModel()
+                                                    {
+                                                        Id = combinationEquipment.Id.ToString(),
+                                                        BlockIndex = ev.BlockIndex,
+                                                        AgentAddress = ev.Signer.ToString(),
+                                                        AvatarAddress =
+                                                            combinationEquipment.avatarAddress.ToString(),
+                                                        ReplacedMaterialId = itemId,
+                                                        ReplacedMaterialCount = requiredCount - itemCount,
+                                                        BurntCrystal =
+                                                            Convert.ToDecimal(burntCrystal.GetQuantityString()),
+                                                        TimeStamp = _blockTimeOffset,
+                                                    });
+                                            }
+                                        }
+                                    }
+                                }
 
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug(
@@ -693,11 +1022,11 @@ namespace NineChronicles.DataProvider
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
 
-                                _ceAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _ceAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = combinationEquipment10.avatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -706,6 +1035,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _ceList.Add(new CombinationEquipmentModel()
                                 {
@@ -770,11 +1100,11 @@ namespace NineChronicles.DataProvider
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
 
-                                _ceAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _ceAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = combinationEquipment11.avatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -783,6 +1113,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _ceList.Add(new CombinationEquipmentModel()
                                 {
@@ -886,18 +1217,18 @@ namespace NineChronicles.DataProvider
                                         EquipmentLevel = outputEquipmentLevel,
                                         GainedCrystal = Convert.ToDecimal(gainedCrystal.GetQuantityString()),
                                         BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
-                                        TimeStamp = DateTimeOffset.UtcNow,
+                                        TimeStamp = _blockTimeOffset,
                                     });
                                 }
 
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
 
-                                _ieAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _ieAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = itemEnhancement.avatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -906,6 +1237,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _ieList.Add(new ItemEnhancementModel()
                                 {
@@ -1013,11 +1345,11 @@ namespace NineChronicles.DataProvider
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
 
-                                _ieAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _ieAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = itemEnhancement9.avatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -1026,6 +1358,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _ieList.Add(new ItemEnhancementModel()
                                 {
@@ -1133,11 +1466,11 @@ namespace NineChronicles.DataProvider
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
 
-                                _ieAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _ieAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = itemEnhancement10.avatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -1146,6 +1479,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _ieList.Add(new ItemEnhancementModel()
                                 {
@@ -1205,11 +1539,11 @@ namespace NineChronicles.DataProvider
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
 
-                                _buyAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _buyAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = buy.buyerAvatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -1218,6 +1552,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
 
                                 var buyerInventory = avatarState.inventory;
@@ -1261,7 +1596,7 @@ namespace NineChronicles.DataProvider
                                             TradableId = equipment.TradableId.ToString(),
                                             UniqueStatType = equipment.UniqueStatType.ToString(),
                                             ItemCount = itemCount,
-                                            TimeStamp = DateTimeOffset.UtcNow,
+                                            TimeStamp = _blockTimeOffset,
                                         });
                                     }
 
@@ -1289,7 +1624,7 @@ namespace NineChronicles.DataProvider
                                             NonFungibleId = costume.NonFungibleId.ToString(),
                                             TradableId = costume.TradableId.ToString(),
                                             ItemCount = itemCount,
-                                            TimeStamp = DateTimeOffset.UtcNow,
+                                            TimeStamp = _blockTimeOffset,
                                         });
                                     }
 
@@ -1312,7 +1647,7 @@ namespace NineChronicles.DataProvider
                                             ElementalType = material.ElementalType.ToString(),
                                             Grade = material.Grade,
                                             ItemCount = itemCount,
-                                            TimeStamp = DateTimeOffset.UtcNow,
+                                            TimeStamp = _blockTimeOffset,
                                         });
                                     }
 
@@ -1341,7 +1676,7 @@ namespace NineChronicles.DataProvider
                                             TradableId = consumable.TradableId.ToString(),
                                             MainStat = consumable.MainStat.ToString(),
                                             ItemCount = itemCount,
-                                            TimeStamp = DateTimeOffset.UtcNow,
+                                            TimeStamp = _blockTimeOffset,
                                         });
                                     }
 
@@ -1404,11 +1739,11 @@ namespace NineChronicles.DataProvider
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
 
-                                _buyAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _buyAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = buy10.buyerAvatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -1417,6 +1752,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    TimeStamp = _blockTimeOffset,
                                 });
 
                                 var buyerInventory = avatarState.inventory;
@@ -1603,11 +1939,11 @@ namespace NineChronicles.DataProvider
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
 
-                                _buyAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _buyAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = buy11.buyerAvatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -1616,6 +1952,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
 
                                 var buyerInventory = avatarState.inventory;
@@ -1865,11 +2202,11 @@ namespace NineChronicles.DataProvider
                                     }
                                 }
 
-                                _claimStakeAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _claimStakeAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = avatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -1878,6 +2215,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _claimStakeList.Add(new ClaimStakeRewardModel()
                                 {
@@ -1889,7 +2227,7 @@ namespace NineChronicles.DataProvider
                                     ApPotionCount = apPotionCount,
                                     ClaimStakeStartBlockIndex = claimStakeStartBlockIndex,
                                     ClaimStakeEndBlockIndex = claimStakeEndBlockIndex,
-                                    TimeStamp = DateTimeOffset.UtcNow,
+                                    TimeStamp = _blockTimeOffset,
                                 });
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored ClaimStakeReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
@@ -1922,11 +2260,11 @@ namespace NineChronicles.DataProvider
                                     ev.Signer,
                                     crystalCurrency);
                                 var burntCrystal = prevCrystalBalance - outputCrystalBalance;
-                                _hasRandomBuffAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _hasRandomBuffAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = hasRandomBuff.AvatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -1935,6 +2273,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _hasRandomBuffList.Add(new HasRandomBuffModel()
                                 {
@@ -1945,7 +2284,7 @@ namespace NineChronicles.DataProvider
                                     HasStageId = currentStageId,
                                     GachaCount = !hasRandomBuff.AdvancedGacha ? 5 : 10,
                                     BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                    TimeStamp = DateTimeOffset.UtcNow,
+                                    TimeStamp = _blockTimeOffset,
                                 });
 
                                 var end = DateTimeOffset.UtcNow;
@@ -1977,11 +2316,11 @@ namespace NineChronicles.DataProvider
                                     ev.Signer,
                                     crystalCurrency);
                                 var burntCrystal = prevCrystalBalance - outputCrystalBalance;
-                                _joinArenaAgentList.Add(new AgentModel()
+                                _agentList.Add(new AgentModel()
                                 {
                                     Address = ev.Signer.ToString(),
                                 });
-                                _joinArenaAvatarList.Add(new AvatarModel()
+                                _avatarList.Add(new AvatarModel()
                                 {
                                     Address = joinArena.avatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
@@ -1990,6 +2329,7 @@ namespace NineChronicles.DataProvider
                                     TitleId = avatarTitleId,
                                     ArmorId = avatarArmorId,
                                     Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
                                 });
                                 _joinArenaList.Add(new JoinArenaModel()
                                 {
@@ -2001,11 +2341,100 @@ namespace NineChronicles.DataProvider
                                     ArenaRound = joinArena.round,
                                     ChampionshipId = joinArena.championshipId,
                                     BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                    TimeStamp = DateTimeOffset.UtcNow,
+                                    TimeStamp = _blockTimeOffset,
                                 });
 
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored JoinArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is BattleArena battleArena)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(battleArena.myAvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+                                var myArenaScoreAdr =
+                                    ArenaScore.DeriveAddress(battleArena.myAvatarAddress, battleArena.championshipId, battleArena.round);
+                                previousStates.TryGetArenaScore(myArenaScoreAdr, out var previousArenaScore);
+                                ev.OutputStates.TryGetArenaScore(myArenaScoreAdr, out var currentArenaScore);
+                                Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
+                                var prevNCGBalance = previousStates.GetBalance(
+                                    ev.Signer,
+                                    ncgCurrency);
+                                var outputNCGBalance = ev.OutputStates.GetBalance(
+                                    ev.Signer,
+                                    ncgCurrency);
+                                var burntNCG = prevNCGBalance - outputNCGBalance;
+                                int ticketCount = battleArena.ticket;
+                                var sheets = previousStates.GetSheets(
+                                    containArenaSimulatorSheets: true,
+                                    sheetTypes: new[] { typeof(ArenaSheet), typeof(ItemRequirementSheet), typeof(EquipmentItemRecipeSheet), typeof(EquipmentItemSubRecipeSheetV2), typeof(EquipmentItemOptionSheet), typeof(MaterialItemSheet), }
+                                );
+                                var arenaSheet = ev.OutputStates.GetSheet<ArenaSheet>();
+                                var arenaData = arenaSheet.GetRoundByBlockIndex(ev.BlockIndex);
+                                var arenaInformationAdr =
+                                    ArenaInformation.DeriveAddress(battleArena.myAvatarAddress, battleArena.championshipId, battleArena.round);
+                                previousStates.TryGetArenaInformation(arenaInformationAdr, out var previousArenaInformation);
+                                ev.OutputStates.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
+                                var winCount = currentArenaInformation.Win - previousArenaInformation.Win;
+                                var medalCount = 0;
+                                if (arenaData.ArenaType != ArenaType.OffSeason &&
+                                    winCount > 0)
+                                {
+                                    var materialSheet = sheets.GetSheet<MaterialItemSheet>();
+                                    var medal = ArenaHelper.GetMedal(battleArena.championshipId, battleArena.round, materialSheet);
+                                    if (medal != null)
+                                    {
+                                        medalCount += winCount;
+                                    }
+                                }
+
+                                _agentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _avatarList.Add(new AvatarModel()
+                                {
+                                    Address = battleArena.myAvatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
+                                });
+                                _battleArenaList.Add(new BattleArenaModel()
+                                {
+                                    Id = battleArena.Id.ToString(),
+                                    BlockIndex = ev.BlockIndex,
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = battleArena.myAvatarAddress.ToString(),
+                                    AvatarLevel = avatarLevel,
+                                    EnemyAvatarAddress = battleArena.enemyAvatarAddress.ToString(),
+                                    ChampionshipId = battleArena.championshipId,
+                                    Round = battleArena.round,
+                                    TicketCount = ticketCount,
+                                    BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
+                                    Victory = currentArenaScore.Score > previousArenaScore.Score,
+                                    MedalCount = medalCount,
+                                    TimeStamp = _blockTimeOffset,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored BattleArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                         catch (Exception ex)
@@ -2205,11 +2634,11 @@ namespace NineChronicles.DataProvider
             Equipment equipment)
         {
             var cp = CPHelper.GetCP(equipment);
-            _eqAgentList.Add(new AgentModel()
+            _agentList.Add(new AgentModel()
             {
                 Address = agentAddress.ToString(),
             });
-            _eqAvatarList.Add(new AvatarModel()
+            _avatarList.Add(new AvatarModel()
             {
                 Address = avatarAddress.ToString(),
                 AgentAddress = agentAddress.ToString(),
@@ -2218,6 +2647,7 @@ namespace NineChronicles.DataProvider
                 TitleId = avatarTitleId,
                 ArmorId = avatarArmorId,
                 Cp = avatarCp,
+                Timestamp = _blockTimeOffset,
             });
             _eqList.Add(new EquipmentModel()
             {

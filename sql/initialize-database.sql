@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Agents` (
 
     PRIMARY KEY (`Address`),
     UNIQUE INDEX `Address_UNIQUE` (`Address`)
-    );
+);
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`Avatars` (
     `Address` VARCHAR(100) NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Avatars` (
     CONSTRAINT `fk_Avatars_Agent`
     FOREIGN KEY (`AgentAddress`)
     REFERENCES `Agents` (`Address`)
-    );
+);
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`HackAndSlashes` (
     `Id` VARCHAR(100) NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`HackAndSlashes` (
     CONSTRAINT `fk_HackAndSlashes_Agent1`
     FOREIGN KEY (`AgentAddress`)
     REFERENCES `Agents` (`Address`)
-    );
+);
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`CombinationConsumables` (
     `Id` VARCHAR(100) NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`CombinationConsumables` (
     CONSTRAINT `fk_CombinationConsumables_Agent1`
     FOREIGN KEY (`AgentAddress`)
     REFERENCES `Agents` (`Address`)
-    );
+);
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`CombinationEquipments` (
     `Id` VARCHAR(100) NOT NULL,
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`CombinationEquipments` (
     CONSTRAINT `fk_CombinationEquipments_Agent1`
     FOREIGN KEY (`AgentAddress`)
     REFERENCES `Agents` (`Address`)
-    );
+);
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`ItemEnhancements` (
     `Id` VARCHAR(100) NOT NULL,
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`ItemEnhancements` (
     CONSTRAINT `fk_ItemEnhancements_Agent1`
     FOREIGN KEY (`AgentAddress`)
     REFERENCES `Agents` (`Address`)
-    );
+);
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`CraftRankings` (
     `AvatarAddress` VARCHAR(100) NOT NULL,
@@ -122,7 +122,8 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`CraftRankings` (
     CONSTRAINT `fk_CrafRankings_Avatar1`
     FOREIGN KEY (`AvatarAddress`)
     REFERENCES `Avatars` (`Address`)
-    );
+);
+
 CREATE TABLE IF NOT EXISTS `data_provider`.`Equipments` (
     `ItemId` VARCHAR(100) NOT NULL,
     `AgentAddress` VARCHAR(100) NOT NULL,
@@ -142,7 +143,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Equipments` (
     CONSTRAINT `fk_Equipments_Agent1`
     FOREIGN KEY (`AgentAddress`)
     REFERENCES `Agents` (`Address`)
-    );
+);
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`ShopHistoryEquipments` (
     `OrderId` varchar(100) NOT NULL,
@@ -240,8 +241,8 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`ShopHistoryConsumables` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`Stakings` (
-                                                          `BlockIndex` bigint NOT NULL,
-                                                          `AgentAddress` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
     `PreviousAmount` decimal(13,2) NOT NULL,
     `NewAmount` decimal(13,2) NOT NULL,
     `RemainingNCG` decimal(13,2) NOT NULL,
@@ -268,8 +269,8 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`ClaimStakeRewards` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`MigrateMonsterCollections` (
-                                                                           `BlockIndex` bigint NOT NULL,
-                                                                           `AgentAddress` varchar(100) NOT NULL,
+    `BlockIndex` bigint NOT NULL,
+    `AgentAddress` varchar(100) NOT NULL,
     `MigrationAmount` decimal(13,2) NOT NULL,
     `MigrationStartBlockIndex` bigint NOT NULL,
     `StakeStartBlockIndex` bigint NOT NULL,
@@ -441,4 +442,24 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Transactions` (
     `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`TxId`),
     KEY `Date` (`Date`,`Signer`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`HackAndSlashSweeps` (
+    `Id` VARCHAR(100) NOT NULL,
+    `AgentAddress` VARCHAR(100) NOT NULL,
+    `AvatarAddress` VARCHAR(100) NOT NULL,
+    `WorldId` INT NOT NULL,
+    `StageId` INT NOT NULL,
+    `ApStoneCount` INT NOT NULL,
+    `ActionPoint` INT NOT NULL,
+    `CostumesCount` INT NOT NULL,
+    `EquipmentsCount` INT NOT NULL,
+    `Cleared` BOOLEAN NOT NULL,
+    `Mimisbrunnr` BOOLEAN NOT NULL,
+    `BlockIndex` BIGINT NOT NULL,
+    `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (`Id`),
+    INDEX (`BlockIndex`),
+    INDEX (`Timestamp`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
