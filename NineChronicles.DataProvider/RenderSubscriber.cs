@@ -288,7 +288,7 @@ namespace NineChronicles.DataProvider
                                         StageId = has.stageId,
                                         BuffId = (int)has.stageBuffId,
                                         Cleared = isClear,
-                                        TimeStamp = DateTimeOffset.UtcNow,
+                                        TimeStamp = _blockTimeOffset,
                                     });
                                 }
 
@@ -519,7 +519,7 @@ namespace NineChronicles.DataProvider
                                                         ReplacedMaterialCount = requiredCount - itemCount,
                                                         BurntCrystal =
                                                             Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                                        TimeStamp = DateTimeOffset.UtcNow,
+                                                        TimeStamp = _blockTimeOffset,
                                                     });
                                             }
                                         }
@@ -617,7 +617,7 @@ namespace NineChronicles.DataProvider
                                         EquipmentLevel = outputEquipmentLevel,
                                         GainedCrystal = Convert.ToDecimal(gainedCrystal.GetQuantityString()),
                                         BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
-                                        TimeStamp = DateTimeOffset.UtcNow,
+                                        TimeStamp = _blockTimeOffset,
                                     });
                                 }
 
@@ -754,7 +754,7 @@ namespace NineChronicles.DataProvider
                                             TradableId = equipment.TradableId.ToString(),
                                             UniqueStatType = equipment.UniqueStatType.ToString(),
                                             ItemCount = itemCount,
-                                            TimeStamp = DateTimeOffset.UtcNow,
+                                            TimeStamp = _blockTimeOffset,
                                         });
                                     }
 
@@ -782,7 +782,7 @@ namespace NineChronicles.DataProvider
                                             NonFungibleId = costume.NonFungibleId.ToString(),
                                             TradableId = costume.TradableId.ToString(),
                                             ItemCount = itemCount,
-                                            TimeStamp = DateTimeOffset.UtcNow,
+                                            TimeStamp = _blockTimeOffset,
                                         });
                                     }
 
@@ -805,7 +805,7 @@ namespace NineChronicles.DataProvider
                                             ElementalType = material.ElementalType.ToString(),
                                             Grade = material.Grade,
                                             ItemCount = itemCount,
-                                            TimeStamp = DateTimeOffset.UtcNow,
+                                            TimeStamp = _blockTimeOffset,
                                         });
                                     }
 
@@ -834,7 +834,7 @@ namespace NineChronicles.DataProvider
                                             TradableId = consumable.TradableId.ToString(),
                                             MainStat = consumable.MainStat.ToString(),
                                             ItemCount = itemCount,
-                                            TimeStamp = DateTimeOffset.UtcNow,
+                                            TimeStamp = _blockTimeOffset,
                                         });
                                     }
 
@@ -906,7 +906,7 @@ namespace NineChronicles.DataProvider
                                     RemainingNCG = Convert.ToDecimal(balance.GetQuantityString()),
                                     PrevStakeStartBlockIndex = prevStakeStartBlockIndex,
                                     NewStakeStartBlockIndex = newStakeStartBlockIndex,
-                                    TimeStamp = DateTimeOffset.UtcNow,
+                                    TimeStamp = _blockTimeOffset,
                                 });
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored Stake action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
@@ -1018,7 +1018,7 @@ namespace NineChronicles.DataProvider
                                     ApPotionCount = apPotionCount,
                                     ClaimStakeStartBlockIndex = claimStakeStartBlockIndex,
                                     ClaimStakeEndBlockIndex = claimStakeEndBlockIndex,
-                                    TimeStamp = DateTimeOffset.UtcNow,
+                                    TimeStamp = _blockTimeOffset,
                                 });
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored ClaimStakeReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
@@ -1047,7 +1047,7 @@ namespace NineChronicles.DataProvider
                                     MigrationAmount = Convert.ToDecimal(migrationAmount.GetQuantityString()),
                                     MigrationStartBlockIndex = migrationStartBlockIndex,
                                     StakeStartBlockIndex = stakeStartBlockIndex,
-                                    TimeStamp = DateTimeOffset.UtcNow,
+                                    TimeStamp = _blockTimeOffset,
                                 });
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
@@ -1145,7 +1145,7 @@ namespace NineChronicles.DataProvider
                                         EquipmentLevel = equipment.level,
                                         Crystal = Convert.ToDecimal(crystal.GetQuantityString()),
                                         BlockIndex = ev.BlockIndex,
-                                        TimeStamp = DateTimeOffset.UtcNow,
+                                        TimeStamp = _blockTimeOffset,
                                     });
                                 }
 
@@ -1203,7 +1203,7 @@ namespace NineChronicles.DataProvider
                                         AvatarAddress = unlockEquipmentRecipe.AvatarAddress.ToString(),
                                         UnlockEquipmentRecipeId = recipeId,
                                         BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                        TimeStamp = DateTimeOffset.UtcNow,
+                                        TimeStamp = _blockTimeOffset,
                                     });
                                 }
 
@@ -1261,7 +1261,7 @@ namespace NineChronicles.DataProvider
                                         AvatarAddress = unlockWorld.AvatarAddress.ToString(),
                                         UnlockWorldId = worldId,
                                         BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                        TimeStamp = DateTimeOffset.UtcNow,
+                                        TimeStamp = _blockTimeOffset,
                                     });
                                 }
 
@@ -1320,7 +1320,7 @@ namespace NineChronicles.DataProvider
                                     HasStageId = currentStageId,
                                     GachaCount = !hasRandomBuff.AdvancedGacha ? 5 : 10,
                                     BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                    TimeStamp = DateTimeOffset.UtcNow,
+                                    TimeStamp = _blockTimeOffset,
                                 });
 
                                 var end = DateTimeOffset.UtcNow;
@@ -1377,7 +1377,7 @@ namespace NineChronicles.DataProvider
                                     ArenaRound = joinArena.round,
                                     ChampionshipId = joinArena.championshipId,
                                     BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                    TimeStamp = DateTimeOffset.UtcNow,
+                                    TimeStamp = _blockTimeOffset,
                                 });
 
                                 var end = DateTimeOffset.UtcNow;
@@ -1466,7 +1466,7 @@ namespace NineChronicles.DataProvider
                                     BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
                                     Victory = currentArenaScore.Score > previousArenaScore.Score,
                                     MedalCount = medalCount,
-                                    TimeStamp = DateTimeOffset.UtcNow,
+                                    TimeStamp = _blockTimeOffset,
                                 });
 
                                 var end = DateTimeOffset.UtcNow;
