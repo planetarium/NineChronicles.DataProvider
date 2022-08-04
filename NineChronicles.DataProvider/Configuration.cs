@@ -2,6 +2,8 @@
 
 namespace NineChronicles.DataProvider
 {
+    using System;
+
     public class Configuration
     {
         public string? AppProtocolVersionToken { get; set; }
@@ -73,7 +75,7 @@ namespace NineChronicles.DataProvider
 
         public bool Preload { get; set; }
 
-        public int TxLifeTime { get; set; }
+        public TimeSpan TxLifeTime { get; set; }
 
         public int MessageTimeout { get; set; }
 
