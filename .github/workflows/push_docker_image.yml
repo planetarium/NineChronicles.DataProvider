@@ -7,7 +7,7 @@ on:
       - development
       - rc-*
       - migration
-      - avatar-address-migration
+      - agent-address-migration
 
 jobs:
   build_and_push:
