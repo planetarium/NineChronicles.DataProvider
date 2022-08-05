@@ -22,6 +22,8 @@
 
         public int? UpdatedAddressesCount { get; set; }
 
+        public DateTimeOffset Date { get; set; }
+
         public DateTimeOffset TimeStamp { get; set; }
     }
 }
