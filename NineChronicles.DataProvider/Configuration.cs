@@ -75,7 +75,7 @@ namespace NineChronicles.DataProvider
 
         public bool Preload { get; set; }
 
-        public TimeSpan TxLifeTime { get; set; }
+        public int TxLifeTime { get; set; }
 
         public int MessageTimeout { get; set; }
 
