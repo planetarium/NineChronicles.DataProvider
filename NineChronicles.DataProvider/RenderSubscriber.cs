@@ -65,8 +65,10 @@ namespace NineChronicles.DataProvider
         private readonly List<BlockModel> _blockList = new List<BlockModel>();
         private readonly List<TransactionModel> _transactionList = new List<TransactionModel>();
         private readonly List<HackAndSlashSweepModel> _hasSweepList = new List<HackAndSlashSweepModel>();
+        private readonly List<string> _agents;
         private int _renderedBlockCount;
         private DateTimeOffset _blockTimeOffset;
+        private Address _miner;
 
         public RenderSubscriber(
             NineChroniclesNodeService nodeService,
@@ -79,6 +81,7 @@ namespace NineChronicles.DataProvider
             _nodeStatusRenderer = nodeService.NodeStatusRenderer;
             MySqlStore = mySqlStore;
             _renderedBlockCount = 0;
+            _agents = new List<string>();
             string dataPath = Environment.GetEnvironmentVariable("NC_BlockIndexFilePath")
                               ?? Path.GetTempPath();
             if (!Directory.Exists(dataPath))
@@ -109,7 +112,8 @@ namespace NineChronicles.DataProvider
             _blockRenderer.BlockSubject.Subscribe(b =>
             {
                 var block = b.NewTip;
-                _blockTimeOffset = block.Timestamp;
+                _blockTimeOffset = block.Timestamp.UtcDateTime;
+                _miner = block.Miner;
                 _blockList.Add(new BlockModel()
                 {
                     Index = block.Index,
@@ -180,6 +184,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreTransactionList(_transactionList);
                     MySqlStore.StoreHackAndSlashSweepList(_hasSweepList);
                     _renderedBlockCount = 0;
+                    _agents.Clear();
                     _agentList.Clear();
                     _avatarList.Clear();
                     _hasList.Clear();
@@ -227,49 +232,13 @@ namespace NineChronicles.DataProvider
                                 return;
                             }
 
+                            ProcessAgentAvatarData(ev);
+
                             if (ev.Action is HackAndSlash has)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has.avatarAddress);
-                                var previousStates = ev.PreviousStates;
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
-
-                                Log.Debug(
-                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
-                                    avatarName,
-                                    avatarLevel,
-                                    avatarArmorId,
-                                    avatarTitleId,
-                                    avatarCp);
-
                                 bool isClear = avatarState.stageMap.ContainsKey(has.stageId);
-
-                                _agentList.Add(new AgentModel()
-                                {
-                                    Address = ev.Signer.ToString(),
-                                });
-                                _avatarList.Add(new AvatarModel()
-                                {
-                                    Address = has.avatarAddress.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    Name = avatarName,
-                                    AvatarLevel = avatarLevel,
-                                    TitleId = avatarTitleId,
-                                    ArmorId = avatarArmorId,
-                                    Cp = avatarCp,
-                                    Timestamp = _blockTimeOffset,
-                                });
                                 _hasList.Add(new HackAndSlashModel()
                                 {
                                     Id = has.Id.ToString(),
@@ -303,45 +272,7 @@ namespace NineChronicles.DataProvider
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep.avatarAddress);
-                                var previousStates = ev.PreviousStates;
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
-
-                                Log.Debug(
-                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
-                                    avatarName,
-                                    avatarLevel,
-                                    avatarArmorId,
-                                    avatarTitleId,
-                                    avatarCp);
-
                                 bool isClear = avatarState.stageMap.ContainsKey(hasSweep.stageId);
-
-                                _agentList.Add(new AgentModel()
-                                {
-                                    Address = ev.Signer.ToString(),
-                                });
-                                _avatarList.Add(new AvatarModel()
-                                {
-                                    Address = hasSweep.avatarAddress.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    Name = avatarName,
-                                    AvatarLevel = avatarLevel,
-                                    TitleId = avatarTitleId,
-                                    ArmorId = avatarArmorId,
-                                    Cp = avatarCp,
-                                    Timestamp = _blockTimeOffset,
-                                });
                                 _hasSweepList.Add(new HackAndSlashSweepModel()
                                 {
                                     Id = hasSweep.Id.ToString(),
@@ -363,85 +294,9 @@ namespace NineChronicles.DataProvider
                                 Log.Debug("Stored HackAndSlashSweep action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (ev.Action is RankingBattle rb)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(rb.avatarAddress);
-                                var previousStates = ev.PreviousStates;
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
-
-                                Log.Debug(
-                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
-                                    avatarName,
-                                    avatarLevel,
-                                    avatarArmorId,
-                                    avatarTitleId,
-                                    avatarCp);
-
-                                _agentList.Add(new AgentModel()
-                                {
-                                    Address = ev.Signer.ToString(),
-                                });
-                                _avatarList.Add(new AvatarModel()
-                                {
-                                    Address = rb.avatarAddress.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    Name = avatarName,
-                                    AvatarLevel = avatarLevel,
-                                    TitleId = avatarTitleId,
-                                    ArmorId = avatarArmorId,
-                                    Cp = avatarCp,
-                                    Timestamp = _blockTimeOffset,
-                                });
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored RankingBattle avatar data in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-
                             if (ev.Action is CombinationConsumable combinationConsumable)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(combinationConsumable.avatarAddress);
-                                var previousStates = ev.PreviousStates;
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
-
-                                _agentList.Add(new AgentModel()
-                                {
-                                    Address = ev.Signer.ToString(),
-                                });
-                                _avatarList.Add(new AvatarModel()
-                                {
-                                    Address = combinationConsumable.avatarAddress.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    Name = avatarName,
-                                    AvatarLevel = avatarLevel,
-                                    TitleId = avatarTitleId,
-                                    ArmorId = avatarArmorId,
-                                    Cp = avatarCp,
-                                    Timestamp = _blockTimeOffset,
-                                });
                                 _ccList.Add(new CombinationConsumableModel()
                                 {
                                     Id = combinationConsumable.Id.ToString(),
@@ -459,38 +314,7 @@ namespace NineChronicles.DataProvider
                             if (ev.Action is CombinationEquipment combinationEquipment)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState =
-                                    ev.OutputStates.GetAvatarStateV2(combinationEquipment.avatarAddress);
                                 var previousStates = ev.PreviousStates;
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume =>
-                                    costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
-
-                                _agentList.Add(new AgentModel()
-                                {
-                                    Address = ev.Signer.ToString(),
-                                });
-                                _avatarList.Add(new AvatarModel()
-                                {
-                                    Address = combinationEquipment.avatarAddress.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    Name = avatarName,
-                                    AvatarLevel = avatarLevel,
-                                    TitleId = avatarTitleId,
-                                    ArmorId = avatarArmorId,
-                                    Cp = avatarCp,
-                                    Timestamp = _blockTimeOffset,
-                                });
                                 _ceList.Add(new CombinationEquipmentModel()
                                 {
                                     Id = combinationEquipment.Id.ToString(),
@@ -609,11 +433,6 @@ namespace NineChronicles.DataProvider
                                     ProcessEquipmentData(
                                         ev.Signer,
                                         combinationEquipment.avatarAddress,
-                                        avatarName,
-                                        avatarLevel,
-                                        avatarTitleId,
-                                        avatarArmorId,
-                                        avatarCp,
                                         (Equipment)slotState.Result.itemUsable);
                                 }
 
@@ -631,15 +450,6 @@ namespace NineChronicles.DataProvider
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 AvatarState prevAvatarState = previousStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
 
                                 int prevEquipmentLevel = 0;
                                 if (prevAvatarState.inventory.TryGetNonFungibleItem(itemEnhancement.itemId, out ItemUsable prevEnhancementItem)
@@ -688,24 +498,6 @@ namespace NineChronicles.DataProvider
                                     });
                                 }
 
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
-
-                                _agentList.Add(new AgentModel()
-                                {
-                                    Address = ev.Signer.ToString(),
-                                });
-                                _avatarList.Add(new AvatarModel()
-                                {
-                                    Address = itemEnhancement.avatarAddress.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    Name = avatarName,
-                                    AvatarLevel = avatarLevel,
-                                    TitleId = avatarTitleId,
-                                    ArmorId = avatarArmorId,
-                                    Cp = avatarCp,
-                                    Timestamp = _blockTimeOffset,
-                                });
                                 _ieList.Add(new ItemEnhancementModel()
                                 {
                                     Id = itemEnhancement.Id.ToString(),
@@ -730,11 +522,6 @@ namespace NineChronicles.DataProvider
                                     ProcessEquipmentData(
                                         ev.Signer,
                                         itemEnhancement.avatarAddress,
-                                        avatarName,
-                                        avatarLevel,
-                                        avatarTitleId,
-                                        avatarArmorId,
-                                        avatarCp,
                                         (Equipment)slotState.Result.itemUsable);
                                 }
 
@@ -750,36 +537,6 @@ namespace NineChronicles.DataProvider
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
-                                var previousStates = ev.PreviousStates;
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
-
-                                _agentList.Add(new AgentModel()
-                                {
-                                    Address = ev.Signer.ToString(),
-                                });
-                                _avatarList.Add(new AvatarModel()
-                                {
-                                    Address = buy.buyerAvatarAddress.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    Name = avatarName,
-                                    AvatarLevel = avatarLevel,
-                                    TitleId = avatarTitleId,
-                                    ArmorId = avatarArmorId,
-                                    Cp = avatarCp,
-                                    Timestamp = _blockTimeOffset,
-                                });
-
                                 var buyerInventory = avatarState.inventory;
                                 foreach (var purchaseInfo in buy.purchaseInfos)
                                 {
@@ -928,11 +685,6 @@ namespace NineChronicles.DataProvider
                                             ProcessEquipmentData(
                                                 ev.Signer,
                                                 buy.buyerAvatarAddress,
-                                                avatarName,
-                                                avatarLevel,
-                                                avatarTitleId,
-                                                avatarArmorId,
-                                                avatarCp,
                                                 equipmentNotNull);
                                         }
                                     }
@@ -959,11 +711,6 @@ namespace NineChronicles.DataProvider
                                 var stakeStateAddress = StakeState.DeriveAddress(ev.Signer);
                                 var previousAmount = ev.PreviousStates.GetBalance(stakeStateAddress, currency);
                                 var newAmount = ev.OutputStates.GetBalance(stakeStateAddress, currency);
-
-                                _agentList.Add(new AgentModel()
-                                {
-                                    Address = ev.Signer.ToString(),
-                                });
                                 _stakeList.Add(new StakeModel()
                                 {
                                     BlockIndex = ev.BlockIndex,
@@ -984,21 +731,6 @@ namespace NineChronicles.DataProvider
                                 var start = DateTimeOffset.UtcNow;
                                 var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
                                 var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress);
-                                var previousStates = ev.PreviousStates;
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
-
                                 var id = claimStakeReward.Id;
                                 ev.PreviousStates.TryGetStakeState(ev.Signer, out StakeState prevStakeState);
 
@@ -1060,21 +792,6 @@ namespace NineChronicles.DataProvider
                                     }
                                 }
 
-                                _agentList.Add(new AgentModel()
-                                {
-                                    Address = ev.Signer.ToString(),
-                                });
-                                _avatarList.Add(new AvatarModel()
-                                {
-                                    Address = avatarAddress.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    Name = avatarName,
-                                    AvatarLevel = avatarLevel,
-                                    TitleId = avatarTitleId,
-                                    ArmorId = avatarArmorId,
-                                    Cp = avatarCp,
-                                    Timestamp = _blockTimeOffset,
-                                });
                                 _claimStakeList.Add(new ClaimStakeRewardModel()
                                 {
                                     Id = id.ToString(),
@@ -1103,10 +820,6 @@ namespace NineChronicles.DataProvider
                                 var migrationAmount = ev.PreviousStates.GetBalance(monsterCollectionState.address, currency);
                                 var migrationStartBlockIndex = ev.BlockIndex;
                                 var stakeStartBlockIndex = stakeState.StartedBlockIndex;
-                                _agentList.Add(new AgentModel()
-                                {
-                                    Address = ev.Signer.ToString(),
-                                });
                                 _mmcList.Add(new MigrateMonsterCollectionModel()
                                 {
                                     BlockIndex = ev.BlockIndex,
@@ -1126,20 +839,7 @@ namespace NineChronicles.DataProvider
 
                                 AvatarState prevAvatarState = ev.PreviousStates.GetAvatarStateV2(grind.AvatarAddress);
                                 AgentState agentState = ev.PreviousStates.GetAgentState(ev.Signer);
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(grind.AvatarAddress);
                                 var previousStates = ev.PreviousStates;
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
                                 Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
                                     ev.Signer,
                                     agentState.MonsterCollectionRound
@@ -1187,21 +887,6 @@ namespace NineChronicles.DataProvider
 
                                 foreach (var equipment in equipmentList)
                                 {
-                                    _agentList.Add(new AgentModel()
-                                    {
-                                        Address = ev.Signer.ToString(),
-                                    });
-                                    _avatarList.Add(new AvatarModel()
-                                    {
-                                        Address = grind.AvatarAddress.ToString(),
-                                        AgentAddress = ev.Signer.ToString(),
-                                        Name = avatarName,
-                                        AvatarLevel = avatarLevel,
-                                        TitleId = avatarTitleId,
-                                        ArmorId = avatarArmorId,
-                                        Cp = avatarCp,
-                                        Timestamp = _blockTimeOffset,
-                                    });
                                     _grindList.Add(new GrindingModel()
                                     {
                                         Id = grind.Id.ToString(),
@@ -1223,20 +908,7 @@ namespace NineChronicles.DataProvider
                             if (ev.Action is UnlockEquipmentRecipe unlockEquipmentRecipe)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(unlockEquipmentRecipe.AvatarAddress);
                                 var previousStates = ev.PreviousStates;
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
                                 Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                                 var prevCrystalBalance = previousStates.GetBalance(
                                     ev.Signer,
@@ -1245,21 +917,6 @@ namespace NineChronicles.DataProvider
                                     ev.Signer,
                                     crystalCurrency);
                                 var burntCrystal = prevCrystalBalance - outputCrystalBalance;
-                                _agentList.Add(new AgentModel()
-                                {
-                                    Address = ev.Signer.ToString(),
-                                });
-                                _avatarList.Add(new AvatarModel()
-                                {
-                                    Address = unlockEquipmentRecipe.AvatarAddress.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    Name = avatarName,
-                                    AvatarLevel = avatarLevel,
-                                    TitleId = avatarTitleId,
-                                    ArmorId = avatarArmorId,
-                                    Cp = avatarCp,
-                                    Timestamp = _blockTimeOffset,
-                                });
                                 foreach (var recipeId in unlockEquipmentRecipe.RecipeIds)
                                 {
                                     _unlockEquipmentRecipeList.Add(new UnlockEquipmentRecipeModel()
@@ -1281,20 +938,7 @@ namespace NineChronicles.DataProvider
                             if (ev.Action is UnlockWorld unlockWorld)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(unlockWorld.AvatarAddress);
                                 var previousStates = ev.PreviousStates;
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
                                 Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                                 var prevCrystalBalance = previousStates.GetBalance(
                                     ev.Signer,
@@ -1303,21 +947,6 @@ namespace NineChronicles.DataProvider
                                     ev.Signer,
                                     crystalCurrency);
                                 var burntCrystal = prevCrystalBalance - outputCrystalBalance;
-                                _agentList.Add(new AgentModel()
-                                {
-                                    Address = ev.Signer.ToString(),
-                                });
-                                _avatarList.Add(new AvatarModel()
-                                {
-                                    Address = unlockWorld.AvatarAddress.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    Name = avatarName,
-                                    AvatarLevel = avatarLevel,
-                                    TitleId = avatarTitleId,
-                                    ArmorId = avatarArmorId,
-                                    Cp = avatarCp,
-                                    Timestamp = _blockTimeOffset,
-                                });
                                 foreach (var worldId in unlockWorld.WorldIds)
                                 {
                                     _unlockWorldList.Add(new UnlockWorldModel()
@@ -1339,22 +968,9 @@ namespace NineChronicles.DataProvider
                             if (ev.Action is HackAndSlashRandomBuff hasRandomBuff)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasRandomBuff.AvatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 AvatarState prevAvatarState = previousStates.GetAvatarStateV2(hasRandomBuff.AvatarAddress);
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                int? avatarTitleId = null;
                                 prevAvatarState.worldInformation.TryGetLastClearedStageId(out var currentStageId);
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
                                 Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                                 var prevCrystalBalance = previousStates.GetBalance(
                                     ev.Signer,
@@ -1363,21 +979,6 @@ namespace NineChronicles.DataProvider
                                     ev.Signer,
                                     crystalCurrency);
                                 var burntCrystal = prevCrystalBalance - outputCrystalBalance;
-                                _agentList.Add(new AgentModel()
-                                {
-                                    Address = ev.Signer.ToString(),
-                                });
-                                _avatarList.Add(new AvatarModel()
-                                {
-                                    Address = hasRandomBuff.AvatarAddress.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    Name = avatarName,
-                                    AvatarLevel = avatarLevel,
-                                    TitleId = avatarTitleId,
-                                    ArmorId = avatarArmorId,
-                                    Cp = avatarCp,
-                                    Timestamp = _blockTimeOffset,
-                                });
                                 _hasRandomBuffList.Add(new HasRandomBuffModel()
                                 {
                                     Id = hasRandomBuff.Id.ToString(),
@@ -1399,18 +1000,6 @@ namespace NineChronicles.DataProvider
                                 var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(joinArena.avatarAddress);
                                 var previousStates = ev.PreviousStates;
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
                                 Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                                 var prevCrystalBalance = previousStates.GetBalance(
                                     ev.Signer,
@@ -1419,28 +1008,13 @@ namespace NineChronicles.DataProvider
                                     ev.Signer,
                                     crystalCurrency);
                                 var burntCrystal = prevCrystalBalance - outputCrystalBalance;
-                                _agentList.Add(new AgentModel()
-                                {
-                                    Address = ev.Signer.ToString(),
-                                });
-                                _avatarList.Add(new AvatarModel()
-                                {
-                                    Address = joinArena.avatarAddress.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    Name = avatarName,
-                                    AvatarLevel = avatarLevel,
-                                    TitleId = avatarTitleId,
-                                    ArmorId = avatarArmorId,
-                                    Cp = avatarCp,
-                                    Timestamp = _blockTimeOffset,
-                                });
                                 _joinArenaList.Add(new JoinArenaModel()
                                 {
                                     Id = joinArena.Id.ToString(),
                                     BlockIndex = ev.BlockIndex,
                                     AgentAddress = ev.Signer.ToString(),
                                     AvatarAddress = joinArena.avatarAddress.ToString(),
-                                    AvatarLevel = avatarLevel,
+                                    AvatarLevel = avatarState.level,
                                     ArenaRound = joinArena.round,
                                     ChampionshipId = joinArena.championshipId,
                                     BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
@@ -1456,18 +1030,6 @@ namespace NineChronicles.DataProvider
                                 var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(battleArena.myAvatarAddress);
                                 var previousStates = ev.PreviousStates;
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
                                 var myArenaScoreAdr =
                                     ArenaScore.DeriveAddress(battleArena.myAvatarAddress, battleArena.championshipId, battleArena.round);
                                 previousStates.TryGetArenaScore(myArenaScoreAdr, out var previousArenaScore);
@@ -1504,28 +1066,13 @@ namespace NineChronicles.DataProvider
                                     }
                                 }
 
-                                _agentList.Add(new AgentModel()
-                                {
-                                    Address = ev.Signer.ToString(),
-                                });
-                                _avatarList.Add(new AvatarModel()
-                                {
-                                    Address = battleArena.myAvatarAddress.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    Name = avatarName,
-                                    AvatarLevel = avatarLevel,
-                                    TitleId = avatarTitleId,
-                                    ArmorId = avatarArmorId,
-                                    Cp = avatarCp,
-                                    Timestamp = _blockTimeOffset,
-                                });
                                 _battleArenaList.Add(new BattleArenaModel()
                                 {
                                     Id = battleArena.Id.ToString(),
                                     BlockIndex = ev.BlockIndex,
                                     AgentAddress = ev.Signer.ToString(),
                                     AvatarAddress = battleArena.myAvatarAddress.ToString(),
-                                    AvatarLevel = avatarLevel,
+                                    AvatarLevel = avatarState.level,
                                     EnemyAvatarAddress = battleArena.enemyAvatarAddress.ToString(),
                                     ChampionshipId = battleArena.championshipId,
                                     Round = battleArena.round,
@@ -1573,20 +1120,6 @@ namespace NineChronicles.DataProvider
                             {
                                 MySqlStore.DeleteCombinationEquipment(combinationEquipment.Id);
                                 Log.Debug("Deleted CombinationEquipment action in block #{index}", ev.BlockIndex);
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(combinationEquipment.avatarAddress);
-                                var previousStates = ev.PreviousStates;
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
                                 var slotState = ev.OutputStates.GetCombinationSlotState(
                                     combinationEquipment.avatarAddress,
                                     combinationEquipment.slotIndex);
@@ -1596,11 +1129,6 @@ namespace NineChronicles.DataProvider
                                     ProcessEquipmentData(
                                         ev.Signer,
                                         combinationEquipment.avatarAddress,
-                                        avatarName,
-                                        avatarLevel,
-                                        avatarTitleId,
-                                        avatarArmorId,
-                                        avatarCp,
                                         (Equipment)slotState.Result.itemUsable);
                                 }
 
@@ -1614,20 +1142,6 @@ namespace NineChronicles.DataProvider
                             {
                                 MySqlStore.DeleteItemEnhancement(itemEnhancement.Id);
                                 Log.Debug("Deleted ItemEnhancement action in block #{index}", ev.BlockIndex);
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
-                                var previousStates = ev.PreviousStates;
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
                                 var slotState = ev.OutputStates.GetCombinationSlotState(
                                     itemEnhancement.avatarAddress,
                                     itemEnhancement.slotIndex);
@@ -1637,11 +1151,6 @@ namespace NineChronicles.DataProvider
                                     ProcessEquipmentData(
                                         ev.Signer,
                                         itemEnhancement.avatarAddress,
-                                        avatarName,
-                                        avatarLevel,
-                                        avatarTitleId,
-                                        avatarArmorId,
-                                        avatarCp,
                                         (Equipment)slotState.Result.itemUsable);
                                 }
 
@@ -1702,11 +1211,6 @@ namespace NineChronicles.DataProvider
                                             ProcessEquipmentData(
                                                 purchaseInfo.SellerAvatarAddress,
                                                 purchaseInfo.SellerAgentAddress,
-                                                avatarName,
-                                                avatarLevel,
-                                                avatarTitleId,
-                                                avatarArmorId,
-                                                avatarCp,
                                                 equipmentNotNull);
                                         }
                                     }
@@ -1729,29 +1233,9 @@ namespace NineChronicles.DataProvider
         private void ProcessEquipmentData(
             Address agentAddress,
             Address avatarAddress,
-            string avatarName,
-            int avatarLevel,
-            int? avatarTitleId,
-            int avatarArmorId,
-            int avatarCp,
             Equipment equipment)
         {
             var cp = CPHelper.GetCP(equipment);
-            _agentList.Add(new AgentModel()
-            {
-                Address = agentAddress.ToString(),
-            });
-            _avatarList.Add(new AvatarModel()
-            {
-                Address = avatarAddress.ToString(),
-                AgentAddress = agentAddress.ToString(),
-                Name = avatarName,
-                AvatarLevel = avatarLevel,
-                TitleId = avatarTitleId,
-                ArmorId = avatarArmorId,
-                Cp = avatarCp,
-                Timestamp = _blockTimeOffset,
-            });
             _eqList.Add(new EquipmentModel()
             {
                 ItemId = equipment.ItemId.ToString(),
@@ -1762,6 +1246,96 @@ namespace NineChronicles.DataProvider
                 Level = equipment.level,
                 ItemSubType = equipment.ItemSubType.ToString(),
             });
+        }
+
+        private void ProcessAgentAvatarData(ActionBase.ActionEvaluation<ActionBase> ev)
+        {
+            if (!_agents.Contains(ev.Signer.ToString()))
+            {
+                _agents.Add(ev.Signer.ToString());
+                _agentList.Add(new AgentModel()
+                {
+                    Address = ev.Signer.ToString(),
+                });
+
+                if (ev.Signer != _miner)
+                {
+                    var agentState = ev.OutputStates.GetAgentState(ev.Signer);
+                    if (agentState is { } ag)
+                    {
+                        var avatarAddresses = ag.avatarAddresses;
+                        foreach (var avatarAddress in avatarAddresses)
+                        {
+                            try
+                            {
+                                AvatarState avatarState;
+                                try
+                                {
+                                    avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress.Value);
+                                }
+                                catch (Exception)
+                                {
+                                    avatarState = ev.OutputStates.GetAvatarState(avatarAddress.Value);
+                                }
+
+                                if (avatarState == null)
+                                {
+                                    continue;
+                                }
+
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                Costume? avatarTitleCostume;
+                                try
+                                {
+                                    avatarTitleCostume =
+                                        avatarState.inventory.Costumes.FirstOrDefault(costume =>
+                                            costume.ItemSubType == ItemSubType.Title &&
+                                            costume.equipped);
+                                }
+                                catch (Exception)
+                                {
+                                    avatarTitleCostume = null;
+                                }
+
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                Log.Debug(
+                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                    avatarName,
+                                    avatarLevel,
+                                    avatarArmorId,
+                                    avatarTitleId,
+                                    avatarCp);
+                                _avatarList.Add(new AvatarModel()
+                                {
+                                    Address = avatarAddress.Value.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(ex.Message);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
