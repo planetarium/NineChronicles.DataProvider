@@ -1583,5 +1583,26 @@ namespace NineChronicles.DataProvider.Store
 
             return query.ToList();
         }
+
+        public void StoreRaider(RaiderModel model)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            ctx.Raiders?.Add(model);
+            ctx.SaveChanges();
+        }
+
+        public List<WorldBossRankingModel> GetWorldBossRanking(int raidId)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            var query = ctx.Set<WorldBossRankingModel>()
+                .FromSqlRaw(@"SELECT `AvatarName`, `HighScore`, `TotalScore`, `Cp`, `Level`, `Address`, `IconId`, row_number() over(ORDER BY `HighScore` DESC) as `Ranking` FROM `Raiders` WHERE `RaidId` = {0}", raidId);
+            return query.ToList();
+        }
+
+        public int GetTotalRaiders(int raidId)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            return ctx.Raiders.Count(r => r.RaidId == raidId);
+        }
     }
 }

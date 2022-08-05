@@ -19,17 +19,16 @@ public class AgentQueryTest : TestBase, IDisposable
         const string query = @"query {
         agentCount
     }";
-        var context = CreateContext();
         for (int i = 0; i < expected; i++)
         {
             var model = new AgentModel
             {
                 Address = new PrivateKey().ToAddress().ToHex(),
             };
-            context.Agents.Add(model);
+            Context.Agents.Add(model);
         }
 
-        await context.SaveChangesAsync();
+        await Context.SaveChangesAsync();
         var result = await ExecuteAsync(query);
         var count =
             (int) ((Dictionary<string, object>) ((ExecutionNode) result.Data).ToValue())["agentCount"];

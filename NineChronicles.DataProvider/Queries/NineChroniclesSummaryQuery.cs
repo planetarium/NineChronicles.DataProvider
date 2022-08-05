@@ -1,9 +1,13 @@
 ﻿namespace NineChronicles.DataProvider.Queries
 {
+    using System;
+    using System.Linq;
     using Bencodex.Types;
     using GraphQL;
     using GraphQL.Types;
     using Libplanet;
+    using Libplanet.Crypto;
+    using Libplanet.Explorer.GraphTypes;
     using Nekoyume;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.GraphTypes;
@@ -204,6 +208,100 @@
             Field<NonNullGraphType<DauQuery>>(
                 name: "dauQuery",
                 resolve: context => new DauQuery(store)
+            );
+            Field<ListGraphType<WorldBossRankingType>>(
+                name: "worldBossRanking",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "raidId",
+                        Description = "world boss season id.",
+                    },
+                    new QueryArgument<StringGraphType>
+                    {
+                        Name = "avatarAddress",
+                        Description = "Hex encoded avatar address",
+                    },
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "limit",
+                        Description = "query limit.",
+                        DefaultValue = 100,
+                    }
+                ),
+                resolve: context =>
+                {
+                    var raidId = context.GetArgument<int>("raidId");
+                    var avatarAddress = context.GetArgument<string?>("avatarAddress");
+                    var limit = context.GetArgument<int>("limit");
+                    var raiders = Store.GetWorldBossRanking(raidId);
+                    var result = raiders
+                        .Take(limit)
+                        .ToList();
+                    if (!(avatarAddress is null) && result.All(r => r.Address != avatarAddress))
+                    {
+                        var myAvatar = result.FirstOrDefault(r => r.Address == avatarAddress);
+                        if (!(myAvatar is null))
+                        {
+                            result.Add(myAvatar);
+                        }
+                    }
+
+                    return result;
+                });
+            Field<IntGraphType>(
+                name: "worldBossTotalUsers",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "raidId",
+                        Description = "world boss season id.",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var raidId = context.GetArgument<int>("raidId");
+                    return Store.GetTotalRaiders(raidId);
+                });
+
+            // mutation for test.
+            Field<BooleanGraphType>(
+                name: "insertRanking",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "raidId",
+                        Description = "world boss season id.",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var raidId = context.GetArgument<int>("raidId");
+                    try
+                    {
+                        for (int i = 0; i < 200; i++)
+                        {
+                            var model = new RaiderModel(
+                                raidId,
+                                i.ToString(),
+                                i,
+                                i + 1,
+                                i + 2,
+                                GameConfig.DefaultAvatarArmorId,
+                                i,
+                                new PrivateKey().ToAddress().ToHex()
+                            );
+                            Store.StoreRaider(model);
+                        }
+
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        return false;
+                    }
+                }
             );
         }
 
