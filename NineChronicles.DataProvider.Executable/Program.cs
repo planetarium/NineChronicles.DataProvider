@@ -82,7 +82,8 @@ namespace NineChronicles.DataProvider.Executable
             {
                MinerPrivateKey = null,
                Libplanet = properties,
-               TxQuotaPerSigner = 500,
+               TxQuotaPerSigner = 10,
+               TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
             };
 
             if (headlessConfig.LogActionRenders)
