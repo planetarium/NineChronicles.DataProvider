@@ -1,5 +1,3 @@
-using Nekoyume.Model.State;
-
 namespace NineChronicles.DataProvider.Tools.SubCommand
 {
     using System;
@@ -29,13 +27,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     {
         private const string AgentDbName = "Agents";
         private const string AvatarDbName = "Avatars";
-        private const string HSWDbName = "HackAndSlashSweeps";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
         private StreamWriter _agentBulkFile;
         private StreamWriter _avatarBulkFile;
-        private StreamWriter _hswBulkFile;
         private List<string> _agentList;
         private List<string> _avatarList;
         private List<string> _agentFiles;
@@ -152,18 +148,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 return;
             }
 
-            Console.WriteLine("Start migration.");
-
-            // files to store bulk file paths (new file created every 10000 blocks for bulk load performance)
-            _agentFiles = new List<string>();
-            _avatarFiles = new List<string>();
-            _hswFiles = new List<string>();
-
-            // lists to keep track of inserted addresses to minimize duplicates
-            _agentList = new List<string>();
-            _avatarList = new List<string>();
-
-            CreateBulkFiles();
+            Console.WriteLine("Start Execution.");
             try
             {
                 int totalCount = limit ?? (int)_baseStore.CountBlocks();
@@ -172,7 +157,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, _baseChain.Tip.Index);
                 var tip = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, (BlockHash)tipHash);
                 var exec = _baseChain.ExecuteActions(tip);
-                var ev = exec.First();
                 while (remainingCount > 0)
                 {
                     int interval = 10000;
@@ -188,186 +172,27 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                     var count = remainingCount;
                     var idx = offsetIdx;
-                    IReadOnlyList<ActionEvaluation> aes = null;
 
                     foreach (var item in
                             _baseStore.IterateIndexes(_baseChain.Id, offset + idx ?? 0 + idx, limitInterval)
                                 .Select((value, i) => new { i, value }))
                     {
                         var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
-                        Console.WriteLine("Migrating {0}/{1} #{2}", item.i, count, block.Index);
-
-                        foreach (var tx in block.Transactions)
-                        {
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is HackAndSlashSweep hasSweep)
-                            {
-                                try
-                                {
-                                    AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep.avatarAddress);
-                                    bool isClear = avatarState.stageMap.ContainsKey(hasSweep.stageId);
-                                    _hswBulkFile.WriteLine(
-                                        $"{hasSweep.Id.ToString()};" +
-                                        $"{tx.Signer.ToString()};" +
-                                        $"{hasSweep.avatarAddress.ToString()};" +
-                                        $"{hasSweep.worldId};" +
-                                        $"{hasSweep.stageId};" +
-                                        $"{hasSweep.apStoneCount};" +
-                                        $"{hasSweep.actionPoint};" +
-                                        $"{hasSweep.costumes.Count};" +
-                                        $"{hasSweep.equipments.Count};" +
-                                        $"{isClear};" +
-                                        $"{hasSweep.stageId > 10000000};" +
-                                        $"{block.Index};" +
-                                        $"{tx.Timestamp.UtcDateTime:o}");
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine(ex.Message);
-                                }
-                            }
-
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is HackAndSlashSweep1 hasSweep1)
-                            {
-                                try
-                                {
-                                    AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep1.avatarAddress);
-                                    bool isClear = avatarState.stageMap.ContainsKey(hasSweep1.stageId);
-                                    _hswBulkFile.WriteLine(
-                                        $"{hasSweep1.Id.ToString()};" +
-                                        $"{tx.Signer.ToString()};" +
-                                        $"{hasSweep1.avatarAddress.ToString()};" +
-                                        $"{hasSweep1.worldId};" +
-                                        $"{hasSweep1.stageId};" +
-                                        $"{hasSweep1.apStoneCount};" +
-                                        $"{0};" +
-                                        $"{0};" +
-                                        $"{0};" +
-                                        $"{isClear};" +
-                                        $"{hasSweep1.stageId > 10000000};" +
-                                        $"{block.Index};" +
-                                        $"{tx.Timestamp.UtcDateTime:o}");
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine(ex.Message);
-                                }
-                            }
-
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is HackAndSlashSweep2 hasSweep2)
-                            {
-                                try
-                                {
-                                    AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep2.avatarAddress);
-                                    bool isClear = avatarState.stageMap.ContainsKey(hasSweep2.stageId);
-                                    _hswBulkFile.WriteLine(
-                                        $"{hasSweep2.Id.ToString()};" +
-                                        $"{tx.Signer.ToString()};" +
-                                        $"{hasSweep2.avatarAddress.ToString()};" +
-                                        $"{hasSweep2.worldId};" +
-                                        $"{hasSweep2.stageId};" +
-                                        $"{hasSweep2.apStoneCount};" +
-                                        $"{0};" +
-                                        $"{0};" +
-                                        $"{0};" +
-                                        $"{isClear};" +
-                                        $"{hasSweep2.stageId > 10000000};" +
-                                        $"{block.Index};" +
-                                        $"{tx.Timestamp.UtcDateTime:o}");
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine(ex.Message);
-                                }
-                            }
-
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is HackAndSlashSweep3 hasSweep3)
-                            {
-                                try
-                                {
-                                    AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep3.avatarAddress);
-                                    bool isClear = avatarState.stageMap.ContainsKey(hasSweep3.stageId);
-                                    _hswBulkFile.WriteLine(
-                                        $"{hasSweep3.Id.ToString()};" +
-                                        $"{tx.Signer.ToString()};" +
-                                        $"{hasSweep3.avatarAddress.ToString()};" +
-                                        $"{hasSweep3.worldId};" +
-                                        $"{hasSweep3.stageId};" +
-                                        $"{hasSweep3.apStoneCount};" +
-                                        $"{hasSweep3.actionPoint};" +
-                                        $"{hasSweep3.costumes.Count};" +
-                                        $"{hasSweep3.equipments.Count};" +
-                                        $"{isClear};" +
-                                        $"{hasSweep3.stageId > 10000000};" +
-                                        $"{block.Index};" +
-                                        $"{tx.Timestamp.UtcDateTime:o}");
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine(ex.Message);
-                                }
-                            }
-
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is HackAndSlashSweep4 hasSweep4)
-                            {
-                                try
-                                {
-                                    AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep4.avatarAddress);
-                                    bool isClear = avatarState.stageMap.ContainsKey(hasSweep4.stageId);
-                                    _hswBulkFile.WriteLine(
-                                        $"{hasSweep4.Id.ToString()};" +
-                                        $"{tx.Signer.ToString()};" +
-                                        $"{hasSweep4.avatarAddress.ToString()};" +
-                                        $"{hasSweep4.worldId};" +
-                                        $"{hasSweep4.stageId};" +
-                                        $"{hasSweep4.apStoneCount};" +
-                                        $"{hasSweep4.actionPoint};" +
-                                        $"{hasSweep4.costumes.Count};" +
-                                        $"{hasSweep4.equipments.Count};" +
-                                        $"{isClear};" +
-                                        $"{hasSweep4.stageId > 10000000};" +
-                                        $"{block.Index};" +
-                                        $"{tx.Timestamp.UtcDateTime:o}");
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine(ex.Message);
-                                }
-                            }
-                        }
-
-                        Console.WriteLine("Migrating Done {0}/{1} #{2}", item.i, count, block.Index);
+                        Console.WriteLine("Executing {0}/{1} #{2}", item.i, count, block.Index);
+                        _baseChain.ExecuteActions(block);
+                        Console.WriteLine("Execution Done {0}/{1} #{2}", item.i, count, block.Index);
                     }
 
                     if (interval < remainingCount)
                     {
                         remainingCount -= interval;
                         offsetIdx += interval;
-                        FlushBulkFiles();
-
-                        foreach (var path in _hswFiles)
-                        {
-                            BulkInsert(HSWDbName, path);
-                        }
-
-                        _hswFiles.RemoveAt(0);
-                        CreateBulkFiles();
                     }
                     else
                     {
                         remainingCount = 0;
                         offsetIdx += remainingCount;
-                        FlushBulkFiles();
-                        CreateBulkFiles();
                     }
-                }
-
-                FlushBulkFiles();
-                DateTimeOffset postDataPrep = DateTimeOffset.Now;
-                Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
-
-                foreach (var path in _hswFiles)
-                {
-                    BulkInsert(HSWDbName, path);
                 }
             }
             catch (Exception e)
@@ -376,7 +201,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             }
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
-            Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
+            Console.WriteLine("Block Execution Complete! Time Elapsed: {0}", end - start);
         }
 
         private void FlushBulkFiles()
@@ -386,9 +211,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             _avatarBulkFile.Flush();
             _avatarBulkFile.Close();
-
-            _hswBulkFile.Flush();
-            _hswBulkFile.Close();
         }
 
         private void CreateBulkFiles()
@@ -399,12 +221,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             string avatarFilePath = Path.GetTempFileName();
             _avatarBulkFile = new StreamWriter(avatarFilePath);
 
-            string hswFilePath = Path.GetTempFileName();
-            _hswBulkFile = new StreamWriter(hswFilePath);
-
             _agentFiles.Add(agentFilePath);
             _avatarFiles.Add(avatarFilePath);
-            _hswFiles.Add(hswFilePath);
         }
 
         private void BulkInsert(

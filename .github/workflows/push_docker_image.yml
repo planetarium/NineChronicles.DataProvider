@@ -7,7 +7,7 @@ on:
       - development
       - rc-*
       - migration
-      - has-sweep-migration
+      - block-execution
 
 jobs:
   build_and_push:
