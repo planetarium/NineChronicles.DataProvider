@@ -307,7 +307,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     TableName = tableName,
                     FileName = filePath,
                     Timeout = 0,
-                    LineTerminator = "\n",
+                    LineTerminator = Environment.OSVersion.VersionString.Contains("Win") ? "\r\n" : "\n",
                     FieldTerminator = ";",
                     Local = true,
                     ConflictOption = MySqlBulkLoaderConflictOption.Ignore,
