@@ -30,24 +30,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
     public class MySqlMigration
     {
-        private const string AgentDbName = "Agents";
-        private const string AvatarDbName = "Avatars";
-        private const string CCDbName = "CombinationConsumables";
-        private const string CEDbName = "CombinationEquipments";
-        private const string IEDbName = "ItemEnhancements";
-        private const string UEDbName = "UserEquipments";
-        private const string UCTDbName = "UserCostumes";
-        private const string UMDbName = "UserMaterials";
-        private const string UCDbName = "UserConsumables";
-        private const string USDbName = "UserStakings";
-        private const string UMCDbName = "UserMonsterCollections";
-        private const string UNCGDbName = "UserNCGs";
-        private const string UCYDbName = "UserCrystals";
-        private const string EDbName = "Equipments";
-        private const string SCDbName = "ShopConsumables";
-        private const string SEDbName = "ShopEquipments";
-        private const string SCTDbName = "ShopCostumes";
-        private const string SMDbName = "ShopMaterials";
         private string BARDbName = "BattleArenaRanking";
         private string _connectionString;
         private IStore _baseStore;
@@ -375,33 +357,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
 
-                var stm2 = $"RENAME TABLE {UEDbName} TO {UEDbName}_Dump; CREATE TABLE {UEDbName} LIKE {UEDbName}_Dump;";
-                var stm3 = $"RENAME TABLE {UCTDbName} TO {UCTDbName}_Dump; CREATE TABLE {UCTDbName} LIKE {UCTDbName}_Dump;";
-                var stm4 = $"RENAME TABLE {UMDbName} TO {UMDbName}_Dump; CREATE TABLE {UMDbName} LIKE {UMDbName}_Dump;";
-                var stm5 = $"RENAME TABLE {UCDbName} TO {UCDbName}_Dump; CREATE TABLE {UCDbName} LIKE {UCDbName}_Dump;";
-                var stm6 = $"RENAME TABLE {EDbName} TO {EDbName}_Dump; CREATE TABLE {EDbName} LIKE {EDbName}_Dump;";
-                var stm12 = $"RENAME TABLE {USDbName} TO {USDbName}_Dump; CREATE TABLE {USDbName} LIKE {USDbName}_Dump;";
-                var stm13 = $"RENAME TABLE {UNCGDbName} TO {UNCGDbName}_Dump; CREATE TABLE {UNCGDbName} LIKE {UNCGDbName}_Dump;";
-                var stm14 = $"RENAME TABLE {UCYDbName} TO {UCYDbName}_Dump; CREATE TABLE {UCYDbName} LIKE {UCYDbName}_Dump;";
-                var stm15 = $"RENAME TABLE {UMCDbName} TO {UMCDbName}_Dump; CREATE TABLE {UMCDbName} LIKE {UMCDbName}_Dump;";
-                var stm16 = $"RENAME TABLE {SCDbName} TO {SCDbName}_Dump; CREATE TABLE {SCDbName} LIKE {SCDbName}_Dump;";
-                var stm17 = $"RENAME TABLE {SEDbName} TO {SEDbName}_Dump; CREATE TABLE {SEDbName} LIKE {SEDbName}_Dump;";
-                var stm19 = $"RENAME TABLE {SCTDbName} TO {SCTDbName}_Dump; CREATE TABLE {SCTDbName} LIKE {SCTDbName}_Dump;";
-                var stm20 = $"RENAME TABLE {SMDbName} TO {SMDbName}_Dump; CREATE TABLE {SMDbName} LIKE {SMDbName}_Dump;";
                 var stm23 = $"RENAME TABLE {BARDbName} TO {BARDbName}_Dump; CREATE TABLE {BARDbName} LIKE {BARDbName}_Dump;";
-                var cmd2 = new MySqlCommand(stm2, connection);
-                var cmd3 = new MySqlCommand(stm3, connection);
-                var cmd4 = new MySqlCommand(stm4, connection);
-                var cmd5 = new MySqlCommand(stm5, connection);
-                var cmd6 = new MySqlCommand(stm6, connection);
-                var cmd12 = new MySqlCommand(stm12, connection);
-                var cmd13 = new MySqlCommand(stm13, connection);
-                var cmd14 = new MySqlCommand(stm14, connection);
-                var cmd15 = new MySqlCommand(stm15, connection);
-                var cmd16 = new MySqlCommand(stm16, connection);
-                var cmd17 = new MySqlCommand(stm17, connection);
-                var cmd19 = new MySqlCommand(stm19, connection);
-                var cmd20 = new MySqlCommand(stm20, connection);
                 var cmd23 = new MySqlCommand(stm23, connection);
                 var startMove = DateTimeOffset.Now;
                 connection.Open();
@@ -419,33 +375,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             {
                 Console.WriteLine(e.Message);
                 Console.WriteLine("Restoring previous tables due to error...");
-                var stm12 = $"DROP TABLE {UEDbName}; RENAME TABLE {UEDbName}_Dump TO {UEDbName};";
-                var stm13 = $"DROP TABLE {EDbName}; RENAME TABLE {UCTDbName}_Dump TO {UCTDbName};";
-                var stm14 = $"DROP TABLE {EDbName}; RENAME TABLE {UMDbName}_Dump TO {UMDbName};";
-                var stm15 = $"DROP TABLE {EDbName}; RENAME TABLE {UCDbName}_Dump TO {UCDbName};";
-                var stm16 = $"DROP TABLE {EDbName}; RENAME TABLE {EDbName}_Dump TO {EDbName};";
-                var stm17 = $"DROP TABLE {USDbName}; RENAME TABLE {USDbName}_Dump TO {USDbName};";
-                var stm19 = $"DROP TABLE {UNCGDbName}; RENAME TABLE {UNCGDbName}_Dump TO {UNCGDbName};";
-                var stm20 = $"DROP TABLE {UCYDbName}; RENAME TABLE {UCYDbName}_Dump TO {UCYDbName};";
-                var stm23 = $"DROP TABLE {UMCDbName}; RENAME TABLE {UMCDbName}_Dump TO {UMCDbName};";
-                var stm25 = $"DROP TABLE {SCDbName}; RENAME TABLE {SCDbName}_Dump TO {SCDbName};";
-                var stm26 = $"DROP TABLE {SEDbName}; RENAME TABLE {SEDbName}_Dump TO {SEDbName};";
-                var stm27 = $"DROP TABLE {SCTDbName}; RENAME TABLE {SCTDbName}_Dump TO {SCTDbName};";
-                var stm28 = $"DROP TABLE {SMDbName}; RENAME TABLE {SMDbName}_Dump TO {SMDbName};";
                 var stm33 = $"DROP TABLE {BARDbName}; RENAME TABLE {BARDbName}_Dump TO {BARDbName};";
-                var cmd12 = new MySqlCommand(stm12, connection);
-                var cmd13 = new MySqlCommand(stm13, connection);
-                var cmd14 = new MySqlCommand(stm14, connection);
-                var cmd15 = new MySqlCommand(stm15, connection);
-                var cmd16 = new MySqlCommand(stm16, connection);
-                var cmd17 = new MySqlCommand(stm17, connection);
-                var cmd19 = new MySqlCommand(stm19, connection);
-                var cmd20 = new MySqlCommand(stm20, connection);
-                var cmd23 = new MySqlCommand(stm23, connection);
-                var cmd25 = new MySqlCommand(stm25, connection);
-                var cmd26 = new MySqlCommand(stm26, connection);
-                var cmd27 = new MySqlCommand(stm27, connection);
-                var cmd28 = new MySqlCommand(stm28, connection);
                 var cmd33 = new MySqlCommand(stm33, connection);
                 var startRestore = DateTimeOffset.Now;
                 connection.Open();
@@ -456,33 +386,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 Console.WriteLine("Restore BattleArenaRanking Complete! Time Elapsed: {0}", endRestore - startRestore);
             }
 
-            var stm7 = $"DROP TABLE {UEDbName}_Dump;";
-            var stm8 = $"DROP TABLE {UCTDbName}_Dump;";
-            var stm9 = $"DROP TABLE {UMDbName}_Dump;";
-            var stm10 = $"DROP TABLE {UCDbName}_Dump;";
-            var stm11 = $"DROP TABLE {EDbName}_Dump;";
-            var stm18 = $"DROP TABLE {USDbName}_Dump;";
-            var stm21 = $"DROP TABLE {UNCGDbName}_Dump;";
-            var stm22 = $"DROP TABLE {UCYDbName}_Dump;";
-            var stm24 = $"DROP TABLE {UMCDbName}_Dump;";
-            var stm29 = $"DROP TABLE {SCDbName}_Dump;";
-            var stm30 = $"DROP TABLE {SEDbName}_Dump;";
-            var stm31 = $"DROP TABLE {SCTDbName}_Dump;";
-            var stm32 = $"DROP TABLE {SMDbName}_Dump;";
             var stm34 = $"DROP TABLE {BARDbName}_Dump;";
-            var cmd7 = new MySqlCommand(stm7, connection);
-            var cmd8 = new MySqlCommand(stm8, connection);
-            var cmd9 = new MySqlCommand(stm9, connection);
-            var cmd10 = new MySqlCommand(stm10, connection);
-            var cmd11 = new MySqlCommand(stm11, connection);
-            var cmd18 = new MySqlCommand(stm18, connection);
-            var cmd21 = new MySqlCommand(stm21, connection);
-            var cmd22 = new MySqlCommand(stm22, connection);
-            var cmd24 = new MySqlCommand(stm24, connection);
-            var cmd29 = new MySqlCommand(stm29, connection);
-            var cmd30 = new MySqlCommand(stm30, connection);
-            var cmd31 = new MySqlCommand(stm31, connection);
-            var cmd32 = new MySqlCommand(stm32, connection);
             var cmd34 = new MySqlCommand(stm34, connection);
             var startDelete = DateTimeOffset.Now;
             connection.Open();
@@ -658,7 +562,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     TableName = tableName,
                     FileName = filePath,
                     Timeout = 0,
-                    LineTerminator = "\n",
+                    LineTerminator = Environment.OSVersion.VersionString.Contains("Win") ? "\r\n" : "\n",
                     FieldTerminator = ";",
                     Local = true,
                     ConflictOption = MySqlBulkLoaderConflictOption.Ignore,
