@@ -6,6 +6,7 @@ on:
       - main
       - development
       - rc-*
+      - 20220811-internal-test
 
 jobs:
   build_and_push:
