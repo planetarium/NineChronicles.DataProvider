@@ -280,7 +280,7 @@ namespace NineChronicles.DataProvider
                                     AvatarAddress = hasSweep.avatarAddress.ToString(),
                                     WorldId = hasSweep.worldId,
                                     StageId = hasSweep.stageId,
-                                    ApStoneCount = hasSweep.actionPoint,
+                                    ApStoneCount = hasSweep.apStoneCount,
                                     ActionPoint = hasSweep.actionPoint,
                                     CostumesCount = hasSweep.costumes.Count,
                                     EquipmentsCount = hasSweep.equipments.Count,
