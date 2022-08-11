@@ -133,7 +133,7 @@ namespace NineChronicles.DataProvider
 
                 foreach (var transaction in block.Transactions)
                 {
-                    var actionType = transaction.Actions.Select(action => action.ToString()!.Split('.')
+                    var actionType = transaction.CustomActions!.Select(action => action.ToString()!.Split('.')
                         .LastOrDefault()?.Replace(">", string.Empty));
                     _transactionList.Add(new TransactionModel()
                     {
@@ -233,6 +233,16 @@ namespace NineChronicles.DataProvider
                             }
 
                             ProcessAgentAvatarData(ev);
+
+                            if (ev.Action is EventDungeonBattle eventDungeonBattle)
+                            {
+                                Console.WriteLine(eventDungeonBattle.Id);
+                            }
+
+                            if (ev.Action is EventConsumableItemCrafts eventConsumableItemCrafts)
+                            {
+                                Console.WriteLine(eventConsumableItemCrafts.Id);
+                            }
 
                             if (ev.Action is HackAndSlash has)
                             {
