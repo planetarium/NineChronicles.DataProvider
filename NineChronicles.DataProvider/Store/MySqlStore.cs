@@ -1587,7 +1587,22 @@ namespace NineChronicles.DataProvider.Store
         public void StoreRaider(RaiderModel model)
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-            ctx.Raiders?.Add(model);
+            RaiderModel? prevModel =
+                ctx.Raiders.FirstOrDefault(r => r.RaidId == model.RaidId && r.Address.Equals(model.Address));
+            if (prevModel is null)
+            {
+                ctx.Raiders.Add(model);
+            }
+            else
+            {
+                prevModel.Cp = model.Cp;
+                prevModel.IconId = model.IconId;
+                prevModel.HighScore = model.HighScore;
+                prevModel.TotalScore = model.TotalScore;
+                prevModel.Level = model.Level;
+                ctx.Raiders.Update(prevModel);
+            }
+
             ctx.SaveChanges();
         }
 
