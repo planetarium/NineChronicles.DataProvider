@@ -321,6 +321,41 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreEventConsumableItemCraftsList(List<EventConsumableItemCraftsModel> eventConsumableItemCraftsList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var eventConsumableItemCraft in eventConsumableItemCraftsList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.EventConsumableItemCrafts?.Find(eventConsumableItemCraft.Id) is null)
+                        {
+                            ctx.EventConsumableItemCrafts!.AddRange(eventConsumableItemCraft);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.EventConsumableItemCrafts!.UpdateRange(eventConsumableItemCraft);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public void DeleteHackAndSlash(Guid id)
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
