@@ -270,7 +270,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 $"{arenaData.RequiredMedalCount};" +
                                 $"{arenaData.StartBlockIndex};" +
                                 $"{arenaData.EndBlockIndex};" +
-                                $"{tip.Timestamp:yyyy-MM-dd}"
+                                $"{tip.Timestamp.UtcDateTime:yyyy-MM-dd}"
                             );
                         }
 
