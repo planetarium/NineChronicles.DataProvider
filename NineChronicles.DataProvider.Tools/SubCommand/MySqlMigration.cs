@@ -270,79 +270,86 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             avatarState = ev.OutputStates.GetAvatarState(avatarAddress);
                         }
 
-                        var avatarLevel = avatarState.level;
-                        var arenaSheet = ev.OutputStates.GetSheet<ArenaSheet>();
-                        var arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
-
-                        if (!checkBARankingTable)
+                        if (avatarState != null)
                         {
-                            BARDbName = $"{BARDbName}_{arenaData.ChampionshipId}_{arenaData.Round}";
-                            var stm33 =
-                            $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{BARDbName}` (
-                                `BlockIndex` bigint NOT NULL,
-                                `AgentAddress` varchar(100) NOT NULL,
-                                `AvatarAddress` varchar(100) NOT NULL,
-                                `AvatarLevel` int NOT NULL,
-                                `ChampionshipId` int NOT NULL,
-                                `Round` int NOT NULL,
-                                `ArenaType` varchar(100) NOT NULL,
-                                `Score` int NOT NULL,
-                                `WinCount` int NOT NULL,
-                                `MedalCount` int NOT NULL,
-                                `LossCount` int NOT NULL,
-                                `Ticket` int NOT NULL,
-                                `PurchasedTicketCount` int NOT NULL,
-                                `TicketResetCount` int NOT NULL,
-                                `EntranceFee` bigint NOT NULL,
-                                `TicketPrice` bigint NOT NULL,
-                                `AdditionalTicketPrice` bigint NOT NULL,
-                                `RequiredMedalCount` int NOT NULL,
-                                `StartBlockIndex` bigint NOT NULL,
-                                `EndBlockIndex` bigint NOT NULL,
-                                `Ranking` int NOT NULL,
-                                `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                KEY `fk_BattleArenaRanking_Agent1_idx` (`AgentAddress`),
-                                KEY `fk_BattleArenaRanking_AvatarAddress1_idx` (`AvatarAddress`)
-                            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
-                            var cmd33 = new MySqlCommand(stm33, connection);
-                            connection.Open();
-                            cmd33.CommandTimeout = 300;
-                            cmd33.ExecuteScalar();
-                            connection.Close();
-                            checkBARankingTable = true;
+                            var avatarLevel = avatarState.level;
+                            var arenaSheet = ev.OutputStates.GetSheet<ArenaSheet>();
+                            var arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
+
+                            if (!checkBARankingTable)
+                            {
+                                BARDbName = $"{BARDbName}_{arenaData.ChampionshipId}_{arenaData.Round}";
+                                var stm33 =
+                                $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{BARDbName}` (
+                                    `BlockIndex` bigint NOT NULL,
+                                    `AgentAddress` varchar(100) NOT NULL,
+                                    `AvatarAddress` varchar(100) NOT NULL,
+                                    `AvatarLevel` int NOT NULL,
+                                    `ChampionshipId` int NOT NULL,
+                                    `Round` int NOT NULL,
+                                    `ArenaType` varchar(100) NOT NULL,
+                                    `Score` int NOT NULL,
+                                    `WinCount` int NOT NULL,
+                                    `MedalCount` int NOT NULL,
+                                    `LossCount` int NOT NULL,
+                                    `Ticket` int NOT NULL,
+                                    `PurchasedTicketCount` int NOT NULL,
+                                    `TicketResetCount` int NOT NULL,
+                                    `EntranceFee` bigint NOT NULL,
+                                    `TicketPrice` bigint NOT NULL,
+                                    `AdditionalTicketPrice` bigint NOT NULL,
+                                    `RequiredMedalCount` int NOT NULL,
+                                    `StartBlockIndex` bigint NOT NULL,
+                                    `EndBlockIndex` bigint NOT NULL,
+                                    `Ranking` int NOT NULL,
+                                    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                    KEY `fk_BattleArenaRanking_Agent1_idx` (`AgentAddress`),
+                                    KEY `fk_BattleArenaRanking_AvatarAddress1_idx` (`AvatarAddress`)
+                                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+                                var cmd33 = new MySqlCommand(stm33, connection);
+                                connection.Open();
+                                cmd33.CommandTimeout = 300;
+                                cmd33.ExecuteScalar();
+                                connection.Close();
+                                checkBARankingTable = true;
+                            }
+
+                            var arenaScoreAdr =
+                                ArenaScore.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
+                            var arenaInformationAdr =
+                                ArenaInformation.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
+                            ev.OutputStates.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
+                            ev.OutputStates.TryGetArenaScore(arenaScoreAdr, out var outputArenaScore);
+                            if (currentArenaInformation != null && outputArenaScore != null)
+                            {
+                                _barBulkFile.WriteLine(
+                                    $"{tip.Index};" +
+                                    $"{avatarState.agentAddress.ToString()};" +
+                                    $"{avatarAddress.ToString()};" +
+                                    $"{avatarLevel};" +
+                                    $"{arenaData.ChampionshipId};" +
+                                    $"{arenaData.Round};" +
+                                    $"{arenaData.ArenaType.ToString()};" +
+                                    $"{outputArenaScore.Score};" +
+                                    $"{currentArenaInformation.Win};" +
+                                    $"{currentArenaInformation.Win};" +
+                                    $"{currentArenaInformation.Lose};" +
+                                    $"{currentArenaInformation.Ticket};" +
+                                    $"{currentArenaInformation.PurchasedTicketCount};" +
+                                    $"{currentArenaInformation.TicketResetCount};" +
+                                    $"{arenaData.EntranceFee};" +
+                                    $"{arenaData.TicketPrice};" +
+                                    $"{arenaData.AdditionalTicketPrice};" +
+                                    $"{arenaData.RequiredMedalCount};" +
+                                    $"{arenaData.StartBlockIndex};" +
+                                    $"{arenaData.EndBlockIndex};" +
+                                    $"{tip.Timestamp.UtcDateTime:yyyy-MM-dd}"
+                                );
+                            }
                         }
-
-                        var arenaScoreAdr =
-                            ArenaScore.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
-                        var arenaInformationAdr =
-                            ArenaInformation.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
-                        ev.OutputStates.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
-                        ev.OutputStates.TryGetArenaScore(arenaScoreAdr, out var outputArenaScore);
-                        if (currentArenaInformation != null && outputArenaScore != null)
+                        else
                         {
-                            _barBulkFile.WriteLine(
-                                $"{tip.Index};" +
-                                $"{avatarState.agentAddress.ToString()};" +
-                                $"{avatarAddress.ToString()};" +
-                                $"{avatarLevel};" +
-                                $"{arenaData.ChampionshipId};" +
-                                $"{arenaData.Round};" +
-                                $"{arenaData.ArenaType.ToString()};" +
-                                $"{outputArenaScore.Score};" +
-                                $"{currentArenaInformation.Win};" +
-                                $"{currentArenaInformation.Win};" +
-                                $"{currentArenaInformation.Lose};" +
-                                $"{currentArenaInformation.Ticket};" +
-                                $"{currentArenaInformation.PurchasedTicketCount};" +
-                                $"{currentArenaInformation.TicketResetCount};" +
-                                $"{arenaData.EntranceFee};" +
-                                $"{arenaData.TicketPrice};" +
-                                $"{arenaData.AdditionalTicketPrice};" +
-                                $"{arenaData.RequiredMedalCount};" +
-                                $"{arenaData.StartBlockIndex};" +
-                                $"{arenaData.EndBlockIndex};" +
-                                $"{tip.Timestamp.UtcDateTime:yyyy-MM-dd}"
-                            );
+                            Console.WriteLine($"No Avatar State: {avatarAddress.ToString()}");
                         }
 
                         Console.WriteLine("Migrating Complete {0}/{1}", avatarCount, avatars.Count);
