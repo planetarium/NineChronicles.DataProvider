@@ -32,12 +32,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
     public class MySqlMigration
     {
-        private string USDbName = "UserStakings";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
-        private StreamWriter _usBulkFile;
-        private List<string> _usFiles;
+        private StreamWriter _baBulkFile;
+        private List<string> _baFiles;
 
         [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
         public void Migration(
@@ -164,7 +163,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             Console.WriteLine("Start migration.");
 
             // files to store bulk file paths (new file created every 10000 blocks for bulk load performance)
-            _usFiles = new List<string>();
+            _baFiles = new List<string>();
 
             CreateBulkFiles();
 
@@ -185,28 +184,40 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             }
 
             connection.Close();
-            int shopOrderCount = 0;
-            _usBulkFile.WriteLine(
-                     "BlockIndex;" +
-                     "StakeVersion;" +
-                     "AgentAddress;" +
-                     "StakingAmount;" +
-                     "StartedBlockIndex;" +
-                     "ReceivedBlockIndex;" +
-                     "CancellableBlockIndex"
-                 );
+            _baBulkFile.WriteLine(
+                "BlockIndex;" +
+                "AgentAddress;" +
+                "AvatarAddress;" +
+                "AvatarLevel;" +
+                "ChampionshipId;" +
+                "Round;" +
+                "ArenaType;" +
+                "Score;" +
+                "WinCount;" +
+                "MedalCount;" +
+                "LossCount;" +
+                "Ticket;" +
+                "PurchasedTicketCount;" +
+                "TicketResetCount;" +
+                "EntranceFee;" +
+                "TicketPrice;" +
+                "AdditionalTicketPrice;" +
+                "RequiredMedalCount;" +
+                "StartBlockIndex;" +
+                "EndBlockIndex;" +
+                "Ranking;" +
+                "Timestamp"
+             );
 
             try
             {
                 var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, tipIndex ?? _baseChain.Tip.Index);
                 var tip = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, (BlockHash)tipHash);
                 var exec = _baseChain.ExecuteActions(tip);
-                var ev = exec.First();
+                var ev = exec.Last();
                 var avatarCount = 0;
-                AvatarState avatarState;
-                int interval = 1000000;
                 int intervalCount = 0;
-                bool checkBARankingTable = false;
+                ArenaSheet.RoundData arenaData = null;
 
                 foreach (var avatar in avatars)
                 {
@@ -217,6 +228,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         Console.WriteLine("Interval Count {0}", intervalCount);
                         Console.WriteLine("Migrating {0}/{1}", avatarCount, avatars.Count);
                         var avatarAddress = new Address(avatar);
+                        AvatarState avatarState;
                         try
                         {
                             avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress);
@@ -226,68 +238,40 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             avatarState = ev.OutputStates.GetAvatarState(avatarAddress);
                         }
 
-                        if (!checkBARankingTable)
+                        var avatarLevel = avatarState.level;
+                        var arenaSheet = ev.OutputStates.GetSheet<ArenaSheet>();
+                        arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
+                        var arenaScoreAdr =
+                        ArenaScore.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
+                        var arenaInformationAdr =
+                            ArenaInformation.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
+                        ev.OutputStates.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
+                        ev.OutputStates.TryGetArenaScore(arenaScoreAdr, out var outputArenaScore);
+                        if (currentArenaInformation != null && outputArenaScore != null)
                         {
-                            USDbName = $"{USDbName}_{tip.Index}";
-                            var stm33 =
-                            $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{USDbName}` (
-                              `BlockIndex` bigint NOT NULL,
-                              `StakeVersion` varchar(100) NOT NULL,
-                              `AgentAddress` varchar(100) NOT NULL,
-                              `StakingAmount` decimal(13,2) NOT NULL,
-                              `StartedBlockIndex` bigint NOT NULL,
-                              `ReceivedBlockIndex` bigint NOT NULL,
-                              `CancellableBlockIndex` bigint NOT NULL,
-                              `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-                            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
-                            var cmd33 = new MySqlCommand(stm33, connection);
-                            connection.Open();
-                            cmd33.CommandTimeout = 300;
-                            cmd33.ExecuteScalar();
-                            connection.Close();
-                            checkBARankingTable = true;
-                        }
-
-                        if (!agents.Contains(avatarState.agentAddress.ToString()))
-                        {
-                            agents.Add(avatarState.agentAddress.ToString());
-                            if (ev.OutputStates.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
-                            {
-                                var stakeStateAddress = StakeState.DeriveAddress(avatarState.agentAddress);
-                                var currency = ev.OutputStates.GetGoldCurrency();
-                                var stakedBalance = ev.OutputStates.GetBalance(stakeStateAddress, currency);
-                                _usBulkFile.WriteLine(
-                                    $"{tip.Index};" +
-                                    "V2;" +
-                                    $"{avatarState.agentAddress.ToString()};" +
-                                    $"{Convert.ToDecimal(stakedBalance.GetQuantityString())};" +
-                                    $"{stakeState.StartedBlockIndex};" +
-                                    $"{stakeState.ReceivedBlockIndex};" +
-                                    $"{stakeState.CancellableBlockIndex}"
-                                );
-                            }
-
-                            var agentState = ev.OutputStates.GetAgentState(avatarState.agentAddress);
-                            Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
-                                avatarState.agentAddress,
-                                agentState.MonsterCollectionRound
+                            _baBulkFile.WriteLine(
+                                $"{tip.Index};" +
+                                $"{avatarState.agentAddress.ToString()};" +
+                                $"{avatarAddress.ToString()};" +
+                                $"{avatarLevel};" +
+                                $"{arenaData.ChampionshipId};" +
+                                $"{arenaData.Round};" +
+                                $"{arenaData.ArenaType.ToString()};" +
+                                $"{outputArenaScore.Score};" +
+                                $"{currentArenaInformation.Win};" +
+                                $"{currentArenaInformation.Win};" +
+                                $"{currentArenaInformation.Lose};" +
+                                $"{currentArenaInformation.Ticket};" +
+                                $"{currentArenaInformation.PurchasedTicketCount};" +
+                                $"{currentArenaInformation.TicketResetCount};" +
+                                $"{arenaData.EntranceFee};" +
+                                $"{arenaData.TicketPrice};" +
+                                $"{arenaData.AdditionalTicketPrice};" +
+                                $"{arenaData.RequiredMedalCount};" +
+                                $"{arenaData.StartBlockIndex};" +
+                                $"{arenaData.EndBlockIndex};" +
+                                $"{tip.Timestamp:yyyy-MM-dd}"
                             );
-                            if (ev.OutputStates.TryGetState(monsterCollectionAddress, out Dictionary stateDict))
-                            {
-                                var mcStates = new MonsterCollectionState(stateDict);
-                                var currency = ev.OutputStates.GetGoldCurrency();
-                                FungibleAssetValue mcBalance =
-                                    ev.OutputStates.GetBalance(monsterCollectionAddress, currency);
-                                _usBulkFile.WriteLine(
-                                    $"{tip.Index};" +
-                                    "V1;" +
-                                    $"{avatarState.agentAddress.ToString()};" +
-                                    $"{Convert.ToDecimal(mcBalance.GetQuantityString())};" +
-                                    $"{mcStates.StartedBlockIndex};" +
-                                    $"{mcStates.ReceivedBlockIndex};" +
-                                    $"{mcStates.ExpiredBlockIndex}"
-                                );
-                            }
                         }
 
                         Console.WriteLine("Migrating Complete {0}/{1}", avatarCount, avatars.Count);
@@ -301,28 +285,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
-
-                var stm11 = $"DROP TABLE IF EXISTS {USDbName}_Dump;";
-                var cmd11 = new MySqlCommand(stm11, connection);
-                connection.Open();
-                cmd11.CommandTimeout = 300;
-                cmd11.ExecuteScalar();
-                connection.Close();
-
-                var stm12 = $"RENAME TABLE {USDbName} TO {USDbName}_Dump; CREATE TABLE {USDbName} LIKE {USDbName}_Dump;";
-                var cmd12 = new MySqlCommand(stm12, connection);
-                var startMove = DateTimeOffset.Now;
-                connection.Open();
-                cmd12.CommandTimeout = 300;
-                cmd12.ExecuteScalar();
-                connection.Close();
-                var endMove = DateTimeOffset.Now;
-                Console.WriteLine("Move BattleArenaRanking Complete! Time Elapsed: {0}", endMove - startMove);
                 var i = 1;
-                foreach (var path in _usFiles)
+                foreach (var path in _baFiles)
                 {
                     string oldFilePath = path;
-                    string newFilePath = Path.Combine(Path.GetTempPath(), $"UserStakings{tip.Index}#{i}.csv");
+                    string newFilePath = Path.Combine(Path.GetTempPath(), $"BattleArena_Championship{arenaData!.ChampionshipId}_Round{arenaData.Round}_#{tip.Index}_{i}.csv");
                     if (File.Exists(newFilePath))
                     {
                         File.Delete(newFilePath);
@@ -334,53 +301,30 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         newFilePath,
                         slackChannel
                     ).Wait();
-
-                    BulkInsert(USDbName, path);
                     i += 1;
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
-                Console.WriteLine("Restoring previous tables due to error...");
-                var stm17 = $"DROP TABLE {USDbName}; RENAME TABLE {USDbName}_Dump TO {USDbName};";
-                var cmd17 = new MySqlCommand(stm17, connection);
-                var startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd17.CommandTimeout = 300;
-                cmd17.ExecuteScalar();
-                connection.Close();
-                var endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore BattleArenaRanking Complete! Time Elapsed: {0}", endRestore - startRestore);
             }
-
-            var stm18 = $"DROP TABLE {USDbName}_Dump;";
-            var cmd18 = new MySqlCommand(stm18, connection);
-            var startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd18.CommandTimeout = 300;
-            cmd18.ExecuteScalar();
-            connection.Close();
-            var endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Delete BattleArenaRanking_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
-            Console.WriteLine("Shop Count for {0} avatars: {1}", avatars.Count, shopOrderCount);
         }
 
         private void FlushBulkFiles()
         {
-            _usBulkFile.Flush();
-            _usBulkFile.Close();
+            _baBulkFile.Flush();
+            _baBulkFile.Close();
         }
 
         private void CreateBulkFiles()
         {
 
-            string usFilePath = Path.GetTempFileName().Replace(".tmp", ".csv");;
-            _usBulkFile = new StreamWriter(usFilePath);
-            _usFiles.Add(usFilePath);
+            string usFilePath = Path.GetTempFileName().Replace(".tmp", ".csv");
+            _baBulkFile = new StreamWriter(usFilePath);
+            _baFiles.Add(usFilePath);
         }
 
         public static async Task UploadFileAsync(string token, string path, string channels)

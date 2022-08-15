@@ -6,7 +6,7 @@ on:
       - main
       - development
       - rc-*
-      - stake-migration
+      - battle-arena-migration-csv
 
 jobs:
   build_and_push:
