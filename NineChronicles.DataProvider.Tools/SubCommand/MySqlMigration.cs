@@ -245,7 +245,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, tipIndex ?? _baseChain.Tip.Index);
                 var tip = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, (BlockHash)tipHash);
                 var exec = _baseChain.ExecuteActions(tip);
-                var ev = exec.First();
+                var ev = exec.Last();
                 var avatarCount = 0;
                 AvatarState avatarState;
                 int interval = 1000000;
