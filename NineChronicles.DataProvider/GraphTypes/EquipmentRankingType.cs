@@ -1,6 +1,6 @@
-﻿namespace NineChronicles.DataProvider.GraphQL.Types
+﻿namespace NineChronicles.DataProvider.GraphTypes
 {
-    using global::GraphQL.Types;
+    using GraphQL.Types;
     using NineChronicles.DataProvider.Store.Models;
 
     public class EquipmentRankingType : ObjectGraphType<EquipmentRankingModel>
@@ -15,9 +15,9 @@
             Field(x => x.Level);
             Field(x => x.ItemSubType);
             Field(x => x.Name);
-            Field(x => x.AvatarLevel, nullable: true);
-            Field(x => x.TitleId, nullable: true);
-            Field(x => x.ArmorId, nullable: true);
+            Field(x => x.AvatarLevel, true);
+            Field(x => x.TitleId, true);
+            Field(x => x.ArmorId, true);
             Field(x => x.Ranking);
 
             Name = "EquipmentRanking";

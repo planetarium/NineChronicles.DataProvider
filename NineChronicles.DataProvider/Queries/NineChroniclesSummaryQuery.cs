@@ -1,24 +1,60 @@
-﻿namespace NineChronicles.DataProvider.GraphQL.Types
+﻿namespace NineChronicles.DataProvider.Queries
 {
-    using System.Linq;
-    using global::GraphQL;
-    using global::GraphQL.Types;
+    using Bencodex.Types;
+    using GraphQL;
+    using GraphQL.Types;
     using Libplanet;
+    using Nekoyume;
+    using Nekoyume.TableData;
+    using NineChronicles.DataProvider.GraphTypes;
     using NineChronicles.DataProvider.Store;
+    using NineChronicles.DataProvider.Store.Models;
+    using NineChronicles.Headless;
+    using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     internal class NineChroniclesSummaryQuery : ObjectGraphType
     {
-        public NineChroniclesSummaryQuery(MySqlStore store)
+        public NineChroniclesSummaryQuery(MySqlStore store, StandaloneContext standaloneContext)
         {
             Store = store;
+            StandaloneContext = standaloneContext;
             Field<StringGraphType>(
                 name: "test",
                 resolve: context => "Should be done.");
+            Field<BattleArenaInfoType>(
+                name: "BattleArenaInfo",
+                arguments: new QueryArguments(
+                    new QueryArgument<LongGraphType> { Name = "index" }
+                ),
+                resolve: context =>
+                {
+                    long index = context.GetArgument<long>("index", StandaloneContext.BlockChain!.Tip.Index);
+                    var arenaSheetAddress = Addresses.GetSheetAddress<ArenaSheet>();
+                    IValue state = StandaloneContext.BlockChain!.GetState(arenaSheetAddress);
+                    ArenaSheet arenaSheet = new ArenaSheet();
+                    arenaSheet.Set((Bencodex.Types.Text)state);
+                    var arenaData = arenaSheet!.GetRoundByBlockIndex(index);
+                    var battleArenaInfo = new BattleArenaInfoModel()
+                    {
+                        ChampionshipId = arenaData.ChampionshipId,
+                        Round = arenaData.Round,
+                        ArenaType = arenaData.ArenaType.ToString(),
+                        StartBlockIndex = arenaData.StartBlockIndex,
+                        EndBlockIndex = arenaData.EndBlockIndex,
+                        RequiredMedalCount = arenaData.RequiredMedalCount,
+                        EntranceFee = arenaData.EntranceFee,
+                        TicketPrice = arenaData.TicketPrice,
+                        AdditionalTicketPrice = arenaData.AdditionalTicketPrice,
+                        QueryBlockIndex = index,
+                        StoreTipBlockIndex = StandaloneContext.BlockChain!.Tip.Index,
+                    };
+                    return battleArenaInfo;
+                });
             Field<IntGraphType>(
                 name: "AgentCount",
                 resolve: context =>
                 {
-                    var agentCount = Store.GetAgents().Count();
+                    var agentCount = Store.GetAgentCount();
                     return agentCount;
                 });
             Field<ListGraphType<AgentType>>(
@@ -38,7 +74,7 @@
                 name: "AvatarCount",
                 resolve: context =>
                 {
-                    var avatarCount = Store.GetAvatars().Count();
+                    var avatarCount = Store.GetAvatarCount();
                     return avatarCount;
                 });
             Field<ListGraphType<AvatarType>>(
@@ -54,85 +90,37 @@
                         : new Address(address.Replace("0x", string.Empty));
                     return Store.GetAvatars(avatarAddress);
                 });
-            Field<IntGraphType>(
-                name: "ShopEquipmentCount",
-                resolve: context =>
-                {
-                    var shopEquipmentCount = Store.GetShopEquipments().Count();
-                    return shopEquipmentCount;
-                });
-            Field<ListGraphType<ShopEquipmentType>>(
-                name: "ShopEquipments",
+            Field<NonNullGraphType<ShopQuery>>(
+                name: "shopQuery",
+                resolve: context => new ShopQuery(store)
+            );
+            Field<ListGraphType<BattleArenaRankingType>>(
+                name: "BattleArenaRanking",
                 arguments: new QueryArguments(
-                    new QueryArgument<StringGraphType> { Name = "sellerAvatarAddress" }
+                    new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "championshipId" },
+                    new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "round" },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "rankingType",
+                        DefaultValue = "Score",
+                        Description = "Input \"Score\" or \"Medal\"",
+                    },
+                    new QueryArgument<IntGraphType> { Name = "limit" },
+                    new QueryArgument<IntGraphType> { Name = "offset" },
+                    new QueryArgument<StringGraphType> { Name = "avatarAddress" }
                 ),
                 resolve: context =>
                 {
-                    string? address = context.GetArgument<string?>("sellerAvatarAddress", null);
-                    Address? sellerAvatarAddress = address == null
+                    int championshipId = context.GetArgument<int>("championshipId" );
+                    int round = context.GetArgument<int>("round" );
+                    string rankingType = context.GetArgument<string>("rankingType", "Score");
+                    int? limit = context.GetArgument<int?>("limit", null );
+                    int? offset = context.GetArgument<int?>("offset", null );
+                    string? address = context.GetArgument<string?>("avatarAddress", null);
+                    Address? avatarAddress = address == null
                         ? (Address?)null
                         : new Address(address.Replace("0x", string.Empty));
-                    return Store.GetShopEquipments(sellerAvatarAddress);
-                });
-            Field<IntGraphType>(
-                name: "ShopConsumableCount",
-                resolve: context =>
-                {
-                    var shopConsumableCount = Store.GetShopConsumables().Count();
-                    return shopConsumableCount;
-                });
-            Field<ListGraphType<AvatarType>>(
-                name: "ShopConsumables",
-                arguments: new QueryArguments(
-                    new QueryArgument<StringGraphType> { Name = "sellerAvatarAddress" }
-                ),
-                resolve: context =>
-                {
-                    string? address = context.GetArgument<string?>("sellerAvatarAddress", null);
-                    Address? sellerAvatarAddress = address == null
-                        ? (Address?)null
-                        : new Address(address.Replace("0x", string.Empty));
-                    return Store.GetShopConsumables(sellerAvatarAddress);
-                });
-            Field<IntGraphType>(
-                name: "ShopCostumeCount",
-                resolve: context =>
-                {
-                    var shopCostumeCount = Store.GetShopCostumes().Count();
-                    return shopCostumeCount;
-                });
-            Field<ListGraphType<AvatarType>>(
-                name: "ShopCostumes",
-                arguments: new QueryArguments(
-                    new QueryArgument<StringGraphType> { Name = "sellerAvatarAddress" }
-                ),
-                resolve: context =>
-                {
-                    string? address = context.GetArgument<string?>("sellerAvatarAddress", null);
-                    Address? sellerAvatarAddress = address == null
-                        ? (Address?)null
-                        : new Address(address.Replace("0x", string.Empty));
-                    return Store.GetShopCostumes(sellerAvatarAddress);
-                });
-            Field<IntGraphType>(
-                name: "ShopMaterialCount",
-                resolve: context =>
-                {
-                    var shopMaterialCount = Store.GetShopMaterials().Count();
-                    return shopMaterialCount;
-                });
-            Field<ListGraphType<AvatarType>>(
-                name: "ShopMaterials",
-                arguments: new QueryArguments(
-                    new QueryArgument<StringGraphType> { Name = "sellerAvatarAddress" }
-                ),
-                resolve: context =>
-                {
-                    string? address = context.GetArgument<string?>("sellerAvatarAddress", null);
-                    Address? sellerAvatarAddress = address == null
-                        ? (Address?)null
-                        : new Address(address.Replace("0x", string.Empty));
-                    return Store.GetShopMaterials(sellerAvatarAddress);
+                    return Store.GetBattleArenaRanking(championshipId, round, rankingType, limit, offset, avatarAddress);
                 });
             Field<ListGraphType<HackAndSlashType>>(
                 name: "HackAndSlash",
@@ -213,8 +201,14 @@
                     int? limit = context.GetArgument<int?>("limit", null);
                     return Store.GetAbilityRanking(avatarAddress, limit);
                 });
+            Field<NonNullGraphType<DauQuery>>(
+                name: "dauQuery",
+                resolve: context => new DauQuery(store)
+            );
         }
 
         private MySqlStore Store { get; }
+
+        private StandaloneContext StandaloneContext { get; }
     }
 }

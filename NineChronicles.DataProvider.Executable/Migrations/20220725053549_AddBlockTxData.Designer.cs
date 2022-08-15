@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
@@ -10,9 +11,10 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20220725053549_AddBlockTxData")]
+    partial class AddBlockTxData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -77,9 +79,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
-
-                    b.Property<DateTimeOffset?>("Timestamp")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<int?>("TitleId")
                         .HasColumnType("int");
@@ -561,56 +560,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.HasIndex("AvatarAddress");
 
                     b.ToTable("HackAndSlashes");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.HackAndSlashSweepModel", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<int>("ActionPoint")
-                        .HasColumnType("int");
-
-                    b.Property<string>("AgentAddress")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<int>("ApStoneCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("AvatarAddress")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<long>("BlockIndex")
-                        .HasColumnType("bigint");
-
-                    b.Property<bool>("Cleared")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<int>("CostumesCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("EquipmentsCount")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("Mimisbrunnr")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<int>("StageId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("Timestamp")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("WorldId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgentAddress");
-
-                    b.HasIndex("AvatarAddress");
-
-                    b.ToTable("HackAndSlashSweeps");
                 });
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.HasRandomBuffModel", b =>
@@ -1493,9 +1442,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<long>("BlockIndex")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTimeOffset>("Date")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<long>("Nonce")
                         .HasColumnType("bigint");
 
@@ -1659,21 +1605,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                 });
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.HackAndSlashModel", b =>
-                {
-                    b.HasOne("NineChronicles.DataProvider.Store.Models.AgentModel", "Agent")
-                        .WithMany()
-                        .HasForeignKey("AgentAddress");
-
-                    b.HasOne("NineChronicles.DataProvider.Store.Models.AvatarModel", "Avatar")
-                        .WithMany()
-                        .HasForeignKey("AvatarAddress");
-
-                    b.Navigation("Agent");
-
-                    b.Navigation("Avatar");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.HackAndSlashSweepModel", b =>
                 {
                     b.HasOne("NineChronicles.DataProvider.Store.Models.AgentModel", "Agent")
                         .WithMany()
