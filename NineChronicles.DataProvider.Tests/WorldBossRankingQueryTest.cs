@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Bencodex.Types;
 using GraphQL.Execution;
 using Libplanet;
+using Libplanet.Assets;
 using Libplanet.Crypto;
 using Nekoyume;
 using NineChronicles.DataProvider.Store.Models;
@@ -77,5 +79,15 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
     {
         CleanUp();
 
+    }
+
+    protected override IValue? GetStateMock(Address address)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected override FungibleAssetValue GetBalanceMock(Address address, Currency currency)
+    {
+        throw new NotImplementedException();
     }
 }

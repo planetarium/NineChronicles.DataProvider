@@ -7,21 +7,22 @@
     using GraphQL.Types;
     using Libplanet;
     using Libplanet.Crypto;
-    using Libplanet.Explorer.GraphTypes;
     using Nekoyume;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.GraphTypes;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless;
+    using NineChronicles.Headless.GraphTypes.States;
     using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     internal class NineChroniclesSummaryQuery : ObjectGraphType
     {
-        public NineChroniclesSummaryQuery(MySqlStore store, StandaloneContext standaloneContext)
+        public NineChroniclesSummaryQuery(MySqlStore store, StandaloneContext standaloneContext, StateContext stateContext)
         {
             Store = store;
             StandaloneContext = standaloneContext;
+            StateContext = stateContext;
             Field<StringGraphType>(
                 name: "test",
                 resolve: context => "Should be done.");
@@ -34,7 +35,7 @@
                 {
                     long index = context.GetArgument<long>("index", StandaloneContext.BlockChain!.Tip.Index);
                     var arenaSheetAddress = Addresses.GetSheetAddress<ArenaSheet>();
-                    IValue state = StandaloneContext.BlockChain!.GetState(arenaSheetAddress);
+                    IValue state = StateContext.GetState(arenaSheetAddress)!;
                     ArenaSheet arenaSheet = new ArenaSheet();
                     arenaSheet.Set((Bencodex.Types.Text)state);
                     var arenaData = arenaSheet!.GetRoundByBlockIndex(index);
@@ -308,5 +309,7 @@
         private MySqlStore Store { get; }
 
         private StandaloneContext StandaloneContext { get; }
+
+        private StateContext StateContext { get; }
     }
 }
