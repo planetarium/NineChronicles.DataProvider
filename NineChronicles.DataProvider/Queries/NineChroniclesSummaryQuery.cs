@@ -265,6 +265,56 @@
                     return Store.GetTotalRaiders(raidId);
                 });
 
+            Field<WorldBossRankingRewardType>(
+                "worldBossRankingReward",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "raidId",
+                        Description = "world boss season id.",
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "address of avatar state.",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var raidId = context.GetArgument<int>("raidId");
+                    var avatarAddress = context.GetArgument<string>("avatarAddress");
+                    var blockIndex = StandaloneContext.BlockChain?.Tip?.Index ?? 0;
+                    var worldBossListSheetAddress = Addresses.GetSheetAddress<WorldBossListSheet>();
+                    var runeSheetAddress = Addresses.GetSheetAddress<RuneSheet>();
+                    var rewardSheetAddress = Addresses.GetSheetAddress<WorldBossRankingRewardSheet>();
+                    var values = stateContext.GetStates(new[] { worldBossListSheetAddress, runeSheetAddress, rewardSheetAddress });
+                    if (values[0] is Text wbs && values[1] is Text rs && values[2] is Text wrs)
+                    {
+                        var sheet = new WorldBossListSheet();
+                        sheet.Set(wbs);
+                        var runeSheet = new RuneSheet();
+                        runeSheet.Set(rs);
+                        var rankingRewardSheet = new WorldBossRankingRewardSheet();
+                        rankingRewardSheet.Set(wrs);
+                        var bossRow = sheet.OrderedList.First(r => r.Id == raidId);
+                        if (bossRow.EndedBlockIndex <= blockIndex)
+                        {
+                            // Check ranking.
+                            var raiders = Store.GetWorldBossRanking(raidId);
+                            var raider = raiders.First(r => r.Address == avatarAddress);
+                            var ranking = raider.Ranking;
+                            var rate = ranking / raiders.Count * 100;
+
+                            // calculate rewards.
+                            var row = rankingRewardSheet.FindRow(ranking, rate);
+                            return (ranking, row.GetRewards(runeSheet));
+                        }
+                    }
+
+                    throw new ExecutionError("can't receive");
+                }
+            );
+
             // mutation for test.
             Field<BooleanGraphType>(
                 name: "insertRanking",
