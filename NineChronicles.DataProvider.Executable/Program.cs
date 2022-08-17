@@ -1,8 +1,12 @@
+using System.IO;
+using Lib9c.DevExtensions;
 using Libplanet;
 using Libplanet.Action;
+using Libplanet.Blockchain;
 using Libplanet.Crypto;
 using Libplanet.Headless.Hosting;
 using Nekoyume.Action;
+using NineChronicles.Headless.GraphTypes.States;
 
 namespace NineChronicles.DataProvider.Executable
 {
@@ -112,6 +116,11 @@ namespace NineChronicles.DataProvider.Executable
 
             hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, context);
 
+            var stateContext = new StateContext(
+                context.BlockChain!.ToAccountStateGetter(),
+                context.BlockChain!.ToAccountBalanceGetter()
+            );
+
             // ConfigureServices must come before Configure for now
             hostBuilder = hostBuilder
                 .ConfigureServices((ctx, services) =>
@@ -133,6 +142,7 @@ namespace NineChronicles.DataProvider.Executable
                     services.AddHostedService<RenderSubscriber>();
                     services.AddSingleton<MySqlStore>();
                     services.Configure<Configuration>(config);
+                    services.AddSingleton(stateContext);
                 });
 
             await hostBuilder.RunConsoleAsync(token);
