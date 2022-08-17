@@ -17,12 +17,15 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
     [Fact]
     public async Task WorldBossRanking()
     {
-        const string query = @"query {
-        worldBossRanking(raidId: 1) {
-            ranking
-            avatarName
-        }
-    }";
+        const string query = $@"query {{
+        worldBossRanking(raidId: 1) {{
+            blockIndex
+            rankingInfo {{
+                ranking
+                avatarName
+            }}
+        }}
+    }}";
         for (int idx = 0; idx < 2; idx++)
         {
             for (int i = 0; i < 200; i++)
@@ -43,7 +46,9 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
 
         await Context.SaveChangesAsync();
         var result = await ExecuteAsync(query);
-        var models = (object[])((Dictionary<string, object>) ((ExecutionNode) result.Data).ToValue())["worldBossRanking"];
+        var data = (Dictionary<string, object>)((Dictionary<string, object>) ((ExecutionNode) result.Data).ToValue())["worldBossRanking"];
+        Assert.Equal(0L, data["blockIndex"]);
+        var models = (object[]) data["rankingInfo"];
         Assert.Equal(100, models.Length);
     }
 
