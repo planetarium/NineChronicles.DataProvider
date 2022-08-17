@@ -62,6 +62,7 @@ namespace NineChronicles.DataProvider.Executable
                     headlessConfig.SwarmPrivateKeyString,
                     headlessConfig.StoreType,
                     headlessConfig.StorePath,
+                    true,
                     100,
                     headlessConfig.IceServerStrings,
                     headlessConfig.PeerStrings,
@@ -76,8 +77,7 @@ namespace NineChronicles.DataProvider.Executable
                     bucketSize: headlessConfig.BucketSize,
                     staticPeerStrings: headlessConfig.StaticPeerStrings,
                     render: headlessConfig.Render,
-                    preload: headlessConfig.Preload,
-                    transportType: "netmq");
+                    preload: headlessConfig.Preload);
 
             var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
             {
