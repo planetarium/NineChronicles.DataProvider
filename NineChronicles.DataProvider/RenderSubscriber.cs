@@ -237,28 +237,28 @@ namespace NineChronicles.DataProvider
                             if (ev.Action is HackAndSlash has)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has.avatarAddress);
-                                bool isClear = avatarState.stageMap.ContainsKey(has.stageId);
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has.AvatarAddress);
+                                bool isClear = avatarState.stageMap.ContainsKey(has.StageId);
                                 _hasList.Add(new HackAndSlashModel()
                                 {
                                     Id = has.Id.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
-                                    AvatarAddress = has.avatarAddress.ToString(),
-                                    StageId = has.stageId,
+                                    AvatarAddress = has.AvatarAddress.ToString(),
+                                    StageId = has.StageId,
                                     Cleared = isClear,
-                                    Mimisbrunnr = has.stageId > 10000000,
+                                    Mimisbrunnr = has.StageId > 10000000,
                                     BlockIndex = ev.BlockIndex,
                                 });
-                                if (has.stageBuffId.HasValue)
+                                if (has.StageBuffId.HasValue)
                                 {
                                     _hasWithRandomBuffList.Add(new HasWithRandomBuffModel()
                                     {
                                         Id = has.Id.ToString(),
                                         BlockIndex = ev.BlockIndex,
                                         AgentAddress = ev.Signer.ToString(),
-                                        AvatarAddress = has.avatarAddress.ToString(),
-                                        StageId = has.stageId,
-                                        BuffId = (int)has.stageBuffId,
+                                        AvatarAddress = has.AvatarAddress.ToString(),
+                                        StageId = has.StageId,
+                                        BuffId = (int)has.StageBuffId,
                                         Cleared = isClear,
                                         TimeStamp = _blockTimeOffset,
                                     });
