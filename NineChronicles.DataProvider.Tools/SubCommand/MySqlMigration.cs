@@ -343,6 +343,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                     $"{arenaData.RequiredMedalCount};" +
                                     $"{arenaData.StartBlockIndex};" +
                                     $"{arenaData.EndBlockIndex};" +
+                                    $"{0};" +
                                     $"{tip.Timestamp.UtcDateTime:yyyy-MM-dd}"
                                 );
                             }
