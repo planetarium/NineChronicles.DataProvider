@@ -191,7 +191,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             IBlockPolicy<NCAction> blockPolicy = blockPolicySource.GetPolicy();
 
             // Setup base chain & new chain
-            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, gHash);
+            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(gHash);
             _baseChain = new BlockChain<NCAction>(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis);
 
             // Prepare block hashes to append to new chain
@@ -257,7 +257,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             try
             {
                 var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, _baseChain.Tip.Index);
-                var tip = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, (BlockHash)tipHash);
+                var tip = _baseStore.GetBlock<NCAction>((BlockHash)tipHash);
                 var exec = _baseChain.ExecuteActions(tip);
                 var ev = exec.Last();
                 var avatarCount = 0;
