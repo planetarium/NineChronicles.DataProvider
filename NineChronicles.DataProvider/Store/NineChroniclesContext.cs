@@ -82,6 +82,10 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<HackAndSlashSweepModel>? HackAndSlashSweeps { get; set; }
 
+        public DbSet<EventDungeonBattleModel>? EventDungeonBattles { get; set; }
+
+        public DbSet<EventConsumableItemCraftsModel>? EventConsumableItemCrafts { get; set; }
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.
