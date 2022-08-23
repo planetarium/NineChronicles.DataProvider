@@ -210,7 +210,7 @@
                 name: "dauQuery",
                 resolve: context => new DauQuery(store)
             );
-            Field<ListGraphType<WorldBossRankingType>>(
+            Field<WorldBossRankingInfoType>(
                 name: "worldBossRanking",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<IntGraphType>>
@@ -248,7 +248,7 @@
                         }
                     }
 
-                    return result;
+                    return (StandaloneContext.BlockChain?.Tip?.Index ?? 0, result);
                 });
             Field<IntGraphType>(
                 name: "worldBossTotalUsers",
