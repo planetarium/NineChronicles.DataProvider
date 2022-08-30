@@ -225,7 +225,7 @@ namespace NineChronicles.DataProvider
                             if (ev.Action is HackAndSlash has)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has.avatarAddress);
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has.AvatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
                                 var avatarLevel = avatarState.level;
@@ -248,7 +248,7 @@ namespace NineChronicles.DataProvider
                                     avatarTitleId,
                                     avatarCp);
 
-                                bool isClear = avatarState.stageMap.ContainsKey(has.stageId);
+                                bool isClear = avatarState.stageMap.ContainsKey(has.StageId);
 
                                 _agentList.Add(new AgentModel()
                                 {
@@ -256,7 +256,7 @@ namespace NineChronicles.DataProvider
                                 });
                                 _avatarList.Add(new AvatarModel()
                                 {
-                                    Address = has.avatarAddress.ToString(),
+                                    Address = has.AvatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
                                     Name = avatarName,
                                     AvatarLevel = avatarLevel,
@@ -268,22 +268,22 @@ namespace NineChronicles.DataProvider
                                 {
                                     Id = has.Id.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
-                                    AvatarAddress = has.avatarAddress.ToString(),
-                                    StageId = has.stageId,
+                                    AvatarAddress = has.AvatarAddress.ToString(),
+                                    StageId = has.StageId,
                                     Cleared = isClear,
-                                    Mimisbrunnr = has.stageId > 10000000,
+                                    Mimisbrunnr = has.StageId > 10000000,
                                     BlockIndex = ev.BlockIndex,
                                 });
-                                if (has.stageBuffId.HasValue)
+                                if (has.StageBuffId.HasValue)
                                 {
                                     _hasWithRandomBuffList.Add(new HasWithRandomBuffModel()
                                     {
                                         Id = has.Id.ToString(),
                                         BlockIndex = ev.BlockIndex,
                                         AgentAddress = ev.Signer.ToString(),
-                                        AvatarAddress = has.avatarAddress.ToString(),
-                                        StageId = has.stageId,
-                                        BuffId = (int)has.stageBuffId,
+                                        AvatarAddress = has.AvatarAddress.ToString(),
+                                        StageId = has.StageId,
+                                        BuffId = (int)has.StageBuffId,
                                         Cleared = isClear,
                                         TimeStamp = DateTimeOffset.UtcNow,
                                     });
