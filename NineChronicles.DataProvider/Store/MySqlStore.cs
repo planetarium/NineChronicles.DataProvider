@@ -48,40 +48,6 @@ namespace NineChronicles.DataProvider.Store
                     ctx.SaveChanges();
                     ctx.Dispose();
                 }
-                else
-                {
-                    ctx.Dispose();
-                    using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
-                    if (avatarLevel == null && titleId == null && armorId == null && cp == null)
-                    {
-                        updateCtx.Avatars!.UpdateRange(
-                            new AvatarModel()
-                            {
-                                Address = address.ToString(),
-                                AgentAddress = agentAddress.ToString(),
-                                Name = name,
-                            }
-                        );
-                    }
-                    else
-                    {
-                        updateCtx.Avatars!.UpdateRange(
-                            new AvatarModel()
-                            {
-                                Address = address.ToString(),
-                                AgentAddress = agentAddress.ToString(),
-                                Name = name,
-                                AvatarLevel = avatarLevel,
-                                TitleId = titleId,
-                                ArmorId = armorId,
-                                Cp = cp,
-                            }
-                        );
-                    }
-
-                    updateCtx.SaveChanges();
-                    updateCtx.Dispose();
-                }
             }
             catch (Exception e)
             {
@@ -104,14 +70,6 @@ namespace NineChronicles.DataProvider.Store
                             ctx.Avatars!.AddRange(avatar!);
                             ctx.SaveChanges();
                             ctx.Dispose();
-                        }
-                        else
-                        {
-                            ctx.Dispose();
-                            using NineChroniclesContext? updateCtx = _dbContextFactory.CreateDbContext();
-                            updateCtx.Avatars!.UpdateRange(avatar!);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
                         }
                     }));
                 }

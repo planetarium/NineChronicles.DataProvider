@@ -129,7 +129,7 @@ namespace NineChronicles.DataProvider
 
                 foreach (var transaction in block.Transactions)
                 {
-                    var actionType = transaction.Actions.Select(action => action.ToString()!.Split('.')
+                    var actionType = transaction.CustomActions!.Select(action => action.ToString()!.Split('.')
                         .LastOrDefault()?.Replace(">", string.Empty));
                     _transactionList.Add(new TransactionModel()
                     {
@@ -230,7 +230,7 @@ namespace NineChronicles.DataProvider
                             if (ev.Action is HackAndSlash has)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has.avatarAddress);
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has.AvatarAddress);
                                 var previousStates = ev.PreviousStates;
                                 var characterSheet = previousStates.GetSheet<CharacterSheet>();
                                 var avatarLevel = avatarState.level;
@@ -253,7 +253,7 @@ namespace NineChronicles.DataProvider
                                     avatarTitleId,
                                     avatarCp);
 
-                                bool isClear = avatarState.stageMap.ContainsKey(has.stageId);
+                                bool isClear = avatarState.stageMap.ContainsKey(has.StageId);
 
                                 _agentList.Add(new AgentModel()
                                 {
@@ -261,7 +261,7 @@ namespace NineChronicles.DataProvider
                                 });
                                 _avatarList.Add(new AvatarModel()
                                 {
-                                    Address = has.avatarAddress.ToString(),
+                                    Address = has.AvatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
                                     Name = avatarName,
                                     AvatarLevel = avatarLevel,
@@ -274,22 +274,166 @@ namespace NineChronicles.DataProvider
                                 {
                                     Id = has.Id.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
-                                    AvatarAddress = has.avatarAddress.ToString(),
-                                    StageId = has.stageId,
+                                    AvatarAddress = has.AvatarAddress.ToString(),
+                                    StageId = has.StageId,
                                     Cleared = isClear,
-                                    Mimisbrunnr = has.stageId > 10000000,
+                                    Mimisbrunnr = has.StageId > 10000000,
                                     BlockIndex = ev.BlockIndex,
                                 });
-                                if (has.stageBuffId.HasValue)
+                                if (has.StageBuffId.HasValue)
                                 {
                                     _hasWithRandomBuffList.Add(new HasWithRandomBuffModel()
                                     {
                                         Id = has.Id.ToString(),
                                         BlockIndex = ev.BlockIndex,
                                         AgentAddress = ev.Signer.ToString(),
-                                        AvatarAddress = has.avatarAddress.ToString(),
-                                        StageId = has.stageId,
-                                        BuffId = (int)has.stageBuffId,
+                                        AvatarAddress = has.AvatarAddress.ToString(),
+                                        StageId = has.StageId,
+                                        BuffId = (int)has.StageBuffId,
+                                        Cleared = isClear,
+                                        TimeStamp = _blockTimeOffset,
+                                    });
+                                }
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is HackAndSlash16 has16)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has16.AvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                Log.Debug(
+                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                    avatarName,
+                                    avatarLevel,
+                                    avatarArmorId,
+                                    avatarTitleId,
+                                    avatarCp);
+
+                                bool isClear = avatarState.stageMap.ContainsKey(has16.StageId);
+
+                                _agentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _avatarList.Add(new AvatarModel()
+                                {
+                                    Address = has16.AvatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
+                                });
+                                _hasList.Add(new HackAndSlashModel()
+                                {
+                                    Id = has16.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = has16.AvatarAddress.ToString(),
+                                    StageId = has16.StageId,
+                                    Cleared = isClear,
+                                    Mimisbrunnr = has16.StageId > 10000000,
+                                    BlockIndex = ev.BlockIndex,
+                                });
+                                if (has16.StageBuffId.HasValue)
+                                {
+                                    _hasWithRandomBuffList.Add(new HasWithRandomBuffModel()
+                                    {
+                                        Id = has16.Id.ToString(),
+                                        BlockIndex = ev.BlockIndex,
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = has16.AvatarAddress.ToString(),
+                                        StageId = has16.StageId,
+                                        BuffId = (int)has16.StageBuffId,
+                                        Cleared = isClear,
+                                        TimeStamp = _blockTimeOffset,
+                                    });
+                                }
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is HackAndSlash15 has15)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has15.avatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                var avatarTitleCostume = avatarState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+                                string avatarName = avatarState.name;
+
+                                Log.Debug(
+                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                    avatarName,
+                                    avatarLevel,
+                                    avatarArmorId,
+                                    avatarTitleId,
+                                    avatarCp);
+
+                                bool isClear = avatarState.stageMap.ContainsKey(has15.stageId);
+
+                                _agentList.Add(new AgentModel()
+                                {
+                                    Address = ev.Signer.ToString(),
+                                });
+                                _avatarList.Add(new AvatarModel()
+                                {
+                                    Address = has15.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
+                                });
+                                _hasList.Add(new HackAndSlashModel()
+                                {
+                                    Id = has15.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = has15.avatarAddress.ToString(),
+                                    StageId = has15.stageId,
+                                    Cleared = isClear,
+                                    Mimisbrunnr = has15.stageId > 10000000,
+                                    BlockIndex = ev.BlockIndex,
+                                });
+                                if (has15.stageBuffId.HasValue)
+                                {
+                                    _hasWithRandomBuffList.Add(new HasWithRandomBuffModel()
+                                    {
+                                        Id = has15.Id.ToString(),
+                                        BlockIndex = ev.BlockIndex,
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = has15.avatarAddress.ToString(),
+                                        StageId = has15.stageId,
+                                        BuffId = (int)has15.stageBuffId,
                                         Cleared = isClear,
                                         TimeStamp = _blockTimeOffset,
                                     });
