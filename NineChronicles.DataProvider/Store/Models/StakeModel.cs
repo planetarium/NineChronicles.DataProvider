@@ -5,7 +5,6 @@ namespace NineChronicles.DataProvider.Store.Models
 
     public class StakeModel
     {
-        [Key]
         public long BlockIndex { get; set; }
 
         public string? AgentAddress { get; set; }
@@ -22,6 +21,7 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public long NewStakeStartBlockIndex { get; set; }
 
+        [Key]
         public DateTimeOffset TimeStamp { get; set; }
     }
 }

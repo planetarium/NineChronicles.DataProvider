@@ -5,7 +5,6 @@
     public class CraftRankingOutputModel
     {
         [Key]
-
         public string? AvatarAddress { get; set; }
 
         public string? AgentAddress { get; set; }
