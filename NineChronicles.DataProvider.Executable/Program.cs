@@ -49,7 +49,7 @@ namespace NineChronicles.DataProvider.Executable
 
             hostBuilder.ConfigureWebHostDefaults(builder =>
             {
-                builder.UseStartup<GraphQL.GraphQLStartup>();
+                builder.UseStartup<GraphQLStartup>();
                 builder.UseUrls($"http://{headlessConfig.GraphQLHost}:{headlessConfig.GraphQLPort}/");
             });
 
@@ -62,6 +62,7 @@ namespace NineChronicles.DataProvider.Executable
                     headlessConfig.SwarmPrivateKeyString,
                     headlessConfig.StoreType,
                     headlessConfig.StorePath,
+                    noReduceStore: true,
                     100,
                     headlessConfig.IceServerStrings,
                     headlessConfig.PeerStrings,
@@ -76,20 +77,25 @@ namespace NineChronicles.DataProvider.Executable
                     bucketSize: headlessConfig.BucketSize,
                     staticPeerStrings: headlessConfig.StaticPeerStrings,
                     render: headlessConfig.Render,
-                    preload: headlessConfig.Preload,
-                    transportType: "netmq");
+                    preload: headlessConfig.Preload);
 
             var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
             {
                MinerPrivateKey = null,
                Libplanet = properties,
-               TxQuotaPerSigner = 500,
+               TxQuotaPerSigner = 10,
+               TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
             };
 
             if (headlessConfig.LogActionRenders)
             {
                 properties.LogActionRenders = true;
             }
+
+            hostBuilder.ConfigureServices(services =>
+            {
+                services.AddSingleton(_ => context);
+            });
 
             hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, context);
 
@@ -126,9 +132,25 @@ namespace NineChronicles.DataProvider.Executable
                 {
                     services.AddDbContextFactory<NineChroniclesContext>(options =>
                     {
+                        // Get configuration from appsettings or env
+                        var configurationBuilder = new ConfigurationBuilder()
+                            .AddJsonFile("appsettings.json")
+                            .AddEnvironmentVariables("NC_");
+                        IConfiguration config = configurationBuilder.Build();
+                        var headlessConfig = new Configuration();
+                        config.Bind(headlessConfig);
+                        if (headlessConfig.MySqlConnectionString != string.Empty)
+                        {
+                            args = new[] { headlessConfig.MySqlConnectionString };
+                        }
+
                         if (args.Length == 1)
                         {
-                            options.UseMySQL(args[0],  b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable"));
+                            options.UseMySql(
+                                args[0],
+                                ServerVersion.AutoDetect(
+                                    args[0]),
+                                b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable"));
                         }
                         else
                         {
