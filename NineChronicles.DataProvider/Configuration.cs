@@ -2,6 +2,8 @@
 
 namespace NineChronicles.DataProvider
 {
+    using System;
+
     public class Configuration
     {
         public string? AppProtocolVersionToken { get; set; }
