@@ -145,7 +145,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             IBlockPolicy<NCAction> blockPolicy = blockPolicySource.GetPolicy();
 
             // Setup base chain & new chain
-            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, gHash);
+            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(gHash);
             _baseChain = new BlockChain<NCAction>(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis);
 
             // Prepare block hashes to append to new chain
@@ -237,16 +237,16 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     foreach (var item in
                         _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
                     {
-                        var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
+                        var block = _baseStore.GetBlock<NCAction>(item.value);
                         List<string> ceList = new List<string>();
                         Console.WriteLine($"Checking Block #{block.Index}");
                         foreach (var tx in block.Transactions)
                         {
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment ce)
+                            if (tx.CustomActions!.FirstOrDefault()?.InnerAction is CombinationEquipment ce)
                             {
                                 try
                                 {
-                                    Console.WriteLine($"Found CE12 action in #{block.Index}");
+                                    Console.WriteLine($"Found CE14 action in #{block.Index}");
                                     var outputState = _baseChain.GetState(ce.avatarAddress, block.Hash);
                                     AvatarState avatarState = new AvatarState((Dictionary)outputState);
                                     foreach (var mail in avatarState.mailBox)
@@ -256,7 +256,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                             var combinationMail = (CombinationMail)mail;
                                             if (!ceList.Contains(combinationMail.attachment.itemUsable.ItemId.ToString()))
                                             {
-                                                Console.WriteLine($"CombinationEquipment12 Action in Block #{block.Index}, TxId: {tx.Id}");
+                                                Console.WriteLine($"CombinationEquipment14 Action in Block #{block.Index}, TxId: {tx.Id}");
                                                 ceList.Add(combinationMail.attachment.itemUsable.ItemId.ToString());
                                                 var data = (CombinationConsumable5.ResultModel)combinationMail.attachment;
                                                 var equipment = (Equipment)data.itemUsable;
@@ -265,7 +265,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                                 _ceBulkFile.WriteLine(
                                                     $"{block.Index};" +
                                                     $"{tx.Id};" +
-                                                    "Combination_Equipment12;" +
+                                                    "Combination_Equipment14;" +
                                                     $"{equipment.ItemId.ToString()};" +
                                                     $"{CPHelper.GetCP(equipment)};" +
                                                     $"{equipment.level};" +
@@ -300,7 +300,123 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment11 ce11)
+                            if (tx.CustomActions!.FirstOrDefault()?.InnerAction is CombinationEquipment13 ce13)
+                            {
+                                try
+                                {
+                                    Console.WriteLine($"Found CE13 action in #{block.Index}");
+                                    var outputState = _baseChain.GetState(ce13.avatarAddress, block.Hash);
+                                    AvatarState avatarState = new AvatarState((Dictionary)outputState);
+                                    foreach (var mail in avatarState.mailBox)
+                                    {
+                                        if (mail.ToString() == "Nekoyume.Model.Mail.CombinationMail" && mail.blockIndex == block.Index)
+                                        {
+                                            var combinationMail = (CombinationMail)mail;
+                                            if (!ceList.Contains(combinationMail.attachment.itemUsable.ItemId.ToString()))
+                                            {
+                                                Console.WriteLine($"CombinationEquipment13 Action in Block #{block.Index}, TxId: {tx.Id}");
+                                                ceList.Add(combinationMail.attachment.itemUsable.ItemId.ToString());
+                                                var data = (CombinationConsumable5.ResultModel)combinationMail.attachment;
+                                                var equipment = (Equipment)data.itemUsable;
+                                                var avatarLevel = avatarState.level;
+                                                string avatarName = avatarState.name;
+                                                _ceBulkFile.WriteLine(
+                                                    $"{block.Index};" +
+                                                    $"{tx.Id};" +
+                                                    "Combination_Equipment13;" +
+                                                    $"{equipment.ItemId.ToString()};" +
+                                                    $"{CPHelper.GetCP(equipment)};" +
+                                                    $"{equipment.level};" +
+                                                    $"{tx.Signer.ToString()};" +
+                                                    $"{ce13.avatarAddress.ToString()};" +
+                                                    $"{avatarName};" +
+                                                    $"{avatarLevel};" +
+                                                    $"{equipment.ItemType.ToString()};" +
+                                                    $"{equipment.ItemSubType.ToString()};" +
+                                                    $"{equipment.Id};" +
+                                                    $"{equipment.BuffSkills.Count};" +
+                                                    $"{equipment.ElementalType.ToString()};" +
+                                                    $"{equipment.Grade};" +
+                                                    $"{equipment.SetId};" +
+                                                    $"{equipment.Skills.Count};" +
+                                                    $"{(equipment.StatsMap.HasAdditionalStats ? 1 : 0)};" +
+                                                    $"{equipment.SpineResourcePath};" +
+                                                    $"{equipment.RequiredBlockIndex};" +
+                                                    $"{equipment.NonFungibleId.ToString()};" +
+                                                    $"{equipment.TradableId.ToString()};" +
+                                                    $"{equipment.UniqueStatType.ToString()};" +
+                                                    $"{block.Timestamp:o}"
+                                                );
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.CustomActions!.FirstOrDefault()?.InnerAction is CombinationEquipment12 ce12)
+                            {
+                                try
+                                {
+                                    Console.WriteLine($"Found CE12 action in #{block.Index}");
+                                    var outputState = _baseChain.GetState(ce12.avatarAddress, block.Hash);
+                                    AvatarState avatarState = new AvatarState((Dictionary)outputState);
+                                    foreach (var mail in avatarState.mailBox)
+                                    {
+                                        if (mail.ToString() == "Nekoyume.Model.Mail.CombinationMail" && mail.blockIndex == block.Index)
+                                        {
+                                            var combinationMail = (CombinationMail)mail;
+                                            if (!ceList.Contains(combinationMail.attachment.itemUsable.ItemId.ToString()))
+                                            {
+                                                Console.WriteLine($"CombinationEquipment12 Action in Block #{block.Index}, TxId: {tx.Id}");
+                                                ceList.Add(combinationMail.attachment.itemUsable.ItemId.ToString());
+                                                var data = (CombinationConsumable5.ResultModel)combinationMail.attachment;
+                                                var equipment = (Equipment)data.itemUsable;
+                                                var avatarLevel = avatarState.level;
+                                                string avatarName = avatarState.name;
+                                                _ceBulkFile.WriteLine(
+                                                    $"{block.Index};" +
+                                                    $"{tx.Id};" +
+                                                    "Combination_Equipment12;" +
+                                                    $"{equipment.ItemId.ToString()};" +
+                                                    $"{CPHelper.GetCP(equipment)};" +
+                                                    $"{equipment.level};" +
+                                                    $"{tx.Signer.ToString()};" +
+                                                    $"{ce12.avatarAddress.ToString()};" +
+                                                    $"{avatarName};" +
+                                                    $"{avatarLevel};" +
+                                                    $"{equipment.ItemType.ToString()};" +
+                                                    $"{equipment.ItemSubType.ToString()};" +
+                                                    $"{equipment.Id};" +
+                                                    $"{equipment.BuffSkills.Count};" +
+                                                    $"{equipment.ElementalType.ToString()};" +
+                                                    $"{equipment.Grade};" +
+                                                    $"{equipment.SetId};" +
+                                                    $"{equipment.Skills.Count};" +
+                                                    $"{(equipment.StatsMap.HasAdditionalStats ? 1 : 0)};" +
+                                                    $"{equipment.SpineResourcePath};" +
+                                                    $"{equipment.RequiredBlockIndex};" +
+                                                    $"{equipment.NonFungibleId.ToString()};" +
+                                                    $"{equipment.TradableId.ToString()};" +
+                                                    $"{equipment.UniqueStatType.ToString()};" +
+                                                    $"{block.Timestamp:o}"
+                                                );
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.CustomActions!.FirstOrDefault()?.InnerAction is CombinationEquipment11 ce11)
                             {
                                 try
                                 {
@@ -358,7 +474,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment10 ce10)
+                            if (tx.CustomActions!.FirstOrDefault()?.InnerAction is CombinationEquipment10 ce10)
                             {
                                 try
                                 {
@@ -416,7 +532,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment9 ce9)
+                            if (tx.CustomActions!.FirstOrDefault()?.InnerAction is CombinationEquipment9 ce9)
                             {
                                 try
                                 {
