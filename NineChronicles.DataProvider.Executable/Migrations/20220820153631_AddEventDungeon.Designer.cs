@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
@@ -10,9 +11,10 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20220820153631_AddEventDungeon")]
+    partial class AddEventDungeon
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1009,54 +1011,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.ToTable("MigrateMonsterCollections");
                 });
 
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.RaiderModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("AvatarName")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<int>("Cp")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("HighScore")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IconId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RaidId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TotalScore")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RaidId", "AvatarName")
-                        .IsUnique();
-
-                    b.ToTable("Raiders");
-                });
-
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.ReplaceCombinationEquipmentMaterialModel", b =>
                 {
                     b.Property<string>("Id")
@@ -1810,35 +1764,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.HasIndex("AvatarAddress");
 
                     b.ToTable("UnlockWorlds");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.WorldBossRankingModel", b =>
-                {
-                    b.Property<string>("Address")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("AvatarName")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("Cp")
-                        .HasColumnType("int");
-
-                    b.Property<int>("HighScore")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IconId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Ranking")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TotalScore")
-                        .HasColumnType("int");
-
-                    b.ToTable("WorldBossRankings", null, t => t.ExcludeFromMigrations());
                 });
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.AvatarModel", b =>

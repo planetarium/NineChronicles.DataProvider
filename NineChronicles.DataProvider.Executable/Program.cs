@@ -72,6 +72,7 @@ namespace NineChronicles.DataProvider.Executable
                     headlessConfig.SwarmPrivateKeyString,
                     headlessConfig.StoreType,
                     headlessConfig.StorePath,
+                    noReduceStore: true,
                     100,
                     headlessConfig.IceServerStrings,
                     headlessConfig.PeerStrings,

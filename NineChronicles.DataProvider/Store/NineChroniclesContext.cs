@@ -80,6 +80,12 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<TransactionModel>? Transactions { get; set; }
 
+        public DbSet<HackAndSlashSweepModel>? HackAndSlashSweeps { get; set; }
+
+        public DbSet<EventDungeonBattleModel>? EventDungeonBattles { get; set; }
+
+        public DbSet<EventConsumableItemCraftsModel>? EventConsumableItemCrafts { get; set; }
+
         public DbSet<RaiderModel> Raiders => Set<RaiderModel>();
 
         /*
