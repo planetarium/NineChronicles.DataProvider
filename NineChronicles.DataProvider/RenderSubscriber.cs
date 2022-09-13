@@ -1438,7 +1438,7 @@ namespace NineChronicles.DataProvider
                             {
                                 RaiderState raiderState =
                                     ev.OutputStates.GetRaiderState(ev.Action.AvatarAddress, raidId);
-                                var model = new RaiderModel(raidId, raiderState.AvatarNameWithHash, raiderState.HighScore, raiderState.TotalScore, raiderState.Cp, raiderState.IconId, raiderState.Level, raiderState.AvatarAddress.ToHex());
+                                var model = new RaiderModel(raidId, raiderState.AvatarName, raiderState.HighScore, raiderState.TotalScore, raiderState.Cp, raiderState.IconId, raiderState.Level, raiderState.AvatarAddress.ToHex());
                                 MySqlStore.StoreRaider(model);
                             }
                             else
