@@ -1,3 +1,13 @@
+using System.IO;
+using Lib9c.DevExtensions;
+using Libplanet;
+using Libplanet.Action;
+using Libplanet.Blockchain;
+using Libplanet.Crypto;
+using Libplanet.Headless.Hosting;
+using Nekoyume.Action;
+using NineChronicles.Headless.GraphTypes.States;
+
 namespace NineChronicles.DataProvider.Executable
 {
     using System;
@@ -67,7 +77,7 @@ namespace NineChronicles.DataProvider.Executable
                     headlessConfig.IceServerStrings,
                     headlessConfig.PeerStrings,
                     headlessConfig.TrustedAppProtocolVersionSigners,
-                    noMiner: true,
+                    noMiner: headlessConfig.NoMiner,
                     workers: headlessConfig.Workers,
                     confirmations: headlessConfig.Confirmations,
                     messageTimeout: headlessConfig.MessageTimeout,
@@ -81,10 +91,18 @@ namespace NineChronicles.DataProvider.Executable
 
             var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
             {
-               MinerPrivateKey = null,
-               Libplanet = properties,
-               TxQuotaPerSigner = 10,
-               TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
+                MinerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
+                    ? null
+                    : PrivateKey.FromString(headlessConfig.MinerPrivateKeyString),
+                Libplanet = properties,
+                TxQuotaPerSigner = 500,
+                Dev = headlessConfig.IsDev,
+                StrictRender = headlessConfig.StrictRendering,
+                BlockInterval = headlessConfig.BlockInterval,
+                ReorgInterval = headlessConfig.ReorgInterval,
+                TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
+                MinerCount = headlessConfig.NoMiner ? 0 : 1,
+                NetworkType = headlessConfig.NetworkType,
             };
 
             if (headlessConfig.LogActionRenders)
@@ -98,6 +116,11 @@ namespace NineChronicles.DataProvider.Executable
             });
 
             hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, context);
+
+            var stateContext = new StateContext(
+                context.BlockChain!.ToAccountStateGetter(),
+                context.BlockChain!.ToAccountBalanceGetter()
+            );
 
             // ConfigureServices must come before Configure for now
             hostBuilder = hostBuilder
@@ -120,6 +143,7 @@ namespace NineChronicles.DataProvider.Executable
                     services.AddHostedService<RenderSubscriber>();
                     services.AddSingleton<MySqlStore>();
                     services.Configure<Configuration>(config);
+                    services.AddSingleton(stateContext);
                 });
 
             await hostBuilder.RunConsoleAsync(token);

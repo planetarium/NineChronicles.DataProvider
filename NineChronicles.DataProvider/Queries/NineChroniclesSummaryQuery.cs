@@ -1,23 +1,28 @@
 ﻿namespace NineChronicles.DataProvider.Queries
 {
+    using System;
+    using System.Linq;
     using Bencodex.Types;
     using GraphQL;
     using GraphQL.Types;
     using Libplanet;
+    using Libplanet.Crypto;
     using Nekoyume;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.GraphTypes;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless;
+    using NineChronicles.Headless.GraphTypes.States;
     using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     internal class NineChroniclesSummaryQuery : ObjectGraphType
     {
-        public NineChroniclesSummaryQuery(MySqlStore store, StandaloneContext standaloneContext)
+        public NineChroniclesSummaryQuery(MySqlStore store, StandaloneContext standaloneContext, StateContext stateContext)
         {
             Store = store;
             StandaloneContext = standaloneContext;
+            StateContext = stateContext;
             Field<StringGraphType>(
                 name: "test",
                 resolve: context => "Should be done.");
@@ -30,7 +35,7 @@
                 {
                     long index = context.GetArgument<long>("index", StandaloneContext.BlockChain!.Tip.Index);
                     var arenaSheetAddress = Addresses.GetSheetAddress<ArenaSheet>();
-                    IValue state = StandaloneContext.BlockChain!.GetState(arenaSheetAddress);
+                    IValue state = StateContext.GetState(arenaSheetAddress)!;
                     ArenaSheet arenaSheet = new ArenaSheet();
                     arenaSheet.Set((Bencodex.Types.Text)state);
                     var arenaData = arenaSheet!.GetRoundByBlockIndex(index);
@@ -205,10 +210,116 @@
                 name: "dauQuery",
                 resolve: context => new DauQuery(store)
             );
+            Field<WorldBossRankingInfoType>(
+                name: "worldBossRanking",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "raidId",
+                        Description = "world boss season id.",
+                    },
+                    new QueryArgument<StringGraphType>
+                    {
+                        Name = "avatarAddress",
+                        Description = "Hex encoded avatar address",
+                    },
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "limit",
+                        Description = "query limit.",
+                        DefaultValue = 100,
+                    }
+                ),
+                resolve: context =>
+                {
+                    var raidId = context.GetArgument<int>("raidId");
+                    var avatarAddress = context.GetArgument<string?>("avatarAddress");
+                    var limit = context.GetArgument<int>("limit");
+                    var raiders = Store.GetWorldBossRanking(raidId);
+                    var result = raiders
+                        .Take(limit)
+                        .ToList();
+                    if (!(avatarAddress is null) && result.All(r => r.Address != avatarAddress))
+                    {
+                        var myAvatar = result.FirstOrDefault(r => r.Address == avatarAddress);
+                        if (!(myAvatar is null))
+                        {
+                            result.Add(myAvatar);
+                        }
+                    }
+
+                    return (StandaloneContext.BlockChain?.Tip?.Index ?? 0, result);
+                });
+            Field<IntGraphType>(
+                name: "worldBossTotalUsers",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "raidId",
+                        Description = "world boss season id.",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var raidId = context.GetArgument<int>("raidId");
+                    return Store.GetTotalRaiders(raidId);
+                });
+
+            Field<WorldBossRankingRewardType>(
+                "worldBossRankingReward",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "raidId",
+                        Description = "world boss season id.",
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "avatarAddress",
+                        Description = "address of avatar state.",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var raidId = context.GetArgument<int>("raidId");
+                    var avatarAddress = context.GetArgument<string>("avatarAddress");
+                    var blockIndex = StandaloneContext.BlockChain?.Tip?.Index ?? 0;
+                    var worldBossListSheetAddress = Addresses.GetSheetAddress<WorldBossListSheet>();
+                    var runeSheetAddress = Addresses.GetSheetAddress<RuneSheet>();
+                    var rewardSheetAddress = Addresses.GetSheetAddress<WorldBossRankingRewardSheet>();
+                    var values = stateContext.GetStates(new[] { worldBossListSheetAddress, runeSheetAddress, rewardSheetAddress });
+                    if (values[0] is Text wbs && values[1] is Text rs && values[2] is Text wrs)
+                    {
+                        var sheet = new WorldBossListSheet();
+                        sheet.Set(wbs);
+                        var runeSheet = new RuneSheet();
+                        runeSheet.Set(rs);
+                        var rankingRewardSheet = new WorldBossRankingRewardSheet();
+                        rankingRewardSheet.Set(wrs);
+                        var bossRow = sheet.OrderedList.First(r => r.Id == raidId);
+                        if (bossRow.EndedBlockIndex <= blockIndex)
+                        {
+                            // Check ranking.
+                            var raiders = Store.GetWorldBossRanking(raidId);
+                            var raider = raiders.First(r => r.Address == avatarAddress);
+                            var ranking = raider.Ranking;
+                            var rate = ranking / raiders.Count * 100;
+
+                            // calculate rewards.
+                            var row = rankingRewardSheet.FindRow(ranking, rate);
+                            return (ranking, row.GetRewards(runeSheet));
+                        }
+                    }
+
+                    throw new ExecutionError("can't receive");
+                }
+            );
         }
 
         private MySqlStore Store { get; }
 
         private StandaloneContext StandaloneContext { get; }
+
+        private StateContext StateContext { get; }
     }
 }
