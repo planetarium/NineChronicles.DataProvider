@@ -82,7 +82,13 @@ public class WorldBossRankingRewardQueryTest : TestBase
                 var rewardInfo = Assert.IsType<Dictionary<string, object>>(model);
                 var quantity = (string)rewardInfo["quantity"];
                 var rawCurrency = (Dictionary<string, object>)rewardInfo["currency"];
-                var currency = new Currency(ticker: (string) rawCurrency["ticker"], decimalPlaces: (byte) rawCurrency["decimalPlaces"], minters: (IImmutableSet<Address>?) rawCurrency["minters"]);
+#pragma warning disable CS0618
+                // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
+                var currency = Currency.Legacy(
+                    (string)rawCurrency["ticker"],
+                    (byte)rawCurrency["decimalPlaces"],
+                    (IImmutableSet<Address>?)rawCurrency["minters"]);
+#pragma warning restore CS0618
                 FungibleAssetValue.Parse(currency, quantity);
             }
         }
