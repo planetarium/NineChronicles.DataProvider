@@ -119,7 +119,8 @@ namespace NineChronicles.DataProvider.Executable
 
             var stateContext = new StateContext(
                 context.BlockChain!.ToAccountStateGetter(),
-                context.BlockChain!.ToAccountBalanceGetter()
+                context.BlockChain!.ToAccountBalanceGetter(),
+                context.BlockChain!.Tip.Index
             );
 
             // ConfigureServices must come before Configure for now
