@@ -16,12 +16,15 @@ namespace NineChronicles.DataProvider.Tests;
 
 public class WorldBossRankingQueryTest : TestBase, IDisposable
 {
-    [Fact]
-    public async Task WorldBossRanking()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task WorldBossRanking(bool hex)
     {
-        var targetAvatarAddress = new PrivateKey().ToAddress().ToHex();
+        var targetAvatarAddress = new PrivateKey().ToAddress();
+        var queryAddress = hex ? targetAvatarAddress.ToHex() : targetAvatarAddress.ToString();
         var query = $@"query {{
-        worldBossRanking(raidId: 1, avatarAddress: ""{targetAvatarAddress}"") {{
+        worldBossRanking(raidId: 1, avatarAddress: ""{queryAddress}"") {{
             blockIndex
             rankingInfo {{
                 ranking
@@ -34,7 +37,7 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
         {
             for (int i = 0; i < 200; i++)
             {
-                var avatarAddress = idx == 0 && i == 0 ? targetAvatarAddress : new PrivateKey().ToAddress().ToHex();
+                var avatarAddress = idx == 0 && i == 0 ? targetAvatarAddress : new PrivateKey().ToAddress();
                 var model = new RaiderModel(
                     idx + 1,
                     i.ToString(),
@@ -43,7 +46,7 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
                     i + 2,
                     GameConfig.DefaultAvatarArmorId,
                     i,
-                    avatarAddress
+                    avatarAddress.ToHex()
                 );
                 Context.Raiders.Add(model);
             }
@@ -74,7 +77,7 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
         var models = (object[]) data["rankingInfo"];
         Assert.Equal(101, models.Length);
         var raider = (Dictionary<string, object>)models.Last();
-        Assert.Equal(targetAvatarAddress, raider["address"]);
+        Assert.Equal(targetAvatarAddress.ToHex(), raider["address"]);
     }
 
     [Fact]
