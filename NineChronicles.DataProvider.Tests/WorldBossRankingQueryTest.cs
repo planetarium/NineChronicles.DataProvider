@@ -49,10 +49,28 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
             }
         }
 
+        var block = new BlockModel
+        {
+            Index = 1L,
+            Hash = "4582250d0da33b06779a8475d283d5dd210c683b9b999d74d03fac4f58fa6bce",
+            Miner = "47d082a115c63e7b58b1532d20e631538eafadde",
+            Difficulty = 0L,
+            Nonce = "dff109a0abf1762673ed",
+            PreviousHash = "asd",
+            ProtocolVersion = 1,
+            PublicKey = ByteUtil.Hex(new PrivateKey().PublicKey.ToImmutableArray(false)),
+            StateRootHash = "ce667fcd0b69076d9ff7e7755daa2f35cb0488e4c47978468dfbd6b88fca8a90",
+            TotalDifficulty = 0L,
+            TxCount = 1,
+            TxHash = "fd47c10ffbee8ff2da8fa08cec3072de06a72f73693f5d3399b093b0877fa954",
+            TimeStamp = DateTimeOffset.UtcNow
+        };
+        Context.Blocks.Add(block);
+
         await Context.SaveChangesAsync();
         var result = await ExecuteAsync(query);
         var data = (Dictionary<string, object>)((Dictionary<string, object>) ((ExecutionNode) result.Data).ToValue())["worldBossRanking"];
-        Assert.Equal(0L, data["blockIndex"]);
+        Assert.Equal(1L, data["blockIndex"]);
         var models = (object[]) data["rankingInfo"];
         Assert.Equal(101, models.Length);
         var raider = (Dictionary<string, object>)models.Last();

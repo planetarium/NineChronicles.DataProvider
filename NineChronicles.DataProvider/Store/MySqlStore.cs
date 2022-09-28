@@ -1724,5 +1724,11 @@ namespace NineChronicles.DataProvider.Store
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             return ctx.Raiders.Count(r => r.RaidId == raidId);
         }
+
+        public long GetTip()
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            return ctx.Blocks.Select(i => i.Index).OrderByDescending(i => i).First();
+        }
     }
 }
