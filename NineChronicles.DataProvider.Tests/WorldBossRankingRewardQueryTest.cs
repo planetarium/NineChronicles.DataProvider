@@ -21,11 +21,13 @@ public class WorldBossRankingRewardQueryTest : TestBase
     private string _csv = string.Empty;
 
     [Theory]
-    [InlineData(1, 1L, false)]
-    [InlineData(1, 20L, true)]
-    [InlineData(200, 1L, false)]
-    [InlineData(200, 20L, true)]
-    public async Task WorldBossRankingReward(int rank, long blockIndex, bool canReceive)
+    [InlineData(1, 1L, false, false)]
+    [InlineData(1, 20L, true, true)]
+    [InlineData(1, 20L, true, false)]
+    [InlineData(200, 1L, false, true)]
+    [InlineData(200, 20L, true, true)]
+    [InlineData(200, 20L, true, false)]
+    public async Task WorldBossRankingReward(int rank, long blockIndex, bool canReceive, bool hex)
     {
         if (canReceive)
         {
@@ -35,10 +37,10 @@ public class WorldBossRankingRewardQueryTest : TestBase
         string queryAddress = null;
         for (int i = 0; i < 200; i++)
         {
-            var avatarAddress =  new PrivateKey().ToAddress().ToHex();
+            var avatarAddress = new PrivateKey().ToAddress();
             if (i + 1 == rank)
             {
-                queryAddress = avatarAddress;
+                queryAddress = hex ? avatarAddress.ToHex() : avatarAddress.ToString();
             }
             var model = new RaiderModel(
                 1,
@@ -48,7 +50,7 @@ public class WorldBossRankingRewardQueryTest : TestBase
                 i + 2,
                 GameConfig.DefaultAvatarArmorId,
                 i,
-                avatarAddress
+                avatarAddress.ToHex()
             );
             Context.Raiders.Add(model);
         }
