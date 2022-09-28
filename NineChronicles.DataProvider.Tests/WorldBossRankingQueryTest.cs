@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL.Execution;
@@ -17,12 +19,14 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
     [Fact]
     public async Task WorldBossRanking()
     {
-        const string query = $@"query {{
-        worldBossRanking(raidId: 1) {{
+        var targetAvatarAddress = new PrivateKey().ToAddress().ToHex();
+        var query = $@"query {{
+        worldBossRanking(raidId: 1, avatarAddress: ""{targetAvatarAddress}"") {{
             blockIndex
             rankingInfo {{
                 ranking
                 avatarName
+                address
             }}
         }}
     }}";
@@ -30,6 +34,7 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
         {
             for (int i = 0; i < 200; i++)
             {
+                var avatarAddress = idx == 0 && i == 0 ? targetAvatarAddress : new PrivateKey().ToAddress().ToHex();
                 var model = new RaiderModel(
                     idx + 1,
                     i.ToString(),
@@ -38,7 +43,7 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
                     i + 2,
                     GameConfig.DefaultAvatarArmorId,
                     i,
-                    new PrivateKey().ToAddress().ToHex()
+                    avatarAddress
                 );
                 Context.Raiders.Add(model);
             }
@@ -49,7 +54,9 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
         var data = (Dictionary<string, object>)((Dictionary<string, object>) ((ExecutionNode) result.Data).ToValue())["worldBossRanking"];
         Assert.Equal(0L, data["blockIndex"]);
         var models = (object[]) data["rankingInfo"];
-        Assert.Equal(100, models.Length);
+        Assert.Equal(101, models.Length);
+        var raider = (Dictionary<string, object>)models.Last();
+        Assert.Equal(targetAvatarAddress, raider["address"]);
     }
 
     [Fact]

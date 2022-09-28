@@ -241,7 +241,7 @@
                         .ToList();
                     if (!(avatarAddress is null) && result.All(r => r.Address != avatarAddress))
                     {
-                        var myAvatar = result.FirstOrDefault(r => r.Address == avatarAddress);
+                        var myAvatar = raiders.FirstOrDefault(r => r.Address == avatarAddress);
                         if (!(myAvatar is null))
                         {
                             result.Add(myAvatar);
