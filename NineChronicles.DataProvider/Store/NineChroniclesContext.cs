@@ -76,7 +76,7 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<BattleArenaRankingModel>? BattleArenaRanking { get; set; }
 
-        public DbSet<BlockModel>? Blocks { get; set; }
+        public DbSet<BlockModel> Blocks => Set<BlockModel>();
 
         public DbSet<TransactionModel>? Transactions { get; set; }
 

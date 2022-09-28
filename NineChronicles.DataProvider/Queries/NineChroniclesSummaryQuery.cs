@@ -241,14 +241,15 @@
                         .ToList();
                     if (!(avatarAddress is null) && result.All(r => r.Address != avatarAddress))
                     {
-                        var myAvatar = result.FirstOrDefault(r => r.Address == avatarAddress);
+                        var myAvatar = raiders.FirstOrDefault(r => r.Address == avatarAddress);
                         if (!(myAvatar is null))
                         {
                             result.Add(myAvatar);
                         }
                     }
 
-                    return (StandaloneContext.BlockChain?.Tip?.Index ?? 0, result);
+                    // Use database block tip because sync db & store delay.
+                    return (Store.GetTip(), result);
                 });
             Field<IntGraphType>(
                 name: "worldBossTotalUsers",
@@ -283,7 +284,9 @@
                 {
                     var raidId = context.GetArgument<int>("raidId");
                     var avatarAddress = context.GetArgument<string>("avatarAddress");
-                    var blockIndex = StandaloneContext.BlockChain?.Tip?.Index ?? 0;
+
+                    // Use database block tip because sync db & store delay.
+                    var blockIndex = Store.GetTip();
                     var worldBossListSheetAddress = Addresses.GetSheetAddress<WorldBossListSheet>();
                     var runeSheetAddress = Addresses.GetSheetAddress<RuneSheet>();
                     var rewardSheetAddress = Addresses.GetSheetAddress<WorldBossRankingRewardSheet>();

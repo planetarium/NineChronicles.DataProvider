@@ -58,7 +58,7 @@ public abstract class TestBase
         var stateContext = new StateContext(
             GetStatesMock,
             GetBalanceMock,
-            standaloneContext.BlockChain!.Tip.Index);
+            0L);
         services
             .AddSingleton(standaloneContext)
             .AddSingleton(stateContext)
