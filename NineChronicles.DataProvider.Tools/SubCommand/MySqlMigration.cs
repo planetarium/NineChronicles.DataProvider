@@ -138,7 +138,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             IBlockPolicy<NCAction> blockPolicy = blockPolicySource.GetPolicy();
 
             // Setup base chain & new chain
-            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, gHash);
+            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(gHash);
             _baseChain = new BlockChain<NCAction>(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis);
 
             // Prepare block hashes to append to new chain
@@ -170,7 +170,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 int remainingCount = totalCount;
                 int offsetIdx = 0;
                 var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, _baseChain.Tip.Index);
-                var tip = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, (BlockHash)tipHash);
+                var tip = _baseStore.GetBlock<NCAction>((BlockHash)tipHash);
                 var exec = _baseChain.ExecuteActions(tip);
                 var ev = exec.First();
                 while (remainingCount > 0)
@@ -194,12 +194,12 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             _baseStore.IterateIndexes(_baseChain.Id, offset + idx ?? 0 + idx, limitInterval)
                                 .Select((value, i) => new { i, value }))
                     {
-                        var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
+                        var block = _baseStore.GetBlock<NCAction>(item.value);
                         Console.WriteLine("Migrating {0}/{1} #{2}", item.i, count, block.Index);
 
                         foreach (var tx in block.Transactions)
                         {
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is HackAndSlashSweep hasSweep)
+                            if (tx.CustomActions.FirstOrDefault().InnerAction is HackAndSlashSweep hasSweep)
                             {
                                 try
                                 {
@@ -226,7 +226,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is HackAndSlashSweep1 hasSweep1)
+                            if (tx.CustomActions.FirstOrDefault().InnerAction is HackAndSlashSweep1 hasSweep1)
                             {
                                 try
                                 {
@@ -253,7 +253,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is HackAndSlashSweep2 hasSweep2)
+                            if (tx.CustomActions.FirstOrDefault().InnerAction is HackAndSlashSweep2 hasSweep2)
                             {
                                 try
                                 {
@@ -280,7 +280,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is HackAndSlashSweep3 hasSweep3)
+                            if (tx.CustomActions.FirstOrDefault().InnerAction is HackAndSlashSweep3 hasSweep3)
                             {
                                 try
                                 {
@@ -307,7 +307,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is HackAndSlashSweep4 hasSweep4)
+                            if (tx.CustomActions.FirstOrDefault().InnerAction is HackAndSlashSweep4 hasSweep4)
                             {
                                 try
                                 {
@@ -325,6 +325,60 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                         $"{hasSweep4.equipments.Count};" +
                                         $"{isClear};" +
                                         $"{hasSweep4.stageId > 10000000};" +
+                                        $"{block.Index};" +
+                                        $"{tx.Timestamp.UtcDateTime:o}");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.CustomActions.FirstOrDefault().InnerAction is HackAndSlashSweep5 hasSweep5)
+                            {
+                                try
+                                {
+                                    AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep5.avatarAddress);
+                                    bool isClear = avatarState.stageMap.ContainsKey(hasSweep5.stageId);
+                                    _hswBulkFile.WriteLine(
+                                        $"{hasSweep5.Id.ToString()};" +
+                                        $"{tx.Signer.ToString()};" +
+                                        $"{hasSweep5.avatarAddress.ToString()};" +
+                                        $"{hasSweep5.worldId};" +
+                                        $"{hasSweep5.stageId};" +
+                                        $"{hasSweep5.apStoneCount};" +
+                                        $"{hasSweep5.actionPoint};" +
+                                        $"{hasSweep5.costumes.Count};" +
+                                        $"{hasSweep5.equipments.Count};" +
+                                        $"{isClear};" +
+                                        $"{hasSweep5.stageId > 10000000};" +
+                                        $"{block.Index};" +
+                                        $"{tx.Timestamp.UtcDateTime:o}");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.CustomActions.FirstOrDefault().InnerAction is HackAndSlashSweep6 hasSweep6)
+                            {
+                                try
+                                {
+                                    AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep6.avatarAddress);
+                                    bool isClear = avatarState.stageMap.ContainsKey(hasSweep6.stageId);
+                                    _hswBulkFile.WriteLine(
+                                        $"{hasSweep6.Id.ToString()};" +
+                                        $"{tx.Signer.ToString()};" +
+                                        $"{hasSweep6.avatarAddress.ToString()};" +
+                                        $"{hasSweep6.worldId};" +
+                                        $"{hasSweep6.stageId};" +
+                                        $"{hasSweep6.apStoneCount};" +
+                                        $"{hasSweep6.actionPoint};" +
+                                        $"{hasSweep6.costumes.Count};" +
+                                        $"{hasSweep6.equipments.Count};" +
+                                        $"{isClear};" +
+                                        $"{hasSweep6.stageId > 10000000};" +
                                         $"{block.Index};" +
                                         $"{tx.Timestamp.UtcDateTime:o}");
                                 }
