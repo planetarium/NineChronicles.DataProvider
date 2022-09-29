@@ -76,9 +76,17 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<BattleArenaRankingModel>? BattleArenaRanking { get; set; }
 
-        public DbSet<BlockModel>? Blocks { get; set; }
+        public DbSet<BlockModel> Blocks => Set<BlockModel>();
 
         public DbSet<TransactionModel>? Transactions { get; set; }
+
+        public DbSet<HackAndSlashSweepModel>? HackAndSlashSweeps { get; set; }
+
+        public DbSet<EventDungeonBattleModel>? EventDungeonBattles { get; set; }
+
+        public DbSet<EventConsumableItemCraftsModel>? EventConsumableItemCrafts { get; set; }
+
+        public DbSet<RaiderModel> Raiders => Set<RaiderModel>();
 
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
@@ -91,6 +99,9 @@ namespace NineChronicles.DataProvider.Store
             modelBuilder.Entity<EquipmentRankingModel>().HasNoKey();
             modelBuilder.Entity<AbilityRankingModel>().HasNoKey();
             modelBuilder.Entity<BattleArenaRankingModel>().HasNoKey();
+            modelBuilder.Entity<WorldBossRankingModel>()
+                .HasNoKey()
+                .ToTable("WorldBossRankings", t => t.ExcludeFromMigrations());
         }
     }
 }
