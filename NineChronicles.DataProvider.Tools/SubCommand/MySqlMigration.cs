@@ -131,7 +131,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             IBlockPolicy<NCAction> blockPolicy = blockPolicySource.GetPolicy();
 
             // Setup base chain & new chain
-            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, gHash);
+            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(gHash);
             _baseChain = new BlockChain<NCAction>(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis);
 
             // Prepare block hashes to append to new chain
@@ -177,7 +177,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             _baseStore.IterateIndexes(_baseChain.Id, offset + idx ?? 0 + idx, limitInterval)
                                 .Select((value, i) => new { i, value }))
                     {
-                        var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
+                        var block = _baseStore.GetBlock<NCAction>(item.value);
                         Console.WriteLine("Migrating {0}/{1} #{2}", item.i, count, block.Index);
                         _blockBulkFile.WriteLine(
                             $"{block.Index};" +
@@ -196,13 +196,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         foreach (var tx in block.Transactions)
                         {
                             string actionType = null;
-                            if (tx.Actions.Count == 0)
+                            if (tx.CustomActions!.Count == 0)
                             {
                                 actionType = string.Empty;
                             }
                             else
                             {
-                                actionType = tx.Actions[0].InnerAction.ToString()!.Split(".").Last();
+                                actionType = tx.CustomActions[0].InnerAction.ToString()!.Split(".").Last();
                             }
 
                             _txBulkFile.WriteLine(
