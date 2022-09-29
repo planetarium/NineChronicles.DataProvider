@@ -154,7 +154,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             IBlockPolicy<NCAction> blockPolicy = blockPolicySource.GetPolicy();
 
             // Setup base chain & new chain
-            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, gHash);
+            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(gHash);
             _baseChain = new BlockChain<NCAction>(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis);
 
             // Prepare block hashes to append to new chain
@@ -197,6 +197,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             var buy7Count = 0;
             var buy8Count = 0;
             var buy9Count = 0;
+            var buy10Count = 0;
+            var buy11Count = 0;
             var buyCount = 0;
             var buymCount = 0;
 
@@ -207,7 +209,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 int remainingCount = totalCount;
                 int offsetIdx = 0;
                 var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, _baseChain.Tip.Index);
-                var tip = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, (BlockHash)tipHash);
+                var tip = _baseStore.GetBlock<NCAction>((BlockHash)tipHash);
                 var exec = _baseChain.ExecuteActions(tip);
                 var ev = exec.First();
                 while (remainingCount > 0)
@@ -231,12 +233,12 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             _baseStore.IterateIndexes(_baseChain.Id, offset + idx ?? 0 + idx, limitInterval)
                                 .Select((value, i) => new { i, value }))
                     {
-                        var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
+                        var block = _baseStore.GetBlock<NCAction>(item.value);
                         Console.WriteLine("Migrating {0}/{1} #{2}", item.i, count, block.Index);
 
                         foreach (var tx in block.Transactions)
                         {
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is Buy0 buy0)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is Buy0 buy0)
                             {
                                 try
                                 {
@@ -323,7 +325,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is Buy2 buy2)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is Buy2 buy2)
                             {
                                 try
                                 {
@@ -410,7 +412,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is Buy3 buy3)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is Buy3 buy3)
                             {
                                 try
                                 {
@@ -497,7 +499,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is Buy4 buy4)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is Buy4 buy4)
                             {
                                 try
                                 {
@@ -584,7 +586,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is Buy5 b5)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is Buy5 b5)
                             {
                                 try
                                 {
@@ -672,7 +674,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is Buy6 b6)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is Buy6 b6)
                             {
                                 try
                                 {
@@ -760,7 +762,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is Buy7 b7)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is Buy7 b7)
                             {
                                 try
                                 {
@@ -849,7 +851,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is Buy8 buy8i)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is Buy8 buy8i)
                             {
                                 try
                                 {
@@ -945,7 +947,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is Buy9 buy9i)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is Buy9 buy9i)
                             {
                                 try
                                 {
@@ -1041,7 +1043,199 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is Buy buyi)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is Buy10 buy10i)
+                            {
+                                try
+                                {
+                                    buy10Count++;
+                                    foreach (var buy in buy10i.purchaseInfos)
+                                    {
+                                        var state = ev.OutputStates.GetState(
+                                        Addresses.GetItemAddress(buy.TradableId));
+                                        ITradableItem orderItem =
+                                            (ITradableItem) ItemFactory.Deserialize((Dictionary)state);
+                                        Order order =
+                                            OrderFactory.Deserialize(
+                                                (Dictionary) ev.OutputStates.GetState(
+                                                    Order.DeriveAddress(buy.OrderId)));
+                                        var orderReceipt = new OrderReceipt(
+                                            (Dictionary) ev.OutputStates.GetState(
+                                                OrderReceipt.DeriveAddress(buy.OrderId)));
+                                        int itemCount = order is FungibleOrder fungibleOrder
+                                            ? fungibleOrder.ItemCount
+                                            : 1;
+                                        if (orderItem.ItemType == ItemType.Equipment)
+                                        {
+                                            eqCount++;
+                                            WriteSE(
+                                                (Equipment)orderItem,
+                                                buy.SellerAvatarAddress,
+                                                buy10i.buyerAvatarAddress,
+                                                block.Index,
+                                                tx.Id.ToString(),
+                                                block.Hash.ToString(),
+                                                buy.Price.ToString().Split(" ").FirstOrDefault(),
+                                                buy.OrderId.ToString(),
+                                                tx.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                                                itemCount);
+                                            Console.WriteLine("10. Equipment");
+                                        }
+
+                                        if (orderItem.ItemType == ItemType.Costume)
+                                        {
+                                            ctCount++;
+                                            WriteSCT(
+                                                (Costume)orderItem,
+                                                buy.SellerAvatarAddress,
+                                                buy10i.buyerAvatarAddress,
+                                                block.Index,
+                                                tx.Id.ToString(),
+                                                block.Hash.ToString(),
+                                                buy.Price.ToString().Split(" ").FirstOrDefault(),
+                                                buy.OrderId.ToString(),
+                                                tx.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                                                itemCount);
+                                            Console.WriteLine("10. Costume");
+                                        }
+
+                                        if (orderItem.ItemType == ItemType.Material)
+                                        {
+                                            mtCount++;
+                                            WriteSM(
+                                                (Material)orderItem,
+                                                buy.SellerAvatarAddress,
+                                                buy10i.buyerAvatarAddress,
+                                                block.Index,
+                                                tx.Id.ToString(),
+                                                block.Hash.ToString(),
+                                                buy.Price.ToString().Split(" ").FirstOrDefault(),
+                                                buy.OrderId.ToString(),
+                                                tx.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                                                itemCount);
+                                            Console.WriteLine("10. Material");
+                                        }
+
+                                        if (orderItem.ItemType == ItemType.Consumable)
+                                        {
+                                            csCount++;
+                                            WriteSC(
+                                                (Consumable)orderItem,
+                                                buy.SellerAvatarAddress,
+                                                buy10i.buyerAvatarAddress,
+                                                block.Index,
+                                                tx.Id.ToString(),
+                                                block.Hash.ToString(),
+                                                buy.Price.ToString().Split(" ").FirstOrDefault(),
+                                                buy.OrderId.ToString(),
+                                                tx.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                                                itemCount);
+                                            Console.WriteLine("10. Consumable");
+                                        }
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is Buy11 buy11i)
+                            {
+                                try
+                                {
+                                    buy11Count++;
+                                    foreach (var buy in buy11i.purchaseInfos)
+                                    {
+                                        var state = ev.OutputStates.GetState(
+                                        Addresses.GetItemAddress(buy.TradableId));
+                                        ITradableItem orderItem =
+                                            (ITradableItem) ItemFactory.Deserialize((Dictionary)state);
+                                        Order order =
+                                            OrderFactory.Deserialize(
+                                                (Dictionary) ev.OutputStates.GetState(
+                                                    Order.DeriveAddress(buy.OrderId)));
+                                        var orderReceipt = new OrderReceipt(
+                                            (Dictionary) ev.OutputStates.GetState(
+                                                OrderReceipt.DeriveAddress(buy.OrderId)));
+                                        int itemCount = order is FungibleOrder fungibleOrder
+                                            ? fungibleOrder.ItemCount
+                                            : 1;
+                                        if (orderItem.ItemType == ItemType.Equipment)
+                                        {
+                                            eqCount++;
+                                            WriteSE(
+                                                (Equipment)orderItem,
+                                                buy.SellerAvatarAddress,
+                                                buy11i.buyerAvatarAddress,
+                                                block.Index,
+                                                tx.Id.ToString(),
+                                                block.Hash.ToString(),
+                                                buy.Price.ToString().Split(" ").FirstOrDefault(),
+                                                buy.OrderId.ToString(),
+                                                tx.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                                                itemCount);
+                                            Console.WriteLine("11. Equipment");
+                                        }
+
+                                        if (orderItem.ItemType == ItemType.Costume)
+                                        {
+                                            ctCount++;
+                                            WriteSCT(
+                                                (Costume)orderItem,
+                                                buy.SellerAvatarAddress,
+                                                buy11i.buyerAvatarAddress,
+                                                block.Index,
+                                                tx.Id.ToString(),
+                                                block.Hash.ToString(),
+                                                buy.Price.ToString().Split(" ").FirstOrDefault(),
+                                                buy.OrderId.ToString(),
+                                                tx.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                                                itemCount);
+                                            Console.WriteLine("11. Costume");
+                                        }
+
+                                        if (orderItem.ItemType == ItemType.Material)
+                                        {
+                                            mtCount++;
+                                            WriteSM(
+                                                (Material)orderItem,
+                                                buy.SellerAvatarAddress,
+                                                buy11i.buyerAvatarAddress,
+                                                block.Index,
+                                                tx.Id.ToString(),
+                                                block.Hash.ToString(),
+                                                buy.Price.ToString().Split(" ").FirstOrDefault(),
+                                                buy.OrderId.ToString(),
+                                                tx.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                                                itemCount);
+                                            Console.WriteLine("11. Material");
+                                        }
+
+                                        if (orderItem.ItemType == ItemType.Consumable)
+                                        {
+                                            csCount++;
+                                            WriteSC(
+                                                (Consumable)orderItem,
+                                                buy.SellerAvatarAddress,
+                                                buy11i.buyerAvatarAddress,
+                                                block.Index,
+                                                tx.Id.ToString(),
+                                                block.Hash.ToString(),
+                                                buy.Price.ToString().Split(" ").FirstOrDefault(),
+                                                buy.OrderId.ToString(),
+                                                tx.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                                                itemCount);
+                                            Console.WriteLine("11. Consumable");
+                                        }
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is Buy buyi)
                             {
                                 try
                                 {
@@ -1137,7 +1331,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is BuyMultiple bm)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is BuyMultiple bm)
                             {
                                 try
                                 {
