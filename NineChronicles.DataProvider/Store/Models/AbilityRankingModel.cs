@@ -5,7 +5,6 @@
     public class AbilityRankingModel
     {
         [Key]
-
         public string? AvatarAddress { get; set; }
 
         public string? AgentAddress { get; set; }
