@@ -148,7 +148,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             IBlockPolicy<NCAction> blockPolicy = blockPolicySource.GetPolicy();
 
             // Setup base chain & new chain
-            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, gHash);
+            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(gHash);
             _baseChain = new BlockChain<NCAction>(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis);
 
             // Prepare block hashes to append to new chain
@@ -201,7 +201,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     foreach (var item in
                         _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
                     {
-                        var block = _baseStore.GetBlock<NCAction>(blockPolicy.GetHashAlgorithm, item.value);
+                        var block = _baseStore.GetBlock<NCAction>(item.value);
                         Console.WriteLine("Migrating {0}/{1} #{2}", item.i, count, block.Index);
 
                         if (block.Index == 4285218)
@@ -271,7 +271,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment ce)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is CombinationEquipment ce)
                             {
                                 try
                                 {
@@ -292,7 +292,49 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment11 ce11)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is CombinationEquipment13 ce13)
+                            {
+                                try
+                                {
+                                    _ceBulkFile.WriteLine(
+                                        $"{ce13.Id.ToString()};" +
+                                        $"{ce13.avatarAddress.ToString()};" +
+                                        $"{tx.Signer.ToString()};" +
+                                        $"{ce13.recipeId};" +
+                                        $"{ce13.slotIndex};" +
+                                        $"{ce13.subRecipeId ?? 0};" +
+                                        $"{block.Index};" +
+                                        $"{tx.Timestamp:yyyy-MM-dd HH:mm:ss}"
+                                    );
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is CombinationEquipment12 ce12)
+                            {
+                                try
+                                {
+                                    _ceBulkFile.WriteLine(
+                                        $"{ce12.Id.ToString()};" +
+                                        $"{ce12.avatarAddress.ToString()};" +
+                                        $"{tx.Signer.ToString()};" +
+                                        $"{ce12.recipeId};" +
+                                        $"{ce12.slotIndex};" +
+                                        $"{ce12.subRecipeId ?? 0};" +
+                                        $"{block.Index};" +
+                                        $"{tx.Timestamp:yyyy-MM-dd HH:mm:ss}"
+                                    );
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is CombinationEquipment11 ce11)
                             {
                                 try
                                 {
@@ -313,7 +355,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationEquipment10 ce10)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is CombinationEquipment10 ce10)
                             {
                                 try
                                 {
@@ -334,7 +376,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is CombinationConsumable cc)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is CombinationConsumable cc)
                             {
                                 try
                                 {
@@ -354,7 +396,27 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is ItemEnhancement ie)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is CombinationConsumable7 cc7)
+                            {
+                                try
+                                {
+                                    _ccBulkFile.WriteLine(
+                                        $"{cc7.Id.ToString()};" +
+                                        $"{cc7.AvatarAddress.ToString()};" +
+                                        $"{tx.Signer.ToString()};" +
+                                        $"{cc7.recipeId};" +
+                                        $"{cc7.slotIndex};" +
+                                        $"{block.Index};" +
+                                        $"{tx.Timestamp:yyyy-MM-dd HH:mm:ss}"
+                                    );
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }
+
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is ItemEnhancement ie)
                             {
                                 try
                                 {
@@ -394,7 +456,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is ItemEnhancement10 ie10)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is ItemEnhancement10 ie10)
                             {
                                 try
                                 {
@@ -434,7 +496,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 }
                             }
 
-                            if (tx.Actions.FirstOrDefault()?.InnerAction is ItemEnhancement9 ie9)
+                            if (tx.CustomActions.FirstOrDefault()?.InnerAction is ItemEnhancement9 ie9)
                             {
                                 try
                                 {
