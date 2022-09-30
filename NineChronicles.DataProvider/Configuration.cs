@@ -2,7 +2,7 @@
 
 namespace NineChronicles.DataProvider
 {
-    using System;
+    using NineChronicles.Headless.Properties;
 
     public class Configuration
     {
@@ -92,5 +92,7 @@ namespace NineChronicles.DataProvider
 #pragma warning restore SA1011 // Closing square brackets should be spaced correctly
 #nullable disable
         public string MySqlConnectionString { get; set; }
+
+        public NetworkType NetworkType { get; set; } = NetworkType.Main;
     }
 }
