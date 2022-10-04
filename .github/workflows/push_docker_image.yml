@@ -7,7 +7,7 @@ on:
       - development
       - rc-*
       - migration
-      - block-tx-migration
+      - raid-migration
       - 2022q3-worldboss
 
 jobs:
