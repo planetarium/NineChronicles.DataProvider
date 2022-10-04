@@ -201,6 +201,17 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         }
                         Console.WriteLine("Migrating Done {0}/{1} #{2}", item.i, count, block.Index);
                     }
+
+                    if (interval < remainingCount)
+                    {
+                        remainingCount -= interval;
+                        offsetIdx += interval;
+                    }
+                    else
+                    {
+                        remainingCount = 0;
+                        offsetIdx += remainingCount;
+                    }
                 }
 
                 FlushBulkFiles();
