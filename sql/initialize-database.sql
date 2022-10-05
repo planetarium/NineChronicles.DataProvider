@@ -542,9 +542,10 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Raiders` (
    `Level` int NOT NULL,
    `Address` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
    `IconId` int NOT NULL,
+   `PurchaseCount` int NOT NULL,
    `CreatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
    `UpdatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
 
    PRIMARY KEY (`Id`),
-   UNIQUE KEY `IX_Raiders_RaidId_AvatarName` (`RaidId`,`AvatarName`)
+   UNIQUE KEY `IX_Raiders_RaidId_Address` (`RaidId`,`Address`)
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
