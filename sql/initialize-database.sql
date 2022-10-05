@@ -14,13 +14,13 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`Avatars` (
     `ArmorId` INT,
     `Cp` INT,
     `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
+
     PRIMARY KEY (`Address`),
     INDEX `fk_Avatars_Agent_idx` (`AgentAddress`),
     UNIQUE INDEX `Address_UNIQUE` (`Address`),
     CONSTRAINT `fk_Avatars_Agent`
-        FOREIGN KEY (`AgentAddress`)
-            REFERENCES `Agents` (`Address`)
+    FOREIGN KEY (`AgentAddress`)
+    REFERENCES `Agents` (`Address`)
 );
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`HackAndSlashes` (
@@ -37,11 +37,11 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`HackAndSlashes` (
     INDEX `fk_HackAndSlashes_Avatar1_idx` (`AvatarAddress`),
     INDEX `fk_HackAndSlashes_Agent1_idx` (`AgentAddress`),
     CONSTRAINT `fk_HackAndSlashes_Avatar1`
-        FOREIGN KEY (`AvatarAddress`)
-            REFERENCES `Avatars` (`Address`),
+    FOREIGN KEY (`AvatarAddress`)
+    REFERENCES `Avatars` (`Address`),
     CONSTRAINT `fk_HackAndSlashes_Agent1`
-        FOREIGN KEY (`AgentAddress`)
-            REFERENCES `Agents` (`Address`)
+    FOREIGN KEY (`AgentAddress`)
+    REFERENCES `Agents` (`Address`)
 );
 
 CREATE TABLE IF NOT EXISTS `data_provider`.`CombinationConsumables` (
@@ -123,6 +123,7 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`CraftRankings` (
     FOREIGN KEY (`AvatarAddress`)
     REFERENCES `Avatars` (`Address`)
 );
+
 CREATE TABLE IF NOT EXISTS `data_provider`.`Equipments` (
     `ItemId` VARCHAR(100) NOT NULL,
     `AgentAddress` VARCHAR(100) NOT NULL,
@@ -410,3 +411,140 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`BattleArenas` (
     KEY `fk_BattleArenas_AvatarAddress1_idx` (`AvatarAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE IF NOT EXISTS `data_provider`.`Blocks` (
+    `Index` bigint NOT NULL,
+    `Hash` varchar(100) NOT NULL,
+    `Miner` varchar(100) NOT NULL,
+    `Difficulty` bigint NOT NULL,
+    `Nonce` varchar(100) NOT NULL,
+    `PreviousHash` varchar(100) NOT NULL,
+    `ProtocolVersion` int NOT NULL,
+    `PublicKey` varchar(100) NOT NULL,
+    `StateRootHash` varchar(100) NOT NULL,
+    `TotalDifficulty` bigint NOT NULL,
+    `TxCount` int NOT NULL,
+    `TxHash` varchar(100) NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`Hash`),
+    INDEX (`Index`, `Timestamp`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`Transactions` (
+    `BlockIndex` bigint NOT NULL,
+    `BlockHash` varchar(100) NOT NULL,
+    `TxId` varchar(100) NOT NULL,
+    `Signer` varchar(100) NOT NULL,
+    `ActionType` varchar(100) NOT NULL,
+    `Nonce` bigint NOT NULL,
+    `PublicKey` varchar(100) NOT NULL,
+    `UpdatedAddressesCount` int NOT NULL,
+    `Date` date NOT NULL,
+    `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`TxId`),
+    KEY `Date` (`Date`,`Signer`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`HackAndSlashSweeps` (
+    `Id` VARCHAR(100) NOT NULL,
+    `AgentAddress` VARCHAR(100) NOT NULL,
+    `AvatarAddress` VARCHAR(100) NOT NULL,
+    `WorldId` INT NOT NULL,
+    `StageId` INT NOT NULL,
+    `ApStoneCount` INT NOT NULL,
+    `ActionPoint` INT NOT NULL,
+    `CostumesCount` INT NOT NULL,
+    `EquipmentsCount` INT NOT NULL,
+    `Cleared` BOOLEAN NOT NULL,
+    `Mimisbrunnr` BOOLEAN NOT NULL,
+    `BlockIndex` BIGINT NOT NULL,
+    `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (`Id`),
+    INDEX (`BlockIndex`),
+    INDEX (`Timestamp`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`EventDungeonBattles` (
+    `Id` VARCHAR(100) NOT NULL,
+    `AgentAddress` VARCHAR(100) NOT NULL,
+    `AvatarAddress` VARCHAR(100) NOT NULL,
+    `EventDungeonId` INT NOT NULL,
+    `EventScheduleId` INT NOT NULL,
+    `EventDungeonStageId` INT NOT NULL,
+    `RemainingTickets` INT NOT NULL,
+    `BurntNCG` decimal(13,2) NOT NULL,
+    `Cleared` BOOLEAN NOT NULL,
+    `FoodsCount` INT NOT NULL,
+    `CostumesCount` INT NOT NULL,
+    `EquipmentsCount` INT NOT NULL,
+    `RewardItem1Id` INT NOT NULL,
+    `RewardItem1Count` INT NOT NULL,
+    `RewardItem2Id` INT NOT NULL,
+    `RewardItem2Count` INT NOT NULL,
+    `RewardItem3Id` INT NOT NULL,
+    `RewardItem3Count` INT NOT NULL,
+    `RewardItem4Id` INT NOT NULL,
+    `RewardItem4Count` INT NOT NULL,
+    `RewardItem5Id` INT NOT NULL,
+    `RewardItem5Count` INT NOT NULL,
+    `RewardItem6Id` INT NOT NULL,
+    `RewardItem6Count` INT NOT NULL,
+    `RewardItem7Id` INT NOT NULL,
+    `RewardItem7Count` INT NOT NULL,
+    `RewardItem8Id` INT NOT NULL,
+    `RewardItem8Count` INT NOT NULL,
+    `RewardItem9Id` INT NOT NULL,
+    `RewardItem9Count` INT NOT NULL,
+    `RewardItem10Id` INT NOT NULL,
+    `RewardItem10Count` INT NOT NULL,
+    `BlockIndex` BIGINT NOT NULL,
+    `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (`Id`),
+    INDEX (`BlockIndex`),
+    INDEX (`Timestamp`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`EventConsumableItemCrafts` (
+    `Id` VARCHAR(100) NOT NULL,
+    `AgentAddress` VARCHAR(100) NOT NULL,
+    `AvatarAddress` VARCHAR(100) NOT NULL,
+    `SlotIndex` INT NOT NULL,
+    `EventScheduleId` INT NOT NULL,
+    `EventConsumableItemRecipeId` INT NOT NULL,
+    `RequiredItem1Id` INT NOT NULL,
+    `RequiredItem1Count` INT NOT NULL,
+    `RequiredItem2Id` INT NOT NULL,
+    `RequiredItem2Count` INT NOT NULL,
+    `RequiredItem3Id` INT NOT NULL,
+    `RequiredItem3Count` INT NOT NULL,
+    `RequiredItem4Id` INT NOT NULL,
+    `RequiredItem4Count` INT NOT NULL,
+    `RequiredItem5Id` INT NOT NULL,
+    `RequiredItem5Count` INT NOT NULL,
+    `RequiredItem6Id` INT NOT NULL,
+    `RequiredItem6Count` INT NOT NULL,
+    `BlockIndex` BIGINT NOT NULL,
+    `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (`Id`),
+    INDEX (`BlockIndex`),
+    INDEX (`Timestamp`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`Raiders` (
+   `Id` int NOT NULL AUTO_INCREMENT,
+   `RaidId` int NOT NULL,
+   `AvatarName` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+   `HighScore` int NOT NULL,
+   `TotalScore` int NOT NULL,
+   `Cp` int NOT NULL,
+   `Level` int NOT NULL,
+   `Address` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+   `IconId` int NOT NULL,
+   `CreatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+   `UpdatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+
+   PRIMARY KEY (`Id`),
+   UNIQUE KEY `IX_Raiders_RaidId_AvatarName` (`RaidId`,`AvatarName`)
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

@@ -1,3 +1,13 @@
+using System.IO;
+using Lib9c.DevExtensions;
+using Libplanet;
+using Libplanet.Action;
+using Libplanet.Blockchain;
+using Libplanet.Crypto;
+using Libplanet.Headless.Hosting;
+using Nekoyume.Action;
+using NineChronicles.Headless.GraphTypes.States;
+
 namespace NineChronicles.DataProvider.Executable
 {
     using System;
@@ -49,7 +59,7 @@ namespace NineChronicles.DataProvider.Executable
 
             hostBuilder.ConfigureWebHostDefaults(builder =>
             {
-                builder.UseStartup<GraphQL.GraphQLStartup>();
+                builder.UseStartup<GraphQLStartup>();
                 builder.UseUrls($"http://{headlessConfig.GraphQLHost}:{headlessConfig.GraphQLPort}/");
             });
 
@@ -62,12 +72,12 @@ namespace NineChronicles.DataProvider.Executable
                     headlessConfig.SwarmPrivateKeyString,
                     headlessConfig.StoreType,
                     headlessConfig.StorePath,
-                    true,
+                    noReduceStore: true,
                     100,
                     headlessConfig.IceServerStrings,
                     headlessConfig.PeerStrings,
                     headlessConfig.TrustedAppProtocolVersionSigners,
-                    noMiner: true,
+                    noMiner: headlessConfig.NoMiner,
                     workers: headlessConfig.Workers,
                     confirmations: headlessConfig.Confirmations,
                     messageTimeout: headlessConfig.MessageTimeout,
@@ -81,9 +91,18 @@ namespace NineChronicles.DataProvider.Executable
 
             var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
             {
-               MinerPrivateKey = null,
-               Libplanet = properties,
-               TxQuotaPerSigner = 500,
+                MinerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
+                    ? null
+                    : PrivateKey.FromString(headlessConfig.MinerPrivateKeyString),
+                Libplanet = properties,
+                TxQuotaPerSigner = 500,
+                Dev = headlessConfig.IsDev,
+                StrictRender = headlessConfig.StrictRendering,
+                BlockInterval = headlessConfig.BlockInterval,
+                ReorgInterval = headlessConfig.ReorgInterval,
+                TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
+                MinerCount = headlessConfig.NoMiner ? 0 : 1,
+                NetworkType = headlessConfig.NetworkType,
             };
 
             if (headlessConfig.LogActionRenders)
@@ -91,7 +110,18 @@ namespace NineChronicles.DataProvider.Executable
                 properties.LogActionRenders = true;
             }
 
+            hostBuilder.ConfigureServices(services =>
+            {
+                services.AddSingleton(_ => context);
+            });
+
             hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, context);
+
+            var stateContext = new StateContext(
+                context.BlockChain!.ToAccountStateGetter(),
+                context.BlockChain!.ToAccountBalanceGetter(),
+                context.BlockChain!.Tip.Index
+            );
 
             // ConfigureServices must come before Configure for now
             hostBuilder = hostBuilder
@@ -114,6 +144,7 @@ namespace NineChronicles.DataProvider.Executable
                     services.AddHostedService<RenderSubscriber>();
                     services.AddSingleton<MySqlStore>();
                     services.Configure<Configuration>(config);
+                    services.AddSingleton(stateContext);
                 });
 
             await hostBuilder.RunConsoleAsync(token);
@@ -126,9 +157,25 @@ namespace NineChronicles.DataProvider.Executable
                 {
                     services.AddDbContextFactory<NineChroniclesContext>(options =>
                     {
+                        // Get configuration from appsettings or env
+                        var configurationBuilder = new ConfigurationBuilder()
+                            .AddJsonFile("appsettings.json")
+                            .AddEnvironmentVariables("NC_");
+                        IConfiguration config = configurationBuilder.Build();
+                        var headlessConfig = new Configuration();
+                        config.Bind(headlessConfig);
+                        if (headlessConfig.MySqlConnectionString != string.Empty)
+                        {
+                            args = new[] { headlessConfig.MySqlConnectionString };
+                        }
+
                         if (args.Length == 1)
                         {
-                            options.UseMySQL(args[0],  b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable"));
+                            options.UseMySql(
+                                args[0],
+                                ServerVersion.AutoDetect(
+                                    args[0]),
+                                b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable"));
                         }
                         else
                         {

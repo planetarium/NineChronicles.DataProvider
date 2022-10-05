@@ -6,7 +6,8 @@ on:
       - main
       - development
       - rc-*
-      - user-migration
+      - 2022q3-worldboss
+      - raiders-migration
 
 jobs:
   build_and_push:
