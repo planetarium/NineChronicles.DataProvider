@@ -70,6 +70,7 @@ namespace NineChronicles.DataProvider
         private readonly List<HackAndSlashSweepModel> _hasSweepList = new List<HackAndSlashSweepModel>();
         private readonly List<EventDungeonBattleModel> _eventDungeonBattleList = new List<EventDungeonBattleModel>();
         private readonly List<EventConsumableItemCraftsModel> _eventConsumableItemCraftsList = new List<EventConsumableItemCraftsModel>();
+        private readonly List<RaiderModel> _raiderList = new List<RaiderModel>();
         private readonly List<string> _agents;
         private int _renderedBlockCount;
         private DateTimeOffset _blockTimeOffset;
@@ -190,6 +191,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreHackAndSlashSweepList(_hasSweepList);
                     MySqlStore.StoreEventDungeonBattleList(_eventDungeonBattleList);
                     MySqlStore.StoreEventConsumableItemCraftsList(_eventConsumableItemCraftsList);
+                    MySqlStore.StoreRaiderList(_raiderList);
                     _renderedBlockCount = 0;
                     _agents.Clear();
                     _agentList.Clear();
@@ -220,6 +222,7 @@ namespace NineChronicles.DataProvider
                     _hasSweepList.Clear();
                     _eventDungeonBattleList.Clear();
                     _eventConsumableItemCraftsList.Clear();
+                    _raiderList.Clear();
                     var end = DateTimeOffset.Now;
                     long blockIndex = b.OldTip.Index;
                     StreamWriter blockIndexFile = new StreamWriter(_blockIndexFilePath);
@@ -1438,7 +1441,17 @@ namespace NineChronicles.DataProvider
                             {
                                 RaiderState raiderState =
                                     ev.OutputStates.GetRaiderState(ev.Action.AvatarAddress, raidId);
-                                var model = new RaiderModel(raidId, raiderState.AvatarName, raiderState.HighScore, raiderState.TotalScore, raiderState.Cp, raiderState.IconId, raiderState.Level, raiderState.AvatarAddress.ToHex());
+                                var model = new RaiderModel(
+                                    raidId,
+                                    raiderState.AvatarName,
+                                    raiderState.HighScore,
+                                    raiderState.TotalScore,
+                                    raiderState.Cp,
+                                    raiderState.IconId,
+                                    raiderState.Level,
+                                    raiderState.AvatarAddress.ToHex(),
+                                    raiderState.PurchaseCount);
+                                _raiderList.Add(model);
                                 MySqlStore.StoreRaider(model);
                             }
                             else
