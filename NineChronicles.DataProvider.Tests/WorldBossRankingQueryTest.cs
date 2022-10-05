@@ -46,7 +46,8 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
                     i + 2,
                     GameConfig.DefaultAvatarArmorId,
                     i,
-                    avatarAddress.ToHex()
+                    avatarAddress.ToHex(),
+                    0
                 );
                 Context.Raiders.Add(model);
             }
@@ -96,7 +97,8 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
                 i + 2,
                 GameConfig.DefaultAvatarArmorId,
                 i,
-                new PrivateKey().ToAddress().ToHex()
+                new PrivateKey().ToAddress().ToHex(),
+                0
             );
             Context.Raiders.Add(model);
         }

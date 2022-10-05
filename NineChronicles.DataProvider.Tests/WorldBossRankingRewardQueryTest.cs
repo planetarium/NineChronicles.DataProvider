@@ -50,7 +50,8 @@ public class WorldBossRankingRewardQueryTest : TestBase
                 i + 2,
                 GameConfig.DefaultAvatarArmorId,
                 i,
-                avatarAddress.ToHex()
+                avatarAddress.ToHex(),
+                0
             );
             Context.Raiders.Add(model);
         }
