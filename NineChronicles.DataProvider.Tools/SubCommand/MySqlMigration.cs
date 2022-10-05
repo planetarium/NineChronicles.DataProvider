@@ -74,7 +74,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             [Option(
                 "limit",
                 Description = "limit of block count (no entry will migrate to the chain tip).")]
-            int? limit = null
+            int? limit = null,
+            [Option(
+                "tipIndex",
+                Description = "tipIndex of chain.")]
+            long? tipIndex = null
         )
         {
             DateTimeOffset start = DateTimeOffset.UtcNow;
@@ -209,7 +213,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             try
             {
-                var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, _baseChain.Tip.Index);
+                var tipHash = _baseStore.IndexBlockHash(_baseChain.Id,  tipIndex ?? _baseChain.Tip.Index);
                 var tip = _baseStore.GetBlock<NCAction>((BlockHash) tipHash);
                 var exec = _baseChain.ExecuteActions(tip);
                 var ev = exec.Last();
