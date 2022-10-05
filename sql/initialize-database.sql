@@ -531,3 +531,20 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`EventConsumableItemCrafts` (
     INDEX (`BlockIndex`),
     INDEX (`Timestamp`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `data_provider`.`Raiders` (
+   `Id` int NOT NULL AUTO_INCREMENT,
+   `RaidId` int NOT NULL,
+   `AvatarName` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+   `HighScore` int NOT NULL,
+   `TotalScore` int NOT NULL,
+   `Cp` int NOT NULL,
+   `Level` int NOT NULL,
+   `Address` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+   `IconId` int NOT NULL,
+   `CreatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+   `UpdatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+
+   PRIMARY KEY (`Id`),
+   UNIQUE KEY `IX_Raiders_RaidId_AvatarName` (`RaidId`,`AvatarName`)
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

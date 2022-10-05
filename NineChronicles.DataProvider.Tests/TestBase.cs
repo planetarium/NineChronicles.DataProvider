@@ -55,7 +55,10 @@ public abstract class TestBase
         {
             KeyStore = keyStore,
         };
-        var stateContext = new StateContext(GetStatesMock, GetBalanceMock);
+        var stateContext = new StateContext(
+            GetStatesMock,
+            GetBalanceMock,
+            0L);
         services
             .AddSingleton(standaloneContext)
             .AddSingleton(stateContext)

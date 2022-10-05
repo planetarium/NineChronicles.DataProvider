@@ -1,12 +1,11 @@
 ﻿namespace NineChronicles.DataProvider.Queries
 {
-    using System;
     using System.Linq;
     using Bencodex.Types;
     using GraphQL;
     using GraphQL.Types;
     using Libplanet;
-    using Libplanet.Crypto;
+    using Libplanet.Explorer.GraphTypes;
     using Nekoyume;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.GraphTypes;
@@ -218,7 +217,7 @@
                         Name = "raidId",
                         Description = "world boss season id.",
                     },
-                    new QueryArgument<StringGraphType>
+                    new QueryArgument<AddressType>
                     {
                         Name = "avatarAddress",
                         Description = "Hex encoded avatar address",
@@ -233,22 +232,23 @@
                 resolve: context =>
                 {
                     var raidId = context.GetArgument<int>("raidId");
-                    var avatarAddress = context.GetArgument<string?>("avatarAddress");
+                    var avatarAddress = context.GetArgument<Address?>("avatarAddress");
                     var limit = context.GetArgument<int>("limit");
                     var raiders = Store.GetWorldBossRanking(raidId);
                     var result = raiders
                         .Take(limit)
                         .ToList();
-                    if (!(avatarAddress is null) && result.All(r => r.Address != avatarAddress))
+                    if (!(avatarAddress is null) && result.All(r => r.Address != avatarAddress.Value.ToHex()))
                     {
-                        var myAvatar = result.FirstOrDefault(r => r.Address == avatarAddress);
+                        var myAvatar = raiders.FirstOrDefault(r => r.Address == avatarAddress.Value.ToHex());
                         if (!(myAvatar is null))
                         {
                             result.Add(myAvatar);
                         }
                     }
 
-                    return (StandaloneContext.BlockChain?.Tip?.Index ?? 0, result);
+                    // Use database block tip because sync db & store delay.
+                    return (Store.GetTip(), result);
                 });
             Field<IntGraphType>(
                 name: "worldBossTotalUsers",
@@ -273,7 +273,7 @@
                         Name = "raidId",
                         Description = "world boss season id.",
                     },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<AddressType>>
                     {
                         Name = "avatarAddress",
                         Description = "address of avatar state.",
@@ -282,8 +282,10 @@
                 resolve: context =>
                 {
                     var raidId = context.GetArgument<int>("raidId");
-                    var avatarAddress = context.GetArgument<string>("avatarAddress");
-                    var blockIndex = StandaloneContext.BlockChain?.Tip?.Index ?? 0;
+                    var avatarAddress = context.GetArgument<Address>("avatarAddress");
+
+                    // Use database block tip because sync db & store delay.
+                    var blockIndex = Store.GetTip();
                     var worldBossListSheetAddress = Addresses.GetSheetAddress<WorldBossListSheet>();
                     var runeSheetAddress = Addresses.GetSheetAddress<RuneSheet>();
                     var rewardSheetAddress = Addresses.GetSheetAddress<WorldBossRankingRewardSheet>();
@@ -301,7 +303,7 @@
                         {
                             // Check ranking.
                             var raiders = Store.GetWorldBossRanking(raidId);
-                            var raider = raiders.First(r => r.Address == avatarAddress);
+                            var raider = raiders.First(r => r.Address == avatarAddress.ToHex());
                             var ranking = raider.Ranking;
                             var rate = ranking / raiders.Count * 100;
 

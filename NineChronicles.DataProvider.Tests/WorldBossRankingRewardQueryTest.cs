@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -20,24 +21,26 @@ public class WorldBossRankingRewardQueryTest : TestBase
     private string _csv = string.Empty;
 
     [Theory]
-    [InlineData(1, false)]
-    [InlineData(1, true)]
-    [InlineData(200, false)]
-    [InlineData(200, true)]
-    public async Task WorldBossRankingReward(int rank, bool canReceive)
+    [InlineData(1, 1L, false, false)]
+    [InlineData(1, 20L, true, true)]
+    [InlineData(1, 20L, true, false)]
+    [InlineData(200, 1L, false, true)]
+    [InlineData(200, 20L, true, true)]
+    [InlineData(200, 20L, true, false)]
+    public async Task WorldBossRankingReward(int rank, long blockIndex, bool canReceive, bool hex)
     {
         if (canReceive)
         {
             _csv = @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
-1,900001,0,0,300,200,100,10";
+1,900001,0,10,300,200,100,10";
         }
         string queryAddress = null;
         for (int i = 0; i < 200; i++)
         {
-            var avatarAddress =  new PrivateKey().ToAddress().ToHex();
+            var avatarAddress = new PrivateKey().ToAddress();
             if (i + 1 == rank)
             {
-                queryAddress = avatarAddress;
+                queryAddress = hex ? avatarAddress.ToHex() : avatarAddress.ToString();
             }
             var model = new RaiderModel(
                 1,
@@ -47,13 +50,30 @@ public class WorldBossRankingRewardQueryTest : TestBase
                 i + 2,
                 GameConfig.DefaultAvatarArmorId,
                 i,
-                avatarAddress
+                avatarAddress.ToHex()
             );
             Context.Raiders.Add(model);
         }
 
         Assert.NotNull(queryAddress);
 
+        var block = new BlockModel
+        {
+            Index = blockIndex,
+            Hash = "4582250d0da33b06779a8475d283d5dd210c683b9b999d74d03fac4f58fa6bce",
+            Miner = "47d082a115c63e7b58b1532d20e631538eafadde",
+            Difficulty = 0L,
+            Nonce = "dff109a0abf1762673ed",
+            PreviousHash = "asd",
+            ProtocolVersion = 1,
+            PublicKey = ByteUtil.Hex(new PrivateKey().PublicKey.ToImmutableArray(false)),
+            StateRootHash = "ce667fcd0b69076d9ff7e7755daa2f35cb0488e4c47978468dfbd6b88fca8a90",
+            TotalDifficulty = 0L,
+            TxCount = 1,
+            TxHash = "fd47c10ffbee8ff2da8fa08cec3072de06a72f73693f5d3399b093b0877fa954",
+            TimeStamp = DateTimeOffset.UtcNow
+        };
+        Context.Blocks.Add(block);
         await Context.SaveChangesAsync();
 
 
