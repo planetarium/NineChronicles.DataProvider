@@ -1382,8 +1382,7 @@ namespace NineChronicles.DataProvider.Store
                     tasks.Add(Task.Run(() =>
                     {
                         using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        var i = ctx.BattleArenas?.Find(battleArena.Id);
-                        if (i is null)
+                        if (ctx.BattleArenas?.Find(battleArena.Id) is null)
                         {
                             ctx.BattleArenas!.AddRange(battleArena);
                             ctx.SaveChanges();
@@ -1394,6 +1393,41 @@ namespace NineChronicles.DataProvider.Store
                             ctx.Dispose();
                             using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
                             updateCtx.BattleArenas!.UpdateRange(battleArena);
+                            updateCtx.SaveChanges();
+                            updateCtx.Dispose();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreRaiderList(List<RaiderModel> raiderList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var raider in raiderList)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
+                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+                        if (ctx.Raiders.Find(raider.Id) is null)
+                        {
+                            ctx.Raiders!.AddRange(raider);
+                            ctx.SaveChanges();
+                            ctx.Dispose();
+                        }
+                        else
+                        {
+                            ctx.Dispose();
+                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            updateCtx.Raiders.UpdateRange(raider);
                             updateCtx.SaveChanges();
                             updateCtx.Dispose();
                         }
@@ -1705,6 +1739,7 @@ namespace NineChronicles.DataProvider.Store
                 prevModel.HighScore = model.HighScore;
                 prevModel.TotalScore = model.TotalScore;
                 prevModel.Level = model.Level;
+                prevModel.PurchaseCount = model.PurchaseCount;
                 ctx.Raiders.Update(prevModel);
             }
 
