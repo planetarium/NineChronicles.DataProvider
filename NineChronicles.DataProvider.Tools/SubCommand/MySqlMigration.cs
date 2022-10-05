@@ -34,10 +34,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
-        private StreamWriter _usBulkFile;
+        private StreamWriter _rsBulkFile;
         private List<string> _agentList;
         private List<string> _avatarList;
-        private List<string> _usFiles;
+        private List<string> _rsFiles;
 
         [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
         public void Migration(
@@ -152,7 +152,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             Console.WriteLine("Start migration.");
 
             // files to store bulk file paths (new file created every 10000 blocks for bulk load performance)
-            _usFiles = new List<string>();
+            _rsFiles = new List<string>();
 
             // lists to keep track of inserted addresses to minimize duplicates
             _agentList = new List<string>();
@@ -214,7 +214,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var exec = _baseChain.ExecuteActions(tip);
                 var ev = exec.Last();
                 var avatarCount = 0;
-                AvatarState avatarState;
                 int interval = 1000000;
                 int intervalCount = 0;
                 bool checkBARankingTable = false;
@@ -227,10 +226,21 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         avatarCount++;
                         Console.WriteLine("Interval Count {0}", intervalCount);
                         Console.WriteLine("Migrating {0}/{1}", avatarCount, avatars.Length);
-                        var avatarAddress = new Address(avatar);
                         RaiderState raiderState =
                             ev.OutputStates.GetRaiderState(new Address(avatar), 1);
-
+                        _rsBulkFile.WriteLine(
+                            "N/A;" +
+                            "1;" +
+                            $"{raiderState.AvatarName};" +
+                            $"{raiderState.HighScore};" +
+                            $"{raiderState.TotalScore};" +
+                            $"{raiderState.Cp};" +
+                            $"{raiderState.Level};" +
+                            $"{raiderState.AvatarAddress.ToHex()};" +
+                            $"{raiderState.IconId};" +
+                            "N/A;" +
+                            $"{tip.Timestamp.UtcDateTime:yyyy-MM-dd}"
+                        );
                         Console.WriteLine("Migrating Complete {0}/{1}", avatarCount, avatars.Length);
                     }
                     catch (Exception ex)
@@ -244,7 +254,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
 
                 Console.WriteLine("Move Raiders Complete!");
-                foreach (var path in _usFiles)
+                foreach (var path in _rsFiles)
                 {
                     BulkInsert(RSDbName, path);
                 }
@@ -258,16 +268,16 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private void FlushBulkFiles()
         {
 
-            _usBulkFile.Flush();
-            _usBulkFile.Close();
+            _rsBulkFile.Flush();
+            _rsBulkFile.Close();
         }
 
         private void CreateBulkFiles()
         {
             string usFilePath = Path.GetTempFileName();
-            _usBulkFile = new StreamWriter(usFilePath);
+            _rsBulkFile = new StreamWriter(usFilePath);
 
-            _usFiles.Add(usFilePath);
+            _rsFiles.Add(usFilePath);
         }
 
         private void BulkInsert(
