@@ -1442,6 +1442,13 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public List<RaiderModel> GetRaiderList()
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<RaiderModel> raiders = ctx.Raiders!;
+            return raiders.ToList();
+        }
+
         public void StoreBlockList(List<BlockModel> blockList)
         {
             try

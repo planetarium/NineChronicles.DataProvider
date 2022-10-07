@@ -4,6 +4,7 @@ namespace NineChronicles.DataProvider.Store.Models
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
     using Microsoft.EntityFrameworkCore;
+    using Nekoyume.Model.State;
 
     [Index(nameof(RaidId), nameof(Address), IsUnique = true)]
     public class RaiderModel
@@ -28,6 +29,20 @@ namespace NineChronicles.DataProvider.Store.Models
             Level = level;
             Address = address;
             PurchaseCount = purchaseCount;
+        }
+
+        public RaiderModel(int id, int raidId, RaiderState state)
+        {
+            Id = id;
+            RaidId = raidId;
+            AvatarName = state.AvatarName;
+            HighScore = state.HighScore;
+            TotalScore = state.TotalScore;
+            Cp = state.Cp;
+            IconId = state.IconId;
+            Level = state.Level;
+            Address = state.AvatarAddress.ToHex();
+            PurchaseCount = state.PurchaseCount;
         }
 
         [Key]
