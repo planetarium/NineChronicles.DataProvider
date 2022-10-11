@@ -318,56 +318,6 @@
                     throw new ExecutionError("can't receive");
                 }
             );
-
-            Field<BooleanGraphType>(
-                name: "updateRaiders",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<IntGraphType>>
-                    {
-                        Name = "raidId",
-                        Description = "world boss season id.",
-                    }
-                ),
-                resolve: context =>
-                {
-                    var raidId = context.GetArgument<int>("raidId");
-                    var raiderListAddress = Addresses.GetRaiderListAddress(raidId);
-                    if (!(StateContext.GetState(raiderListAddress) is List raiderList))
-                    {
-                        return false;
-                    }
-
-                    var avatarAddresses = raiderList.ToList(StateExtensions.ToAddress);
-                    var updateList = new List<RaiderModel>();
-                    var storeRaiders = store.GetRaiderList();
-                    var index = storeRaiders.Count + 1;
-                    foreach (var avatarAddress in avatarAddresses)
-                    {
-                        var raiderAddress = Addresses.GetRaiderAddress(avatarAddress, raidId);
-                        if (!(StateContext.GetState(raiderAddress) is List stateList))
-                        {
-                            continue;
-                        }
-
-                        var raiderState = new RaiderState(stateList);
-                        var raider = storeRaiders.FirstOrDefault(x => x.Address == avatarAddress.ToHex());
-                        if (raider == null)
-                        {
-                            updateList.Add(new RaiderModel(index, raidId, raiderState));
-                            index++;
-                        }
-                        else
-                        {
-                            if (raider.TotalScore != raiderState.TotalScore)
-                            {
-                                updateList.Add(new RaiderModel(raider.Id, raidId, raiderState));
-                            }
-                        }
-                    }
-
-                    store.StoreRaiderList(updateList);
-                    return true;
-                });
         }
 
         private MySqlStore Store { get; }
