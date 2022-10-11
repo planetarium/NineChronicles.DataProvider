@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL.Execution;
+using GraphQL.Types;
 using Libplanet;
 using Libplanet.Assets;
 using Libplanet.Crypto;
@@ -63,7 +64,9 @@ public class WorldBossRankingRewardQueryTest : TestBase
 
         var query = $@"query {{
         worldBossRankingReward(raidId: 1, avatarAddress: ""{queryAddress}"") {{
-            ranking
+            raider {{
+                ranking
+            }}
             rewards {{
                 quantity
                 currency {{
@@ -78,7 +81,8 @@ public class WorldBossRankingRewardQueryTest : TestBase
         if (canReceive)
         {
             var dictionary = (Dictionary<string, object>)((Dictionary<string, object>) ((ExecutionNode) result.Data).ToValue())["worldBossRankingReward"];
-            Assert.Equal(rank, dictionary["ranking"]);
+            var raider = (Dictionary<string, object>) dictionary["raider"];
+            Assert.Equal(rank, raider["ranking"]);
             var models = (object[])dictionary["rewards"];
             Assert.True(models.Any());
             foreach (var model in models)
@@ -131,7 +135,9 @@ public class WorldBossRankingRewardQueryTest : TestBase
 
         var query = $@"query {{
         worldBossRankingRewards(raidId: 1, offset: {offset}, limit: {limit}) {{
-            ranking
+            raider {{
+                ranking
+            }}
             rewards {{
                 quantity
                 currency {{
@@ -148,7 +154,8 @@ public class WorldBossRankingRewardQueryTest : TestBase
             var queryData = (object[])((Dictionary<string, object>) ((ExecutionNode) result.Data).ToValue())["worldBossRankingRewards"];
             Assert.Equal(expectedCount, queryData.Length);
             var dictionary = (Dictionary<string, object>)queryData.First();
-            Assert.Equal(expectedRank, dictionary["ranking"]);
+            var raider = (Dictionary<string, object>) dictionary["raider"];
+            Assert.Equal(expectedRank, raider["ranking"]);
             var models = (object[])dictionary["rewards"];
             Assert.True(models.Any());
             foreach (var model in models)

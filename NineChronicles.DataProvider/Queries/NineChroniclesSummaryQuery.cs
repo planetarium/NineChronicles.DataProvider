@@ -311,7 +311,7 @@
 
                             // calculate rewards.
                             var row = rankingRewardSheet.FindRow(ranking, rate);
-                            return (ranking, row.GetRewards(runeSheet));
+                            return (raider, row.GetRewards(runeSheet));
                         }
                     }
 
@@ -365,13 +365,13 @@
                             // Check ranking.
                             var raiders = Store.GetWorldBossRanking(raidId, offset, limit);
                             int totalCount = Store.GetTotalRaiders(raidId);
-                            var result = new List<(int, List<FungibleAssetValue>)>();
+                            var result = new List<(WorldBossRankingModel, List<FungibleAssetValue>)>();
                             foreach (var raider in raiders)
                             {
                                 var ranking = raider.Ranking;
                                 var rate = ranking / totalCount * 100;
                                 var row = rankingRewardSheet.FindRow(ranking, rate);
-                                result.Add((ranking, row.GetRewards(runeSheet)));
+                                result.Add((raider, row.GetRewards(runeSheet)));
                             }
 
                             return result;
