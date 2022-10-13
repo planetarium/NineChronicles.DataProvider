@@ -1,10 +1,12 @@
 ﻿namespace NineChronicles.DataProvider.Queries
 {
+    using System.Collections.Generic;
     using System.Linq;
     using Bencodex.Types;
     using GraphQL;
     using GraphQL.Types;
     using Libplanet;
+    using Libplanet.Assets;
     using Libplanet.Explorer.GraphTypes;
     using Nekoyume;
     using Nekoyume.TableData;
@@ -234,7 +236,7 @@
                     var raidId = context.GetArgument<int>("raidId");
                     var avatarAddress = context.GetArgument<Address?>("avatarAddress");
                     var limit = context.GetArgument<int>("limit");
-                    var raiders = Store.GetWorldBossRanking(raidId);
+                    var raiders = Store.GetWorldBossRanking(raidId, null, null);
                     var result = raiders
                         .Take(limit)
                         .ToList();
@@ -302,14 +304,77 @@
                         if (bossRow.EndedBlockIndex <= blockIndex)
                         {
                             // Check ranking.
-                            var raiders = Store.GetWorldBossRanking(raidId);
+                            var raiders = Store.GetWorldBossRanking(raidId, null, null);
                             var raider = raiders.First(r => r.Address == avatarAddress.ToHex());
                             var ranking = raider.Ranking;
                             var rate = ranking / raiders.Count * 100;
 
                             // calculate rewards.
                             var row = rankingRewardSheet.FindRow(ranking, rate);
-                            return (ranking, row.GetRewards(runeSheet));
+                            return (raider, row.GetRewards(runeSheet));
+                        }
+                    }
+
+                    throw new ExecutionError("can't receive");
+                }
+            );
+
+            Field<ListGraphType<WorldBossRankingRewardType>>(
+                "worldBossRankingRewards",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "raidId",
+                        Description = "world boss season id.",
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "limit",
+                        Description = "query limit.",
+                    },
+                    new QueryArgument<NonNullGraphType<IntGraphType>>
+                    {
+                        Name = "offset",
+                        Description = "query offset.",
+                    }
+                ),
+                resolve: context =>
+                {
+                    var raidId = context.GetArgument<int>("raidId");
+                    int limit = context.GetArgument<int>("limit" );
+                    int offset = context.GetArgument<int>("offset");
+
+                    // Check calculate state end.
+                    // Use database block tip because sync db & store delay.
+                    var blockIndex = Store.GetTip();
+                    var worldBossListSheetAddress = Addresses.GetSheetAddress<WorldBossListSheet>();
+                    var runeSheetAddress = Addresses.GetSheetAddress<RuneSheet>();
+                    var rewardSheetAddress = Addresses.GetSheetAddress<WorldBossRankingRewardSheet>();
+                    var values = stateContext.GetStates(new[] { worldBossListSheetAddress, runeSheetAddress, rewardSheetAddress });
+                    if (values[0] is Text wbs && values[1] is Text rs && values[2] is Text wrs)
+                    {
+                        var sheet = new WorldBossListSheet();
+                        sheet.Set(wbs);
+                        var runeSheet = new RuneSheet();
+                        runeSheet.Set(rs);
+                        var rankingRewardSheet = new WorldBossRankingRewardSheet();
+                        rankingRewardSheet.Set(wrs);
+                        var bossRow = sheet.OrderedList.First(r => r.Id == raidId);
+                        if (bossRow.EndedBlockIndex <= blockIndex)
+                        {
+                            // Check ranking.
+                            var raiders = Store.GetWorldBossRanking(raidId, offset, limit);
+                            int totalCount = Store.GetTotalRaiders(raidId);
+                            var result = new List<(WorldBossRankingModel, List<FungibleAssetValue>)>();
+                            foreach (var raider in raiders)
+                            {
+                                var ranking = raider.Ranking;
+                                var rate = ranking / totalCount * 100;
+                                var row = rankingRewardSheet.FindRow(ranking, rate);
+                                result.Add((raider, row.GetRewards(runeSheet)));
+                            }
+
+                            return result;
                         }
                     }
 
