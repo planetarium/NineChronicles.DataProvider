@@ -301,7 +301,7 @@
                         var rankingRewardSheet = new WorldBossRankingRewardSheet();
                         rankingRewardSheet.Set(wrs);
                         var bossRow = sheet.OrderedList.First(r => r.Id == raidId);
-                        if (bossRow.EndedBlockIndex <= blockIndex)
+                        if (bossRow.EndedBlockIndex <= blockIndex && Store.MigrationExists(raidId))
                         {
                             // Check ranking.
                             var raiders = Store.GetWorldBossRanking(raidId, null, null);

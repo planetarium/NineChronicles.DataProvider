@@ -1442,6 +1442,13 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public List<RaiderModel> GetRaiderList()
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<RaiderModel> raiders = ctx.Raiders!;
+            return raiders.ToList();
+        }
+
         public void StoreBlockList(List<BlockModel> blockList)
         {
             try
@@ -1746,6 +1753,17 @@ namespace NineChronicles.DataProvider.Store
             ctx.SaveChanges();
         }
 
+        public void StoreWorldBossMigration(int raidId)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            WorldBossSeasonMigrationModel model = new WorldBossSeasonMigrationModel
+            {
+                RaidId = raidId,
+            };
+            ctx.WorldBossSeasonMigrationModels.Add(model);
+            ctx.SaveChanges();
+        }
+
         public List<WorldBossRankingModel> GetWorldBossRanking(int raidId, int? queryOffset, int? queryLimit)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
@@ -1774,6 +1792,38 @@ namespace NineChronicles.DataProvider.Store
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             return ctx.Blocks.Select(i => i.Index).OrderByDescending(i => i).First();
+        }
+
+        public bool MigrationExists(int raidId)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            return ctx.WorldBossSeasonMigrationModels.Any(m => m.RaidId == raidId);
+        }
+
+        public void UpsertRaiders(List<RaiderModel> raiderModels)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            foreach (var model in raiderModels)
+            {
+                RaiderModel? prevModel =
+                    ctx.Raiders.FirstOrDefault(r => r.RaidId == model.RaidId && r.Address.Equals(model.Address));
+                if (prevModel is null)
+                {
+                    ctx.Raiders.Add(model);
+                }
+                else
+                {
+                    prevModel.Cp = model.Cp;
+                    prevModel.IconId = model.IconId;
+                    prevModel.HighScore = model.HighScore;
+                    prevModel.TotalScore = model.TotalScore;
+                    prevModel.Level = model.Level;
+                    prevModel.PurchaseCount = model.PurchaseCount;
+                    ctx.Raiders.Update(prevModel);
+                }
+            }
+
+            ctx.SaveChanges();
         }
     }
 }
