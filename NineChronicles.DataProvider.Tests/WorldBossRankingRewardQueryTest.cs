@@ -33,6 +33,7 @@ public class WorldBossRankingRewardQueryTest : TestBase
         {
             _csv = @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
 1,900001,0,10,300,200,100,10";
+            Context.WorldBossSeasonMigrationModels.Add(new WorldBossSeasonMigrationModel { RaidId = 1 });
         }
         string queryAddress = null;
         for (int i = 0; i < 200; i++)
