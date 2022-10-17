@@ -145,6 +145,7 @@ namespace NineChronicles.DataProvider.Executable
                     services.AddSingleton<MySqlStore>();
                     services.Configure<Configuration>(config);
                     services.AddSingleton(stateContext);
+                    services.AddHostedService<RaiderWorker>();
                 });
 
             await hostBuilder.RunConsoleAsync(token);
