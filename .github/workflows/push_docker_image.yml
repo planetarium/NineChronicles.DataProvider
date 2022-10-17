@@ -7,7 +7,6 @@ on:
       - development
       - rc-*
       - 2022q3-worldboss
-      - prepare-worldboss-s2
 
 jobs:
   build_and_push:
