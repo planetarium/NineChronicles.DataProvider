@@ -1688,5 +1688,47 @@ namespace NineChronicles.DataProvider.Store
 
             return query.ToList();
         }
+
+        public void StoreRaider(RaiderModel model)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            RaiderModel? prevModel =
+                ctx.Raiders.FirstOrDefault(r => r.RaidId == model.RaidId && r.Address.Equals(model.Address));
+            if (prevModel is null)
+            {
+                ctx.Raiders.Add(model);
+            }
+            else
+            {
+                prevModel.Cp = model.Cp;
+                prevModel.IconId = model.IconId;
+                prevModel.HighScore = model.HighScore;
+                prevModel.TotalScore = model.TotalScore;
+                prevModel.Level = model.Level;
+                ctx.Raiders.Update(prevModel);
+            }
+
+            ctx.SaveChanges();
+        }
+
+        public List<WorldBossRankingModel> GetWorldBossRanking(int raidId)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            var query = ctx.Set<WorldBossRankingModel>()
+                .FromSqlRaw(@"SELECT `AvatarName`, `HighScore`, `TotalScore`, `Cp`, `Level`, `Address`, `IconId`, row_number() over(ORDER BY `TotalScore` DESC) as `Ranking` FROM `Raiders` WHERE `RaidId` = {0}", raidId);
+            return query.ToList();
+        }
+
+        public int GetTotalRaiders(int raidId)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            return ctx.Raiders.Count(r => r.RaidId == raidId);
+        }
+
+        public long GetTip()
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            return ctx.Blocks.Select(i => i.Index).OrderByDescending(i => i).First();
+        }
     }
 }
