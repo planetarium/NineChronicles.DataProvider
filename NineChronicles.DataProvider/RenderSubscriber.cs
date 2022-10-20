@@ -72,6 +72,7 @@ namespace NineChronicles.DataProvider
         private readonly List<EventConsumableItemCraftsModel> _eventConsumableItemCraftsList = new List<EventConsumableItemCraftsModel>();
         private readonly List<RaiderModel> _raiderList = new List<RaiderModel>();
         private readonly List<string> _agents;
+        private readonly bool _render;
         private int _renderedBlockCount;
         private DateTimeOffset _blockTimeOffset;
         private Address _miner;
@@ -88,6 +89,7 @@ namespace NineChronicles.DataProvider
             MySqlStore = mySqlStore;
             _renderedBlockCount = 0;
             _agents = new List<string>();
+            _render = Convert.ToBoolean(Environment.GetEnvironmentVariable("NC_Render"));
             string dataPath = Environment.GetEnvironmentVariable("NC_BlockIndexFilePath")
                               ?? Path.GetTempPath();
             if (!Directory.Exists(dataPath))
@@ -117,6 +119,11 @@ namespace NineChronicles.DataProvider
         {
             _blockRenderer.BlockSubject.Subscribe(b =>
             {
+                if (!_render)
+                {
+                    return;
+                }
+
                 if (_renderedBlockCount == _blockInsertInterval)
                 {
                     var start = DateTimeOffset.Now;
