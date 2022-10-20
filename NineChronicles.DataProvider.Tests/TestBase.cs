@@ -28,6 +28,7 @@ public abstract class TestBase
     protected DocumentExecuter DocumentExecuter;
     protected Schema Schema;
     protected NineChroniclesContext Context;
+    protected ServiceCollection Services;
 
     protected TestBase()
     {
@@ -70,6 +71,7 @@ public abstract class TestBase
         var serviceProvider = services.BuildServiceProvider();
         Schema = new NineChroniclesSummarySchema(serviceProvider);
         DocumentExecuter = new DocumentExecuter();
+        Services = services;
     }
 
     private NineChroniclesContext CreateContext(string connectionString)

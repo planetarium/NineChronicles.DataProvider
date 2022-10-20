@@ -88,6 +88,9 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<RaiderModel> Raiders => Set<RaiderModel>();
 
+        public DbSet<WorldBossSeasonMigrationModel> WorldBossSeasonMigrationModels =>
+            Set<WorldBossSeasonMigrationModel>();
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.
