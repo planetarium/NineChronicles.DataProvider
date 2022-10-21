@@ -30,8 +30,9 @@ namespace NineChronicles.DataProvider
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            bool retry = true;
             Log.Information("Start RaiderWorker");
-            while (!stoppingToken.IsCancellationRequested)
+            while (!stoppingToken.IsCancellationRequested && retry)
             {
                 try
                 {
@@ -56,6 +57,7 @@ namespace NineChronicles.DataProvider
                                 {
                                     Log.Information("Success Update raiders");
                                     _mySqlStore.StoreWorldBossMigration(raidId);
+                                    retry = false;
                                 }
                             }
                         }
