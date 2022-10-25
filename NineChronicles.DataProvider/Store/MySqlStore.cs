@@ -1764,11 +1764,21 @@ namespace NineChronicles.DataProvider.Store
             ctx.SaveChanges();
         }
 
-        public List<WorldBossRankingModel> GetWorldBossRanking(int raidId)
+        public List<WorldBossRankingModel> GetWorldBossRanking(int raidId, int? queryOffset, int? queryLimit)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             var query = ctx.Set<WorldBossRankingModel>()
                 .FromSqlRaw(@"SELECT `AvatarName`, `HighScore`, `TotalScore`, `Cp`, `Level`, `Address`, `IconId`, row_number() over(ORDER BY `TotalScore` DESC) as `Ranking` FROM `Raiders` WHERE `RaidId` = {0}", raidId);
+            if (queryOffset.HasValue)
+            {
+                query = query.Skip(queryOffset.Value);
+            }
+
+            if (queryLimit.HasValue)
+            {
+                query = query.Take(queryLimit.Value);
+            }
+
             return query.ToList();
         }
 
