@@ -6,8 +6,7 @@ on:
       - main
       - development
       - rc-*
-      - 2022q3-worldboss
-      - internal-worldboss-s2
+      - worldboss-task-test
 
 jobs:
   build_and_push:
