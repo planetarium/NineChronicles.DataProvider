@@ -669,24 +669,25 @@ namespace NineChronicles.DataProvider
                                     outputEquipmentLevel = outputEnhancementEquipment.level;
                                 }
 
+                                Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
+                                var prevNCGBalance = previousStates.GetBalance(
+                                    ev.Signer,
+                                    ncgCurrency);
+                                var outputNCGBalance = ev.OutputStates.GetBalance(
+                                    ev.Signer,
+                                    ncgCurrency);
+                                var burntNCG = prevNCGBalance - outputNCGBalance;
+
                                 if (prevEquipmentLevel == outputEquipmentLevel)
                                 {
                                     Currency crystalCurrency = CrystalCalculator.CRYSTAL;
-                                    Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
                                     var prevCrystalBalance = previousStates.GetBalance(
                                         ev.Signer,
                                         crystalCurrency);
                                     var outputCrystalBalance = ev.OutputStates.GetBalance(
                                         ev.Signer,
                                         crystalCurrency);
-                                    var prevNCGBalance = previousStates.GetBalance(
-                                        ev.Signer,
-                                        ncgCurrency);
-                                    var outputNCGBalance = ev.OutputStates.GetBalance(
-                                        ev.Signer,
-                                        ncgCurrency);
                                     var gainedCrystal = outputCrystalBalance - prevCrystalBalance;
-                                    var burntNCG = prevNCGBalance - outputNCGBalance;
                                     _itemEnhancementFailList.Add(new ItemEnhancementFailModel()
                                     {
                                         Id = itemEnhancement.Id.ToString(),
@@ -710,6 +711,7 @@ namespace NineChronicles.DataProvider
                                     ItemId = itemEnhancement.itemId.ToString(),
                                     MaterialId = itemEnhancement.materialId.ToString(),
                                     SlotIndex = itemEnhancement.slotIndex,
+                                    BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
                                     BlockIndex = ev.BlockIndex,
                                 });
 

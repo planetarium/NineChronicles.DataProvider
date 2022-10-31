@@ -21,6 +21,8 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public int SlotIndex { get; set; }
 
+        public decimal BurntNCG { get; set; }
+
         public long BlockIndex { get; set; }
     }
 }
