@@ -911,6 +911,7 @@ namespace NineChronicles.DataProvider.Store
             Guid itemId,
             Guid materialId,
             int slotIndex,
+            decimal burntNCG,
             long blockIndex)
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
@@ -923,6 +924,7 @@ namespace NineChronicles.DataProvider.Store
                     ItemId = itemId.ToString(),
                     MaterialId = materialId.ToString(),
                     SlotIndex = slotIndex,
+                    BurntNCG = burntNCG,
                     BlockIndex = blockIndex,
                 }
             );

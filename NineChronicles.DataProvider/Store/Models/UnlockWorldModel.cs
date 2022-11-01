@@ -5,7 +5,6 @@
 
     public class UnlockWorldModel
     {
-        [Key]
         public string? Id { get; set; }
 
         public long BlockIndex { get; set; }
