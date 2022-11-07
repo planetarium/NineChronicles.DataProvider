@@ -92,8 +92,9 @@ CREATE TABLE IF NOT EXISTS `data_provider`.`ItemEnhancements` (
     `ItemId` VARCHAR(100) NOT NULL,
     `MaterialId` VARCHAR(100) NOT NULL,
     `SlotIndex` INT NOT NULL,
-    `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `BurntNCG` decimal(13,2) NOT NULL,
     `BlockIndex` BIGINT NOT NULL,
+    `Timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     PRIMARY KEY (`Id`),
     INDEX `fk_ItemEnhancements_Avatar1_idx` (`AvatarAddress`),

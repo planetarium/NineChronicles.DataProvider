@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
@@ -10,9 +11,10 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20221031061838_UpdateTables")]
+    partial class UpdateTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -679,6 +681,9 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.GrindingModel", b =>
                 {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
                     b.Property<string>("AgentAddress")
                         .HasColumnType("varchar(255)");
 
@@ -700,11 +705,10 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<int>("EquipmentLevel")
                         .HasColumnType("int");
 
-                    b.Property<string>("Id")
-                        .HasColumnType("longtext");
-
                     b.Property<DateTimeOffset>("TimeStamp")
                         .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("AgentAddress");
 
@@ -984,6 +988,10 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<string>("AgentAddress")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("AgentAddress1")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
                     b.Property<long>("BlockIndex")
                         .HasColumnType("bigint");
 
@@ -999,7 +1007,9 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<DateTimeOffset>("TimeStamp")
                         .HasColumnType("datetime(6)");
 
-                    b.HasIndex("AgentAddress");
+                    b.HasKey("AgentAddress");
+
+                    b.HasIndex("AgentAddress1");
 
                     b.ToTable("MigrateMonsterCollections");
                 });
@@ -1585,6 +1595,9 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.ShopMaterialModel", b =>
                 {
+                    b.Property<string>("ItemId")
+                        .HasColumnType("varchar(255)");
+
                     b.Property<long>("BlockIndex")
                         .HasColumnType("bigint");
 
@@ -1602,9 +1615,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
                     b.Property<int>("ItemCount")
                         .HasColumnType("int");
-
-                    b.Property<string>("ItemId")
-                        .HasColumnType("longtext");
 
                     b.Property<string>("ItemSubType")
                         .HasColumnType("longtext");
@@ -1635,6 +1645,8 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
                     b.Property<string>("TradableId")
                         .HasColumnType("longtext");
+
+                    b.HasKey("ItemId");
 
                     b.ToTable("ShopMaterials");
                 });
@@ -1744,6 +1756,9 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.UnlockEquipmentRecipeModel", b =>
                 {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
                     b.Property<string>("AgentAddress")
                         .HasColumnType("varchar(255)");
 
@@ -1756,14 +1771,13 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<decimal>("BurntCrystal")
                         .HasColumnType("decimal(65,30)");
 
-                    b.Property<string>("Id")
-                        .HasColumnType("longtext");
-
                     b.Property<DateTimeOffset>("TimeStamp")
                         .HasColumnType("datetime(6)");
 
                     b.Property<int>("UnlockEquipmentRecipeId")
                         .HasColumnType("int");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("AgentAddress");
 
@@ -1774,6 +1788,9 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.UnlockWorldModel", b =>
                 {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
                     b.Property<string>("AgentAddress")
                         .HasColumnType("varchar(255)");
 
@@ -1786,14 +1803,13 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<decimal>("BurntCrystal")
                         .HasColumnType("decimal(65,30)");
 
-                    b.Property<string>("Id")
-                        .HasColumnType("longtext");
-
                     b.Property<DateTimeOffset>("TimeStamp")
                         .HasColumnType("datetime(6)");
 
                     b.Property<int>("UnlockWorldId")
                         .HasColumnType("int");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("AgentAddress");
 
@@ -2066,7 +2082,9 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                 {
                     b.HasOne("NineChronicles.DataProvider.Store.Models.AgentModel", "Agent")
                         .WithMany()
-                        .HasForeignKey("AgentAddress");
+                        .HasForeignKey("AgentAddress1")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Agent");
                 });
