@@ -22,19 +22,31 @@ public class WorldBossRankingRewardQueryTest : TestBase
     private string _csv = string.Empty;
 
     [Theory]
-    [InlineData(1, 1L, false, false)]
-    [InlineData(1, 20L, true, true)]
-    [InlineData(1, 20L, true, false)]
-    [InlineData(200, 1L, false, true)]
-    [InlineData(200, 20L, true, true)]
-    [InlineData(200, 20L, true, false)]
-    public async Task WorldBossRankingReward(int rank, long blockIndex, bool canReceive, bool hex)
+    [InlineData(1, 1L, false, false, 1, "0")]
+    [InlineData(200, 1L, false, true, 1, "0")]
+    [InlineData(1, 20L, true, true, 1, "900000")]
+    [InlineData(2, 20L, true, false, 1, "625000")]
+    [InlineData(3, 20L, true, true, 1, "400000")]
+    [InlineData(10, 20L, true, false, 1, "250000")]
+    [InlineData(100, 20L, true, false, 1, "150000")]
+    [InlineData(140, 20L, true, false, 1, "150000")]
+    [InlineData(199, 20L, true, false, 1, "150000")]
+    [InlineData(200, 20L, true, false, 1, "15000")]
+    [InlineData(1, 20L, true, true, 2, "900000")]
+    [InlineData(2, 20L, true, false, 2, "625000")]
+    [InlineData(3, 20L, true, true, 2, "400000")]
+    [InlineData(10, 20L, true, false, 2, "250000")]
+    [InlineData(100, 20L, true, false, 2, "150000")]
+    [InlineData(140, 20L, true, false, 2, "25000")]
+    [InlineData(199, 20L, true, false, 2, "15000")]
+    [InlineData(200, 20L, true, false, 2, "15000")]
+    public async Task WorldBossRankingReward(int rank, long blockIndex, bool canReceive, bool hex, int raidId, string expectedCrystal)
     {
         if (canReceive)
         {
-            _csv = @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
-1,900001,0,10,300,200,100,10";
-            Context.WorldBossSeasonMigrationModels.Add(new WorldBossSeasonMigrationModel { RaidId = 1 });
+            _csv = $@"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
+{raidId},900001,0,10,300,200,100,10";
+            Context.WorldBossSeasonMigrationModels.Add(new WorldBossSeasonMigrationModel { RaidId = raidId });
         }
         string queryAddress = null;
         for (int i = 0; i < 200; i++)
@@ -45,7 +57,7 @@ public class WorldBossRankingRewardQueryTest : TestBase
                 queryAddress = hex ? avatarAddress.ToHex() : avatarAddress.ToString();
             }
             var model = new RaiderModel(
-                1,
+                raidId,
                 i.ToString(),
                 200 -i,
                 200 - i,
@@ -64,7 +76,7 @@ public class WorldBossRankingRewardQueryTest : TestBase
 
 
         var query = $@"query {{
-        worldBossRankingReward(raidId: 1, avatarAddress: ""{queryAddress}"") {{
+        worldBossRankingReward(raidId: {raidId}, avatarAddress: ""{queryAddress}"") {{
             raider {{
                 ranking
             }}
@@ -91,14 +103,19 @@ public class WorldBossRankingRewardQueryTest : TestBase
                 var rewardInfo = Assert.IsType<Dictionary<string, object>>(model);
                 var quantity = (string)rewardInfo["quantity"];
                 var rawCurrency = (Dictionary<string, object>)rewardInfo["currency"];
+                var ticker = (string) rawCurrency["ticker"];
 #pragma warning disable CS0618
                 // Use of obsolete method Currency.Legacy(): https://github.com/planetarium/lib9c/discussions/1319
                 var currency = Currency.Legacy(
-                    (string)rawCurrency["ticker"],
+                    ticker,
                     (byte)rawCurrency["decimalPlaces"],
                     (IImmutableSet<Address>?)rawCurrency["minters"]);
 #pragma warning restore CS0618
                 FungibleAssetValue.Parse(currency, quantity);
+                if (ticker == "CRYSTAL")
+                {
+                    Assert.Equal(expectedCrystal, quantity);
+                }
             }
         }
         else
@@ -181,6 +198,83 @@ public class WorldBossRankingRewardQueryTest : TestBase
             Assert.Single(result.Errors!);
         }
     }
+
+
+    [Theory]
+    [InlineData(1, 0, 1, "900000")]
+    [InlineData(1, 1, 2, "625000")]
+    [InlineData(1, 2, 3, "400000")]
+    [InlineData(1, 9, 10, "250000")]
+    [InlineData(1, 99, 100, "150000")]
+    [InlineData(1, 198, 199, "150000")]
+    [InlineData(2, 139, 140, "25000")]
+    [InlineData(2, 199, 200, "15000")]
+    [InlineData(2, 198, 199, "15000")]
+    public async Task WorldBossRankingRewards_Rate(int raidId, int offset, int expectedRank, string expectedCrystal)
+    {
+        _csv = $@"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
+{raidId},900001,0,10,300,200,100,10";
+
+        for (int i = 0; i < 200; i++)
+        {
+            var avatarAddress = new PrivateKey().ToAddress();
+            var model = new RaiderModel(
+                raidId,
+                i.ToString(),
+                200 -i,
+                200 - i,
+                i + 2,
+                GameConfig.DefaultAvatarArmorId,
+                i,
+                avatarAddress.ToHex(),
+                0
+            );
+            Context.Raiders.Add(model);
+        }
+
+        await SaveBlock(11L);
+
+
+        var query = $@"query {{
+        worldBossRankingRewards(raidId: {raidId}, offset: {offset}, limit: 1) {{
+            raider {{
+                ranking
+            }}
+            rewards {{
+                quantity
+                currency {{
+                    minters
+                    ticker
+                    decimalPlaces
+                }}
+            }}
+        }}
+    }}";
+        var result = await ExecuteAsync(query);
+        var queryData = (object[])((Dictionary<string, object>) ((ExecutionNode) result.Data).ToValue())["worldBossRankingRewards"];
+        Assert.Single(queryData);
+        var dictionary = (Dictionary<string, object>)queryData.First();
+        var raider = (Dictionary<string, object>) dictionary["raider"];
+        Assert.Equal(expectedRank, raider["ranking"]);
+        var models = (object[])dictionary["rewards"];
+        Assert.True(models.Any());
+        foreach (var model in models)
+        {
+            var rewardInfo = Assert.IsType<Dictionary<string, object>>(model);
+            var quantity = (string)rewardInfo["quantity"];
+            var rawCurrency = (Dictionary<string, object>)rewardInfo["currency"];
+            var ticker = (string) rawCurrency["ticker"];
+#pragma warning disable CS0618
+            var currency = Currency.Legacy(ticker: ticker, decimalPlaces: (byte) rawCurrency["decimalPlaces"], minters: (IImmutableSet<Address>?) rawCurrency["minters"]);
+#pragma warning restore CS0618
+            FungibleAssetValue.Parse(currency, quantity);
+            if (ticker == "CRYSTAL")
+            {
+                Assert.Equal(expectedCrystal, quantity);
+            }
+        }
+    }
+
     protected override IValue? GetStateMock(Address address)
     {
         if (address.Equals(Addresses.GetSheetAddress<WorldBossListSheet>()))

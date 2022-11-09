@@ -307,7 +307,11 @@
                             var raiders = Store.GetWorldBossRanking(raidId, null, null);
                             var raider = raiders.First(r => r.Address == avatarAddress.ToHex());
                             var ranking = raider.Ranking;
-                            var rate = ranking / raiders.Count * 100;
+
+                            // backward compatibility for season 1. because season 1 reward already distributed.
+                            var rate = raidId == 1
+                                ? ranking / raiders.Count * 100
+                                : ranking * 100 / raiders.Count;
 
                             // calculate rewards.
                             var row = rankingRewardSheet.FindRow(ranking, rate);
@@ -369,7 +373,11 @@
                             foreach (var raider in raiders)
                             {
                                 var ranking = raider.Ranking;
-                                var rate = ranking / totalCount * 100;
+
+                                // backward compatibility for season 1. because season 1 reward already distributed.
+                                var rate = raidId == 1
+                                    ? ranking / totalCount * 100
+                                    : ranking * 100 / totalCount;
                                 var row = rankingRewardSheet.FindRow(ranking, rate);
                                 result.Add((raider, row.GetRewards(runeSheet)));
                             }
