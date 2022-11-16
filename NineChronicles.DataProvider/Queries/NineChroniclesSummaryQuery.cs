@@ -300,7 +300,7 @@
                         runeSheet.Set(rs);
                         var rankingRewardSheet = new WorldBossRankingRewardSheet();
                         rankingRewardSheet.Set(wrs);
-                        var bossRow = sheet.OrderedList.First(r => r.Id == raidId);
+                        var bossRow = sheet.OrderedList!.First(r => r.Id == raidId);
                         if (bossRow.EndedBlockIndex <= blockIndex && Store.MigrationExists(raidId))
                         {
                             // Check ranking.
@@ -363,7 +363,7 @@
                         runeSheet.Set(rs);
                         var rankingRewardSheet = new WorldBossRankingRewardSheet();
                         rankingRewardSheet.Set(wrs);
-                        var bossRow = sheet.OrderedList.First(r => r.Id == raidId);
+                        var bossRow = sheet.OrderedList!.First(r => r.Id == raidId);
                         if (bossRow.EndedBlockIndex <= blockIndex)
                         {
                             // Check ranking.

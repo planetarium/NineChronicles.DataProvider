@@ -43,7 +43,7 @@ namespace NineChronicles.DataProvider
                         var sheet = new WorldBossListSheet();
                         sheet.Set(wbs);
                         int raidId = sheet.FindPreviousRaidIdByBlockIndex(blockIndex);
-                        var bossRow = sheet.OrderedList.First(r => r.Id == raidId);
+                        var bossRow = sheet.OrderedList!.First(r => r.Id == raidId);
                         var exist = _mySqlStore.MigrationExists(raidId);
                         if (bossRow.EndedBlockIndex < blockIndex && !exist)
                         {
