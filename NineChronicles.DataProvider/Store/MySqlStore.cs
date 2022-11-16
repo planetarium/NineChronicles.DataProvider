@@ -1527,14 +1527,7 @@ namespace NineChronicles.DataProvider.Store
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
             var query = ctx.Set<CraftRankingOutputModel>()
-                .FromSqlRaw("SELECT `h`.`AvatarAddress`, `AgentAddress`, `CraftCount`, `BlockIndex`, " +
-                            "(SELECT `a`.`Name` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Name`, " +
-                            "(SELECT `a`.`AvatarLevel` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `AvatarLevel`, " +
-                            "(SELECT `a`.`TitleId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `TitleId`, " +
-                            "(SELECT `a`.`ArmorId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `ArmorId`, " +
-                            "(SELECT `a`.`Cp` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Cp`, " +
-                            "row_number() over(ORDER BY `CraftCount` DESC, `h`.`BlockIndex`) `Ranking` " +
-                            "FROM `CraftRankings` AS `h` ");
+                .FromSqlRaw("SELECT * FROM CraftRankings ORDER BY Ranking ");
 
             if (avatarAddress is { } avatarAddressNotNull)
             {
