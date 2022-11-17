@@ -1391,7 +1391,9 @@ namespace NineChronicles.DataProvider
                                             avatarTitleId = avatarTitleCostume.Id;
                                         }
 
+#pragma warning disable CS0618
                                         var avatarCp = CPHelper.GetCP(sellerState, characterSheet);
+#pragma warning restore CS0618
                                         string avatarName = sellerState.name;
 
                                         if (buyerInventory.Equipments == null || sellerInventory.Equipments == null)
@@ -1562,7 +1564,9 @@ namespace NineChronicles.DataProvider
                                     avatarTitleId = avatarTitleCostume.Id;
                                 }
 
+#pragma warning disable CS0618
                                 var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
+#pragma warning restore CS0618
                                 string avatarName = avatarState.name;
 
                                 Log.Debug(
