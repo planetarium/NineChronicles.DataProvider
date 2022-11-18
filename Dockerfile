@@ -35,7 +35,7 @@ RUN dotnet publish NineChronicles.Headless/NineChronicles.Headless.Executable/Ni
     --version-suffix $COMMIT \
 
 RUN dotnet tool install --global dotnet-ef
-ENV PATH="$PATH:/root/.dotnet/tools"
+ENV PATH="$PATH:/app/.dotnet/tools"
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:6.0
