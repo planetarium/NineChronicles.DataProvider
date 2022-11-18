@@ -8,6 +8,7 @@ on:
       - rc-*
       - 2022q3-worldboss
       - internal-worldboss-s2
+      - feat/add-dotnet-ef
     tags:
         - v*
 
