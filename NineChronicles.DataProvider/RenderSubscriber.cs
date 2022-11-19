@@ -1077,6 +1077,7 @@ namespace NineChronicles.DataProvider
                                         EquipmentLevel = equipment.level,
                                         Crystal = Convert.ToDecimal(crystal.GetQuantityString()),
                                         BlockIndex = ev.BlockIndex,
+                                        Date = _blockTimeOffset.UtcDateTime,
                                         TimeStamp = _blockTimeOffset,
                                     });
                                 }
@@ -1107,6 +1108,7 @@ namespace NineChronicles.DataProvider
                                         AvatarAddress = unlockEquipmentRecipe.AvatarAddress.ToString(),
                                         UnlockEquipmentRecipeId = recipeId,
                                         BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
+                                        Date = _blockTimeOffset.UtcDateTime,
                                         TimeStamp = _blockTimeOffset,
                                     });
                                 }
@@ -1137,6 +1139,7 @@ namespace NineChronicles.DataProvider
                                         AvatarAddress = unlockWorld.AvatarAddress.ToString(),
                                         UnlockWorldId = worldId,
                                         BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
+                                        Date = _blockTimeOffset.UtcDateTime,
                                         TimeStamp = _blockTimeOffset,
                                     });
                                 }

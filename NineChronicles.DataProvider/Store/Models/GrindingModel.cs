@@ -26,6 +26,8 @@
 
         public decimal Crystal { get; set; }
 
+        public DateTimeOffset Date { get; set; }
+
         public DateTimeOffset TimeStamp { get; set; }
     }
 }
