@@ -8,6 +8,7 @@ on:
       - rc-*
       - 2022q3-worldboss
       - internal-worldboss-s2
+      - migration-2022-11-19
     tags:
         - v*
 
