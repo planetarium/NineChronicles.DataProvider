@@ -103,9 +103,6 @@ namespace NineChronicles.DataProvider.Store
             modelBuilder.Entity<EquipmentRankingModel>().HasNoKey();
             modelBuilder.Entity<AbilityRankingModel>().HasNoKey();
             modelBuilder.Entity<BattleArenaRankingModel>().HasNoKey();
-            modelBuilder.Entity<GrindingModel>().HasNoKey();
-            modelBuilder.Entity<UnlockWorldModel>().HasNoKey();
-            modelBuilder.Entity<UnlockEquipmentRecipeModel>().HasNoKey();
             modelBuilder.Entity<ShopMaterialModel>().HasNoKey();
             modelBuilder.Entity<MigrateMonsterCollectionModel>().HasNoKey();
             modelBuilder.Entity<WorldBossRankingModel>()
