@@ -1444,6 +1444,76 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreBattleGrandFinaleList(List<BattleGrandFinaleModel> battleGrandFinaleList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var battleGrandFinale in battleGrandFinaleList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.BattleGrandFinales.FindAsync(battleGrandFinale.Id).Result is null)
+                        {
+                            await ctx.BattleGrandFinales.AddRangeAsync(battleGrandFinale);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.BattleGrandFinales.UpdateRange(battleGrandFinale);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreEventMaterialItemCraftsList(List<EventMaterialItemCraftsModel> eventMaterialItemCraftsList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var eventMaterialItemCrafts in eventMaterialItemCraftsList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.EventMaterialItemCrafts.FindAsync(eventMaterialItemCrafts.Id).Result is null)
+                        {
+                            await ctx.EventMaterialItemCrafts.AddRangeAsync(eventMaterialItemCrafts);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.EventMaterialItemCrafts.UpdateRange(eventMaterialItemCrafts);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public List<RaiderModel> GetRaiderList()
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();

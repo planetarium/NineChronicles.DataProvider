@@ -2,6 +2,7 @@ namespace NineChronicles.DataProvider
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.IO;
     using System.Linq;
     using System.Text;
@@ -71,6 +72,8 @@ namespace NineChronicles.DataProvider
         private readonly List<EventDungeonBattleModel> _eventDungeonBattleList = new List<EventDungeonBattleModel>();
         private readonly List<EventConsumableItemCraftsModel> _eventConsumableItemCraftsList = new List<EventConsumableItemCraftsModel>();
         private readonly List<RaiderModel> _raiderList = new List<RaiderModel>();
+        private readonly List<BattleGrandFinaleModel> _battleGrandFinaleList = new List<BattleGrandFinaleModel>();
+        private readonly List<EventMaterialItemCraftsModel> _eventMaterialItemCraftsList = new List<EventMaterialItemCraftsModel>();
         private readonly List<string> _agents;
         private readonly bool _render;
         private int _renderedBlockCount;
@@ -161,6 +164,8 @@ namespace NineChronicles.DataProvider
                             MySqlStore.StoreEventDungeonBattleList(_eventDungeonBattleList);
                             MySqlStore.StoreEventConsumableItemCraftsList(_eventConsumableItemCraftsList);
                             MySqlStore.StoreRaiderList(_raiderList);
+                            MySqlStore.StoreBattleGrandFinaleList(_battleGrandFinaleList);
+                            MySqlStore.StoreEventMaterialItemCraftsList(_eventMaterialItemCraftsList);
                         }),
                     };
 
@@ -196,6 +201,8 @@ namespace NineChronicles.DataProvider
                     _eventDungeonBattleList.Clear();
                     _eventConsumableItemCraftsList.Clear();
                     _raiderList.Clear();
+                    _battleGrandFinaleList.Clear();
+                    _eventMaterialItemCraftsList.Clear();
                     var end = DateTimeOffset.Now;
                     long blockIndex = b.OldTip.Index;
                     StreamWriter blockIndexFile = new StreamWriter(_blockIndexFilePath);
@@ -1291,6 +1298,92 @@ namespace NineChronicles.DataProvider
 
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored BattleArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is BattleGrandFinale battleGrandFinale)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(battleGrandFinale.myAvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var scoreAddress = battleGrandFinale.myAvatarAddress.Derive(string.Format(CultureInfo.InvariantCulture, BattleGrandFinale.ScoreDeriveKey, battleGrandFinale.grandFinaleId));
+                                previousStates.TryGetState(scoreAddress, out Integer previousGrandFinaleScore);
+                                ev.OutputStates.TryGetState(scoreAddress, out Integer outputGrandFinaleScore);
+
+                                _battleGrandFinaleList.Add(new BattleGrandFinaleModel()
+                                {
+                                    Id = battleGrandFinale.Id.ToString(),
+                                    BlockIndex = ev.BlockIndex,
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = battleGrandFinale.myAvatarAddress.ToString(),
+                                    AvatarLevel = avatarState.level,
+                                    EnemyAvatarAddress = battleGrandFinale.enemyAvatarAddress.ToString(),
+                                    GrandFinaleId = battleGrandFinale.grandFinaleId,
+                                    Victory = outputGrandFinaleScore > previousGrandFinaleScore,
+                                    GrandFinaleScore = outputGrandFinaleScore,
+                                    Date = _blockTimeOffset,
+                                    TimeStamp = _blockTimeOffset,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored BattleGrandFinale action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is EventMaterialItemCrafts eventMaterialItemCrafts)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                Dictionary<string, int> materialData = new Dictionary<string, int>();
+                                for (var i = 1; i < 13; i++)
+                                {
+                                    materialData.Add($"material{i}Id", 0);
+                                    materialData.Add($"material{i}Count", 0);
+                                }
+
+                                int itemNumber = 1;
+                                foreach (var pair in eventMaterialItemCrafts.MaterialsToUse)
+                                {
+                                    materialData[$"material{itemNumber}Id"] = pair.Key;
+                                    materialData[$"material{itemNumber}Count"] = pair.Value;
+                                    itemNumber++;
+                                }
+
+                                _eventMaterialItemCraftsList.Add(new EventMaterialItemCraftsModel()
+                                {
+                                    Id = eventMaterialItemCrafts.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = eventMaterialItemCrafts.AvatarAddress.ToString(),
+                                    EventScheduleId = eventMaterialItemCrafts.EventScheduleId,
+                                    EventMaterialItemRecipeId = eventMaterialItemCrafts.EventMaterialItemRecipeId,
+                                    Material1Id = materialData["material1Id"],
+                                    Material1Count = materialData["material1Count"],
+                                    Material2Id = materialData["material2Id"],
+                                    Material2Count = materialData["material2Count"],
+                                    Material3Id = materialData["material3Id"],
+                                    Material3Count = materialData["material3Count"],
+                                    Material4Id = materialData["material4Id"],
+                                    Material4Count = materialData["material4Count"],
+                                    Material5Id = materialData["material5Id"],
+                                    Material5Count = materialData["material5Count"],
+                                    Material6Id = materialData["material6Id"],
+                                    Material6Count = materialData["material6Count"],
+                                    Material7Id = materialData["material7Id"],
+                                    Material7Count = materialData["material7Count"],
+                                    Material8Id = materialData["material8Id"],
+                                    Material8Count = materialData["material8Count"],
+                                    Material9Id = materialData["material9Id"],
+                                    Material9Count = materialData["material9Count"],
+                                    Material10Id = materialData["material10Id"],
+                                    Material10Count = materialData["material10Count"],
+                                    Material11Id = materialData["material11Id"],
+                                    Material11Count = materialData["material11Count"],
+                                    Material12Id = materialData["material12Id"],
+                                    Material12Count = materialData["material12Count"],
+                                    BlockIndex = ev.BlockIndex,
+                                    Date = _blockTimeOffset,
+                                    Timestamp = _blockTimeOffset,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored EventMaterialItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                         catch (Exception ex)
