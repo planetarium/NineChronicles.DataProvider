@@ -939,12 +939,12 @@ namespace NineChronicles.DataProvider
                                 Log.Debug("Stored Stake action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (ev.Action is ClaimStakeReward claimStakeReward)
+                            if (ev.Action is IClaimStakeReward claimStakeReward)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
                                 var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
-                                var id = claimStakeReward.Id;
+                                var id = ((GameAction)claimStakeReward).Id;
                                 ev.PreviousStates.TryGetStakeState(ev.Signer, out StakeState prevStakeState);
 
                                 var claimStakeStartBlockIndex = prevStakeState.StartedBlockIndex;
