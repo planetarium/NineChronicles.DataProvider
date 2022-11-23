@@ -1,6 +1,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
 WORKDIR /app
 ARG COMMIT
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
 
 # Copy csproj and restore as distinct layers
 COPY ./NineChronicles.Headless/Lib9c/Lib9c/Lib9c.csproj ./NineChronicles.Headless/Lib9c/Lib9c/
@@ -39,8 +41,6 @@ RUN dotnet publish NineChronicles.Headless/NineChronicles.Headless.Executable/Ni
 FROM mcr.microsoft.com/dotnet/aspnet:6.0
 WORKDIR /app
 RUN apt-get update && apt-get install -y libc6-dev jq
-RUN dotnet tool install --global dotnet-ef
-ENV PATH="$PATH:/root/.dotnet/tools"
 COPY --from=build-env /app/out .
 COPY --from=build-env /app/out2 NineChronicles.Headless.Executable
 
