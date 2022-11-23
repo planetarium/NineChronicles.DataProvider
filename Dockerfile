@@ -34,13 +34,13 @@ RUN dotnet publish NineChronicles.Headless/NineChronicles.Headless.Executable/Ni
     --self-contained \
     --version-suffix $COMMIT \
 
-RUN dotnet tool install --global dotnet-ef
-ENV PATH="${PATH}:/${HOME}/.dotnet/tools"
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:6.0
 WORKDIR /app
 RUN apt-get update && apt-get install -y libc6-dev jq
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="${PATH}:/${HOME}/.dotnet/tools"
 COPY --from=build-env /app/out .
 COPY --from=build-env /app/out2 NineChronicles.Headless.Executable
 
