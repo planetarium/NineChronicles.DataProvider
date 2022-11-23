@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
 WORKDIR /app
 ARG COMMIT
 RUN dotnet tool install --global dotnet-ef
-ENV PATH="$PATH:/root/.dotnet/tools"
+ENV PATH="${PATH}:/${HOME}/.dotnet/tools"
 
 # Copy csproj and restore as distinct layers
 COPY ./NineChronicles.Headless/Lib9c/Lib9c/Lib9c.csproj ./NineChronicles.Headless/Lib9c/Lib9c/
@@ -34,7 +34,7 @@ RUN dotnet publish NineChronicles.Headless/NineChronicles.Headless.Executable/Ni
     -r linux-x64 \
     -o out2 \
     --self-contained \
-    --version-suffix $COMMIT \
+    --version-suffix $COMMIT
 
 
 # Build runtime image
