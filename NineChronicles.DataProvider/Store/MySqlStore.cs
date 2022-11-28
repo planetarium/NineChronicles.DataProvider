@@ -1444,6 +1444,76 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreBattleGrandFinaleList(List<BattleGrandFinaleModel> battleGrandFinaleList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var battleGrandFinale in battleGrandFinaleList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.BattleGrandFinales.FindAsync(battleGrandFinale.Id).Result is null)
+                        {
+                            await ctx.BattleGrandFinales.AddRangeAsync(battleGrandFinale);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.BattleGrandFinales.UpdateRange(battleGrandFinale);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreEventMaterialItemCraftsList(List<EventMaterialItemCraftsModel> eventMaterialItemCraftsList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var eventMaterialItemCrafts in eventMaterialItemCraftsList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.EventMaterialItemCrafts.FindAsync(eventMaterialItemCrafts.Id).Result is null)
+                        {
+                            await ctx.EventMaterialItemCrafts.AddRangeAsync(eventMaterialItemCrafts);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.EventMaterialItemCrafts.UpdateRange(eventMaterialItemCrafts);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public List<RaiderModel> GetRaiderList()
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
@@ -1527,14 +1597,7 @@ namespace NineChronicles.DataProvider.Store
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
             var query = ctx.Set<CraftRankingOutputModel>()
-                .FromSqlRaw("SELECT `h`.`AvatarAddress`, `AgentAddress`, `CraftCount`, `BlockIndex`, " +
-                            "(SELECT `a`.`Name` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Name`, " +
-                            "(SELECT `a`.`AvatarLevel` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `AvatarLevel`, " +
-                            "(SELECT `a`.`TitleId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `TitleId`, " +
-                            "(SELECT `a`.`ArmorId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `ArmorId`, " +
-                            "(SELECT `a`.`Cp` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Cp`, " +
-                            "row_number() over(ORDER BY `CraftCount` DESC, `h`.`BlockIndex`) `Ranking` " +
-                            "FROM `CraftRankings` AS `h` ");
+                .FromSqlRaw("SELECT * FROM CraftRankings ORDER BY Ranking ");
 
             if (avatarAddress is { } avatarAddressNotNull)
             {
