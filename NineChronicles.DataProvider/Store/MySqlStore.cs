@@ -1514,6 +1514,41 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreRuneEnhancementList(List<RuneEnhancementModel> runeEnhancementList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var runeEnhancement in runeEnhancementList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.RuneEnhancements.FindAsync(runeEnhancement.Id).Result is null)
+                        {
+                            await ctx.RuneEnhancements.AddRangeAsync(runeEnhancement);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.RuneEnhancements.UpdateRange(runeEnhancement);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public List<RaiderModel> GetRaiderList()
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();

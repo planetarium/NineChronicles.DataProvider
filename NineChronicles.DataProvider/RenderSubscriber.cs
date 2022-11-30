@@ -74,6 +74,7 @@ namespace NineChronicles.DataProvider
         private readonly List<RaiderModel> _raiderList = new List<RaiderModel>();
         private readonly List<BattleGrandFinaleModel> _battleGrandFinaleList = new List<BattleGrandFinaleModel>();
         private readonly List<EventMaterialItemCraftsModel> _eventMaterialItemCraftsList = new List<EventMaterialItemCraftsModel>();
+        private readonly List<RuneEnhancementModel> _runeEnhancementList = new List<RuneEnhancementModel>();
         private readonly List<string> _agents;
         private readonly bool _render;
         private int _renderedBlockCount;
@@ -166,6 +167,7 @@ namespace NineChronicles.DataProvider
                             MySqlStore.StoreRaiderList(_raiderList);
                             MySqlStore.StoreBattleGrandFinaleList(_battleGrandFinaleList);
                             MySqlStore.StoreEventMaterialItemCraftsList(_eventMaterialItemCraftsList);
+                            MySqlStore.StoreRuneEnhancementList(_runeEnhancementList);
                         }),
                     };
 
@@ -203,6 +205,7 @@ namespace NineChronicles.DataProvider
                     _raiderList.Clear();
                     _battleGrandFinaleList.Clear();
                     _eventMaterialItemCraftsList.Clear();
+                    _runeEnhancementList.Clear();
                     var end = DateTimeOffset.Now;
                     long blockIndex = b.OldTip.Index;
                     StreamWriter blockIndexFile = new StreamWriter(_blockIndexFilePath);
@@ -1582,6 +1585,87 @@ namespace NineChronicles.DataProvider
 
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored BattleArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is RuneEnhancement runeEnhancement)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                var previousStates = ev.PreviousStates;
+                                Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
+                                var prevNCGBalance = previousStates.GetBalance(
+                                    ev.Signer,
+                                    ncgCurrency);
+                                var outputNCGBalance = ev.OutputStates.GetBalance(
+                                    ev.Signer,
+                                    ncgCurrency);
+                                var burntNCG = prevNCGBalance - outputNCGBalance;
+                                Currency crystalCurrency = CrystalCalculator.CRYSTAL;
+                                var prevCrystalBalance = previousStates.GetBalance(
+                                    ev.Signer,
+                                    crystalCurrency);
+                                var outputCrystalBalance = ev.OutputStates.GetBalance(
+                                    ev.Signer,
+                                    crystalCurrency);
+                                var burntCrystal = prevCrystalBalance - outputCrystalBalance;
+                                var runeStateAddress = RuneState.DeriveAddress(runeEnhancement.AvatarAddress, runeEnhancement.RuneId);
+                                RuneState runeState;
+                                if (ev.OutputStates.TryGetState(runeStateAddress, out List rawState))
+                                {
+                                    runeState = new RuneState(rawState);
+                                }
+                                else
+                                {
+                                    runeState = new RuneState(runeEnhancement.RuneId);
+                                }
+
+                                RuneState previousRuneState;
+                                if (ev.OutputStates.TryGetState(runeStateAddress, out List prevRawState))
+                                {
+                                    previousRuneState = new RuneState(prevRawState);
+                                }
+                                else
+                                {
+                                    previousRuneState = new RuneState(runeEnhancement.RuneId);
+                                }
+
+                                var sheets = ev.OutputStates.GetSheets(
+                                    sheetTypes: new[]
+                                    {
+                                        typeof(ArenaSheet),
+                                        typeof(RuneSheet),
+                                        typeof(RuneListSheet),
+                                        typeof(RuneCostSheet),
+                                    });
+                                var runeSheet = sheets.GetSheet<RuneSheet>();
+                                runeSheet.TryGetValue(runeState.RuneId, out var runeRow);
+#pragma warning disable CS0618
+                                var runeCurrency = Currency.Legacy(runeRow!.Ticker, 0, minters: null);
+#pragma warning restore CS0618
+                                var prevRuneBalance = previousStates.GetBalance(
+                                    ev.Signer,
+                                    runeCurrency);
+                                var outputRuneBalance = ev.OutputStates.GetBalance(
+                                    ev.Signer,
+                                    runeCurrency);
+                                var burntRune = prevRuneBalance - outputRuneBalance;
+                                _runeEnhancementList.Add(new RuneEnhancementModel()
+                                {
+                                    Id = runeEnhancement.Id.ToString(),
+                                    BlockIndex = ev.BlockIndex,
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = runeEnhancement.AvatarAddress.ToString(),
+                                    PreviousRuneLevel = previousRuneState.Level,
+                                    OutputRuneLevel = runeState.Level,
+                                    RuneId = runeEnhancement.RuneId,
+                                    TryCount = runeEnhancement.TryCount,
+                                    BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
+                                    BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
+                                    BurntRune = Convert.ToDecimal(burntRune.GetQuantityString()),
+                                    Date = _blockTimeOffset,
+                                    TimeStamp = _blockTimeOffset,
+                                });
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored RuneEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                         catch (Exception ex)
