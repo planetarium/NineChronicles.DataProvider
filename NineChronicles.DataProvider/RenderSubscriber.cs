@@ -450,6 +450,100 @@ namespace NineChronicles.DataProvider
                                 var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has.AvatarAddress);
                                 bool isClear = avatarState.stageMap.ContainsKey(has.StageId);
+                                var itemSlotStateAddress = ItemSlotState.DeriveAddress(has.AvatarAddress, BattleType.Adventure);
+                                var itemSlotState = ev.OutputStates.TryGetState(itemSlotStateAddress, out List rawItemSlotState)
+                                    ? new ItemSlotState(rawItemSlotState)
+                                    : new ItemSlotState(BattleType.Adventure);
+                                var equipmentInventory = avatarState.inventory.Equipments;
+                                var equipmentList = itemSlotState.Equipments
+                                    .Select(guid => equipmentInventory.FirstOrDefault(x => x.ItemId == guid))
+                                    .Where(item => item != null).ToList();
+
+                                var costumeInventory = avatarState.inventory.Costumes;
+                                var costumeList = itemSlotState.Costumes
+                                    .Select(guid => costumeInventory.FirstOrDefault(x => x.ItemId == guid))
+                                    .Where(item => item != null).ToList();
+                                var sheets = ev.OutputStates.GetSheets(
+                                    sheetTypes: new[]
+                                    {
+                                        typeof(CharacterSheet),
+                                        typeof(CostumeStatSheet),
+                                        typeof(RuneListSheet),
+                                        typeof(RuneOptionSheet),
+                                    });
+                                var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
+                                var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
+                                foreach (var info in has.RuneInfos)
+                                {
+                                    if (!runeOptionSheet.TryGetValue(info.RuneId, out var optionRow))
+                                    {
+                                        throw new SheetRowNotFoundException("RuneOptionSheet", info.RuneId);
+                                    }
+
+                                    if (!optionRow.LevelOptionMap.TryGetValue(info.Level, out var option))
+                                    {
+                                        throw new SheetRowNotFoundException("RuneOptionSheet", info.Level);
+                                    }
+
+                                    runeOptions.Add(option);
+                                }
+
+                                var characterSheet = sheets.GetSheet<CharacterSheet>();
+                                if (!characterSheet.TryGetValue(avatarState.characterId, out var characterRow))
+                                {
+                                    throw new SheetRowNotFoundException("CharacterSheet", avatarState.characterId);
+                                }
+
+                                var costumeStatSheet = sheets.GetSheet<CostumeStatSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                Costume? avatarTitleCostume;
+                                try
+                                {
+                                    avatarTitleCostume =
+                                        avatarState.inventory.Costumes.FirstOrDefault(costume =>
+                                            costume.ItemSubType == ItemSubType.Title &&
+                                            costume.equipped);
+                                }
+                                catch (Exception)
+                                {
+                                    avatarTitleCostume = null;
+                                }
+
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.TotalCP(
+                                   equipmentList,
+                                   costumeList,
+                                   runeOptions,
+                                   avatarState.level,
+                                   characterRow,
+                                   costumeStatSheet);
+                                string avatarName = avatarState.name;
+
+                                Log.Debug(
+                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                    avatarName,
+                                    avatarLevel,
+                                    avatarArmorId,
+                                    avatarTitleId,
+                                    avatarCp);
+
+                                _avatarList.Add(new AvatarModel()
+                                {
+                                    Address = has.AvatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
+                                });
                                 _hasList.Add(new HackAndSlashModel()
                                 {
                                     Id = has.Id.ToString(),
@@ -484,6 +578,100 @@ namespace NineChronicles.DataProvider
                                 var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep.avatarAddress);
                                 bool isClear = avatarState.stageMap.ContainsKey(hasSweep.stageId);
+                                var itemSlotStateAddress = ItemSlotState.DeriveAddress(hasSweep.avatarAddress, BattleType.Adventure);
+                                var itemSlotState = ev.OutputStates.TryGetState(itemSlotStateAddress, out List rawItemSlotState)
+                                    ? new ItemSlotState(rawItemSlotState)
+                                    : new ItemSlotState(BattleType.Adventure);
+                                var equipmentInventory = avatarState.inventory.Equipments;
+                                var equipmentList = itemSlotState.Equipments
+                                    .Select(guid => equipmentInventory.FirstOrDefault(x => x.ItemId == guid))
+                                    .Where(item => item != null).ToList();
+
+                                var costumeInventory = avatarState.inventory.Costumes;
+                                var costumeList = itemSlotState.Costumes
+                                    .Select(guid => costumeInventory.FirstOrDefault(x => x.ItemId == guid))
+                                    .Where(item => item != null).ToList();
+                                var sheets = ev.OutputStates.GetSheets(
+                                    sheetTypes: new[]
+                                    {
+                                        typeof(CharacterSheet),
+                                        typeof(CostumeStatSheet),
+                                        typeof(RuneListSheet),
+                                        typeof(RuneOptionSheet),
+                                    });
+                                var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
+                                var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
+                                foreach (var info in hasSweep.runeInfos)
+                                {
+                                    if (!runeOptionSheet.TryGetValue(info.RuneId, out var optionRow))
+                                    {
+                                        throw new SheetRowNotFoundException("RuneOptionSheet", info.RuneId);
+                                    }
+
+                                    if (!optionRow.LevelOptionMap.TryGetValue(info.Level, out var option))
+                                    {
+                                        throw new SheetRowNotFoundException("RuneOptionSheet", info.Level);
+                                    }
+
+                                    runeOptions.Add(option);
+                                }
+
+                                var characterSheet = sheets.GetSheet<CharacterSheet>();
+                                if (!characterSheet.TryGetValue(avatarState.characterId, out var characterRow))
+                                {
+                                    throw new SheetRowNotFoundException("CharacterSheet", avatarState.characterId);
+                                }
+
+                                var costumeStatSheet = sheets.GetSheet<CostumeStatSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                Costume? avatarTitleCostume;
+                                try
+                                {
+                                    avatarTitleCostume =
+                                        avatarState.inventory.Costumes.FirstOrDefault(costume =>
+                                            costume.ItemSubType == ItemSubType.Title &&
+                                            costume.equipped);
+                                }
+                                catch (Exception)
+                                {
+                                    avatarTitleCostume = null;
+                                }
+
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.TotalCP(
+                                   equipmentList,
+                                   costumeList,
+                                   runeOptions,
+                                   avatarState.level,
+                                   characterRow,
+                                   costumeStatSheet);
+                                string avatarName = avatarState.name;
+
+                                Log.Debug(
+                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                    avatarName,
+                                    avatarLevel,
+                                    avatarArmorId,
+                                    avatarTitleId,
+                                    avatarCp);
+
+                                _avatarList.Add(new AvatarModel()
+                                {
+                                    Address = hasSweep.avatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
+                                });
                                 _hasSweepList.Add(new HackAndSlashSweepModel()
                                 {
                                     Id = hasSweep.Id.ToString(),
@@ -939,12 +1127,12 @@ namespace NineChronicles.DataProvider
                                 Log.Debug("Stored Stake action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (ev.Action is IClaimStakeReward claimStakeReward)
+                            if (ev.Action is ClaimStakeReward claimStakeReward)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
                                 var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
-                                var id = ((GameAction)claimStakeReward).Id;
+                                var id = claimStakeReward.Id;
                                 ev.PreviousStates.TryGetStakeState(ev.Signer, out StakeState prevStakeState);
 
                                 var claimStakeStartBlockIndex = prevStakeState.StartedBlockIndex;
@@ -1257,9 +1445,19 @@ namespace NineChronicles.DataProvider
                                 var burntNCG = prevNCGBalance - outputNCGBalance;
                                 int ticketCount = battleArena.ticket;
                                 var sheets = previousStates.GetSheets(
-                                    containArenaSimulatorSheets: true,
-                                    sheetTypes: new[] { typeof(ArenaSheet), typeof(ItemRequirementSheet), typeof(EquipmentItemRecipeSheet), typeof(EquipmentItemSubRecipeSheetV2), typeof(EquipmentItemOptionSheet), typeof(MaterialItemSheet), }
-                                );
+                                    sheetTypes: new[]
+                                    {
+                                        typeof(ArenaSheet),
+                                        typeof(ItemRequirementSheet),
+                                        typeof(EquipmentItemRecipeSheet),
+                                        typeof(EquipmentItemSubRecipeSheetV2),
+                                        typeof(EquipmentItemOptionSheet),
+                                        typeof(MaterialItemSheet),
+                                        typeof(CharacterSheet),
+                                        typeof(CostumeStatSheet),
+                                        typeof(RuneListSheet),
+                                        typeof(RuneOptionSheet),
+                                    });
                                 var arenaSheet = ev.OutputStates.GetSheet<ArenaSheet>();
                                 var arenaData = arenaSheet.GetRoundByBlockIndex(ev.BlockIndex);
                                 var arenaInformationAdr =
@@ -1279,6 +1477,92 @@ namespace NineChronicles.DataProvider
                                     }
                                 }
 
+                                var itemSlotStateAddress = ItemSlotState.DeriveAddress(battleArena.myAvatarAddress, BattleType.Arena);
+                                var itemSlotState = ev.OutputStates.TryGetState(itemSlotStateAddress, out List rawItemSlotState)
+                                    ? new ItemSlotState(rawItemSlotState)
+                                    : new ItemSlotState(BattleType.Adventure);
+                                var equipmentInventory = avatarState.inventory.Equipments;
+                                var equipmentList = itemSlotState.Equipments
+                                    .Select(guid => equipmentInventory.FirstOrDefault(x => x.ItemId == guid))
+                                    .Where(item => item != null).ToList();
+
+                                var costumeInventory = avatarState.inventory.Costumes;
+                                var costumeList = itemSlotState.Costumes
+                                    .Select(guid => costumeInventory.FirstOrDefault(x => x.ItemId == guid))
+                                    .Where(item => item != null).ToList();
+                                var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
+                                var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
+                                foreach (var info in battleArena.runeInfos)
+                                {
+                                    if (!runeOptionSheet.TryGetValue(info.RuneId, out var optionRow))
+                                    {
+                                        throw new SheetRowNotFoundException("RuneOptionSheet", info.RuneId);
+                                    }
+
+                                    if (!optionRow.LevelOptionMap.TryGetValue(info.Level, out var option))
+                                    {
+                                        throw new SheetRowNotFoundException("RuneOptionSheet", info.Level);
+                                    }
+
+                                    runeOptions.Add(option);
+                                }
+
+                                var characterSheet = sheets.GetSheet<CharacterSheet>();
+                                if (!characterSheet.TryGetValue(avatarState.characterId, out var characterRow))
+                                {
+                                    throw new SheetRowNotFoundException("CharacterSheet", avatarState.characterId);
+                                }
+
+                                var costumeStatSheet = sheets.GetSheet<CostumeStatSheet>();
+                                var avatarLevel = avatarState.level;
+                                var avatarArmorId = avatarState.GetArmorId();
+                                Costume? avatarTitleCostume;
+                                try
+                                {
+                                    avatarTitleCostume =
+                                        avatarState.inventory.Costumes.FirstOrDefault(costume =>
+                                            costume.ItemSubType == ItemSubType.Title &&
+                                            costume.equipped);
+                                }
+                                catch (Exception)
+                                {
+                                    avatarTitleCostume = null;
+                                }
+
+                                int? avatarTitleId = null;
+                                if (avatarTitleCostume != null)
+                                {
+                                    avatarTitleId = avatarTitleCostume.Id;
+                                }
+
+                                var avatarCp = CPHelper.TotalCP(
+                                   equipmentList,
+                                   costumeList,
+                                   runeOptions,
+                                   avatarState.level,
+                                   characterRow,
+                                   costumeStatSheet);
+                                string avatarName = avatarState.name;
+
+                                Log.Debug(
+                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                    avatarName,
+                                    avatarLevel,
+                                    avatarArmorId,
+                                    avatarTitleId,
+                                    avatarCp);
+
+                                _avatarList.Add(new AvatarModel()
+                                {
+                                    Address = battleArena.myAvatarAddress.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    Name = avatarName,
+                                    AvatarLevel = avatarLevel,
+                                    TitleId = avatarTitleId,
+                                    ArmorId = avatarArmorId,
+                                    Cp = avatarCp,
+                                    Timestamp = _blockTimeOffset,
+                                });
                                 _battleArenaList.Add(new BattleArenaModel()
                                 {
                                     Id = battleArena.Id.ToString(),
@@ -1298,92 +1582,6 @@ namespace NineChronicles.DataProvider
 
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored BattleArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is BattleGrandFinale battleGrandFinale)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(battleGrandFinale.myAvatarAddress);
-                                var previousStates = ev.PreviousStates;
-                                var scoreAddress = battleGrandFinale.myAvatarAddress.Derive(string.Format(CultureInfo.InvariantCulture, BattleGrandFinale.ScoreDeriveKey, battleGrandFinale.grandFinaleId));
-                                previousStates.TryGetState(scoreAddress, out Integer previousGrandFinaleScore);
-                                ev.OutputStates.TryGetState(scoreAddress, out Integer outputGrandFinaleScore);
-
-                                _battleGrandFinaleList.Add(new BattleGrandFinaleModel()
-                                {
-                                    Id = battleGrandFinale.Id.ToString(),
-                                    BlockIndex = ev.BlockIndex,
-                                    AgentAddress = ev.Signer.ToString(),
-                                    AvatarAddress = battleGrandFinale.myAvatarAddress.ToString(),
-                                    AvatarLevel = avatarState.level,
-                                    EnemyAvatarAddress = battleGrandFinale.enemyAvatarAddress.ToString(),
-                                    GrandFinaleId = battleGrandFinale.grandFinaleId,
-                                    Victory = outputGrandFinaleScore > previousGrandFinaleScore,
-                                    GrandFinaleScore = outputGrandFinaleScore,
-                                    Date = _blockTimeOffset,
-                                    TimeStamp = _blockTimeOffset,
-                                });
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored BattleGrandFinale action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is EventMaterialItemCrafts eventMaterialItemCrafts)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                Dictionary<string, int> materialData = new Dictionary<string, int>();
-                                for (var i = 1; i < 13; i++)
-                                {
-                                    materialData.Add($"material{i}Id", 0);
-                                    materialData.Add($"material{i}Count", 0);
-                                }
-
-                                int itemNumber = 1;
-                                foreach (var pair in eventMaterialItemCrafts.MaterialsToUse)
-                                {
-                                    materialData[$"material{itemNumber}Id"] = pair.Key;
-                                    materialData[$"material{itemNumber}Count"] = pair.Value;
-                                    itemNumber++;
-                                }
-
-                                _eventMaterialItemCraftsList.Add(new EventMaterialItemCraftsModel()
-                                {
-                                    Id = eventMaterialItemCrafts.Id.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    AvatarAddress = eventMaterialItemCrafts.AvatarAddress.ToString(),
-                                    EventScheduleId = eventMaterialItemCrafts.EventScheduleId,
-                                    EventMaterialItemRecipeId = eventMaterialItemCrafts.EventMaterialItemRecipeId,
-                                    Material1Id = materialData["material1Id"],
-                                    Material1Count = materialData["material1Count"],
-                                    Material2Id = materialData["material2Id"],
-                                    Material2Count = materialData["material2Count"],
-                                    Material3Id = materialData["material3Id"],
-                                    Material3Count = materialData["material3Count"],
-                                    Material4Id = materialData["material4Id"],
-                                    Material4Count = materialData["material4Count"],
-                                    Material5Id = materialData["material5Id"],
-                                    Material5Count = materialData["material5Count"],
-                                    Material6Id = materialData["material6Id"],
-                                    Material6Count = materialData["material6Count"],
-                                    Material7Id = materialData["material7Id"],
-                                    Material7Count = materialData["material7Count"],
-                                    Material8Id = materialData["material8Id"],
-                                    Material8Count = materialData["material8Count"],
-                                    Material9Id = materialData["material9Id"],
-                                    Material9Count = materialData["material9Count"],
-                                    Material10Id = materialData["material10Id"],
-                                    Material10Count = materialData["material10Count"],
-                                    Material11Id = materialData["material11Id"],
-                                    Material11Count = materialData["material11Count"],
-                                    Material12Id = materialData["material12Id"],
-                                    Material12Count = materialData["material12Count"],
-                                    BlockIndex = ev.BlockIndex,
-                                    Date = _blockTimeOffset,
-                                    Timestamp = _blockTimeOffset,
-                                });
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored EventMaterialItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                         catch (Exception ex)
@@ -1473,18 +1671,6 @@ namespace NineChronicles.DataProvider
                                     {
                                         AvatarState sellerState = ev.OutputStates.GetAvatarStateV2(purchaseInfo.SellerAvatarAddress);
                                         var sellerInventory = sellerState.inventory;
-                                        var previousStates = ev.PreviousStates;
-                                        var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                        var avatarLevel = sellerState.level;
-                                        var avatarArmorId = sellerState.GetArmorId();
-                                        var avatarTitleCostume = sellerState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                        int? avatarTitleId = null;
-                                        if (avatarTitleCostume != null)
-                                        {
-                                            avatarTitleId = avatarTitleCostume.Id;
-                                        }
-
-                                        var avatarCp = CPHelper.GetCP(sellerState, characterSheet);
                                         string avatarName = sellerState.name;
 
                                         if (buyerInventory.Equipments == null || sellerInventory.Equipments == null)
@@ -1497,10 +1683,10 @@ namespace NineChronicles.DataProvider
                                             purchaseInfo.SellerAvatarAddress,
                                             purchaseInfo.SellerAgentAddress,
                                             avatarName,
-                                            avatarLevel,
-                                            avatarTitleId,
-                                            avatarArmorId,
-                                            avatarCp);
+                                            null,
+                                            null,
+                                            null,
+                                            null);
                                         Equipment? equipment = buyerInventory.Equipments.SingleOrDefault(i =>
                                             i.TradableId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
                                             i.TradableId == purchaseInfo.TradableId);
@@ -1534,6 +1720,102 @@ namespace NineChronicles.DataProvider
                     {
                         if (ev.Exception is null)
                         {
+                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(ev.Action.AvatarAddress);
+                            var itemSlotStateAddress = ItemSlotState.DeriveAddress(ev.Action.AvatarAddress, BattleType.Raid);
+                            var itemSlotState = ev.OutputStates.TryGetState(itemSlotStateAddress, out List rawItemSlotState)
+                                ? new ItemSlotState(rawItemSlotState)
+                                : new ItemSlotState(BattleType.Adventure);
+                            var equipmentInventory = avatarState.inventory.Equipments;
+                            var equipmentList = itemSlotState.Equipments
+                                .Select(guid => equipmentInventory.FirstOrDefault(x => x.ItemId == guid))
+                                .Where(item => item != null).ToList();
+
+                            var costumeInventory = avatarState.inventory.Costumes;
+                            var costumeList = itemSlotState.Costumes
+                                .Select(guid => costumeInventory.FirstOrDefault(x => x.ItemId == guid))
+                                .Where(item => item != null).ToList();
+                            var sheets = ev.OutputStates.GetSheets(
+                                sheetTypes: new[]
+                                {
+                                    typeof(CharacterSheet),
+                                    typeof(CostumeStatSheet),
+                                    typeof(RuneListSheet),
+                                    typeof(RuneOptionSheet),
+                                });
+                            var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
+                            var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
+                            foreach (var info in ev.Action.RuneInfos)
+                            {
+                                if (!runeOptionSheet.TryGetValue(info.RuneId, out var optionRow))
+                                {
+                                    throw new SheetRowNotFoundException("RuneOptionSheet", info.RuneId);
+                                }
+
+                                if (!optionRow.LevelOptionMap.TryGetValue(info.Level, out var option))
+                                {
+                                    throw new SheetRowNotFoundException("RuneOptionSheet", info.Level);
+                                }
+
+                                runeOptions.Add(option);
+                            }
+
+                            var characterSheet = sheets.GetSheet<CharacterSheet>();
+                            if (!characterSheet.TryGetValue(avatarState.characterId, out var characterRow))
+                            {
+                                throw new SheetRowNotFoundException("CharacterSheet", avatarState.characterId);
+                            }
+
+                            var costumeStatSheet = sheets.GetSheet<CostumeStatSheet>();
+                            var avatarLevel = avatarState.level;
+                            var avatarArmorId = avatarState.GetArmorId();
+                            Costume? avatarTitleCostume;
+                            try
+                            {
+                                avatarTitleCostume =
+                                    avatarState.inventory.Costumes.FirstOrDefault(costume =>
+                                        costume.ItemSubType == ItemSubType.Title &&
+                                        costume.equipped);
+                            }
+                            catch (Exception)
+                            {
+                                avatarTitleCostume = null;
+                            }
+
+                            int? avatarTitleId = null;
+                            if (avatarTitleCostume != null)
+                            {
+                                avatarTitleId = avatarTitleCostume.Id;
+                            }
+
+                            var avatarCp = CPHelper.TotalCP(
+                               equipmentList,
+                               costumeList,
+                               runeOptions,
+                               avatarState.level,
+                               characterRow,
+                               costumeStatSheet);
+                            string avatarName = avatarState.name;
+
+                            Log.Debug(
+                                "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
+                                avatarName,
+                                avatarLevel,
+                                avatarArmorId,
+                                avatarTitleId,
+                                avatarCp);
+
+                            _avatarList.Add(new AvatarModel()
+                            {
+                                Address = ev.Action.AvatarAddress.ToString(),
+                                AgentAddress = ev.Signer.ToString(),
+                                Name = avatarName,
+                                AvatarLevel = avatarLevel,
+                                TitleId = avatarTitleId,
+                                ArmorId = avatarArmorId,
+                                Cp = avatarCp,
+                                Timestamp = _blockTimeOffset,
+                            });
+
                             int raidId = 0;
                             bool found = false;
                             for (int i = 0; i < 99; i++)
@@ -1632,48 +1914,12 @@ namespace NineChronicles.DataProvider
                                     continue;
                                 }
 
-                                var previousStates = ev.PreviousStates;
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                Costume? avatarTitleCostume;
-                                try
-                                {
-                                    avatarTitleCostume =
-                                        avatarState.inventory.Costumes.FirstOrDefault(costume =>
-                                            costume.ItemSubType == ItemSubType.Title &&
-                                            costume.equipped);
-                                }
-                                catch (Exception)
-                                {
-                                    avatarTitleCostume = null;
-                                }
-
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
                                 string avatarName = avatarState.name;
-
-                                Log.Debug(
-                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
-                                    avatarName,
-                                    avatarLevel,
-                                    avatarArmorId,
-                                    avatarTitleId,
-                                    avatarCp);
                                 _avatarList.Add(new AvatarModel()
                                 {
                                     Address = avatarAddress.Value.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
                                     Name = avatarName,
-                                    AvatarLevel = avatarLevel,
-                                    TitleId = avatarTitleId,
-                                    ArmorId = avatarArmorId,
-                                    Cp = avatarCp,
                                     Timestamp = _blockTimeOffset,
                                 });
                             }
