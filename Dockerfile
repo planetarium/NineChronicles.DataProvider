@@ -42,7 +42,7 @@ RUN dotnet tool install --global dotnet-ef
 ENV PATH="${PATH}:/${HOME}/.dotnet/tools"
 COPY --from=build-env /app/out .
 COPY --from=build-env /app/out2 NineChronicles.Headless.Executable
-COPY ./NineChronicles.DataProvider.Executable NineChronicles.DataProvider.Executable
+COPY ./NineChronicles.DataProvider.Executable NineChronicles.DataProvider.Executable.EFCore
 
 RUN apt-get update \
     && apt-get install -y --allow-unauthenticated \
