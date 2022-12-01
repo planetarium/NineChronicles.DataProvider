@@ -476,16 +476,25 @@ namespace NineChronicles.DataProvider
                                     });
                                 var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
                                 var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
-                                foreach (var info in has.RuneInfos)
+                                var runeStates = new List<RuneState>();
+                                foreach (var address in has.RuneInfos.Select(info => RuneState.DeriveAddress(has.AvatarAddress, info.RuneId)))
                                 {
-                                    if (!runeOptionSheet.TryGetValue(info.RuneId, out var optionRow))
+                                    if (ev.OutputStates.TryGetState(address, out List rawRuneState))
                                     {
-                                        throw new SheetRowNotFoundException("RuneOptionSheet", info.RuneId);
+                                        runeStates.Add(new RuneState(rawRuneState));
+                                    }
+                                }
+
+                                foreach (var runeState in runeStates)
+                                {
+                                    if (!runeOptionSheet.TryGetValue(runeState.RuneId, out var optionRow))
+                                    {
+                                        throw new SheetRowNotFoundException("RuneOptionSheet", runeState.RuneId);
                                     }
 
-                                    if (!optionRow.LevelOptionMap.TryGetValue(info.Level, out var option))
+                                    if (!optionRow.LevelOptionMap.TryGetValue(runeState.Level, out var option))
                                     {
-                                        throw new SheetRowNotFoundException("RuneOptionSheet", info.Level);
+                                        throw new SheetRowNotFoundException("RuneOptionSheet", runeState.Level);
                                     }
 
                                     runeOptions.Add(option);
@@ -604,16 +613,25 @@ namespace NineChronicles.DataProvider
                                     });
                                 var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
                                 var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
-                                foreach (var info in hasSweep.runeInfos)
+                                var runeStates = new List<RuneState>();
+                                foreach (var address in hasSweep.runeInfos.Select(info => RuneState.DeriveAddress(hasSweep.avatarAddress, info.RuneId)))
                                 {
-                                    if (!runeOptionSheet.TryGetValue(info.RuneId, out var optionRow))
+                                    if (ev.OutputStates.TryGetState(address, out List rawRuneState))
                                     {
-                                        throw new SheetRowNotFoundException("RuneOptionSheet", info.RuneId);
+                                        runeStates.Add(new RuneState(rawRuneState));
+                                    }
+                                }
+
+                                foreach (var runeState in runeStates)
+                                {
+                                    if (!runeOptionSheet.TryGetValue(runeState.RuneId, out var optionRow))
+                                    {
+                                        throw new SheetRowNotFoundException("RuneOptionSheet", runeState.RuneId);
                                     }
 
-                                    if (!optionRow.LevelOptionMap.TryGetValue(info.Level, out var option))
+                                    if (!optionRow.LevelOptionMap.TryGetValue(runeState.Level, out var option))
                                     {
-                                        throw new SheetRowNotFoundException("RuneOptionSheet", info.Level);
+                                        throw new SheetRowNotFoundException("RuneOptionSheet", runeState.Level);
                                     }
 
                                     runeOptions.Add(option);
@@ -1130,12 +1148,12 @@ namespace NineChronicles.DataProvider
                                 Log.Debug("Stored Stake action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (ev.Action is ClaimStakeReward claimStakeReward)
+                            if (ev.Action is IClaimStakeReward claimStakeReward)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
                                 var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
-                                var id = claimStakeReward.Id;
+                                var id = ((GameAction)claimStakeReward).Id;
                                 ev.PreviousStates.TryGetStakeState(ev.Signer, out StakeState prevStakeState);
 
                                 var claimStakeStartBlockIndex = prevStakeState.StartedBlockIndex;
@@ -1495,16 +1513,25 @@ namespace NineChronicles.DataProvider
                                     .Where(item => item != null).ToList();
                                 var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
                                 var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
-                                foreach (var info in battleArena.runeInfos)
+                                var runeStates = new List<RuneState>();
+                                foreach (var address in battleArena.runeInfos.Select(info => RuneState.DeriveAddress(battleArena.myAvatarAddress, info.RuneId)))
                                 {
-                                    if (!runeOptionSheet.TryGetValue(info.RuneId, out var optionRow))
+                                    if (ev.OutputStates.TryGetState(address, out List rawRuneState))
                                     {
-                                        throw new SheetRowNotFoundException("RuneOptionSheet", info.RuneId);
+                                        runeStates.Add(new RuneState(rawRuneState));
+                                    }
+                                }
+
+                                foreach (var runeState in runeStates)
+                                {
+                                    if (!runeOptionSheet.TryGetValue(runeState.RuneId, out var optionRow))
+                                    {
+                                        throw new SheetRowNotFoundException("RuneOptionSheet", runeState.RuneId);
                                     }
 
-                                    if (!optionRow.LevelOptionMap.TryGetValue(info.Level, out var option))
+                                    if (!optionRow.LevelOptionMap.TryGetValue(runeState.Level, out var option))
                                     {
-                                        throw new SheetRowNotFoundException("RuneOptionSheet", info.Level);
+                                        throw new SheetRowNotFoundException("RuneOptionSheet", runeState.Level);
                                     }
 
                                     runeOptions.Add(option);
@@ -1585,6 +1612,92 @@ namespace NineChronicles.DataProvider
 
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored BattleArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is BattleGrandFinale battleGrandFinale)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(battleGrandFinale.myAvatarAddress);
+                                var previousStates = ev.PreviousStates;
+                                var scoreAddress = battleGrandFinale.myAvatarAddress.Derive(string.Format(CultureInfo.InvariantCulture, BattleGrandFinale.ScoreDeriveKey, battleGrandFinale.grandFinaleId));
+                                previousStates.TryGetState(scoreAddress, out Integer previousGrandFinaleScore);
+                                ev.OutputStates.TryGetState(scoreAddress, out Integer outputGrandFinaleScore);
+
+                                _battleGrandFinaleList.Add(new BattleGrandFinaleModel()
+                                {
+                                    Id = battleGrandFinale.Id.ToString(),
+                                    BlockIndex = ev.BlockIndex,
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = battleGrandFinale.myAvatarAddress.ToString(),
+                                    AvatarLevel = avatarState.level,
+                                    EnemyAvatarAddress = battleGrandFinale.enemyAvatarAddress.ToString(),
+                                    GrandFinaleId = battleGrandFinale.grandFinaleId,
+                                    Victory = outputGrandFinaleScore > previousGrandFinaleScore,
+                                    GrandFinaleScore = outputGrandFinaleScore,
+                                    Date = _blockTimeOffset,
+                                    TimeStamp = _blockTimeOffset,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored BattleGrandFinale action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is EventMaterialItemCrafts eventMaterialItemCrafts)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                Dictionary<string, int> materialData = new Dictionary<string, int>();
+                                for (var i = 1; i < 13; i++)
+                                {
+                                    materialData.Add($"material{i}Id", 0);
+                                    materialData.Add($"material{i}Count", 0);
+                                }
+
+                                int itemNumber = 1;
+                                foreach (var pair in eventMaterialItemCrafts.MaterialsToUse)
+                                {
+                                    materialData[$"material{itemNumber}Id"] = pair.Key;
+                                    materialData[$"material{itemNumber}Count"] = pair.Value;
+                                    itemNumber++;
+                                }
+
+                                _eventMaterialItemCraftsList.Add(new EventMaterialItemCraftsModel()
+                                {
+                                    Id = eventMaterialItemCrafts.Id.ToString(),
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = eventMaterialItemCrafts.AvatarAddress.ToString(),
+                                    EventScheduleId = eventMaterialItemCrafts.EventScheduleId,
+                                    EventMaterialItemRecipeId = eventMaterialItemCrafts.EventMaterialItemRecipeId,
+                                    Material1Id = materialData["material1Id"],
+                                    Material1Count = materialData["material1Count"],
+                                    Material2Id = materialData["material2Id"],
+                                    Material2Count = materialData["material2Count"],
+                                    Material3Id = materialData["material3Id"],
+                                    Material3Count = materialData["material3Count"],
+                                    Material4Id = materialData["material4Id"],
+                                    Material4Count = materialData["material4Count"],
+                                    Material5Id = materialData["material5Id"],
+                                    Material5Count = materialData["material5Count"],
+                                    Material6Id = materialData["material6Id"],
+                                    Material6Count = materialData["material6Count"],
+                                    Material7Id = materialData["material7Id"],
+                                    Material7Count = materialData["material7Count"],
+                                    Material8Id = materialData["material8Id"],
+                                    Material8Count = materialData["material8Count"],
+                                    Material9Id = materialData["material9Id"],
+                                    Material9Count = materialData["material9Count"],
+                                    Material10Id = materialData["material10Id"],
+                                    Material10Count = materialData["material10Count"],
+                                    Material11Id = materialData["material11Id"],
+                                    Material11Count = materialData["material11Count"],
+                                    Material12Id = materialData["material12Id"],
+                                    Material12Count = materialData["material12Count"],
+                                    BlockIndex = ev.BlockIndex,
+                                    Date = _blockTimeOffset,
+                                    Timestamp = _blockTimeOffset,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored EventMaterialItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is RuneEnhancement runeEnhancement)
@@ -1828,16 +1941,25 @@ namespace NineChronicles.DataProvider
                                 });
                             var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
                             var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
-                            foreach (var info in ev.Action.RuneInfos)
+                            var runeStates = new List<RuneState>();
+                            foreach (var address in ev.Action.RuneInfos.Select(info => RuneState.DeriveAddress(ev.Action.AvatarAddress, info.RuneId)))
                             {
-                                if (!runeOptionSheet.TryGetValue(info.RuneId, out var optionRow))
+                                if (ev.OutputStates.TryGetState(address, out List rawRuneState))
                                 {
-                                    throw new SheetRowNotFoundException("RuneOptionSheet", info.RuneId);
+                                    runeStates.Add(new RuneState(rawRuneState));
+                                }
+                            }
+
+                            foreach (var runeState in runeStates)
+                            {
+                                if (!runeOptionSheet.TryGetValue(runeState.RuneId, out var optionRow))
+                                {
+                                    throw new SheetRowNotFoundException("RuneOptionSheet", runeState.RuneId);
                                 }
 
-                                if (!optionRow.LevelOptionMap.TryGetValue(info.Level, out var option))
+                                if (!optionRow.LevelOptionMap.TryGetValue(runeState.Level, out var option))
                                 {
-                                    throw new SheetRowNotFoundException("RuneOptionSheet", info.Level);
+                                    throw new SheetRowNotFoundException("RuneOptionSheet", runeState.Level);
                                 }
 
                                 runeOptions.Add(option);
