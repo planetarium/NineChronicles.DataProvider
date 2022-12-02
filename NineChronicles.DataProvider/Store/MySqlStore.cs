@@ -1549,6 +1549,41 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreRunesAcquiredList(List<RunesAcquiredModel> runesAcquiredList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var runesAcquired in runesAcquiredList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.RunesAcquired.FindAsync(runesAcquired.Id).Result is null)
+                        {
+                            await ctx.RunesAcquired.AddRangeAsync(runesAcquired);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.RunesAcquired.UpdateRange(runesAcquired);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public List<RaiderModel> GetRaiderList()
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();

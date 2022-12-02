@@ -75,6 +75,7 @@ namespace NineChronicles.DataProvider
         private readonly List<BattleGrandFinaleModel> _battleGrandFinaleList = new List<BattleGrandFinaleModel>();
         private readonly List<EventMaterialItemCraftsModel> _eventMaterialItemCraftsList = new List<EventMaterialItemCraftsModel>();
         private readonly List<RuneEnhancementModel> _runeEnhancementList = new List<RuneEnhancementModel>();
+        private readonly List<RunesAcquiredModel> _runesAcquiredList = new List<RunesAcquiredModel>();
         private readonly List<string> _agents;
         private readonly bool _render;
         private int _renderedBlockCount;
@@ -168,6 +169,7 @@ namespace NineChronicles.DataProvider
                             MySqlStore.StoreBattleGrandFinaleList(_battleGrandFinaleList);
                             MySqlStore.StoreEventMaterialItemCraftsList(_eventMaterialItemCraftsList);
                             MySqlStore.StoreRuneEnhancementList(_runeEnhancementList);
+                            MySqlStore.StoreRunesAcquiredList(_runesAcquiredList);
                         }),
                     };
 
@@ -206,6 +208,7 @@ namespace NineChronicles.DataProvider
                     _battleGrandFinaleList.Clear();
                     _eventMaterialItemCraftsList.Clear();
                     _runeEnhancementList.Clear();
+                    _runesAcquiredList.Clear();
                     var end = DateTimeOffset.Now;
                     long blockIndex = b.OldTip.Index;
                     StreamWriter blockIndexFile = new StreamWriter(_blockIndexFilePath);
@@ -1214,6 +1217,28 @@ namespace NineChronicles.DataProvider
                                     }
                                 }
 
+#pragma warning disable CS0618
+                                var runeCurrency = Currency.Legacy(RuneHelper.StakeRune.Ticker, 0, minters: null);
+#pragma warning restore CS0618
+                                var prevRuneBalance = ev.PreviousStates.GetBalance(
+                                    avatarAddress,
+                                    runeCurrency);
+                                var outputRuneBalance = ev.OutputStates.GetBalance(
+                                    avatarAddress,
+                                    runeCurrency);
+                                var acquiredRune = outputRuneBalance - prevRuneBalance;
+                                _runesAcquiredList.Add(new RunesAcquiredModel()
+                                {
+                                        Id = id.ToString(),
+                                        ActionType = claimStakeReward.ToString()!.Split('.').LastOrDefault()?.Replace(">", string.Empty),
+                                        TickerType = RuneHelper.StakeRune.Ticker,
+                                        BlockIndex = ev.BlockIndex,
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = avatarAddress.ToString(),
+                                        AcquiredRune = Convert.ToDecimal(acquiredRune.GetQuantityString()),
+                                        Date = DateOnly.FromDateTime(_blockTimeOffset.DateTime),
+                                        TimeStamp = _blockTimeOffset,
+                                });
                                 _claimStakeList.Add(new ClaimStakeRewardModel()
                                 {
                                     Id = id.ToString(),
@@ -1755,10 +1780,10 @@ namespace NineChronicles.DataProvider
                                 var runeCurrency = Currency.Legacy(runeRow!.Ticker, 0, minters: null);
 #pragma warning restore CS0618
                                 var prevRuneBalance = previousStates.GetBalance(
-                                    ev.Signer,
+                                    runeEnhancement.AvatarAddress,
                                     runeCurrency);
                                 var outputRuneBalance = ev.OutputStates.GetBalance(
-                                    ev.Signer,
+                                    runeEnhancement.AvatarAddress,
                                     runeCurrency);
                                 var burntRune = prevRuneBalance - outputRuneBalance;
                                 _runeEnhancementList.Add(new RuneEnhancementModel()
@@ -1779,6 +1804,68 @@ namespace NineChronicles.DataProvider
                                 });
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored RuneEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is TransferAssets transferAssets)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                foreach (var recipient in transferAssets.Recipients)
+                                {
+                                    var actionString = ev.BlockIndex +
+                                                       recipient.recipient.ToString() +
+                                                       recipient.amount.Currency.Ticker +
+                                                       recipient.amount.GetQuantityString();
+                                    var actionByteArray = Encoding.UTF8.GetBytes(actionString);
+                                    var id = new Guid(actionByteArray);
+                                    var avatarAddress = recipient.recipient;
+                                    AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress);
+                                    var agentAddress = avatarState.agentAddress;
+                                    _runesAcquiredList.Add(new RunesAcquiredModel()
+                                    {
+                                            Id = id.ToString(),
+                                            ActionType = transferAssets.ToString()!.Split('.').LastOrDefault()?.Replace(">", string.Empty),
+                                            TickerType = recipient.amount.Currency.Ticker,
+                                            BlockIndex = ev.BlockIndex,
+                                            AgentAddress = agentAddress.ToString(),
+                                            AvatarAddress = avatarAddress.ToString(),
+                                            AcquiredRune = Convert.ToDecimal(recipient.amount.GetQuantityString()),
+                                            Date = DateOnly.FromDateTime(_blockTimeOffset.DateTime),
+                                            TimeStamp = _blockTimeOffset,
+                                    });
+                                }
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored TransferAssets action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is DailyReward dailyReward)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+#pragma warning disable CS0618
+                                var runeCurrency = Currency.Legacy(RuneHelper.DailyRewardRune.Ticker, 0, minters: null);
+#pragma warning restore CS0618
+                                var prevRuneBalance = ev.PreviousStates.GetBalance(
+                                    dailyReward.avatarAddress,
+                                    runeCurrency);
+                                var outputRuneBalance = ev.OutputStates.GetBalance(
+                                    dailyReward.avatarAddress,
+                                    runeCurrency);
+                                var acquiredRune = outputRuneBalance - prevRuneBalance;
+                                _runesAcquiredList.Add(new RunesAcquiredModel()
+                                {
+                                        Id = dailyReward.Id.ToString(),
+                                        ActionType = dailyReward.ToString()!.Split('.').LastOrDefault()?.Replace(">", string.Empty),
+                                        TickerType = RuneHelper.DailyRewardRune.Ticker,
+                                        BlockIndex = ev.BlockIndex,
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = dailyReward.avatarAddress.ToString(),
+                                        AcquiredRune = Convert.ToDecimal(acquiredRune.GetQuantityString()),
+                                        Date = DateOnly.FromDateTime(_blockTimeOffset.DateTime),
+                                        TimeStamp = _blockTimeOffset,
+                                });
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored DailyReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                         catch (Exception ex)
@@ -1936,6 +2023,7 @@ namespace NineChronicles.DataProvider
                                 {
                                     typeof(CharacterSheet),
                                     typeof(CostumeStatSheet),
+                                    typeof(RuneSheet),
                                     typeof(RuneListSheet),
                                     typeof(RuneOptionSheet),
                                 });
@@ -2009,6 +2097,36 @@ namespace NineChronicles.DataProvider
                                 avatarArmorId,
                                 avatarTitleId,
                                 avatarCp);
+
+                            var runeSheet = sheets.GetSheet<RuneSheet>();
+                            foreach (var runeType in runeSheet.Values)
+                            {
+#pragma warning disable CS0618
+                                var runeCurrency = Currency.Legacy(runeType.Ticker, 0, minters: null);
+#pragma warning restore CS0618
+                                var prevRuneBalance = ev.PreviousStates.GetBalance(
+                                    ev.Action.AvatarAddress,
+                                    runeCurrency);
+                                var outputRuneBalance = ev.OutputStates.GetBalance(
+                                    ev.Action.AvatarAddress,
+                                    runeCurrency);
+                                var acquiredRune = outputRuneBalance - prevRuneBalance;
+                                if (Convert.ToDecimal(acquiredRune.GetQuantityString()) > 0)
+                                {
+                                    _runesAcquiredList.Add(new RunesAcquiredModel()
+                                    {
+                                        Id = ev.Action.Id.ToString(),
+                                        ActionType = ev.Action.ToString()!.Split('.').LastOrDefault()?.Replace(">", string.Empty),
+                                        TickerType = RuneHelper.DailyRewardRune.Ticker,
+                                        BlockIndex = ev.BlockIndex,
+                                        AgentAddress = ev.Signer.ToString(),
+                                        AvatarAddress = ev.Action.AvatarAddress.ToString(),
+                                        AcquiredRune = Convert.ToDecimal(acquiredRune.GetQuantityString()),
+                                        Date = DateOnly.FromDateTime(_blockTimeOffset.DateTime),
+                                        TimeStamp = _blockTimeOffset,
+                                    });
+                                }
+                            }
 
                             _avatarList.Add(new AvatarModel()
                             {
@@ -2101,18 +2219,18 @@ namespace NineChronicles.DataProvider
                     if (agentState is { } ag)
                     {
                         var avatarAddresses = ag.avatarAddresses;
-                        foreach (var avatarAddress in avatarAddresses)
+                        foreach (var avatarAddress in avatarAddresses.Select(avatarAddress => avatarAddress.Value))
                         {
                             try
                             {
                                 AvatarState avatarState;
                                 try
                                 {
-                                    avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress.Value);
+                                    avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress);
                                 }
                                 catch (Exception)
                                 {
-                                    avatarState = ev.OutputStates.GetAvatarState(avatarAddress.Value);
+                                    avatarState = ev.OutputStates.GetAvatarState(avatarAddress);
                                 }
 
                                 if (avatarState == null)
@@ -2123,7 +2241,7 @@ namespace NineChronicles.DataProvider
                                 string avatarName = avatarState.name;
                                 _avatarList.Add(new AvatarModel()
                                 {
-                                    Address = avatarAddress.Value.ToString(),
+                                    Address = avatarAddress.ToString(),
                                     AgentAddress = ev.Signer.ToString(),
                                     Name = avatarName,
                                     Timestamp = _blockTimeOffset,
