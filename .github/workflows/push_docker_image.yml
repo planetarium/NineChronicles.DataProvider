@@ -9,7 +9,7 @@ on:
       - 2022q3-worldboss
       - internal-worldboss-s2
       - 2022q4-rune
-      - user-migration
+      - user-migration*
     tags:
         - v*
 
