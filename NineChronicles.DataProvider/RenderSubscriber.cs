@@ -135,73 +135,12 @@ namespace NineChronicles.DataProvider
                     {
                         Task.Run(() =>
                         {
-                            MySqlStore.StoreAgentList(_agentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                            MySqlStore.StoreAvatarList(_avatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                            MySqlStore.StoreHackAndSlashList(_hasList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                            MySqlStore.StoreCombinationConsumableList(_ccList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                            MySqlStore.StoreCombinationEquipmentList(_ceList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                            MySqlStore.StoreItemEnhancementList(_ieList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                            MySqlStore.StoreShopHistoryEquipmentList(_buyShopEquipmentsList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
-                            MySqlStore.StoreShopHistoryCostumeList(_buyShopCostumesList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
-                            MySqlStore.StoreShopHistoryMaterialList(_buyShopMaterialsList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
-                            MySqlStore.StoreShopHistoryConsumableList(_buyShopConsumablesList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
-                            MySqlStore.ProcessEquipmentList(_eqList.GroupBy(i => i.ItemId).Select(i => i.FirstOrDefault()).ToList());
-                            MySqlStore.StoreStakingList(_stakeList);
-                            MySqlStore.StoreClaimStakeRewardList(_claimStakeList);
-                            MySqlStore.StoreMigrateMonsterCollectionList(_mmcList);
-                            MySqlStore.StoreGrindList(_grindList);
-                            MySqlStore.StoreItemEnhancementFailList(_itemEnhancementFailList);
-                            MySqlStore.StoreUnlockEquipmentRecipeList(_unlockEquipmentRecipeList);
-                            MySqlStore.StoreUnlockWorldList(_unlockWorldList);
-                            MySqlStore.StoreReplaceCombinationEquipmentMaterialList(_replaceCombinationEquipmentMaterialList);
-                            MySqlStore.StoreHasRandomBuffList(_hasRandomBuffList);
-                            MySqlStore.StoreHasWithRandomBuffList(_hasWithRandomBuffList);
-                            MySqlStore.StoreJoinArenaList(_joinArenaList);
-                            MySqlStore.StoreBattleArenaList(_battleArenaList);
-                            MySqlStore.StoreBlockList(_blockList);
-                            MySqlStore.StoreTransactionList(_transactionList);
-                            MySqlStore.StoreHackAndSlashSweepList(_hasSweepList);
-                            MySqlStore.StoreEventDungeonBattleList(_eventDungeonBattleList);
-                            MySqlStore.StoreEventConsumableItemCraftsList(_eventConsumableItemCraftsList);
-                            MySqlStore.StoreRaiderList(_raiderList);
-                            MySqlStore.StoreBattleGrandFinaleList(_battleGrandFinaleList);
                             MySqlStore.StoreEventMaterialItemCraftsList(_eventMaterialItemCraftsList);
                         }),
                     };
 
                     Task.WaitAll(tasks.ToArray());
                     _renderedBlockCount = 0;
-                    _agents.Clear();
-                    _agentList.Clear();
-                    _avatarList.Clear();
-                    _hasList.Clear();
-                    _ccList.Clear();
-                    _ceList.Clear();
-                    _ieList.Clear();
-                    _buyShopEquipmentsList.Clear();
-                    _buyShopCostumesList.Clear();
-                    _buyShopMaterialsList.Clear();
-                    _buyShopConsumablesList.Clear();
-                    _eqList.Clear();
-                    _stakeList.Clear();
-                    _claimStakeList.Clear();
-                    _mmcList.Clear();
-                    _grindList.Clear();
-                    _itemEnhancementFailList.Clear();
-                    _unlockEquipmentRecipeList.Clear();
-                    _unlockWorldList.Clear();
-                    _replaceCombinationEquipmentMaterialList.Clear();
-                    _hasRandomBuffList.Clear();
-                    _hasWithRandomBuffList.Clear();
-                    _joinArenaList.Clear();
-                    _battleArenaList.Clear();
-                    _blockList.Clear();
-                    _transactionList.Clear();
-                    _hasSweepList.Clear();
-                    _eventDungeonBattleList.Clear();
-                    _eventConsumableItemCraftsList.Clear();
-                    _raiderList.Clear();
-                    _battleGrandFinaleList.Clear();
                     _eventMaterialItemCraftsList.Clear();
                     var end = DateTimeOffset.Now;
                     long blockIndex = b.OldTip.Index;
@@ -1562,7 +1501,6 @@ namespace NineChronicles.DataProvider
                                     raiderState.AvatarAddress.ToHex(),
                                     raiderState.PurchaseCount);
                                 _raiderList.Add(model);
-                                MySqlStore.StoreRaider(model);
                             }
                             else
                             {
