@@ -3,7 +3,7 @@ namespace NineChronicles.DataProvider.Store
     using Microsoft.EntityFrameworkCore;
     using NineChronicles.DataProvider.Store.Models;
 
-    public class NineChroniclesContext : DbContext
+    public sealed class NineChroniclesContext : DbContext
     {
         public NineChroniclesContext(DbContextOptions<NineChroniclesContext> options)
             : base(options)
@@ -30,9 +30,9 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<EquipmentModel>? Equipments { get; set; }
 
-        public DbSet<EquipmentRankingModel>? EquipmentRankings { get; set; }
+        public DbSet<EquipmentRankingModel>? EquipmentRanking { get; set; }
 
-        public DbSet<AbilityRankingModel>? AbilityRankings { get; set; }
+        public DbSet<AbilityRankingModel>? AbilityRanking { get; set; }
 
         public DbSet<ShopHistoryEquipmentModel>? ShopHistoryEquipments { get; set; }
 
@@ -73,5 +73,49 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<ShopCostumeModel>? ShopCostumes { get; set; }
 
         public DbSet<ShopMaterialModel>? ShopMaterials { get; set; }
+
+        public DbSet<BattleArenaRankingModel>? BattleArenaRanking { get; set; }
+
+        public DbSet<BlockModel> Blocks => Set<BlockModel>();
+
+        public DbSet<TransactionModel>? Transactions { get; set; }
+
+        public DbSet<HackAndSlashSweepModel>? HackAndSlashSweeps { get; set; }
+
+        public DbSet<EventDungeonBattleModel>? EventDungeonBattles { get; set; }
+
+        public DbSet<EventConsumableItemCraftsModel>? EventConsumableItemCrafts { get; set; }
+
+        public DbSet<RaiderModel> Raiders => Set<RaiderModel>();
+
+        public DbSet<WorldBossSeasonMigrationModel> WorldBossSeasonMigrationModels =>
+            Set<WorldBossSeasonMigrationModel>();
+
+        public DbSet<BattleGrandFinaleModel> BattleGrandFinales => Set<BattleGrandFinaleModel>();
+
+        public DbSet<EventMaterialItemCraftsModel> EventMaterialItemCrafts => Set<EventMaterialItemCraftsModel>();
+
+        public DbSet<RuneEnhancementModel> RuneEnhancements => Set<RuneEnhancementModel>();
+
+        public DbSet<RunesAcquiredModel> RunesAcquired => Set<RunesAcquiredModel>();
+
+        /*
+         * This override method enables EF database update & migration when certain models are required for data querying,
+         * but tables constructed by these models are not needed.
+         */
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<StakeModel>().HasNoKey();
+            modelBuilder.Entity<StageRankingModel>().HasNoKey();
+            modelBuilder.Entity<CraftRankingOutputModel>().HasNoKey();
+            modelBuilder.Entity<EquipmentRankingModel>().HasNoKey();
+            modelBuilder.Entity<AbilityRankingModel>().HasNoKey();
+            modelBuilder.Entity<BattleArenaRankingModel>().HasNoKey();
+            modelBuilder.Entity<ShopMaterialModel>().HasNoKey();
+            modelBuilder.Entity<MigrateMonsterCollectionModel>().HasNoKey();
+            modelBuilder.Entity<WorldBossRankingModel>()
+                .HasNoKey()
+                .ToTable("WorldBossRankings", t => t.ExcludeFromMigrations());
+        }
     }
 }

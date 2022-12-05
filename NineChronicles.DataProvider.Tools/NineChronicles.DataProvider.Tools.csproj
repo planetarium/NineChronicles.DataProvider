@@ -5,7 +5,7 @@
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="Cocona.Lite" Version="1.5.0" />
-      <PackageReference Include="MySqlConnector" Version="1.3.8" />
+      <PackageReference Include="MySqlConnector" Version="2.1.2" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\NineChronicles.DataProvider\NineChronicles.DataProvider.csproj" />
