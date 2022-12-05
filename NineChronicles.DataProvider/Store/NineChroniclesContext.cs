@@ -95,6 +95,10 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<EventMaterialItemCraftsModel> EventMaterialItemCrafts => Set<EventMaterialItemCraftsModel>();
 
+        public DbSet<RuneEnhancementModel> RuneEnhancements => Set<RuneEnhancementModel>();
+
+        public DbSet<RunesAcquiredModel> RunesAcquired => Set<RunesAcquiredModel>();
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.
