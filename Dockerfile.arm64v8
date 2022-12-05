@@ -3,11 +3,13 @@ WORKDIR /app
 ARG COMMIT
 
 # Copy csproj and restore as distinct layers
-COPY ./Lib9c/Lib9c/Lib9c.csproj ./Lib9c/
-COPY ./Libplanet.Headless/Libplanet.Headless.csproj ./Libplanet.Headless/
-COPY ./NineChronicles.RPC.Shared/NineChronicles.RPC.Shared/NineChronicles.RPC.Shared.csproj ./NineChronicles.RPC.Shared/
-COPY ./NineChronicles.Headless/NineChronicles.Headless.csproj ./NineChronicles.Headless/
-COPY ./NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj ./NineChronicles.Headless.Executable/
+COPY ./NineChronicles.Headless/Lib9c/Lib9c/Lib9c.csproj ./Lib9c/
+COPY ./NineChronicles.Headless/Libplanet.Headless/Libplanet.Headless.csproj ./Libplanet.Headless/
+COPY ./NineChronicles.Headless/NineChronicles.RPC.Shared/NineChronicles.RPC.Shared/NineChronicles.RPC.Shared.csproj ./NineChronicles.RPC.Shared/
+COPY ./NineChronicles.Headless/NineChronicles.Headless/NineChronicles.Headless.csproj ./NineChronicles.Headless/
+COPY ./NineChronicles.Headless/NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj ./NineChronicles.Headless.Executable/
+COPY ./NineChronicles.DataProvider/NineChronicles.DataProvider.csproj ./NineChronicles.DataProvider/
+COPY ./NineChronicles.DataProvider.Executable/NineChronicles.DataProvider.Executable.csproj ./NineChronicles.DataProvider.Executable/
 COPY ./NineChronicles.DataProvider.Tools/NineChronicles.DataProvider.Tools.csproj ./NineChronicles.DataProvider.Tools/
 RUN dotnet restore Lib9c
 RUN dotnet restore Libplanet.Headless
