@@ -1867,6 +1867,48 @@ namespace NineChronicles.DataProvider
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored DailyReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
+
+                            if (ev.Action is ClaimRaidReward claimRaidReward)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                var sheets = ev.OutputStates.GetSheets(
+                                    sheetTypes: new[]
+                                    {
+                                        typeof(RuneSheet),
+                                    });
+                                var runeSheet = sheets.GetSheet<RuneSheet>();
+                                foreach (var runeType in runeSheet.Values)
+                                {
+#pragma warning disable CS0618
+                                    var runeCurrency = Currency.Legacy(runeType.Ticker, 0, minters: null);
+#pragma warning restore CS0618
+                                    var prevRuneBalance = ev.PreviousStates.GetBalance(
+                                        claimRaidReward.AvatarAddress,
+                                        runeCurrency);
+                                    var outputRuneBalance = ev.OutputStates.GetBalance(
+                                        claimRaidReward.AvatarAddress,
+                                        runeCurrency);
+                                    var acquiredRune = outputRuneBalance - prevRuneBalance;
+                                    if (Convert.ToDecimal(acquiredRune.GetQuantityString()) > 0)
+                                    {
+                                        _runesAcquiredList.Add(new RunesAcquiredModel()
+                                        {
+                                            Id = claimRaidReward.Id.ToString(),
+                                            ActionType = claimRaidReward.ToString()!.Split('.').LastOrDefault()?.Replace(">", string.Empty),
+                                            TickerType = runeType.Ticker,
+                                            BlockIndex = ev.BlockIndex,
+                                            AgentAddress = ev.Signer.ToString(),
+                                            AvatarAddress = claimRaidReward.AvatarAddress.ToString(),
+                                            AcquiredRune = Convert.ToDecimal(acquiredRune.GetQuantityString()),
+                                            Date = DateOnly.FromDateTime(_blockTimeOffset.DateTime),
+                                            TimeStamp = _blockTimeOffset,
+                                        });
+                                    }
+                                }
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored ClaimRaidReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -2117,7 +2159,7 @@ namespace NineChronicles.DataProvider
                                     {
                                         Id = ev.Action.Id.ToString(),
                                         ActionType = ev.Action.ToString()!.Split('.').LastOrDefault()?.Replace(">", string.Empty),
-                                        TickerType = RuneHelper.DailyRewardRune.Ticker,
+                                        TickerType = runeType.Ticker,
                                         BlockIndex = ev.BlockIndex,
                                         AgentAddress = ev.Signer.ToString(),
                                         AvatarAddress = ev.Action.AvatarAddress.ToString(),
