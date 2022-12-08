@@ -1757,7 +1757,7 @@ namespace NineChronicles.DataProvider
                                 }
 
                                 RuneState previousRuneState;
-                                if (ev.OutputStates.TryGetState(runeStateAddress, out List prevRawState))
+                                if (ev.PreviousStates.TryGetState(runeStateAddress, out List prevRawState))
                                 {
                                     previousRuneState = new RuneState(prevRawState);
                                 }
