@@ -1558,39 +1558,67 @@ namespace NineChronicles.DataProvider
 
                             foreach (var avatar in avatars)
                             {
-                                int raidId = 0;
-                                bool found = false;
-                                for (int i = 0; i < 99; i++)
+                                if (avatar == ev.Action.AvatarAddress)
                                 {
-                                    if (ev.OutputStates.UpdatedAddresses.Contains(
-                                            Addresses.GetRaiderAddress(avatar, i)))
+                                    int raidId = 0;
+                                    bool found = false;
+                                    for (int i = 0; i < 99; i++)
                                     {
-                                        raidId = i;
-                                        found = true;
-                                        break;
+                                        if (ev.OutputStates.UpdatedAddresses.Contains(
+                                                Addresses.GetRaiderAddress(avatar, i)))
+                                        {
+                                            raidId = i;
+                                            found = true;
+                                            break;
+                                        }
                                     }
-                                }
 
-                                if (found)
-                                {
-                                    RaiderState raiderState =
-                                        ev.OutputStates.GetRaiderState(avatar, raidId);
-                                    var model = new RaiderModel(
-                                        raidId,
-                                        raiderState.AvatarName,
-                                        raiderState.HighScore,
-                                        raiderState.TotalScore,
-                                        raiderState.Cp,
-                                        raiderState.IconId,
-                                        raiderState.Level,
-                                        raiderState.AvatarAddress.ToHex(),
-                                        raiderState.PurchaseCount);
-                                    _raiderList.Add(model);
-                                    MySqlStore.StoreRaider(model);
+                                    if (found)
+                                    {
+                                        RaiderState raiderState =
+                                            ev.OutputStates.GetRaiderState(avatar, raidId);
+                                        var model = new RaiderModel(
+                                            raidId,
+                                            raiderState.AvatarName,
+                                            raiderState.HighScore,
+                                            raiderState.TotalScore,
+                                            raiderState.Cp,
+                                            raiderState.IconId,
+                                            raiderState.Level,
+                                            raiderState.AvatarAddress.ToHex(),
+                                            raiderState.PurchaseCount);
+                                        _raiderList.Add(model);
+                                        MySqlStore.StoreRaider(model);
+                                    }
+                                    else
+                                    {
+                                        Log.Error("can't find raidId.");
+                                    }
                                 }
                                 else
                                 {
-                                    Log.Error("can't find raidId.");
+                                    int raidId = 3;
+                                    RaiderState raiderState = ev.OutputStates.GetRaiderState(avatar, raidId);
+
+                                    if (raiderState != null)
+                                    {
+                                        var model = new RaiderModel(
+                                            raidId,
+                                            raiderState.AvatarName,
+                                            raiderState.HighScore,
+                                            raiderState.TotalScore,
+                                            raiderState.Cp,
+                                            raiderState.IconId,
+                                            raiderState.Level,
+                                            raiderState.AvatarAddress.ToHex(),
+                                            raiderState.PurchaseCount);
+                                        _raiderList.Add(model);
+                                        MySqlStore.StoreRaider(model);
+                                    }
+                                    else
+                                    {
+                                        Log.Error("can't find raidId.");
+                                    }
                                 }
                             }
                         }
