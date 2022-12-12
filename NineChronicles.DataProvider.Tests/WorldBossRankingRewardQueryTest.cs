@@ -102,7 +102,7 @@ public class WorldBossRankingRewardQueryTest : TestBase
                 var rewardInfo = Assert.IsType<Dictionary<string, object>>(model);
                 var quantity = (string)rewardInfo["quantity"];
                 var rawCurrency = (Dictionary<string, object>)rewardInfo["currency"];
-                var currency = new Currency(ticker: (string) rawCurrency["ticker"], decimalPlaces: (byte) rawCurrency["decimalPlaces"], minters: (IImmutableSet<Address>?) rawCurrency["minters"]);
+                var currency = Currency.Uncapped(ticker: (string) rawCurrency["ticker"], decimalPlaces: (byte) rawCurrency["decimalPlaces"], minters: (IImmutableSet<Address>?) rawCurrency["minters"]);
                 FungibleAssetValue.Parse(currency, quantity);
             }
         }

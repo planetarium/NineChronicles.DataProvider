@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace NineChronicles.DataProvider.Tools.SubCommand
 {
     using System;
@@ -32,7 +34,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
     public class MySqlMigration
     {
-        private string USDbName = "UserStakings";
+        private string USDbName = "BattleGrandFinaleRanking";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
@@ -188,12 +190,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             int shopOrderCount = 0;
             _usBulkFile.WriteLine(
                      "BlockIndex;" +
-                     "StakeVersion;" +
                      "AgentAddress;" +
-                     "StakingAmount;" +
-                     "StartedBlockIndex;" +
-                     "ReceivedBlockIndex;" +
-                     "CancellableBlockIndex"
+                     "AvatarAddress;" +
+                     "AvatarLevel;" +
+                     "MaxGrandFinaleScore"
                  );
 
             try
@@ -232,12 +232,9 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             var stm33 =
                             $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{USDbName}` (
                               `BlockIndex` bigint NOT NULL,
-                              `StakeVersion` varchar(100) NOT NULL,
                               `AgentAddress` varchar(100) NOT NULL,
-                              `StakingAmount` decimal(13,2) NOT NULL,
-                              `StartedBlockIndex` bigint NOT NULL,
-                              `ReceivedBlockIndex` bigint NOT NULL,
-                              `CancellableBlockIndex` bigint NOT NULL,
+                              `AvatarAddress` varchar(100) NOT NULL,
+                              `MaxGrandFinaleScore` int NOT NULL,
                               `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
                             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
                             var cmd33 = new MySqlCommand(stm33, connection);
@@ -248,47 +245,14 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             checkBARankingTable = true;
                         }
 
-                        if (!agents.Contains(avatarState.agentAddress.ToString()))
-                        {
-                            agents.Add(avatarState.agentAddress.ToString());
-                            if (ev.OutputStates.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
-                            {
-                                var stakeStateAddress = StakeState.DeriveAddress(avatarState.agentAddress);
-                                var currency = ev.OutputStates.GetGoldCurrency();
-                                var stakedBalance = ev.OutputStates.GetBalance(stakeStateAddress, currency);
-                                _usBulkFile.WriteLine(
-                                    $"{tip.Index};" +
-                                    "V2;" +
-                                    $"{avatarState.agentAddress.ToString()};" +
-                                    $"{Convert.ToDecimal(stakedBalance.GetQuantityString())};" +
-                                    $"{stakeState.StartedBlockIndex};" +
-                                    $"{stakeState.ReceivedBlockIndex};" +
-                                    $"{stakeState.CancellableBlockIndex}"
-                                );
-                            }
-
-                            var agentState = ev.OutputStates.GetAgentState(avatarState.agentAddress);
-                            Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
-                                avatarState.agentAddress,
-                                agentState.MonsterCollectionRound
-                            );
-                            if (ev.OutputStates.TryGetState(monsterCollectionAddress, out Dictionary stateDict))
-                            {
-                                var mcStates = new MonsterCollectionState(stateDict);
-                                var currency = ev.OutputStates.GetGoldCurrency();
-                                FungibleAssetValue mcBalance =
-                                    ev.OutputStates.GetBalance(monsterCollectionAddress, currency);
-                                _usBulkFile.WriteLine(
-                                    $"{tip.Index};" +
-                                    "V1;" +
-                                    $"{avatarState.agentAddress.ToString()};" +
-                                    $"{Convert.ToDecimal(mcBalance.GetQuantityString())};" +
-                                    $"{mcStates.StartedBlockIndex};" +
-                                    $"{mcStates.ReceivedBlockIndex};" +
-                                    $"{mcStates.ExpiredBlockIndex}"
-                                );
-                            }
-                        }
+                        var scoreAddress = avatarAddress.Derive(string.Format(CultureInfo.InvariantCulture, BattleGrandFinale.ScoreDeriveKey, 1));
+                        ev.OutputStates.TryGetState(scoreAddress, out Integer outputGrandFinaleScore);
+                        _usBulkFile.WriteLine(
+                            $"{tip.Index};" +
+                            $"{avatarState.agentAddress.ToString()};" +
+                            $"{avatarAddress.ToString()};" +
+                            $"{outputGrandFinaleScore}"
+                        );
 
                         Console.WriteLine("Migrating Complete {0}/{1}", avatarCount, avatars.Count);
                     }
@@ -317,12 +281,12 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 cmd12.ExecuteScalar();
                 connection.Close();
                 var endMove = DateTimeOffset.Now;
-                Console.WriteLine("Move BattleArenaRanking Complete! Time Elapsed: {0}", endMove - startMove);
+                Console.WriteLine("Move BattleGrandFinaleRanking Complete! Time Elapsed: {0}", endMove - startMove);
                 var i = 1;
                 foreach (var path in _usFiles)
                 {
                     string oldFilePath = path;
-                    string newFilePath = Path.Combine(Path.GetTempPath(), $"UserStakings{tip.Index}#{i}.csv");
+                    string newFilePath = Path.Combine(Path.GetTempPath(), $"BattleGrandFinaleRanking{tip.Index}#{i}.csv");
                     if (File.Exists(newFilePath))
                     {
                         File.Delete(newFilePath);
@@ -351,7 +315,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 cmd17.ExecuteScalar();
                 connection.Close();
                 var endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore BattleArenaRanking Complete! Time Elapsed: {0}", endRestore - startRestore);
+                Console.WriteLine("Restore BattleGrandFinaleRanking Complete! Time Elapsed: {0}", endRestore - startRestore);
             }
 
             var stm18 = $"DROP TABLE {USDbName}_Dump;";
@@ -362,7 +326,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             cmd18.ExecuteScalar();
             connection.Close();
             var endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Delete BattleArenaRanking_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            Console.WriteLine("Delete BattleGrandFinaleRanking_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
