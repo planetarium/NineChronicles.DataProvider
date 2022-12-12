@@ -1540,11 +1540,11 @@ namespace NineChronicles.DataProvider
                             if (!_migratedRaid)
                             {
                                 Log.Debug("GETRAIDAGENTADDRESSES");
-                                List<string> query = MySqlStore.GetRaidAgentAddresses();
+                                List<AgentModel> query = MySqlStore.GetRaidAgentAddresses();
                                 Log.Debug("RAIDAGENTADDRESSESCOUNT:{0}", query.Count);
                                 foreach (var i in query)
                                 {
-                                    agents.Add(i.Replace("0x", string.Empty));
+                                    agents.Add(i.Address!.Replace("0x", string.Empty));
                                 }
 
                                 foreach (var agent in agents)
