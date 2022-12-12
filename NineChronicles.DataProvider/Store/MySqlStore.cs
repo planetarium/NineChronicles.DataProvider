@@ -1616,7 +1616,7 @@ namespace NineChronicles.DataProvider.Store
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
             var query = ctx.Set<string>()
-                .FromSqlRaw("select * from (select b.Signer from (select * from (SELECT * FROM data_provider.Transactions where Date > \"2022-12-10\") a where BlockIndex > 5599600) b where ActionType=\"Raid\") c group by Signer;");
+                .FromSqlRaw("select * from (select b.Signer from (select * from (SELECT * FROM data_provider.Transactions where Date > '2022-12-10') a where BlockIndex > 5599600) b where ActionType='Raid') c group by Signer ");
 
             return query.ToList();
         }
