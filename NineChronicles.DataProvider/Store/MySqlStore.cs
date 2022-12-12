@@ -1612,6 +1612,15 @@ namespace NineChronicles.DataProvider.Store
             return query.ToList();
         }
 
+        public List<string> GetRaidAgentAddresses()
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            var query = ctx.Set<string>()
+                .FromSqlRaw("select * from (select b.Signer from (select * from (SELECT * FROM data_provider.Transactions where Date > \"2022-12-10\") a where BlockIndex > 5599600) b where ActionType=\"Raid\") c group by Signer;");
+
+            return query.ToList();
+        }
+
         public IEnumerable<BattleArenaRankingModel> GetBattleArenaRanking(
             int championshipId,
             int round,

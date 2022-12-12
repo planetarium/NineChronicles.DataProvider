@@ -76,6 +76,7 @@ namespace NineChronicles.DataProvider
         private readonly List<EventMaterialItemCraftsModel> _eventMaterialItemCraftsList = new List<EventMaterialItemCraftsModel>();
         private readonly List<string> _agents;
         private readonly bool _render;
+        private bool _migratedRaid = false;
         private int _renderedBlockCount;
         private DateTimeOffset _blockTimeOffset;
         private Address _miner;
@@ -1534,39 +1535,69 @@ namespace NineChronicles.DataProvider
                     {
                         if (ev.Exception is null)
                         {
-                            int raidId = 0;
-                            bool found = false;
-                            for (int i = 0; i < 99; i++)
+                            List<Address> avatars = new List<Address> { ev.Action.AvatarAddress };
+                            List<string> agents = new List<string>();
+                            if (!_migratedRaid)
                             {
-                                if (ev.OutputStates.UpdatedAddresses.Contains(
-                                        Addresses.GetRaiderAddress(ev.Action.AvatarAddress, i)))
+                                Log.Debug("GETRAIDAGENTADDRESSES");
+                                List<string> query = MySqlStore.GetRaidAgentAddresses();
+                                Log.Debug("RAIDAGENTADDRESSESCOUNT:{0}", query.Count);
+                                foreach (var i in query)
                                 {
-                                    raidId = i;
-                                    found = true;
-                                    break;
+                                    agents.Add(i.Replace("0x", string.Empty));
                                 }
+
+                                foreach (var agent in agents)
+                                {
+                                    var agentAddress = new Address(agent);
+                                    var avatarAddresses = ev.OutputStates.GetAgentState(agentAddress).avatarAddresses;
+                                    foreach (var avatar in avatarAddresses.Values)
+                                    {
+                                        avatars.Add(avatar);
+                                    }
+                                }
+
+                                Log.Debug("RAIDAVATARADDRESSESCOUNT:{0}", avatars.Count);
+                                Log.Debug("RAIDAVATARADDRESSES:{0}", avatars);
+                                _migratedRaid = true;
                             }
 
-                            if (found)
+                            foreach (var avatar in avatars)
                             {
-                                RaiderState raiderState =
-                                    ev.OutputStates.GetRaiderState(ev.Action.AvatarAddress, raidId);
-                                var model = new RaiderModel(
-                                    raidId,
-                                    raiderState.AvatarName,
-                                    raiderState.HighScore,
-                                    raiderState.TotalScore,
-                                    raiderState.Cp,
-                                    raiderState.IconId,
-                                    raiderState.Level,
-                                    raiderState.AvatarAddress.ToHex(),
-                                    raiderState.PurchaseCount);
-                                _raiderList.Add(model);
-                                MySqlStore.StoreRaider(model);
-                            }
-                            else
-                            {
-                                Log.Error("can't find raidId.");
+                                int raidId = 0;
+                                bool found = false;
+                                for (int i = 0; i < 99; i++)
+                                {
+                                    if (ev.OutputStates.UpdatedAddresses.Contains(
+                                            Addresses.GetRaiderAddress(avatar, i)))
+                                    {
+                                        raidId = i;
+                                        found = true;
+                                        break;
+                                    }
+                                }
+
+                                if (found)
+                                {
+                                    RaiderState raiderState =
+                                        ev.OutputStates.GetRaiderState(avatar, raidId);
+                                    var model = new RaiderModel(
+                                        raidId,
+                                        raiderState.AvatarName,
+                                        raiderState.HighScore,
+                                        raiderState.TotalScore,
+                                        raiderState.Cp,
+                                        raiderState.IconId,
+                                        raiderState.Level,
+                                        raiderState.AvatarAddress.ToHex(),
+                                        raiderState.PurchaseCount);
+                                    _raiderList.Add(model);
+                                    MySqlStore.StoreRaider(model);
+                                }
+                                else
+                                {
+                                    Log.Error("can't find raidId.");
+                                }
                             }
                         }
                     }
