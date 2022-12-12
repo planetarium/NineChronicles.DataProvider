@@ -251,7 +251,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             $"{tip.Index};" +
                             $"{avatarState.agentAddress.ToString()};" +
                             $"{avatarAddress.ToString()};" +
-                            $"{outputGrandFinaleScore}"
+                            $"{outputGrandFinaleScore.Value.ToString()}"
                         );
 
                         Console.WriteLine("Migrating Complete {0}/{1}", avatarCount, avatars.Count);
