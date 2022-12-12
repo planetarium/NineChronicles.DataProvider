@@ -247,12 +247,15 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                         var scoreAddress = avatarAddress.Derive(string.Format(CultureInfo.InvariantCulture, BattleGrandFinale.ScoreDeriveKey, 1));
                         ev.OutputStates.TryGetState(scoreAddress, out Integer outputGrandFinaleScore);
-                        _usBulkFile.WriteLine(
-                            $"{tip.Index};" +
-                            $"{avatarState.agentAddress.ToString()};" +
-                            $"{avatarAddress.ToString()};" +
-                            $"{outputGrandFinaleScore.Value.ToString()}"
-                        );
+                        if (outputGrandFinaleScore.Value > 0)
+                        {
+                            _usBulkFile.WriteLine(
+                                $"{tip.Index};" +
+                                $"{avatarState.agentAddress.ToString()};" +
+                                $"{avatarAddress.ToString()};" +
+                                $"{outputGrandFinaleScore.Value.ToString()}"
+                            );
+                        }
 
                         Console.WriteLine("Migrating Complete {0}/{1}", avatarCount, avatars.Count);
                     }
