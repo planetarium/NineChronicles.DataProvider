@@ -1527,55 +1527,6 @@ namespace NineChronicles.DataProvider
                         }
                     });
 
-            _actionRenderer.EveryRender<Raid>()
-                .Subscribe(ev =>
-                {
-                    try
-                    {
-                        if (ev.Exception is null)
-                        {
-                            int raidId = 0;
-                            bool found = false;
-                            for (int i = 0; i < 99; i++)
-                            {
-                                if (ev.OutputStates.UpdatedAddresses.Contains(
-                                        Addresses.GetRaiderAddress(ev.Action.AvatarAddress, i)))
-                                {
-                                    raidId = i;
-                                    found = true;
-                                    break;
-                                }
-                            }
-
-                            if (found)
-                            {
-                                RaiderState raiderState =
-                                    ev.OutputStates.GetRaiderState(ev.Action.AvatarAddress, raidId);
-                                var model = new RaiderModel(
-                                    raidId,
-                                    raiderState.AvatarName,
-                                    raiderState.HighScore,
-                                    raiderState.TotalScore,
-                                    raiderState.Cp,
-                                    raiderState.IconId,
-                                    raiderState.Level,
-                                    raiderState.AvatarAddress.ToHex(),
-                                    raiderState.PurchaseCount);
-                                _raiderList.Add(model);
-                                MySqlStore.StoreRaider(model);
-                            }
-                            else
-                            {
-                                Log.Error("can't find raidId.");
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
-                });
-
             return Task.CompletedTask;
         }
 
