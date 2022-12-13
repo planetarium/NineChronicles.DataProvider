@@ -1,6 +1,3 @@
-using Nekoyume.Extensions;
-using NineChronicles.DataProvider.Store.Models;
-
 namespace NineChronicles.DataProvider.Tools.SubCommand
 {
     using System;
@@ -22,6 +19,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using Nekoyume.Action;
     using Nekoyume.Battle;
     using Nekoyume.BlockChain.Policy;
+    using Nekoyume.Extensions;
     using Nekoyume.Helper;
     using Nekoyume.Model.Arena;
     using Nekoyume.Model.Item;
