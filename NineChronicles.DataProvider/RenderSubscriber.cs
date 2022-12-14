@@ -2005,15 +2005,6 @@ namespace NineChronicles.DataProvider
                                         }
 
                                         MySqlStore.StoreAgent(ev.Signer);
-                                        MySqlStore.StoreAvatar(
-                                            purchaseInfo.SellerAvatarAddress,
-                                            purchaseInfo.SellerAgentAddress,
-                                            avatarName,
-                                            _blockTimeOffset,
-                                            null,
-                                            null,
-                                            null,
-                                            null);
                                         Equipment? equipment = buyerInventory.Equipments.SingleOrDefault(i =>
                                             i.TradableId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
                                             i.TradableId == purchaseInfo.TradableId);
@@ -2255,50 +2246,6 @@ namespace NineChronicles.DataProvider
                 {
                     Address = ev.Signer.ToString(),
                 });
-
-                if (ev.Signer != _miner)
-                {
-                    var agentState = ev.OutputStates.GetAgentState(ev.Signer);
-                    if (agentState is { } ag)
-                    {
-                        var avatarAddresses = ag.avatarAddresses;
-                        foreach (var avatarAddress in avatarAddresses.Select(avatarAddress => avatarAddress.Value))
-                        {
-                            try
-                            {
-                                AvatarState avatarState;
-                                try
-                                {
-                                    avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress);
-                                }
-                                catch (Exception)
-                                {
-                                    avatarState = ev.OutputStates.GetAvatarState(avatarAddress);
-                                }
-
-                                if (avatarState == null)
-                                {
-                                    continue;
-                                }
-
-                                string avatarName = avatarState.name;
-                                MySqlStore.StoreAvatar(
-                                    avatarAddress,
-                                    ev.Signer,
-                                    avatarName,
-                                    _blockTimeOffset,
-                                    null,
-                                    null,
-                                    null,
-                                    null);
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine(ex.Message);
-                            }
-                        }
-                    }
-                }
             }
         }
 
