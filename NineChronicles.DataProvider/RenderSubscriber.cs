@@ -76,6 +76,7 @@ namespace NineChronicles.DataProvider
         private readonly List<EventMaterialItemCraftsModel> _eventMaterialItemCraftsList = new List<EventMaterialItemCraftsModel>();
         private readonly List<RuneEnhancementModel> _runeEnhancementList = new List<RuneEnhancementModel>();
         private readonly List<RunesAcquiredModel> _runesAcquiredList = new List<RunesAcquiredModel>();
+        private readonly List<UnlockRuneSlotModel> _unlockRuneSlotList = new List<UnlockRuneSlotModel>();
         private readonly List<string> _agents;
         private readonly bool _render;
         private int _renderedBlockCount;
@@ -1908,6 +1909,33 @@ namespace NineChronicles.DataProvider
 
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored ClaimRaidReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is UnlockRuneSlot unlockRuneSlot)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                var previousStates = ev.PreviousStates;
+                                Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
+                                var prevNCGBalance = previousStates.GetBalance(
+                                    ev.Signer,
+                                    ncgCurrency);
+                                var outputNCGBalance = ev.OutputStates.GetBalance(
+                                    ev.Signer,
+                                    ncgCurrency);
+                                var burntNCG = prevNCGBalance - outputNCGBalance;
+                                _unlockRuneSlotList.Add(new UnlockRuneSlotModel()
+                                {
+                                    Id = unlockRuneSlot.Id.ToString(),
+                                    BlockIndex = ev.BlockIndex,
+                                    AgentAddress = ev.Signer.ToString(),
+                                    AvatarAddress = unlockRuneSlot.AvatarAddress.ToString(),
+                                    SlotIndex = unlockRuneSlot.SlotIndex,
+                                    BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
+                                    Date = DateOnly.FromDateTime(_blockTimeOffset.DateTime),
+                                    TimeStamp = _blockTimeOffset,
+                                });
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored UnlockRuneSlot action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                         catch (Exception ex)
