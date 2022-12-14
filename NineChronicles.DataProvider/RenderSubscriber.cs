@@ -2009,6 +2009,7 @@ namespace NineChronicles.DataProvider
                                             purchaseInfo.SellerAvatarAddress,
                                             purchaseInfo.SellerAgentAddress,
                                             avatarName,
+                                            _blockTimeOffset,
                                             null,
                                             null,
                                             null,
