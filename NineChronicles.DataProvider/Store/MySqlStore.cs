@@ -23,6 +23,7 @@ namespace NineChronicles.DataProvider.Store
             Address address,
             Address agentAddress,
             string name,
+            DateTimeOffset timestamp,
             int? avatarLevel,
             int? titleId,
             int? armorId,
@@ -43,6 +44,7 @@ namespace NineChronicles.DataProvider.Store
                             TitleId = titleId,
                             ArmorId = armorId,
                             Cp = cp,
+                            Timestamp = timestamp,
                         }
                     );
                     ctx.SaveChanges();
@@ -60,6 +62,7 @@ namespace NineChronicles.DataProvider.Store
                                 Address = address.ToString(),
                                 AgentAddress = agentAddress.ToString(),
                                 Name = name,
+                                Timestamp = timestamp,
                             }
                         );
                     }
@@ -75,6 +78,7 @@ namespace NineChronicles.DataProvider.Store
                                 TitleId = titleId,
                                 ArmorId = armorId,
                                 Cp = cp,
+                                Timestamp = timestamp,
                             }
                         );
                     }

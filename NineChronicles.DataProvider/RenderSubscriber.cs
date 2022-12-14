@@ -2281,13 +2281,15 @@ namespace NineChronicles.DataProvider
                                 }
 
                                 string avatarName = avatarState.name;
-                                _avatarList.Add(new AvatarModel()
-                                {
-                                    Address = avatarAddress.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    Name = avatarName,
-                                    Timestamp = _blockTimeOffset,
-                                });
+                                MySqlStore.StoreAvatar(
+                                    avatarAddress,
+                                    ev.Signer,
+                                    avatarName,
+                                    _blockTimeOffset,
+                                    null,
+                                    null,
+                                    null,
+                                    null);
                             }
                             catch (Exception ex)
                             {
