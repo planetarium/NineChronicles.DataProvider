@@ -1997,7 +1997,6 @@ namespace NineChronicles.DataProvider
                                     {
                                         AvatarState sellerState = ev.OutputStates.GetAvatarStateV2(purchaseInfo.SellerAvatarAddress);
                                         var sellerInventory = sellerState.inventory;
-                                        string avatarName = sellerState.name;
 
                                         if (buyerInventory.Equipments == null || sellerInventory.Equipments == null)
                                         {
