@@ -23,6 +23,7 @@ namespace NineChronicles.DataProvider.Store
             Address address,
             Address agentAddress,
             string name,
+            DateTimeOffset timestamp,
             int? avatarLevel,
             int? titleId,
             int? armorId,
@@ -43,6 +44,7 @@ namespace NineChronicles.DataProvider.Store
                             TitleId = titleId,
                             ArmorId = armorId,
                             Cp = cp,
+                            Timestamp = timestamp,
                         }
                     );
                     ctx.SaveChanges();
@@ -60,6 +62,7 @@ namespace NineChronicles.DataProvider.Store
                                 Address = address.ToString(),
                                 AgentAddress = agentAddress.ToString(),
                                 Name = name,
+                                Timestamp = timestamp,
                             }
                         );
                     }
@@ -75,6 +78,7 @@ namespace NineChronicles.DataProvider.Store
                                 TitleId = titleId,
                                 ArmorId = armorId,
                                 Cp = cp,
+                                Timestamp = timestamp,
                             }
                         );
                     }
@@ -1570,6 +1574,41 @@ namespace NineChronicles.DataProvider.Store
                             await ctx.DisposeAsync();
                             await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.RunesAcquired.UpdateRange(runesAcquired);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreUnlockRuneSlotList(List<UnlockRuneSlotModel> unlockRuneSlotList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var unlockRuneSlot in unlockRuneSlotList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.UnlockRuneSlots.FindAsync(unlockRuneSlot.Id).Result is null)
+                        {
+                            await ctx.UnlockRuneSlots.AddRangeAsync(unlockRuneSlot);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.UnlockRuneSlots.UpdateRange(unlockRuneSlot);
                             await updateCtx.SaveChangesAsync();
                             await updateCtx.DisposeAsync();
                         }
