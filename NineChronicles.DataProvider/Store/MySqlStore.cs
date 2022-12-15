@@ -1588,6 +1588,41 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreUnlockRuneSlotList(List<UnlockRuneSlotModel> unlockRuneSlotList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var unlockRuneSlot in unlockRuneSlotList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.UnlockRuneSlots.FindAsync(unlockRuneSlot.Id).Result is null)
+                        {
+                            await ctx.UnlockRuneSlots.AddRangeAsync(unlockRuneSlot);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.UnlockRuneSlots.UpdateRange(unlockRuneSlot);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public List<RaiderModel> GetRaiderList()
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
