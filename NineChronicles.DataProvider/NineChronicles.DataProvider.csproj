@@ -6,7 +6,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Nullable>enable</Nullable>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	<NoWarn>$(NoWarn),1573,1591,1712</NoWarn>
+	<NoWarn>$(NoWarn),1573,1591,1712,SA1009,SA1101,SA1111,SA1309,SA1600,SA1633</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
