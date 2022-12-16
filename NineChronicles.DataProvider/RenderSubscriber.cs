@@ -2082,7 +2082,7 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is UnlockRuneSlot unlockRuneSlot)
+                        if (ev.Exception == null && ev.Action is { } unlockRuneSlot)
                         {
                             var start = DateTimeOffset.UtcNow;
                             var previousStates = ev.PreviousStates;
