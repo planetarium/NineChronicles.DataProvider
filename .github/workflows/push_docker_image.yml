@@ -6,9 +6,6 @@ on:
       - main
       - development
       - rc-*
-      - 2022q3-worldboss
-      - internal-worldboss-s2
-      - 2022q4-rune
     tags:
         - v*
 
