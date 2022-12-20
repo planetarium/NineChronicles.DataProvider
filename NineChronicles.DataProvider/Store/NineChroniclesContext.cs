@@ -101,6 +101,8 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<UnlockRuneSlotModel> UnlockRuneSlots => Set<UnlockRuneSlotModel>();
 
+        public DbSet<RapidCombinationModel> RapidCombinations => Set<RapidCombinationModel>();
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.
