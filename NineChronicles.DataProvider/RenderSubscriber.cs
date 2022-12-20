@@ -2126,9 +2126,7 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var states = ev.PreviousStates;
                             var slotState = states.GetCombinationSlotState(rapidCombination.avatarAddress, rapidCombination.slotIndex);
-
                             var diff = slotState.Result.itemUsable.RequiredBlockIndex - ev.BlockIndex;
-
                             var gameConfigState = states.GetGameConfigState();
                             var count = RapidCombination0.CalculateHourglassCount(gameConfigState, diff);
                             _rapidCombinationList.Add(new RapidCombinationModel()
