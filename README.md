@@ -3,10 +3,15 @@
 - NineChronicles.DataProvider is an off-chain service that stores NineChronicles game action data to a database mainly for game analysis.
 - Currently, this service only supports `MySQL` database.
 
+## Pre-requisite
+
+- [MySQL](https://www.mysql.com/) and [Entity Framework Core tools](https://learn.microsoft.com/en-us/ef/core/cli/dotnet) should be installed in the local machine.
+
 ## Run
 
 - Before running the program, please refer to the option values in the latest official [9c-launcher-config.json](https://release.nine-chronicles.com/9c-launcher-config.json) and fill out the variables in [appsettings.json](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider.Executable/appsettings.json).
-
+- In [appsettings.json](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider.Executable/appsettings.json), `AppProtocolVersionToken`, `StorePath`, `PeerStrings`, `MySqlConnectionString` properties **MUST** be filled to run the program.
+- To setup the NineChronicles mainnet blockchain store to use in the `StorePath`, download and extract the latest [mainnet snapshot](http://snapshots.nine-chronicles.com/main/partition/full/9c-main-snapshot.zip) to a desired location.
 ```
 $ dotnet run --project ./NineChronicles.DataProvider.Executable/ -- 
 ```
@@ -18,8 +23,7 @@ $ dotnet run --project ./NineChronicles.DataProvider.Executable/ --
 
 ### 1. Setup Database
 
-- As a prerequisite, [MySQL](https://www.mysql.com/) and [Entity Framework Core tools](https://learn.microsoft.com/en-us/ef/core/cli/dotnet) should be installed in the local machine.
-- After MySQL installation, navigate to [NineChronicles.DataProvider/NineChronicles.DataProvider.Executable](https://github.com/planetarium/NineChronicles.DataProvider/tree/development/NineChronicles.DataProvider.Executable) directory on your terminal and run the following migration command
+- To setup the database, navigate to [NineChronicles.DataProvider/NineChronicles.DataProvider.Executable](https://github.com/planetarium/NineChronicles.DataProvider/tree/development/NineChronicles.DataProvider.Executable) directory on your terminal and run the following migration command.
 ```
 dotnet ef database update -- [Connection String]
 - Connection String example: "server=localhost;database=data_provider;port=3306;uid=root;pwd=root;"
@@ -28,6 +32,7 @@ dotnet ef database update -- [Connection String]
 ### 2. Create Model
 
 - In [NineChronicles.DataProvider/NineChronicles.DataProvider/Store/Models](https://github.com/planetarium/NineChronicles.DataProvider/tree/development/NineChronicles.DataProvider/Store/Models) directory, create a model file called `TransferAssetModel.cs`.
+- In general, `TxId`, `BlockIndex`, `Date`, and `Timestamp` are useful to add as default properties in a model because these values will help with query speed when table size increases.
 ```
 namespace NineChronicles.DataProvider.Store.Models
 {
