@@ -42,7 +42,7 @@ namespace NineChronicles.DataProvider.Store
         // Table for ranking avatars' equipment combat points
         public DbSet<EquipmentRankingModel>? EquipmentRanking { get; set; }
 
-        // Table for ranking avatars' levels
+        // Table for ranking avatars' total combat points
         public DbSet<AbilityRankingModel>? AbilityRanking { get; set; }
 
         // Table for storing equipment purchase data in the shop
