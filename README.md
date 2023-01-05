@@ -132,3 +132,8 @@ _actionRenderer.EveryRender<TransferAsset>()
 dotnet ef migrations add AddTransferAsset -- [Connection String]
 - Connection String example: "server=localhost;database=data_provider;port=3306;uid=root;pwd=root;"
 ```
+
+## Current Table Descriptions
+
+- Tables that `NineChronicles.DataProvider` stores data into are listed in [NineChroniclesContext.cs](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider/Store/NineChroniclesContext.cs).
+- Please refer to each `DbSet`'s comment in [NineChroniclesContext.cs](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider/Store/NineChroniclesContext.cs) for table descriptions.
