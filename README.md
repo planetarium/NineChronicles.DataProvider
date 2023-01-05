@@ -3,6 +3,13 @@
 - NineChronicles.DataProvider is an off-chain service that stores NineChronicles game action data to a database mainly for game analysis.
 - Currently, this service only supports `MySQL` database.
 
+## Table of Contents
+
+- [Pre-requisite](#pre-requisite)
+- [Run](#run)
+- [Development Guide](#development-guide)
+- [Current Table Descriptions](#current-table-descriptions)
+
 ## Pre-requisite
 
 - [MySQL](https://www.mysql.com/) and [Entity Framework Core tools](https://learn.microsoft.com/en-us/ef/core/cli/dotnet) should be installed in the local machine.
