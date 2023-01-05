@@ -67,9 +67,10 @@ namespace NineChronicles.DataProvider.Store.Models
 
 ```
 
-- In [NineChronicles.DataProvider/NineChronicles.DataProvider/Store/NineChroniclesContext.csNineChroniclesContext.cs](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider/Store/NineChroniclesContext.cs), add a DbSet called `TransferAssets`
+- In [NineChronicles.DataProvider/NineChronicles.DataProvider/Store/NineChroniclesContext.csNineChroniclesContext.cs](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider/Store/NineChroniclesContext.cs), add a DbSet called `TransferAssets` and its description for reference.
 
 ```
+// Table for storing TransferAsset actions
 public DbSet<TransferAssetModel> TransferAssets => Set<TransferAssetModel>();
 ```
 
