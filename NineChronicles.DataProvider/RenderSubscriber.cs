@@ -186,115 +186,121 @@ namespace NineChronicles.DataProvider
                     {
                         try
                         {
-                            if (ev.Exception != null)
+                            if (ev.BlockIndex == 5840595 ||
+                                ev.BlockIndex == 5840596 ||
+                                ev.BlockIndex == 5840597 ||
+                                ev.BlockIndex == 5841207)
                             {
-                                return;
-                            }
-
-                            ProcessAgentAvatarData(ev);
-
-                            if (ev.Action is IClaimStakeReward claimStakeReward)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
-                                var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
-                                var id = ((GameAction)claimStakeReward).Id;
-                                ev.PreviousStates.TryGetStakeState(ev.Signer, out StakeState prevStakeState);
-
-                                var claimStakeStartBlockIndex = prevStakeState.StartedBlockIndex;
-                                var claimStakeEndBlockIndex = prevStakeState.ReceivedBlockIndex;
-                                var currency = ev.OutputStates.GetGoldCurrency();
-                                var stakeStateAddress = StakeState.DeriveAddress(ev.Signer);
-                                var stakedAmount = ev.OutputStates.GetBalance(stakeStateAddress, currency);
-
-                                var sheets = ev.PreviousStates.GetSheets(new[]
+                                if (ev.Exception != null)
                                 {
-                                    typeof(StakeRegularRewardSheet),
-                                    typeof(ConsumableItemSheet),
-                                    typeof(CostumeItemSheet),
-                                    typeof(EquipmentItemSheet),
-                                    typeof(MaterialItemSheet),
-                                });
-                                StakeRegularRewardSheet stakeRegularRewardSheet = sheets.GetSheet<StakeRegularRewardSheet>();
-                                int level = stakeRegularRewardSheet.FindLevelByStakedAmount(ev.Signer, stakedAmount);
-                                var rewards = stakeRegularRewardSheet[level].Rewards;
-                                var accumulatedRewards = prevStakeState.CalculateAccumulatedRewards(ev.BlockIndex);
-                                int hourGlassCount = 0;
-                                int apPotionCount = 0;
-                                foreach (var reward in rewards)
-                                {
-                                    var (quantity, _) = stakedAmount.DivRem(currency * reward.Rate);
-                                    if (quantity < 1)
-                                    {
-                                        // If the quantity is zero, it doesn't add the item into inventory.
-                                        continue;
-                                    }
-
-                                    if (reward.ItemId == 400000)
-                                    {
-                                        hourGlassCount += (int)quantity * accumulatedRewards;
-                                    }
-
-                                    if (reward.ItemId == 500000)
-                                    {
-                                        apPotionCount += (int)quantity * accumulatedRewards;
-                                    }
+                                    return;
                                 }
 
-                                if (ev.PreviousStates.TryGetSheet<StakeRegularFixedRewardSheet>(
-                                        out var stakeRegularFixedRewardSheet))
+                                ProcessAgentAvatarData(ev);
+
+                                if (ev.Action is IClaimStakeReward claimStakeReward)
                                 {
-                                    var fixedRewards = stakeRegularFixedRewardSheet[level].Rewards;
-                                    foreach (var reward in fixedRewards)
+                                    var start = DateTimeOffset.UtcNow;
+                                    var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
+                                    var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
+                                    var id = ((GameAction)claimStakeReward).Id;
+                                    ev.PreviousStates.TryGetStakeState(ev.Signer, out StakeState prevStakeState);
+
+                                    var claimStakeStartBlockIndex = prevStakeState.StartedBlockIndex;
+                                    var claimStakeEndBlockIndex = prevStakeState.ReceivedBlockIndex;
+                                    var currency = ev.OutputStates.GetGoldCurrency();
+                                    var stakeStateAddress = StakeState.DeriveAddress(ev.Signer);
+                                    var stakedAmount = ev.OutputStates.GetBalance(stakeStateAddress, currency);
+
+                                    var sheets = ev.PreviousStates.GetSheets(new[]
                                     {
+                                        typeof(StakeRegularRewardSheet),
+                                        typeof(ConsumableItemSheet),
+                                        typeof(CostumeItemSheet),
+                                        typeof(EquipmentItemSheet),
+                                        typeof(MaterialItemSheet),
+                                    });
+                                    StakeRegularRewardSheet stakeRegularRewardSheet = sheets.GetSheet<StakeRegularRewardSheet>();
+                                    int level = stakeRegularRewardSheet.FindLevelByStakedAmount(ev.Signer, stakedAmount);
+                                    var rewards = stakeRegularRewardSheet[level].Rewards;
+                                    var accumulatedRewards = prevStakeState.CalculateAccumulatedRewards(ev.BlockIndex);
+                                    int hourGlassCount = 0;
+                                    int apPotionCount = 0;
+                                    foreach (var reward in rewards)
+                                    {
+                                        var (quantity, _) = stakedAmount.DivRem(currency * reward.Rate);
+                                        if (quantity < 1)
+                                        {
+                                            // If the quantity is zero, it doesn't add the item into inventory.
+                                            continue;
+                                        }
+
                                         if (reward.ItemId == 400000)
                                         {
-                                            hourGlassCount += reward.Count * accumulatedRewards;
+                                            hourGlassCount += (int)quantity * accumulatedRewards;
                                         }
 
                                         if (reward.ItemId == 500000)
                                         {
-                                            apPotionCount += reward.Count * accumulatedRewards;
+                                            apPotionCount += (int)quantity * accumulatedRewards;
                                         }
                                     }
-                                }
 
-#pragma warning disable CS0618
-                                var runeCurrency = Currency.Legacy(RuneHelper.StakeRune.Ticker, 0, minters: null);
-#pragma warning restore CS0618
-                                var prevRuneBalance = ev.PreviousStates.GetBalance(
-                                    avatarAddress,
-                                    runeCurrency);
-                                var outputRuneBalance = ev.OutputStates.GetBalance(
-                                    avatarAddress,
-                                    runeCurrency);
-                                var acquiredRune = outputRuneBalance - prevRuneBalance;
-                                _runesAcquiredList.Add(new RunesAcquiredModel()
-                                {
+                                    if (ev.PreviousStates.TryGetSheet<StakeRegularFixedRewardSheet>(
+                                            out var stakeRegularFixedRewardSheet))
+                                    {
+                                        var fixedRewards = stakeRegularFixedRewardSheet[level].Rewards;
+                                        foreach (var reward in fixedRewards)
+                                        {
+                                            if (reward.ItemId == 400000)
+                                            {
+                                                hourGlassCount += reward.Count * accumulatedRewards;
+                                            }
+
+                                            if (reward.ItemId == 500000)
+                                            {
+                                                apPotionCount += reward.Count * accumulatedRewards;
+                                            }
+                                        }
+                                    }
+
+    #pragma warning disable CS0618
+                                    var runeCurrency = Currency.Legacy(RuneHelper.StakeRune.Ticker, 0, minters: null);
+    #pragma warning restore CS0618
+                                    var prevRuneBalance = ev.PreviousStates.GetBalance(
+                                        avatarAddress,
+                                        runeCurrency);
+                                    var outputRuneBalance = ev.OutputStates.GetBalance(
+                                        avatarAddress,
+                                        runeCurrency);
+                                    var acquiredRune = outputRuneBalance - prevRuneBalance;
+                                    _runesAcquiredList.Add(new RunesAcquiredModel()
+                                    {
+                                            Id = id.ToString(),
+                                            ActionType = claimStakeReward.ToString()!.Split('.').LastOrDefault()?.Replace(">", string.Empty),
+                                            TickerType = RuneHelper.StakeRune.Ticker,
+                                            BlockIndex = ev.BlockIndex,
+                                            AgentAddress = ev.Signer.ToString(),
+                                            AvatarAddress = avatarAddress.ToString(),
+                                            AcquiredRune = Convert.ToDecimal(acquiredRune.GetQuantityString()),
+                                            Date = DateOnly.FromDateTime(_blockTimeOffset.DateTime),
+                                            TimeStamp = _blockTimeOffset,
+                                    });
+                                    _claimStakeList.Add(new ClaimStakeRewardModel()
+                                    {
                                         Id = id.ToString(),
-                                        ActionType = claimStakeReward.ToString()!.Split('.').LastOrDefault()?.Replace(">", string.Empty),
-                                        TickerType = RuneHelper.StakeRune.Ticker,
                                         BlockIndex = ev.BlockIndex,
                                         AgentAddress = ev.Signer.ToString(),
-                                        AvatarAddress = avatarAddress.ToString(),
-                                        AcquiredRune = Convert.ToDecimal(acquiredRune.GetQuantityString()),
-                                        Date = DateOnly.FromDateTime(_blockTimeOffset.DateTime),
+                                        ClaimRewardAvatarAddress = avatarAddress.ToString(),
+                                        HourGlassCount = hourGlassCount,
+                                        ApPotionCount = apPotionCount,
+                                        ClaimStakeStartBlockIndex = claimStakeStartBlockIndex,
+                                        ClaimStakeEndBlockIndex = claimStakeEndBlockIndex,
                                         TimeStamp = _blockTimeOffset,
-                                });
-                                _claimStakeList.Add(new ClaimStakeRewardModel()
-                                {
-                                    Id = id.ToString(),
-                                    BlockIndex = ev.BlockIndex,
-                                    AgentAddress = ev.Signer.ToString(),
-                                    ClaimRewardAvatarAddress = avatarAddress.ToString(),
-                                    HourGlassCount = hourGlassCount,
-                                    ApPotionCount = apPotionCount,
-                                    ClaimStakeStartBlockIndex = claimStakeStartBlockIndex,
-                                    ClaimStakeEndBlockIndex = claimStakeEndBlockIndex,
-                                    TimeStamp = _blockTimeOffset,
-                                });
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored ClaimStakeReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                                    });
+                                    var end = DateTimeOffset.UtcNow;
+                                    Log.Debug("Stored ClaimStakeReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                                }
                             }
                         }
                         catch (Exception ex)
@@ -308,7 +314,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } eventDungeonBattle)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } eventDungeonBattle)
                         {
                             var start = DateTimeOffset.UtcNow;
                             var previousStates = ev.PreviousStates;
@@ -420,7 +429,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } eventConsumableItemCrafts)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } eventConsumableItemCrafts)
                         {
                             var start = DateTimeOffset.UtcNow;
                             var previousStates = ev.PreviousStates;
@@ -507,7 +519,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } has)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } has)
                         {
                             var start = DateTimeOffset.UtcNow;
                             AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has.AvatarAddress);
@@ -588,12 +603,12 @@ namespace NineChronicles.DataProvider
                             }
 
                             var avatarCp = CPHelper.TotalCP(
-                               equipmentList,
-                               costumeList,
-                               runeOptions,
-                               avatarState.level,
-                               characterRow,
-                               costumeStatSheet);
+                                equipmentList,
+                                costumeList,
+                                runeOptions,
+                                avatarState.level,
+                                characterRow,
+                                costumeStatSheet);
                             string avatarName = avatarState.name;
 
                             Log.Debug(
@@ -655,7 +670,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } hasSweep)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } hasSweep)
                         {
                             var start = DateTimeOffset.UtcNow;
                             AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep.avatarAddress);
@@ -736,12 +754,12 @@ namespace NineChronicles.DataProvider
                             }
 
                             var avatarCp = CPHelper.TotalCP(
-                               equipmentList,
-                               costumeList,
-                               runeOptions,
-                               avatarState.level,
-                               characterRow,
-                               costumeStatSheet);
+                                equipmentList,
+                                costumeList,
+                                runeOptions,
+                                avatarState.level,
+                                characterRow,
+                                costumeStatSheet);
                             string avatarName = avatarState.name;
 
                             Log.Debug(
@@ -795,7 +813,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } combinationConsumable)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } combinationConsumable)
                         {
                             var start = DateTimeOffset.UtcNow;
                             _ccList.Add(new CombinationConsumableModel()
@@ -823,7 +844,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } combinationEquipment)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } combinationEquipment)
                         {
                             var start = DateTimeOffset.UtcNow;
                             var previousStates = ev.PreviousStates;
@@ -877,8 +901,10 @@ namespace NineChronicles.DataProvider
 
                                 if (combinationEquipment.subRecipeId.HasValue)
                                 {
-                                    var equipmentItemSubRecipeSheetV2 = sheets.GetSheet<EquipmentItemSubRecipeSheetV2>();
-                                    equipmentItemSubRecipeSheetV2.TryGetValue(combinationEquipment.subRecipeId.Value, out var subRecipeRow);
+                                    var equipmentItemSubRecipeSheetV2 =
+                                        sheets.GetSheet<EquipmentItemSubRecipeSheetV2>();
+                                    equipmentItemSubRecipeSheetV2.TryGetValue(
+                                        combinationEquipment.subRecipeId.Value, out var subRecipeRow);
 
                                     // Validate SubRecipe Material
                                     for (var i = subRecipeRow!.Materials.Count; i > 0; i--)
@@ -967,22 +993,31 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } itemEnhancement)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } itemEnhancement)
                         {
                             var start = DateTimeOffset.UtcNow;
-                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
+                            AvatarState avatarState =
+                                ev.OutputStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
                             var previousStates = ev.PreviousStates;
-                            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
+                            AvatarState prevAvatarState =
+                                previousStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
 
                             int prevEquipmentLevel = 0;
-                            if (prevAvatarState.inventory.TryGetNonFungibleItem(itemEnhancement.itemId, out ItemUsable prevEnhancementItem)
+                            if (prevAvatarState.inventory.TryGetNonFungibleItem(
+                                    itemEnhancement.itemId,
+                                    out ItemUsable prevEnhancementItem)
                                 && prevEnhancementItem is Equipment prevEnhancementEquipment)
                             {
-                                   prevEquipmentLevel = prevEnhancementEquipment.level;
+                                prevEquipmentLevel = prevEnhancementEquipment.level;
                             }
 
                             int outputEquipmentLevel = 0;
-                            if (avatarState.inventory.TryGetNonFungibleItem(itemEnhancement.itemId, out ItemUsable outputEnhancementItem)
+                            if (avatarState.inventory.TryGetNonFungibleItem(
+                                    itemEnhancement.itemId,
+                                    out ItemUsable outputEnhancementItem)
                                 && outputEnhancementItem is Equipment outputEnhancementEquipment)
                             {
                                 outputEquipmentLevel = outputEnhancementEquipment.level;
@@ -1035,7 +1070,10 @@ namespace NineChronicles.DataProvider
                             });
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug(
+                                "Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
                             start = DateTimeOffset.UtcNow;
 
                             var slotState = ev.OutputStates.GetCombinationSlotState(
@@ -1069,7 +1107,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } buy)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } buy)
                         {
                             var start = DateTimeOffset.UtcNow;
                             AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
@@ -1077,7 +1118,7 @@ namespace NineChronicles.DataProvider
                             foreach (var purchaseInfo in buy.purchaseInfos)
                             {
                                 var state = ev.OutputStates.GetState(
-                                Addresses.GetItemAddress(purchaseInfo.TradableId));
+                                    Addresses.GetItemAddress(purchaseInfo.TradableId));
                                 ITradableItem orderItem =
                                     (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
                                 Order order =
@@ -1099,7 +1140,8 @@ namespace NineChronicles.DataProvider
                                         ItemId = equipment.ItemId.ToString(),
                                         SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
                                         BuyerAvatarAddress = buy.buyerAvatarAddress.ToString(),
-                                        Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                        Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ")
+                                            .FirstOrDefault()!),
                                         ItemType = equipment.ItemType.ToString(),
                                         ItemSubType = equipment.ItemSubType.ToString(),
                                         Id = equipment.Id,
@@ -1130,7 +1172,8 @@ namespace NineChronicles.DataProvider
                                         ItemId = costume.ItemId.ToString(),
                                         SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
                                         BuyerAvatarAddress = buy.buyerAvatarAddress.ToString(),
-                                        Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                        Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ")
+                                            .FirstOrDefault()!),
                                         ItemType = costume.ItemType.ToString(),
                                         ItemSubType = costume.ItemSubType.ToString(),
                                         Id = costume.Id,
@@ -1158,7 +1201,8 @@ namespace NineChronicles.DataProvider
                                         ItemId = material.ItemId.ToString(),
                                         SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
                                         BuyerAvatarAddress = buy.buyerAvatarAddress.ToString(),
-                                        Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                        Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ")
+                                            .FirstOrDefault()!),
                                         ItemType = material.ItemType.ToString(),
                                         ItemSubType = material.ItemSubType.ToString(),
                                         Id = material.Id,
@@ -1181,7 +1225,8 @@ namespace NineChronicles.DataProvider
                                         ItemId = consumable.ItemId.ToString(),
                                         SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
                                         BuyerAvatarAddress = buy.buyerAvatarAddress.ToString(),
-                                        Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
+                                        Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ")
+                                            .FirstOrDefault()!),
                                         ItemType = consumable.ItemType.ToString(),
                                         ItemSubType = consumable.ItemSubType.ToString(),
                                         Id = consumable.Id,
@@ -1204,7 +1249,8 @@ namespace NineChronicles.DataProvider
                                     || purchaseInfo.ItemSubType == ItemSubType.Ring
                                     || purchaseInfo.ItemSubType == ItemSubType.Weapon)
                                 {
-                                    var sellerState = ev.OutputStates.GetAvatarStateV2(purchaseInfo.SellerAvatarAddress);
+                                    var sellerState =
+                                        ev.OutputStates.GetAvatarStateV2(purchaseInfo.SellerAvatarAddress);
                                     var sellerInventory = sellerState.inventory;
 
                                     if (buyerInventory.Equipments == null || sellerInventory.Equipments == null)
@@ -1213,8 +1259,9 @@ namespace NineChronicles.DataProvider
                                     }
 
                                     Equipment? equipment = buyerInventory.Equipments.SingleOrDefault(i =>
-                                        i.TradableId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
-                                        i.TradableId == purchaseInfo.TradableId);
+                                                               i.TradableId == purchaseInfo.TradableId) ??
+                                                           sellerInventory.Equipments.SingleOrDefault(i =>
+                                                               i.TradableId == purchaseInfo.TradableId);
 
                                     if (equipment is { } equipmentNotNull)
                                     {
@@ -1245,13 +1292,17 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } stake)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } stake)
                         {
                             var start = DateTimeOffset.UtcNow;
                             ev.OutputStates.TryGetStakeState(ev.Signer, out StakeState stakeState);
                             var prevStakeStartBlockIndex =
                                 !ev.PreviousStates.TryGetStakeState(ev.Signer, out StakeState prevStakeState)
-                                    ? 0 : prevStakeState.StartedBlockIndex;
+                                    ? 0
+                                    : prevStakeState.StartedBlockIndex;
                             var newStakeStartBlockIndex = stakeState.StartedBlockIndex;
                             var currency = ev.OutputStates.GetGoldCurrency();
                             var balance = ev.OutputStates.GetBalance(ev.Signer, currency);
@@ -1270,7 +1321,10 @@ namespace NineChronicles.DataProvider
                                 TimeStamp = _blockTimeOffset,
                             });
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored Stake action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug(
+                                "Stored Stake action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -1284,16 +1338,21 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } mc)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } mc)
                         {
                             var start = DateTimeOffset.UtcNow;
                             ev.OutputStates.TryGetStakeState(ev.Signer, out StakeState stakeState);
                             var agentState = ev.PreviousStates.GetAgentState(ev.Signer);
-                            Address collectionAddress = MonsterCollectionState.DeriveAddress(ev.Signer, agentState.MonsterCollectionRound);
+                            Address collectionAddress =
+                                MonsterCollectionState.DeriveAddress(ev.Signer, agentState.MonsterCollectionRound);
                             ev.PreviousStates.TryGetState(collectionAddress, out Dictionary stateDict);
                             var monsterCollectionState = new MonsterCollectionState(stateDict);
                             var currency = ev.OutputStates.GetGoldCurrency();
-                            var migrationAmount = ev.PreviousStates.GetBalance(monsterCollectionState.address, currency);
+                            var migrationAmount =
+                                ev.PreviousStates.GetBalance(monsterCollectionState.address, currency);
                             var migrationStartBlockIndex = ev.BlockIndex;
                             var stakeStartBlockIndex = stakeState.StartedBlockIndex;
                             _mmcList.Add(new MigrateMonsterCollectionModel()
@@ -1306,7 +1365,10 @@ namespace NineChronicles.DataProvider
                                 TimeStamp = _blockTimeOffset,
                             });
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug(
+                                "Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -1320,7 +1382,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Action is Grinding grind)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Action is Grinding grind)
                         {
                             var start = DateTimeOffset.UtcNow;
 
@@ -1342,7 +1407,9 @@ namespace NineChronicles.DataProvider
                             List<Equipment> equipmentList = new List<Equipment>();
                             foreach (var equipmentId in grind.EquipmentIds)
                             {
-                                if (prevAvatarState.inventory.TryGetNonFungibleItem(equipmentId, out Equipment equipment))
+                                if (prevAvatarState.inventory.TryGetNonFungibleItem(
+                                        equipmentId,
+                                        out Equipment equipment))
                                 {
                                     equipmentList.Add(equipment);
                                 }
@@ -1389,7 +1456,10 @@ namespace NineChronicles.DataProvider
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored Grinding action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug(
+                                "Stored Grinding action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -1403,7 +1473,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } unlockEquipmentRecipe)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } unlockEquipmentRecipe)
                         {
                             var start = DateTimeOffset.UtcNow;
                             var previousStates = ev.PreviousStates;
@@ -1430,7 +1503,10 @@ namespace NineChronicles.DataProvider
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored UnlockEquipmentRecipe action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug(
+                                "Stored UnlockEquipmentRecipe action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -1444,7 +1520,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } unlockWorld)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } unlockWorld)
                         {
                             var start = DateTimeOffset.UtcNow;
                             var previousStates = ev.PreviousStates;
@@ -1471,7 +1550,10 @@ namespace NineChronicles.DataProvider
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored UnlockWorld action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug(
+                                "Stored UnlockWorld action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -1485,11 +1567,15 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } hasRandomBuff)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } hasRandomBuff)
                         {
                             var start = DateTimeOffset.UtcNow;
                             var previousStates = ev.PreviousStates;
-                            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(hasRandomBuff.AvatarAddress);
+                            AvatarState prevAvatarState =
+                                previousStates.GetAvatarStateV2(hasRandomBuff.AvatarAddress);
                             prevAvatarState.worldInformation.TryGetLastClearedStageId(out var currentStageId);
                             Currency crystalCurrency = CrystalCalculator.CRYSTAL;
                             var prevCrystalBalance = previousStates.GetBalance(
@@ -1512,7 +1598,10 @@ namespace NineChronicles.DataProvider
                             });
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored HasRandomBuff action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug(
+                                "Stored HasRandomBuff action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -1526,7 +1615,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } joinArena)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } joinArena)
                         {
                             var start = DateTimeOffset.UtcNow;
                             AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(joinArena.avatarAddress);
@@ -1553,7 +1645,10 @@ namespace NineChronicles.DataProvider
                             });
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored JoinArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug(
+                                "Stored JoinArena action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -1567,13 +1662,19 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } battleArena)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } battleArena)
                         {
                             var start = DateTimeOffset.UtcNow;
                             AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(battleArena.myAvatarAddress);
                             var previousStates = ev.PreviousStates;
                             var myArenaScoreAdr =
-                                ArenaScore.DeriveAddress(battleArena.myAvatarAddress, battleArena.championshipId, battleArena.round);
+                                ArenaScore.DeriveAddress(
+                                    battleArena.myAvatarAddress,
+                                    battleArena.championshipId,
+                                    battleArena.round);
                             previousStates.TryGetArenaScore(myArenaScoreAdr, out var previousArenaScore);
                             ev.OutputStates.TryGetArenaScore(myArenaScoreAdr, out var currentArenaScore);
                             Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
@@ -1602,26 +1703,38 @@ namespace NineChronicles.DataProvider
                             var arenaSheet = ev.OutputStates.GetSheet<ArenaSheet>();
                             var arenaData = arenaSheet.GetRoundByBlockIndex(ev.BlockIndex);
                             var arenaInformationAdr =
-                                ArenaInformation.DeriveAddress(battleArena.myAvatarAddress, battleArena.championshipId, battleArena.round);
-                            previousStates.TryGetArenaInformation(arenaInformationAdr, out var previousArenaInformation);
-                            ev.OutputStates.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
+                                ArenaInformation.DeriveAddress(
+                                    battleArena.myAvatarAddress,
+                                    battleArena.championshipId,
+                                    battleArena.round);
+                            previousStates.TryGetArenaInformation(
+                                arenaInformationAdr,
+                                out var previousArenaInformation);
+                            ev.OutputStates.TryGetArenaInformation(
+                                arenaInformationAdr,
+                                out var currentArenaInformation);
                             var winCount = currentArenaInformation.Win - previousArenaInformation.Win;
                             var medalCount = 0;
                             if (arenaData.ArenaType != ArenaType.OffSeason &&
                                 winCount > 0)
                             {
                                 var materialSheet = sheets.GetSheet<MaterialItemSheet>();
-                                var medal = ArenaHelper.GetMedal(battleArena.championshipId, battleArena.round, materialSheet);
+                                var medal = ArenaHelper.GetMedal(
+                                    battleArena.championshipId,
+                                    battleArena.round,
+                                    materialSheet);
                                 if (medal != null)
                                 {
                                     medalCount += winCount;
                                 }
                             }
 
-                            var itemSlotStateAddress = ItemSlotState.DeriveAddress(battleArena.myAvatarAddress, BattleType.Arena);
-                            var itemSlotState = ev.OutputStates.TryGetState(itemSlotStateAddress, out List rawItemSlotState)
-                                ? new ItemSlotState(rawItemSlotState)
-                                : new ItemSlotState(BattleType.Adventure);
+                            var itemSlotStateAddress =
+                                ItemSlotState.DeriveAddress(battleArena.myAvatarAddress, BattleType.Arena);
+                            var itemSlotState =
+                                ev.OutputStates.TryGetState(itemSlotStateAddress, out List rawItemSlotState)
+                                    ? new ItemSlotState(rawItemSlotState)
+                                    : new ItemSlotState(BattleType.Adventure);
                             var equipmentInventory = avatarState.inventory.Equipments;
                             var equipmentList = itemSlotState.Equipments
                                 .Select(guid => equipmentInventory.FirstOrDefault(x => x.ItemId == guid))
@@ -1634,7 +1747,8 @@ namespace NineChronicles.DataProvider
                             var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
                             var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
                             var runeStates = new List<RuneState>();
-                            foreach (var address in battleArena.runeInfos.Select(info => RuneState.DeriveAddress(battleArena.myAvatarAddress, info.RuneId)))
+                            foreach (var address in battleArena.runeInfos.Select(info =>
+                                         RuneState.DeriveAddress(battleArena.myAvatarAddress, info.RuneId)))
                             {
                                 if (ev.OutputStates.TryGetState(address, out List rawRuneState))
                                 {
@@ -1686,12 +1800,12 @@ namespace NineChronicles.DataProvider
                             }
 
                             var avatarCp = CPHelper.TotalCP(
-                               equipmentList,
-                               costumeList,
-                               runeOptions,
-                               avatarState.level,
-                               characterRow,
-                               costumeStatSheet);
+                                equipmentList,
+                                costumeList,
+                                runeOptions,
+                                avatarState.level,
+                                characterRow,
+                                costumeStatSheet);
                             string avatarName = avatarState.name;
 
                             Log.Debug(
@@ -1731,7 +1845,10 @@ namespace NineChronicles.DataProvider
                             });
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored BattleArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug(
+                                "Stored BattleArena action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -1745,12 +1862,20 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } battleGrandFinale)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } battleGrandFinale)
                         {
                             var start = DateTimeOffset.UtcNow;
-                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(battleGrandFinale.myAvatarAddress);
+                            AvatarState avatarState =
+                                ev.OutputStates.GetAvatarStateV2(battleGrandFinale.myAvatarAddress);
                             var previousStates = ev.PreviousStates;
-                            var scoreAddress = battleGrandFinale.myAvatarAddress.Derive(string.Format(CultureInfo.InvariantCulture, BattleGrandFinale.ScoreDeriveKey, battleGrandFinale.grandFinaleId));
+                            var scoreAddress = battleGrandFinale.myAvatarAddress.Derive(
+                                string.Format(
+                                    CultureInfo.InvariantCulture,
+                                    BattleGrandFinale.ScoreDeriveKey,
+                                    battleGrandFinale.grandFinaleId));
                             previousStates.TryGetState(scoreAddress, out Integer previousGrandFinaleScore);
                             ev.OutputStates.TryGetState(scoreAddress, out Integer outputGrandFinaleScore);
 
@@ -1770,7 +1895,10 @@ namespace NineChronicles.DataProvider
                             });
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored BattleGrandFinale action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug(
+                                "Stored BattleGrandFinale action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -1784,7 +1912,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } eventMaterialItemCrafts)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } eventMaterialItemCrafts)
                         {
                             var start = DateTimeOffset.UtcNow;
                             Dictionary<string, int> materialData = new Dictionary<string, int>();
@@ -1839,7 +1970,10 @@ namespace NineChronicles.DataProvider
                             });
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored EventMaterialItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug(
+                                "Stored EventMaterialItemCrafts action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -1853,7 +1987,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } runeEnhancement)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } runeEnhancement)
                         {
                             var start = DateTimeOffset.UtcNow;
                             var previousStates = ev.PreviousStates;
@@ -1873,7 +2010,9 @@ namespace NineChronicles.DataProvider
                                 ev.Signer,
                                 crystalCurrency);
                             var burntCrystal = prevCrystalBalance - outputCrystalBalance;
-                            var runeStateAddress = RuneState.DeriveAddress(runeEnhancement.AvatarAddress, runeEnhancement.RuneId);
+                            var runeStateAddress = RuneState.DeriveAddress(
+                                runeEnhancement.AvatarAddress,
+                                runeEnhancement.RuneId);
                             RuneState runeState;
                             if (ev.OutputStates.TryGetState(runeStateAddress, out List rawState))
                             {
@@ -1931,7 +2070,10 @@ namespace NineChronicles.DataProvider
                                 TimeStamp = _blockTimeOffset,
                             });
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored RuneEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug(
+                                "Stored RuneEnhancement action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -1945,7 +2087,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } transferAssets)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } transferAssets)
                         {
                             var start = DateTimeOffset.UtcNow;
                             foreach (var recipient in transferAssets.Recipients)
@@ -1961,20 +2106,24 @@ namespace NineChronicles.DataProvider
                                 var agentAddress = avatarState.agentAddress;
                                 _runesAcquiredList.Add(new RunesAcquiredModel()
                                 {
-                                        Id = id.ToString(),
-                                        ActionType = transferAssets.ToString()!.Split('.').LastOrDefault()?.Replace(">", string.Empty),
-                                        TickerType = recipient.amount.Currency.Ticker,
-                                        BlockIndex = ev.BlockIndex,
-                                        AgentAddress = agentAddress.ToString(),
-                                        AvatarAddress = avatarAddress.ToString(),
-                                        AcquiredRune = Convert.ToDecimal(recipient.amount.GetQuantityString()),
-                                        Date = DateOnly.FromDateTime(_blockTimeOffset.DateTime),
-                                        TimeStamp = _blockTimeOffset,
+                                    Id = id.ToString(),
+                                    ActionType = transferAssets.ToString()!.Split('.').LastOrDefault()
+                                        ?.Replace(">", string.Empty),
+                                    TickerType = recipient.amount.Currency.Ticker,
+                                    BlockIndex = ev.BlockIndex,
+                                    AgentAddress = agentAddress.ToString(),
+                                    AvatarAddress = avatarAddress.ToString(),
+                                    AcquiredRune = Convert.ToDecimal(recipient.amount.GetQuantityString()),
+                                    Date = DateOnly.FromDateTime(_blockTimeOffset.DateTime),
+                                    TimeStamp = _blockTimeOffset,
                                 });
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored TransferAssets action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug(
+                                "Stored TransferAssets action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -1988,7 +2137,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } dailyReward)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } dailyReward)
                         {
                             var start = DateTimeOffset.UtcNow;
 #pragma warning disable CS0618
@@ -2003,19 +2155,23 @@ namespace NineChronicles.DataProvider
                             var acquiredRune = outputRuneBalance - prevRuneBalance;
                             _runesAcquiredList.Add(new RunesAcquiredModel()
                             {
-                                    Id = dailyReward.Id.ToString(),
-                                    ActionType = dailyReward.ToString()!.Split('.').LastOrDefault()?.Replace(">", string.Empty),
-                                    TickerType = RuneHelper.DailyRewardRune.Ticker,
-                                    BlockIndex = ev.BlockIndex,
-                                    AgentAddress = ev.Signer.ToString(),
-                                    AvatarAddress = dailyReward.avatarAddress.ToString(),
-                                    AcquiredRune = Convert.ToDecimal(acquiredRune.GetQuantityString()),
-                                    Date = DateOnly.FromDateTime(_blockTimeOffset.DateTime),
-                                    TimeStamp = _blockTimeOffset,
+                                Id = dailyReward.Id.ToString(),
+                                ActionType = dailyReward.ToString()!.Split('.').LastOrDefault()
+                                    ?.Replace(">", string.Empty),
+                                TickerType = RuneHelper.DailyRewardRune.Ticker,
+                                BlockIndex = ev.BlockIndex,
+                                AgentAddress = ev.Signer.ToString(),
+                                AvatarAddress = dailyReward.avatarAddress.ToString(),
+                                AcquiredRune = Convert.ToDecimal(acquiredRune.GetQuantityString()),
+                                Date = DateOnly.FromDateTime(_blockTimeOffset.DateTime),
+                                TimeStamp = _blockTimeOffset,
                             });
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored DailyReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug(
+                                "Stored DailyReward action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -2029,7 +2185,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is { } claimRaidReward)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is { } claimRaidReward)
                         {
                             var start = DateTimeOffset.UtcNow;
                             var sheets = ev.OutputStates.GetSheets(
@@ -2055,7 +2214,8 @@ namespace NineChronicles.DataProvider
                                     _runesAcquiredList.Add(new RunesAcquiredModel()
                                     {
                                         Id = claimRaidReward.Id.ToString(),
-                                        ActionType = claimRaidReward.ToString()!.Split('.').LastOrDefault()?.Replace(">", string.Empty),
+                                        ActionType = claimRaidReward.ToString()!.Split('.').LastOrDefault()
+                                            ?.Replace(">", string.Empty),
                                         TickerType = runeType.Ticker,
                                         BlockIndex = ev.BlockIndex,
                                         AgentAddress = ev.Signer.ToString(),
@@ -2068,7 +2228,10 @@ namespace NineChronicles.DataProvider
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored ClaimRaidReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug(
+                                "Stored ClaimRaidReward action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -2082,7 +2245,10 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is UnlockRuneSlot unlockRuneSlot)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception == null && ev.Action is UnlockRuneSlot unlockRuneSlot)
                         {
                             var start = DateTimeOffset.UtcNow;
                             var previousStates = ev.PreviousStates;
@@ -2106,7 +2272,10 @@ namespace NineChronicles.DataProvider
                                 TimeStamp = _blockTimeOffset,
                             });
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored UnlockRuneSlot action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug(
+                                "Stored UnlockRuneSlot action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -2244,13 +2413,18 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception is null)
+                        if ((ev.BlockIndex == 5840595 ||
+                             ev.BlockIndex == 5840596 ||
+                             ev.BlockIndex == 5840597 ||
+                             ev.BlockIndex == 5841207) && ev.Exception is null)
                         {
                             AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(ev.Action.AvatarAddress);
-                            var itemSlotStateAddress = ItemSlotState.DeriveAddress(ev.Action.AvatarAddress, BattleType.Raid);
-                            var itemSlotState = ev.OutputStates.TryGetState(itemSlotStateAddress, out List rawItemSlotState)
-                                ? new ItemSlotState(rawItemSlotState)
-                                : new ItemSlotState(BattleType.Adventure);
+                            var itemSlotStateAddress =
+                                ItemSlotState.DeriveAddress(ev.Action.AvatarAddress, BattleType.Raid);
+                            var itemSlotState =
+                                ev.OutputStates.TryGetState(itemSlotStateAddress, out List rawItemSlotState)
+                                    ? new ItemSlotState(rawItemSlotState)
+                                    : new ItemSlotState(BattleType.Adventure);
                             var equipmentInventory = avatarState.inventory.Equipments;
                             var equipmentList = itemSlotState.Equipments
                                 .Select(guid => equipmentInventory.FirstOrDefault(x => x.ItemId == guid))
@@ -2272,7 +2446,8 @@ namespace NineChronicles.DataProvider
                             var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
                             var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
                             var runeStates = new List<RuneState>();
-                            foreach (var address in ev.Action.RuneInfos.Select(info => RuneState.DeriveAddress(ev.Action.AvatarAddress, info.RuneId)))
+                            foreach (var address in ev.Action.RuneInfos.Select(info =>
+                                         RuneState.DeriveAddress(ev.Action.AvatarAddress, info.RuneId)))
                             {
                                 if (ev.OutputStates.TryGetState(address, out List rawRuneState))
                                 {
@@ -2324,12 +2499,12 @@ namespace NineChronicles.DataProvider
                             }
 
                             var avatarCp = CPHelper.TotalCP(
-                               equipmentList,
-                               costumeList,
-                               runeOptions,
-                               avatarState.level,
-                               characterRow,
-                               costumeStatSheet);
+                                equipmentList,
+                                costumeList,
+                                runeOptions,
+                                avatarState.level,
+                                characterRow,
+                                costumeStatSheet);
                             string avatarName = avatarState.name;
 
                             Log.Debug(
@@ -2358,7 +2533,8 @@ namespace NineChronicles.DataProvider
                                     _runesAcquiredList.Add(new RunesAcquiredModel()
                                     {
                                         Id = ev.Action.Id.ToString(),
-                                        ActionType = ev.Action.ToString()!.Split('.').LastOrDefault()?.Replace(">", string.Empty),
+                                        ActionType = ev.Action.ToString()!.Split('.').LastOrDefault()
+                                            ?.Replace(">", string.Empty),
                                         TickerType = runeType.Ticker,
                                         BlockIndex = ev.BlockIndex,
                                         AgentAddress = ev.Signer.ToString(),
