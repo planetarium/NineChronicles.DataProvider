@@ -1623,6 +1623,41 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreRapidCombinationList(List<RapidCombinationModel> rapidCombinationList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var rapidCombination in rapidCombinationList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.RapidCombinations.FindAsync(rapidCombination.Id).Result is null)
+                        {
+                            await ctx.RapidCombinations.AddRangeAsync(rapidCombination);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.RapidCombinations.UpdateRange(rapidCombination);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public List<RaiderModel> GetRaiderList()
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
