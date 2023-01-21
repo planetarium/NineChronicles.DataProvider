@@ -72,7 +72,7 @@ namespace NineChronicles.DataProvider.Executable
                     headlessConfig.SwarmPrivateKeyString,
                     headlessConfig.StoreType,
                     headlessConfig.StorePath,
-                    noReduceStore: true,
+                    headlessConfig.NoReduceStore,
                     100,
                     headlessConfig.IceServerStrings,
                     headlessConfig.PeerStrings,
@@ -145,6 +145,7 @@ namespace NineChronicles.DataProvider.Executable
                     services.AddSingleton<MySqlStore>();
                     services.Configure<Configuration>(config);
                     services.AddSingleton(stateContext);
+                    services.AddHostedService<RaiderWorker>();
                 });
 
             await hostBuilder.RunConsoleAsync(token);

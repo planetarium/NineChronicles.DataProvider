@@ -32,8 +32,6 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public int Grade { get; set; }
 
-        public int SetId { get; set; }
-
         public bool Equipped { get; set; }
 
         public string? SpineResourcePath { get; set; }

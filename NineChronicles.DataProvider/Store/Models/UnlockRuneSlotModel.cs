@@ -1,11 +1,14 @@
-namespace NineChronicles.DataProvider.Store.Models
+﻿namespace NineChronicles.DataProvider.Store.Models
 {
+    using System;
     using System.ComponentModel.DataAnnotations;
 
-    public class ItemEnhancementModel
+    public class UnlockRuneSlotModel
     {
         [Key]
         public string? Id { get; set; }
+
+        public long BlockIndex { get; set; }
 
         public string? AgentAddress { get; set; }
 
@@ -15,14 +18,12 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public AvatarModel? Avatar { get; set; }
 
-        public string? ItemId { get; set; }
-
-        public string? MaterialId { get; set; }
-
         public int SlotIndex { get; set; }
 
         public decimal BurntNCG { get; set; }
 
-        public long BlockIndex { get; set; }
+        public DateOnly Date { get; set; }
+
+        public DateTimeOffset TimeStamp { get; set; }
     }
 }

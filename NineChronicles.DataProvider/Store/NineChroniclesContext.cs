@@ -88,17 +88,33 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<RaiderModel> Raiders => Set<RaiderModel>();
 
+        public DbSet<WorldBossSeasonMigrationModel> WorldBossSeasonMigrationModels =>
+            Set<WorldBossSeasonMigrationModel>();
+
+        public DbSet<BattleGrandFinaleModel> BattleGrandFinales => Set<BattleGrandFinaleModel>();
+
+        public DbSet<EventMaterialItemCraftsModel> EventMaterialItemCrafts => Set<EventMaterialItemCraftsModel>();
+
+        public DbSet<RuneEnhancementModel> RuneEnhancements => Set<RuneEnhancementModel>();
+
+        public DbSet<RunesAcquiredModel> RunesAcquired => Set<RunesAcquiredModel>();
+
+        public DbSet<UnlockRuneSlotModel> UnlockRuneSlots => Set<UnlockRuneSlotModel>();
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.
          */
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<StakeModel>().HasNoKey();
             modelBuilder.Entity<StageRankingModel>().HasNoKey();
             modelBuilder.Entity<CraftRankingOutputModel>().HasNoKey();
             modelBuilder.Entity<EquipmentRankingModel>().HasNoKey();
             modelBuilder.Entity<AbilityRankingModel>().HasNoKey();
             modelBuilder.Entity<BattleArenaRankingModel>().HasNoKey();
+            modelBuilder.Entity<ShopMaterialModel>().HasNoKey();
+            modelBuilder.Entity<MigrateMonsterCollectionModel>().HasNoKey();
             modelBuilder.Entity<WorldBossRankingModel>()
                 .HasNoKey()
                 .ToTable("WorldBossRankings", t => t.ExcludeFromMigrations());
