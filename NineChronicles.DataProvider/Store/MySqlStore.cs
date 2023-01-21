@@ -23,6 +23,7 @@ namespace NineChronicles.DataProvider.Store
             Address address,
             Address agentAddress,
             string name,
+            DateTimeOffset timestamp,
             int? avatarLevel,
             int? titleId,
             int? armorId,
@@ -43,6 +44,7 @@ namespace NineChronicles.DataProvider.Store
                             TitleId = titleId,
                             ArmorId = armorId,
                             Cp = cp,
+                            Timestamp = timestamp,
                         }
                     );
                     ctx.SaveChanges();
@@ -60,6 +62,7 @@ namespace NineChronicles.DataProvider.Store
                                 Address = address.ToString(),
                                 AgentAddress = agentAddress.ToString(),
                                 Name = name,
+                                Timestamp = timestamp,
                             }
                         );
                     }
@@ -75,6 +78,7 @@ namespace NineChronicles.DataProvider.Store
                                 TitleId = titleId,
                                 ArmorId = armorId,
                                 Cp = cp,
+                                Timestamp = timestamp,
                             }
                         );
                     }
@@ -96,22 +100,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var avatar in avatarList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.Avatars?.Find(avatar!.Address) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.Avatars?.FindAsync(avatar!.Address).Result is null)
                         {
-                            ctx.Avatars!.AddRange(avatar!);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.Avatars!.AddRangeAsync(avatar!);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.Avatars!.UpdateRange(avatar);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -155,22 +159,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var agent in agentList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.Agents?.Find(agent!.Address) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.Agents?.FindAsync(agent!.Address).Result is null)
                         {
-                            ctx.Agents!.AddRange(agent!);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.Agents!.AddRangeAsync(agent!);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.Agents!.UpdateRange(agent);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -223,22 +227,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var has in hasList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.HackAndSlashes?.Find(has!.Id) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.HackAndSlashes?.FindAsync(has!.Id).Result is null)
                         {
-                            ctx.HackAndSlashes!.AddRange(has!);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.HackAndSlashes!.AddRangeAsync(has!);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.HackAndSlashes!.UpdateRange(has);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -258,22 +262,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var hasSweep in hasSweepList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.HackAndSlashSweeps?.Find(hasSweep.Id) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.HackAndSlashSweeps?.FindAsync(hasSweep.Id).Result is null)
                         {
-                            ctx.HackAndSlashSweeps!.AddRange(hasSweep);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.HackAndSlashSweeps!.AddRangeAsync(hasSweep);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.HackAndSlashSweeps!.UpdateRange(hasSweep);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -293,22 +297,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var eventDungeonBattle in eventDungeonBattleList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.EventDungeonBattles?.Find(eventDungeonBattle.Id) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.EventDungeonBattles?.FindAsync(eventDungeonBattle.Id).Result is null)
                         {
-                            ctx.EventDungeonBattles!.AddRange(eventDungeonBattle);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.EventDungeonBattles!.AddRangeAsync(eventDungeonBattle);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.EventDungeonBattles!.UpdateRange(eventDungeonBattle);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -328,22 +332,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var eventConsumableItemCraft in eventConsumableItemCraftsList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.EventConsumableItemCrafts?.Find(eventConsumableItemCraft.Id) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.EventConsumableItemCrafts?.FindAsync(eventConsumableItemCraft.Id).Result is null)
                         {
-                            ctx.EventConsumableItemCrafts!.AddRange(eventConsumableItemCraft);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.EventConsumableItemCrafts!.AddRangeAsync(eventConsumableItemCraft);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.EventConsumableItemCrafts!.UpdateRange(eventConsumableItemCraft);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -608,16 +612,16 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var cc in ccList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.CombinationConsumables?.Find(cc!.Id) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.CombinationConsumables?.FindAsync(cc!.Id).Result is null)
                         {
                             try
                             {
-                                ctx.CombinationConsumables!.AddRange(cc!);
-                                ctx.SaveChanges();
-                                ctx.Dispose();
+                                await ctx.CombinationConsumables!.AddRangeAsync(cc!);
+                                await ctx.SaveChangesAsync();
+                                await ctx.DisposeAsync();
                             }
                             catch (Exception e)
                             {
@@ -626,11 +630,11 @@ namespace NineChronicles.DataProvider.Store
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.CombinationConsumables!.UpdateRange(cc);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -712,16 +716,16 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var ce in ceList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.CombinationEquipments?.Find(ce!.Id) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.CombinationEquipments?.FindAsync(ce!.Id).Result is null)
                         {
                             try
                             {
-                                ctx.CombinationEquipments!.AddRange(ce!);
-                                ctx.SaveChanges();
-                                ctx.Dispose();
+                                await ctx.CombinationEquipments!.AddRangeAsync(ce!);
+                                await ctx.SaveChangesAsync();
+                                await ctx.DisposeAsync();
                             }
                             catch (Exception e)
                             {
@@ -730,11 +734,11 @@ namespace NineChronicles.DataProvider.Store
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.CombinationEquipments!.UpdateRange(ce);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -754,22 +758,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var se in seList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.ShopHistoryEquipments?.Find(se!.OrderId) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.ShopHistoryEquipments?.FindAsync(se!.OrderId).Result is null)
                         {
-                            ctx.ShopHistoryEquipments!.AddRange(se!);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.ShopHistoryEquipments!.AddRangeAsync(se!);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.ShopHistoryEquipments!.UpdateRange(se);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -824,22 +828,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var sm in smList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.ShopHistoryMaterials?.Find(sm!.OrderId) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.ShopHistoryMaterials?.FindAsync(sm!.OrderId).Result is null)
                         {
-                            ctx.ShopHistoryMaterials!.AddRange(sm!);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.ShopHistoryMaterials!.AddRangeAsync(sm!);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.ShopHistoryMaterials!.UpdateRange(sm);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -859,22 +863,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var sc in scList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.ShopHistoryConsumables?.Find(sc!.OrderId) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.ShopHistoryConsumables?.FindAsync(sc!.OrderId).Result is null)
                         {
-                            ctx.ShopHistoryConsumables!.AddRange(sc!);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.ShopHistoryConsumables!.AddRangeAsync(sc!);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.ShopHistoryConsumables!.UpdateRange(sc);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -911,6 +915,7 @@ namespace NineChronicles.DataProvider.Store
             Guid itemId,
             Guid materialId,
             int slotIndex,
+            decimal burntNCG,
             long blockIndex)
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
@@ -923,6 +928,7 @@ namespace NineChronicles.DataProvider.Store
                     ItemId = itemId.ToString(),
                     MaterialId = materialId.ToString(),
                     SlotIndex = slotIndex,
+                    BurntNCG = burntNCG,
                     BlockIndex = blockIndex,
                 }
             );
@@ -955,16 +961,16 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var ie in ieList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.ItemEnhancements?.Find(ie!.Id) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.ItemEnhancements?.FindAsync(ie!.Id).Result is null)
                         {
                             try
                             {
-                                ctx.ItemEnhancements!.AddRange(ie!);
-                                ctx.SaveChanges();
-                                ctx.Dispose();
+                                await ctx.ItemEnhancements!.AddRangeAsync(ie!);
+                                await ctx.SaveChangesAsync();
+                                await ctx.DisposeAsync();
                             }
                             catch (Exception e)
                             {
@@ -973,11 +979,11 @@ namespace NineChronicles.DataProvider.Store
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.ItemEnhancements!.UpdateRange(ie);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -1014,12 +1020,12 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var stake in stakeList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        ctx.Stakings!.AddRange(stake);
-                        ctx.SaveChanges();
-                        ctx.Dispose();
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        await ctx.Stakings!.AddRangeAsync(stake);
+                        await ctx.SaveChangesAsync();
+                        await ctx.DisposeAsync();
                     }));
                 }
 
@@ -1038,22 +1044,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var claimStake in claimStakeList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.ClaimStakeRewards?.Find(claimStake!.Id) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.ClaimStakeRewards?.FindAsync(claimStake.Id).Result is null)
                         {
-                            ctx.ClaimStakeRewards!.AddRange(claimStake);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.ClaimStakeRewards!.AddRangeAsync(claimStake);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.ClaimStakeRewards!.UpdateRange(claimStake);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -1074,12 +1080,12 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var mmc in mmcList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        ctx.MigrateMonsterCollections!.AddRange(mmc);
-                        ctx.SaveChanges();
-                        ctx.Dispose();
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        await ctx.MigrateMonsterCollections!.AddRangeAsync(mmc);
+                        await ctx.SaveChangesAsync();
+                        await ctx.DisposeAsync();
                     }));
                 }
 
@@ -1098,22 +1104,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var grind in grindList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.Grindings?.Find(grind!.Id) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.Grindings?.FindAsync(grind.Id).Result is null)
                         {
-                            ctx.Grindings!.AddRange(grind);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.Grindings!.AddRangeAsync(grind);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.Grindings!.UpdateRange(grind);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -1133,22 +1139,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var itemEnhancementFail in itemEnhancementFailList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.ItemEnhancementFails?.Find(itemEnhancementFail!.Id) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.ItemEnhancementFails?.FindAsync(itemEnhancementFail.Id).Result is null)
                         {
-                            ctx.ItemEnhancementFails!.AddRange(itemEnhancementFail);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.ItemEnhancementFails!.AddRangeAsync(itemEnhancementFail);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.ItemEnhancementFails!.UpdateRange(itemEnhancementFail);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -1168,22 +1174,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var unlockEquipmentRecipe in unlockEquipmentRecipeList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.UnlockEquipmentRecipes?.Find(unlockEquipmentRecipe.Id) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.UnlockEquipmentRecipes?.FindAsync(unlockEquipmentRecipe.Id).Result is null)
                         {
-                            ctx.UnlockEquipmentRecipes!.AddRange(unlockEquipmentRecipe);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.UnlockEquipmentRecipes!.AddRangeAsync(unlockEquipmentRecipe);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.UnlockEquipmentRecipes!.UpdateRange(unlockEquipmentRecipe);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -1203,22 +1209,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var unlockWorld in unlockWorldList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.UnlockWorlds?.Find(unlockWorld.Id) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.UnlockWorlds?.FindAsync(unlockWorld.Id).Result is null)
                         {
-                            ctx.UnlockWorlds!.AddRange(unlockWorld);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.UnlockWorlds!.AddRangeAsync(unlockWorld);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.UnlockWorlds!.UpdateRange(unlockWorld);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -1239,22 +1245,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var replaceCombinationEquipmentMaterial in replaceCombinationEquipmentMaterialList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.ReplaceCombinationEquipmentMaterials?.Find(replaceCombinationEquipmentMaterial.Id) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.ReplaceCombinationEquipmentMaterials?.FindAsync(replaceCombinationEquipmentMaterial.Id).Result is null)
                         {
-                            ctx.ReplaceCombinationEquipmentMaterials!.AddRange(replaceCombinationEquipmentMaterial);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.ReplaceCombinationEquipmentMaterials!.AddRangeAsync(replaceCombinationEquipmentMaterial);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.ReplaceCombinationEquipmentMaterials!.UpdateRange(replaceCombinationEquipmentMaterial);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -1274,22 +1280,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var hasRandomBuff in hasRandomBuffList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.HasRandomBuffs?.Find(hasRandomBuff.Id) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.HasRandomBuffs?.FindAsync(hasRandomBuff.Id).Result is null)
                         {
-                            ctx.HasRandomBuffs!.AddRange(hasRandomBuff);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.HasRandomBuffs!.AddRangeAsync(hasRandomBuff);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.HasRandomBuffs!.UpdateRange(hasRandomBuff);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -1309,22 +1315,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var hasWithRandomBuff in hasWithRandomBuffList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.HasWithRandomBuffs?.Find(hasWithRandomBuff.Id) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.HasWithRandomBuffs?.FindAsync(hasWithRandomBuff.Id).Result is null)
                         {
-                            ctx.HasWithRandomBuffs!.AddRange(hasWithRandomBuff);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.HasWithRandomBuffs!.AddRangeAsync(hasWithRandomBuff);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.HasWithRandomBuffs!.UpdateRange(hasWithRandomBuff);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -1344,22 +1350,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var joinArena in joinArenaList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.JoinArenas?.Find(joinArena.Id) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.JoinArenas?.FindAsync(joinArena.Id).Result is null)
                         {
-                            ctx.JoinArenas!.AddRange(joinArena);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.JoinArenas!.AddRangeAsync(joinArena);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.JoinArenas!.UpdateRange(joinArena);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -1379,23 +1385,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var battleArena in battleArenaList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        var i = ctx.BattleArenas?.Find(battleArena.Id);
-                        if (i is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.BattleArenas?.FindAsync(battleArena.Id).Result is null)
                         {
-                            ctx.BattleArenas!.AddRange(battleArena);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.BattleArenas!.AddRangeAsync(battleArena);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.BattleArenas!.UpdateRange(battleArena);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -1408,6 +1413,223 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreRaiderList(List<RaiderModel> raiderList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var raider in raiderList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.Raiders.FindAsync(raider.Id).Result is null)
+                        {
+                            await ctx.Raiders!.AddRangeAsync(raider);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.Raiders.UpdateRange(raider);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreBattleGrandFinaleList(List<BattleGrandFinaleModel> battleGrandFinaleList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var battleGrandFinale in battleGrandFinaleList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.BattleGrandFinales.FindAsync(battleGrandFinale.Id).Result is null)
+                        {
+                            await ctx.BattleGrandFinales.AddRangeAsync(battleGrandFinale);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.BattleGrandFinales.UpdateRange(battleGrandFinale);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreEventMaterialItemCraftsList(List<EventMaterialItemCraftsModel> eventMaterialItemCraftsList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var eventMaterialItemCrafts in eventMaterialItemCraftsList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.EventMaterialItemCrafts.FindAsync(eventMaterialItemCrafts.Id).Result is null)
+                        {
+                            await ctx.EventMaterialItemCrafts.AddRangeAsync(eventMaterialItemCrafts);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.EventMaterialItemCrafts.UpdateRange(eventMaterialItemCrafts);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreRuneEnhancementList(List<RuneEnhancementModel> runeEnhancementList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var runeEnhancement in runeEnhancementList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.RuneEnhancements.FindAsync(runeEnhancement.Id).Result is null)
+                        {
+                            await ctx.RuneEnhancements.AddRangeAsync(runeEnhancement);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.RuneEnhancements.UpdateRange(runeEnhancement);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreRunesAcquiredList(List<RunesAcquiredModel> runesAcquiredList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var runesAcquired in runesAcquiredList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.RunesAcquired.FindAsync(runesAcquired.Id).Result is null)
+                        {
+                            await ctx.RunesAcquired.AddRangeAsync(runesAcquired);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.RunesAcquired.UpdateRange(runesAcquired);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreUnlockRuneSlotList(List<UnlockRuneSlotModel> unlockRuneSlotList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var unlockRuneSlot in unlockRuneSlotList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.UnlockRuneSlots.FindAsync(unlockRuneSlot.Id).Result is null)
+                        {
+                            await ctx.UnlockRuneSlots.AddRangeAsync(unlockRuneSlot);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.UnlockRuneSlots.UpdateRange(unlockRuneSlot);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public List<RaiderModel> GetRaiderList()
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            IQueryable<RaiderModel> raiders = ctx.Raiders!;
+            return raiders.ToList();
+        }
+
         public void StoreBlockList(List<BlockModel> blockList)
         {
             try
@@ -1415,22 +1637,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var block in blockList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.Blocks?.Find(block.Hash) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.Blocks.FindAsync(block.Hash).Result is null)
                         {
-                            ctx.Blocks!.AddRange(block);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.Blocks.AddRangeAsync(block);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
-                            updateCtx.Blocks!.UpdateRange(block);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.Blocks.UpdateRange(block);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -1450,22 +1672,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var transaction in transactionList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.Transactions?.Find(transaction.TxId) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.Transactions?.FindAsync(transaction.TxId).Result is null)
                         {
-                            ctx.Transactions!.AddRange(transaction);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.Transactions!.AddRangeAsync(transaction);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.Transactions!.UpdateRange(transaction);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -1484,14 +1706,7 @@ namespace NineChronicles.DataProvider.Store
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
             var query = ctx.Set<CraftRankingOutputModel>()
-                .FromSqlRaw("SELECT `h`.`AvatarAddress`, `AgentAddress`, `CraftCount`, `BlockIndex`, " +
-                            "(SELECT `a`.`Name` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Name`, " +
-                            "(SELECT `a`.`AvatarLevel` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `AvatarLevel`, " +
-                            "(SELECT `a`.`TitleId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `TitleId`, " +
-                            "(SELECT `a`.`ArmorId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `ArmorId`, " +
-                            "(SELECT `a`.`Cp` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Cp`, " +
-                            "row_number() over(ORDER BY `CraftCount` DESC, `h`.`BlockIndex`) `Ranking` " +
-                            "FROM `CraftRankings` AS `h` ");
+                .FromSqlRaw("SELECT * FROM CraftRankings ORDER BY Ranking ");
 
             if (avatarAddress is { } avatarAddressNotNull)
             {
@@ -1597,22 +1812,22 @@ namespace NineChronicles.DataProvider.Store
                 var tasks = new List<Task>();
                 foreach (var eq in eqList)
                 {
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(Task.Run(async () =>
                     {
-                        using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                        if (ctx.Equipments?.Find(eq!.ItemId) is null)
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.Equipments?.FindAsync(eq!.ItemId).Result is null)
                         {
-                            ctx.Equipments!.AddRange(eq!);
-                            ctx.SaveChanges();
-                            ctx.Dispose();
+                            await ctx.Equipments!.AddRangeAsync(eq!);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            ctx.Dispose();
-                            using NineChroniclesContext updateCtx = _dbContextFactory.CreateDbContext();
-                            updateCtx.Equipments!.UpdateRange(eq!);
-                            updateCtx.SaveChanges();
-                            updateCtx.Dispose();
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.Equipments!.UpdateRange(eq);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
                         }
                     }));
                 }
@@ -1705,17 +1920,39 @@ namespace NineChronicles.DataProvider.Store
                 prevModel.HighScore = model.HighScore;
                 prevModel.TotalScore = model.TotalScore;
                 prevModel.Level = model.Level;
+                prevModel.PurchaseCount = model.PurchaseCount;
                 ctx.Raiders.Update(prevModel);
             }
 
             ctx.SaveChanges();
         }
 
-        public List<WorldBossRankingModel> GetWorldBossRanking(int raidId)
+        public void StoreWorldBossMigration(int raidId)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            WorldBossSeasonMigrationModel model = new WorldBossSeasonMigrationModel
+            {
+                RaidId = raidId,
+            };
+            ctx.WorldBossSeasonMigrationModels.Add(model);
+            ctx.SaveChanges();
+        }
+
+        public List<WorldBossRankingModel> GetWorldBossRanking(int raidId, int? queryOffset, int? queryLimit)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             var query = ctx.Set<WorldBossRankingModel>()
                 .FromSqlRaw(@"SELECT `AvatarName`, `HighScore`, `TotalScore`, `Cp`, `Level`, `Address`, `IconId`, row_number() over(ORDER BY `TotalScore` DESC) as `Ranking` FROM `Raiders` WHERE `RaidId` = {0}", raidId);
+            if (queryOffset.HasValue)
+            {
+                query = query.Skip(queryOffset.Value);
+            }
+
+            if (queryLimit.HasValue)
+            {
+                query = query.Take(queryLimit.Value);
+            }
+
             return query.ToList();
         }
 
@@ -1729,6 +1966,38 @@ namespace NineChronicles.DataProvider.Store
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
             return ctx.Blocks.Select(i => i.Index).OrderByDescending(i => i).First();
+        }
+
+        public bool MigrationExists(int raidId)
+        {
+            using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            return ctx.WorldBossSeasonMigrationModels.Any(m => m.RaidId == raidId);
+        }
+
+        public void UpsertRaiders(List<RaiderModel> raiderModels)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            foreach (var model in raiderModels)
+            {
+                RaiderModel? prevModel =
+                    ctx.Raiders.FirstOrDefault(r => r.RaidId == model.RaidId && r.Address.Equals(model.Address));
+                if (prevModel is null)
+                {
+                    ctx.Raiders.Add(model);
+                }
+                else
+                {
+                    prevModel.Cp = model.Cp;
+                    prevModel.IconId = model.IconId;
+                    prevModel.HighScore = model.HighScore;
+                    prevModel.TotalScore = model.TotalScore;
+                    prevModel.Level = model.Level;
+                    prevModel.PurchaseCount = model.PurchaseCount;
+                    ctx.Raiders.Update(prevModel);
+                }
+            }
+
+            ctx.SaveChanges();
         }
     }
 }
