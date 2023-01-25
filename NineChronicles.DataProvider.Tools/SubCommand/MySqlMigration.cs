@@ -177,75 +177,85 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             _baseStore.IterateIndexes(_baseChain.Id, offset + idx ?? 0 + idx, limitInterval)
                                 .Select((value, i) => new { i, value }))
                     {
-                        var block = _baseStore.GetBlock<NCAction>(item.value);
-                        Console.WriteLine("Migrating {0}/{1} #{2}", item.i, count, block.Index);
-                        _blockBulkFile.WriteLine(
-                            $"{block.Index};" +
-                            $"{block.Hash.ToString()};" +
-                            $"{block.Miner.ToString()};" +
-                            $"{block.Difficulty};" +
-                            $"{block.Nonce.ToString()};" +
-                            $"{block.PreviousHash.ToString()};" +
-                            $"{block.ProtocolVersion};" +
-                            $"{block.PublicKey!};" +
-                            $"{block.StateRootHash.ToString()};" +
-                            $"{block.TotalDifficulty};" +
-                            $"{block.Transactions.Count};" +
-                            $"{block.TxHash.ToString()};" +
-                            $"{block.Timestamp.UtcDateTime:o}");
-                        foreach (var tx in block.Transactions)
+                        try
                         {
-                            string actionType = null;
-                            if (tx.CustomActions!.Count == 0)
-                            {
-                                actionType = string.Empty;
-                            }
-                            else
-                            {
-                                actionType = tx.CustomActions[0].InnerAction.ToString()!.Split(".").Last();
-                            }
-
-                            _txBulkFile.WriteLine(
+                            var block = _baseStore.GetBlock<NCAction>(item.value);
+                            Console.WriteLine("Migrating {0}/{1} #{2}", item.i, count, block.Index);
+                            _blockBulkFile.WriteLine(
                                 $"{block.Index};" +
                                 $"{block.Hash.ToString()};" +
-                                $"{tx.Id.ToString()};" +
-                                $"{tx.Signer.ToString()};" +
-                                $"{actionType};" +
-                                $"{tx.Nonce};" +
-                                $"{tx.PublicKey};" +
-                                $"{tx.UpdatedAddresses.Count};" +
-                                $"{tx.Timestamp.UtcDateTime:yyyy-MM-dd};" +
-                                $"{tx.Timestamp.UtcDateTime:o}");
+                                $"{block.Miner.ToString()};" +
+                                $"{block.Difficulty};" +
+                                $"{block.Nonce.ToString()};" +
+                                $"{block.PreviousHash.ToString()};" +
+                                $"{block.ProtocolVersion};" +
+                                $"{block.PublicKey!};" +
+                                $"{block.StateRootHash.ToString()};" +
+                                $"{block.TotalDifficulty};" +
+                                $"{block.Transactions.Count};" +
+                                $"{block.TxHash.ToString()};" +
+                                $"{block.Timestamp.UtcDateTime:o}");
+                            Console.WriteLine("Migrating Done {0}/{1} #{2}", item.i, count, block.Index);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error Migrating {0}/{1} #{2}", item.i, count, item.value);
+                            _txBulkFile.WriteLine(
+                                $"{item.i};" +
+                                $"{item.value}");
                         }
 
-                        Console.WriteLine("Migrating Done {0}/{1} #{2}", item.i, count, block.Index);
+                        // foreach (var tx in block.Transactions)
+                        // {
+                        //     string actionType = null;
+                        //     if (tx.CustomActions!.Count == 0)
+                        //     {
+                        //         actionType = string.Empty;
+                        //     }
+                        //     else
+                        //     {
+                        //         actionType = tx.CustomActions[0].InnerAction.ToString()!.Split(".").Last();
+                        //     }
+                        //
+                        //     _txBulkFile.WriteLine(
+                        //         $"{block.Index};" +
+                        //         $"{block.Hash.ToString()};" +
+                        //         $"{tx.Id.ToString()};" +
+                        //         $"{tx.Signer.ToString()};" +
+                        //         $"{actionType};" +
+                        //         $"{tx.Nonce};" +
+                        //         $"{tx.PublicKey};" +
+                        //         $"{tx.UpdatedAddresses.Count};" +
+                        //         $"{tx.Timestamp.UtcDateTime:yyyy-MM-dd};" +
+                        //         $"{tx.Timestamp.UtcDateTime:o}");
+                        // }
                     }
 
                     if (interval < remainingCount)
                     {
                         remainingCount -= interval;
                         offsetIdx += interval;
-                        FlushBulkFiles();
-                        foreach (var path in _blockFiles)
-                        {
-                            BulkInsert(BlockDbName, path);
-                        }
+                        // FlushBulkFiles();
+                        // foreach (var path in _blockFiles)
+                        // {
+                        //     BulkInsert(BlockDbName, path);
+                        // }
 
-                        foreach (var path in _txFiles)
-                        {
-                            BulkInsert(TxDbName, path);
-                        }
-
-                        _blockFiles.RemoveAt(0);
-                        _txFiles.RemoveAt(0);
-                        CreateBulkFiles();
+                        // foreach (var path in _txFiles)
+                        // {
+                        //     BulkInsert(TxDbName, path);
+                        // }
+                        //
+                        // _blockFiles.RemoveAt(0);
+                        // _txFiles.RemoveAt(0);
+                        // CreateBulkFiles();
                     }
                     else
                     {
                         remainingCount = 0;
                         offsetIdx += remainingCount;
-                        FlushBulkFiles();
-                        CreateBulkFiles();
+                        // FlushBulkFiles();
+                        // CreateBulkFiles();
                     }
                 }
 
@@ -253,15 +263,15 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
 
-                foreach (var path in _blockFiles)
-                {
-                    BulkInsert(BlockDbName, path);
-                }
-
-                foreach (var path in _txFiles)
-                {
-                    BulkInsert(TxDbName, path);
-                }
+                // foreach (var path in _blockFiles)
+                // {
+                //     BulkInsert(BlockDbName, path);
+                // }
+                //
+                // foreach (var path in _txFiles)
+                // {
+                //     BulkInsert(TxDbName, path);
+                // }
             }
             catch (Exception e)
             {
@@ -270,6 +280,15 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
+            foreach (var path in _blockFiles)
+            {
+                Console.WriteLine("Block File: {0}", path);
+            }
+
+            foreach (var path in _txFiles)
+            {
+                Console.WriteLine("Error File: {0}", path);
+            }
         }
 
         private void FlushBulkFiles()
