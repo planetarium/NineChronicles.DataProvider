@@ -25,9 +25,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
     public class MySqlMigration
     {
-        private const string BlockDbName = "Blocks";
-        private const string TxDbName = "Transactions";
-        private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
         private StreamWriter _blockBulkFile;
@@ -40,30 +37,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             [Option('o', Description = "Rocksdb path to migrate.")]
             string storePath,
             [Option(
-                "rocksdb-storetype",
-                Description = "Store type of RocksDb (new or mono).")]
-            string rocksdbStoreType,
-            [Option(
-                "mysql-server",
-                Description = "A hostname of MySQL server.")]
-            string mysqlServer,
-            [Option(
-                "mysql-port",
-                Description = "A port of MySQL server.")]
-            uint mysqlPort,
-            [Option(
-                "mysql-username",
-                Description = "The name of MySQL user.")]
-            string mysqlUsername,
-            [Option(
-                "mysql-password",
-                Description = "The password of MySQL user.")]
-            string mysqlPassword,
-            [Option(
-                "mysql-database",
-                Description = "The name of MySQL database to use.")]
-            string mysqlDatabase,
-            [Option(
                 "offset",
                 Description = "offset of block index (no entry will migrate from the genesis block).")]
             int? offset = null,
@@ -74,30 +47,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         )
         {
             DateTimeOffset start = DateTimeOffset.UtcNow;
-            var builder = new MySqlConnectionStringBuilder
-            {
-                Database = mysqlDatabase,
-                UserID = mysqlUsername,
-                Password = mysqlPassword,
-                Server = mysqlServer,
-                Port = mysqlPort,
-                AllowLoadLocalInfile = true,
-            };
-
-            _connectionString = builder.ConnectionString;
 
             Console.WriteLine("Setting up RocksDBStore...");
-            if (rocksdbStoreType == "new")
-            {
-                _baseStore = new RocksDBStore(
-                    storePath,
-                    dbConnectionCacheSize: 10000);
-            }
-            else
-            {
-                throw new CommandExitedException("Invalid rocksdb-storetype. Please enter 'new' or 'mono'", -1);
-            }
-
+            _baseStore = new RocksDBStore(
+                storePath,
+                dbConnectionCacheSize: 10000);
             long totalLength = _baseStore.CountBlocks();
 
             if (totalLength == 0)
@@ -180,7 +134,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         try
                         {
                             var block = _baseStore.GetBlock<NCAction>(item.value);
-                            Console.WriteLine("Migrating {0}/{1} #{2}", item.i, count, block.Index);
+                            Console.WriteLine("Checking {0}/{1} #{2}", item.i, count, block.Index);
                             _blockBulkFile.WriteLine(
                                 $"{block.Index};" +
                                 $"{block.Hash.ToString()};" +
@@ -195,83 +149,32 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 $"{block.Transactions.Count};" +
                                 $"{block.TxHash.ToString()};" +
                                 $"{block.Timestamp.UtcDateTime:o}");
-                            Console.WriteLine("Migrating Done {0}/{1} #{2}", item.i, count, block.Index);
+                            Console.WriteLine("Checking Done {0}/{1} #{2}", item.i, count, block.Index);
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine("Error Migrating {0}/{1} #{2}", item.i, count, item.value);
+                            Console.WriteLine("Error Checking {0}/{1} #{2}", item.i, count, item.value);
                             _txBulkFile.WriteLine(
                                 $"{item.i};" +
                                 $"{item.value}");
                         }
-
-                        // foreach (var tx in block.Transactions)
-                        // {
-                        //     string actionType = null;
-                        //     if (tx.CustomActions!.Count == 0)
-                        //     {
-                        //         actionType = string.Empty;
-                        //     }
-                        //     else
-                        //     {
-                        //         actionType = tx.CustomActions[0].InnerAction.ToString()!.Split(".").Last();
-                        //     }
-                        //
-                        //     _txBulkFile.WriteLine(
-                        //         $"{block.Index};" +
-                        //         $"{block.Hash.ToString()};" +
-                        //         $"{tx.Id.ToString()};" +
-                        //         $"{tx.Signer.ToString()};" +
-                        //         $"{actionType};" +
-                        //         $"{tx.Nonce};" +
-                        //         $"{tx.PublicKey};" +
-                        //         $"{tx.UpdatedAddresses.Count};" +
-                        //         $"{tx.Timestamp.UtcDateTime:yyyy-MM-dd};" +
-                        //         $"{tx.Timestamp.UtcDateTime:o}");
-                        // }
                     }
 
                     if (interval < remainingCount)
                     {
                         remainingCount -= interval;
                         offsetIdx += interval;
-                        // FlushBulkFiles();
-                        // foreach (var path in _blockFiles)
-                        // {
-                        //     BulkInsert(BlockDbName, path);
-                        // }
-
-                        // foreach (var path in _txFiles)
-                        // {
-                        //     BulkInsert(TxDbName, path);
-                        // }
-                        //
-                        // _blockFiles.RemoveAt(0);
-                        // _txFiles.RemoveAt(0);
-                        // CreateBulkFiles();
                     }
                     else
                     {
                         remainingCount = 0;
                         offsetIdx += remainingCount;
-                        // FlushBulkFiles();
-                        // CreateBulkFiles();
                     }
                 }
 
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
-
-                // foreach (var path in _blockFiles)
-                // {
-                //     BulkInsert(BlockDbName, path);
-                // }
-                //
-                // foreach (var path in _txFiles)
-                // {
-                //     BulkInsert(TxDbName, path);
-                // }
             }
             catch (Exception e)
             {
@@ -310,38 +213,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             _blockFiles.Add(blockFilePath);
             _txFiles.Add(txFilePath);
-        }
-
-        private void BulkInsert(
-            string tableName,
-            string filePath)
-        {
-            using MySqlConnection connection = new MySqlConnection(_connectionString);
-            try
-            {
-                DateTimeOffset start = DateTimeOffset.Now;
-                Console.WriteLine($"Start bulk insert to {tableName}.");
-                MySqlBulkLoader loader = new MySqlBulkLoader(connection)
-                {
-                    TableName = tableName,
-                    FileName = filePath,
-                    Timeout = 0,
-                    LineTerminator = Environment.OSVersion.VersionString.Contains("Win") ? "\r\n" : "\n",
-                    FieldTerminator = ";",
-                    Local = true,
-                    ConflictOption = MySqlBulkLoaderConflictOption.Ignore,
-                };
-
-                loader.Load();
-                Console.WriteLine($"Bulk load to {tableName} complete.");
-                DateTimeOffset end = DateTimeOffset.Now;
-                Console.WriteLine("Time elapsed: {0}", end - start);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                Console.WriteLine($"Bulk load to {tableName} failed.");
-            }
         }
     }
 }
