@@ -79,6 +79,7 @@ namespace NineChronicles.DataProvider
         private readonly List<RuneEnhancementModel> _runeEnhancementList = new List<RuneEnhancementModel>();
         private readonly List<RunesAcquiredModel> _runesAcquiredList = new List<RunesAcquiredModel>();
         private readonly List<UnlockRuneSlotModel> _unlockRuneSlotList = new List<UnlockRuneSlotModel>();
+        private readonly List<RapidCombinationModel> _rapidCombinationList = new List<RapidCombinationModel>();
         private readonly List<string> _agents;
         private readonly bool _render;
         private int _renderedBlockCount;
@@ -2082,7 +2083,7 @@ namespace NineChronicles.DataProvider
                 {
                     try
                     {
-                        if (ev.Exception == null && ev.Action is UnlockRuneSlot unlockRuneSlot)
+                        if (ev.Exception == null && ev.Action is { } unlockRuneSlot)
                         {
                             var start = DateTimeOffset.UtcNow;
                             var previousStates = ev.PreviousStates;
@@ -2107,6 +2108,40 @@ namespace NineChronicles.DataProvider
                             });
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("Stored UnlockRuneSlot action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<RapidCombination>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } rapidCombination)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            var states = ev.PreviousStates;
+                            var slotState = states.GetCombinationSlotState(rapidCombination.avatarAddress, rapidCombination.slotIndex);
+                            var diff = slotState.Result.itemUsable.RequiredBlockIndex - ev.BlockIndex;
+                            var gameConfigState = states.GetGameConfigState();
+                            var count = RapidCombination0.CalculateHourglassCount(gameConfigState, diff);
+                            _rapidCombinationList.Add(new RapidCombinationModel()
+                            {
+                                Id = rapidCombination.Id.ToString(),
+                                BlockIndex = ev.BlockIndex,
+                                AgentAddress = ev.Signer.ToString(),
+                                AvatarAddress = rapidCombination.avatarAddress.ToString(),
+                                SlotIndex = rapidCombination.slotIndex,
+                                HourglassCount = count,
+                                Date = DateOnly.FromDateTime(_blockTimeOffset.DateTime),
+                                TimeStamp = _blockTimeOffset,
+                            });
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored RapidCombination action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -2654,6 +2689,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreRuneEnhancementList(_runeEnhancementList);
                     MySqlStore.StoreRunesAcquiredList(_runesAcquiredList);
                     MySqlStore.StoreUnlockRuneSlotList(_unlockRuneSlotList);
+                    MySqlStore.StoreRapidCombinationList(_rapidCombinationList);
                 }),
             };
 
@@ -2694,6 +2730,7 @@ namespace NineChronicles.DataProvider
             _runeEnhancementList.Clear();
             _runesAcquiredList.Clear();
             _unlockRuneSlotList.Clear();
+            _rapidCombinationList.Clear();
             var end = DateTimeOffset.Now;
             long blockIndex = b.OldTip.Index;
             StreamWriter blockIndexFile = new StreamWriter(_blockIndexFilePath);
