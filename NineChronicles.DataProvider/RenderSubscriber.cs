@@ -38,7 +38,7 @@ namespace NineChronicles.DataProvider
 
     public class RenderSubscriber : BackgroundService
     {
-        private const int DefaultInsertInterval = 30;
+        private const int DefaultInsertInterval = 1;
         private readonly int _blockInsertInterval;
         private readonly string _blockIndexFilePath;
         private readonly BlockRenderer _blockRenderer;
