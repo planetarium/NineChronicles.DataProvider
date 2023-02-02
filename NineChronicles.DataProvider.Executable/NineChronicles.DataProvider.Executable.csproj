@@ -4,7 +4,7 @@
     <TargetFramework>net6</TargetFramework>
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	<NoWarn>$(NoWarn),1573,1591,1712,SA1200, MEN005, SA1413, MEN003</NoWarn>
+	<NoWarn>$(NoWarn),1573,1591,1712,SA1200,MEN005,SA1413,MEN003,SA1009,SA1101,SA1111,S1134,SA1309,SA1600,SA1601,SA1633</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Menees.Analyzers.2017" Version="2.0.3" />
@@ -13,9 +13,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.1" />
     <PackageReference Include="Serilog.Expressions" Version="1.1.1" />
     <PackageReference Include="Serilog.Formatting.Compact" Version="1.1.0" />
