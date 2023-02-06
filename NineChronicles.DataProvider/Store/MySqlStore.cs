@@ -109,14 +109,6 @@ namespace NineChronicles.DataProvider.Store
                             await ctx.SaveChangesAsync();
                             await ctx.DisposeAsync();
                         }
-                        else
-                        {
-                            await ctx.DisposeAsync();
-                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
-                            updateCtx.Avatars!.UpdateRange(avatar);
-                            await updateCtx.SaveChangesAsync();
-                            await updateCtx.DisposeAsync();
-                        }
                     }));
                 }
 
