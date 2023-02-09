@@ -78,7 +78,6 @@ namespace NineChronicles.DataProvider.Executable
                     headlessConfig.PeerStrings,
                     headlessConfig.TrustedAppProtocolVersionSigners,
                     noMiner: headlessConfig.NoMiner,
-                    workers: headlessConfig.Workers,
                     confirmations: headlessConfig.Confirmations,
                     messageTimeout: headlessConfig.MessageTimeout,
                     tipTimeout: headlessConfig.TipTimeout,
