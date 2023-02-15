@@ -76,6 +76,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private StreamWriter _agentBulkFile;
         private StreamWriter _avatarBulkFile;
         private List<string> _agentList;
+        private List<string> _hourGlassAgentList;
+        private List<string> _apStoneAgentList;
         private List<string> _avatarList;
         private List<string> _ccFiles;
         private List<string> _ceFiles;
@@ -236,6 +238,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             // lists to keep track of inserted addresses to minimize duplicates
             _agentList = new List<string>();
+            _hourGlassAgentList = new List<string>();
+            _apStoneAgentList = new List<string>();
             _avatarList = new List<string>();
 
             CreateBulkFiles();
@@ -554,17 +558,25 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         {
                             if (material.ItemId.ToString() == hourglassRow.ItemId.ToString())
                             {
-                                 var inventoryState = new Inventory((List)avatarState.inventory.Serialize());
-                                 inventoryState.TryGetFungibleItems(hourglassRow.ItemId, out var hourglasses);
-                                 var hourglassesCount = hourglasses.Sum(e => e.count);
-                                 WriteMaterial(material, hourglassesCount, avatarState.agentAddress, avatarAddress);
+                                if (!_hourGlassAgentList.Contains(avatarState.agentAddress.ToString()))
+                                {
+                                     var inventoryState = new Inventory((List)avatarState.inventory.Serialize());
+                                     inventoryState.TryGetFungibleItems(hourglassRow.ItemId, out var hourglasses);
+                                     var hourglassesCount = hourglasses.Sum(e => e.count);
+                                     WriteMaterial(material, hourglassesCount, avatarState.agentAddress, avatarAddress);
+                                     _hourGlassAgentList.Add(avatarState.agentAddress.ToString());
+                                }
                             }
                             else if (material.ItemId.ToString() == apStoneRow.ItemId.ToString())
                             {
-                                var inventoryState = new Inventory((List)avatarState.inventory.Serialize());
-                                inventoryState.TryGetFungibleItems(apStoneRow.ItemId, out var apStones);
-                                var apStonesCount = apStones.Sum(e => e.count);
-                                WriteMaterial(material, apStonesCount, avatarState.agentAddress, avatarAddress);
+                                if (!_apStoneAgentList.Contains(avatarState.agentAddress.ToString()))
+                                {
+                                    var inventoryState = new Inventory((List)avatarState.inventory.Serialize());
+                                    inventoryState.TryGetFungibleItems(apStoneRow.ItemId, out var apStones);
+                                    var apStonesCount = apStones.Sum(e => e.count);
+                                    WriteMaterial(material, apStonesCount, avatarState.agentAddress, avatarAddress);
+                                    _apStoneAgentList.Add(avatarState.agentAddress.ToString());
+                                }
                             }
                             else
                             {
