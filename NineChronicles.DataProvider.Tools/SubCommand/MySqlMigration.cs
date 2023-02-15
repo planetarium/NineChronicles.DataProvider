@@ -529,6 +529,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         var userEquipments = avatarState.inventory.Equipments;
                         var userCostumes = avatarState.inventory.Costumes;
                         var userMaterials = avatarState.inventory.Materials;
+                        var materialItemSheet = ev.OutputStates.GetSheet<MaterialItemSheet>();
+                        var hourglassRow = materialItemSheet
+                            .First(pair => pair.Value.ItemSubType == ItemSubType.Hourglass)
+                            .Value;
+                        var apStoneRow = materialItemSheet
+                            .First(pair => pair.Value.ItemSubType == ItemSubType.ApStone)
+                            .Value;
                         var userConsumables = avatarState.inventory.Consumables;
 
                         foreach (var equipment in userEquipments)
@@ -545,7 +552,24 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                         foreach (var material in userMaterials)
                         {
-                            WriteMaterial(material, avatarState.agentAddress, avatarAddress);
+                            if (material.ItemId.ToString() == hourglassRow.ItemId.ToString())
+                            {
+                                 var inventoryState = new Inventory((List)avatarState.inventory.Serialize());
+                                 inventoryState.TryGetFungibleItems(hourglassRow.ItemId, out var hourglasses);
+                                 var hourglassesCount = hourglasses.Sum(e => e.count);
+                                 WriteMaterial(material, hourglassesCount, avatarState.agentAddress, avatarAddress);
+                            }
+                            else if (material.ItemId.ToString() == apStoneRow.ItemId.ToString())
+                            {
+                                var inventoryState = new Inventory((List)avatarState.inventory.Serialize());
+                                inventoryState.TryGetFungibleItems(apStoneRow.ItemId, out var apStones);
+                                var apStonesCount = apStones.Sum(e => e.count);
+                                WriteMaterial(material, apStonesCount, avatarState.agentAddress, avatarAddress);
+                            }
+                            else
+                            {
+                                WriteMaterial(material, 1, avatarState.agentAddress, avatarAddress);
+                            }
                         }
 
                         foreach (var consumable in userConsumables)
@@ -1528,6 +1552,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
         private void WriteMaterial(
             Material material,
+            int materialCount,
             Address agentAddress,
             Address avatarAddress)
         {
@@ -1539,6 +1564,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     $"{avatarAddress.ToString()};" +
                     $"{material.ItemType.ToString()};" +
                     $"{material.ItemSubType.ToString()};" +
+                    $"{materialCount};" +
                     $"{material.Id};" +
                     $"{material.ElementalType.ToString()};" +
                     $"{material.Grade}"
