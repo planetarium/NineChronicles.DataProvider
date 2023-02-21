@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using Bencodex.Types;
     using Libplanet;
+    using Libplanet.Action;
     using Libplanet.Assets;
     using Nekoyume.Action;
     using Nekoyume.Extensions;
@@ -17,16 +18,18 @@
     public static class GrindingData
     {
         public static List<GrindingModel> GetGrindingInfo(
-            ActionBase.ActionEvaluation<Grinding> ev,
             Grinding grinding,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            AvatarState prevAvatarState = ev.PreviousStates.GetAvatarStateV2(grinding.AvatarAddress);
-            AgentState agentState = ev.PreviousStates.GetAgentState(ev.Signer);
-            var previousStates = ev.PreviousStates;
+            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(grinding.AvatarAddress);
+            AgentState agentState = previousStates.GetAgentState(signer);
             Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
-                ev.Signer,
+                signer,
                 agentState.MonsterCollectionRound
             );
             Dictionary<Type, (Address, ISheet)> sheets = previousStates.GetSheets(sheetTypes: new[]
@@ -48,7 +51,7 @@
 
             Currency currency = previousStates.GetGoldCurrency();
             FungibleAssetValue stakedAmount = 0 * currency;
-            if (previousStates.TryGetStakeState(ev.Signer, out StakeState stakeState))
+            if (previousStates.TryGetStakeState(signer, out StakeState stakeState))
             {
                 stakedAmount = previousStates.GetBalance(stakeState.address, currency);
             }
@@ -61,7 +64,7 @@
             }
 
             FungibleAssetValue crystal = CrystalCalculator.CalculateCrystal(
-                ev.Signer,
+                signer,
                 equipmentList,
                 stakedAmount,
                 false,
@@ -76,13 +79,13 @@
                 grindList.Add(new GrindingModel()
                 {
                     Id = grinding.Id.ToString(),
-                    AgentAddress = ev.Signer.ToString(),
+                    AgentAddress = signer.ToString(),
                     AvatarAddress = grinding.AvatarAddress.ToString(),
                     EquipmentItemId = equipment.ItemId.ToString(),
                     EquipmentId = equipment.Id,
                     EquipmentLevel = equipment.level,
                     Crystal = Convert.ToDecimal(crystal.GetQuantityString()),
-                    BlockIndex = ev.BlockIndex,
+                    BlockIndex = blockIndex,
                     TimeStamp = blockTime,
                 });
             }

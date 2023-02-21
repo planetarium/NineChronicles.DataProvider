@@ -1,6 +1,8 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
+    using Libplanet;
+    using Libplanet.Action;
     using Libplanet.Assets;
     using Nekoyume.Action;
     using NineChronicles.DataProvider.Store.Models;
@@ -8,25 +10,27 @@
     public static class UnlockRuneSlotData
     {
         public static UnlockRuneSlotModel GetUnlockRuneSlotInfo(
-            ActionBase.ActionEvaluation<UnlockRuneSlot> ev,
             UnlockRuneSlot unlockRuneSlot,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            var previousStates = ev.PreviousStates;
-            Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
+            Currency ncgCurrency = outputStates.GetGoldCurrency();
             var prevNCGBalance = previousStates.GetBalance(
-                ev.Signer,
+                signer,
                 ncgCurrency);
-            var outputNCGBalance = ev.OutputStates.GetBalance(
-                ev.Signer,
+            var outputNCGBalance = outputStates.GetBalance(
+                signer,
                 ncgCurrency);
             var burntNCG = prevNCGBalance - outputNCGBalance;
             var unlockRuneSlotModel = new UnlockRuneSlotModel()
             {
                 Id = unlockRuneSlot.Id.ToString(),
-                BlockIndex = ev.BlockIndex,
-                AgentAddress = ev.Signer.ToString(),
+                BlockIndex = blockIndex,
+                AgentAddress = signer.ToString(),
                 AvatarAddress = unlockRuneSlot.AvatarAddress.ToString(),
                 SlotIndex = unlockRuneSlot.SlotIndex,
                 BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),

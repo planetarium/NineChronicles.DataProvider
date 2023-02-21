@@ -9,11 +9,11 @@
     public static class ShopHistoryEquipmentData
     {
         public static ShopHistoryEquipmentModel GetShopHistoryEquipmentInfo(
-            ActionBase.ActionEvaluation<Buy> ev,
             Buy buy,
             PurchaseInfo purchaseInfo,
             Equipment equipment,
             int itemCount,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
@@ -21,7 +21,7 @@
             {
                 OrderId = purchaseInfo.OrderId.ToString(),
                 TxId = string.Empty,
-                BlockIndex = ev.BlockIndex,
+                BlockIndex = blockIndex,
                 BlockHash = string.Empty,
                 ItemId = equipment.ItemId.ToString(),
                 SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),

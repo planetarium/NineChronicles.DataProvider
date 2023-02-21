@@ -2,14 +2,19 @@
 {
     using System;
     using System.Collections.Generic;
+    using Libplanet;
+    using Libplanet.Action;
     using Nekoyume.Action;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class EventMaterialItemCraftsData
     {
         public static EventMaterialItemCraftsModel GetEventMaterialItemCraftsInfo(
-            ActionBase.ActionEvaluation<EventMaterialItemCrafts> ev,
             EventMaterialItemCrafts eventMaterialItemCrafts,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
@@ -31,7 +36,7 @@
             var eventMaterialItemCraftsModel = new EventMaterialItemCraftsModel()
             {
                 Id = eventMaterialItemCrafts.Id.ToString(),
-                AgentAddress = ev.Signer.ToString(),
+                AgentAddress = signer.ToString(),
                 AvatarAddress = eventMaterialItemCrafts.AvatarAddress.ToString(),
                 EventScheduleId = eventMaterialItemCrafts.EventScheduleId,
                 EventMaterialItemRecipeId = eventMaterialItemCrafts.EventMaterialItemRecipeId,
@@ -59,7 +64,7 @@
                 Material11Count = materialData["material11Count"],
                 Material12Id = materialData["material12Id"],
                 Material12Count = materialData["material12Count"],
-                BlockIndex = ev.BlockIndex,
+                BlockIndex = blockIndex,
                 Date = blockTime,
                 Timestamp = blockTime,
             };

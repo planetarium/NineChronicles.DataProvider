@@ -1,6 +1,8 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
+    using Libplanet;
+    using Libplanet.Action;
     using Libplanet.Assets;
     using Nekoyume.Action;
     using Nekoyume.Helper;
@@ -11,13 +13,15 @@
     public static class ItemEnhancementFailData
     {
         public static ItemEnhancementFailModel? GetItemEnhancementFailInfo(
-            ActionBase.ActionEvaluation<ItemEnhancement> ev,
             ItemEnhancement itemEnhancement,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
-            var previousStates = ev.PreviousStates;
+            AvatarState avatarState = outputStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
             AvatarState prevAvatarState = previousStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
 
             int prevEquipmentLevel = 0;
@@ -34,21 +38,21 @@
                 outputEquipmentLevel = outputEnhancementEquipment.level;
             }
 
-            Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
+            Currency ncgCurrency = outputStates.GetGoldCurrency();
             var prevNCGBalance = previousStates.GetBalance(
-                ev.Signer,
+                signer,
                 ncgCurrency);
-            var outputNCGBalance = ev.OutputStates.GetBalance(
-                ev.Signer,
+            var outputNCGBalance = outputStates.GetBalance(
+                signer,
                 ncgCurrency);
             var burntNCG = prevNCGBalance - outputNCGBalance;
 
             Currency crystalCurrency = CrystalCalculator.CRYSTAL;
-            var prevCrystalBalance = ev.PreviousStates.GetBalance(
-                ev.Signer,
+            var prevCrystalBalance = previousStates.GetBalance(
+                signer,
                 crystalCurrency);
-            var outputCrystalBalance = ev.OutputStates.GetBalance(
-                ev.Signer,
+            var outputCrystalBalance = outputStates.GetBalance(
+                signer,
                 crystalCurrency);
             var gainedCrystal = outputCrystalBalance - prevCrystalBalance;
 
@@ -57,8 +61,8 @@
                 return new ItemEnhancementFailModel()
                 {
                     Id = itemEnhancement.Id.ToString(),
-                    BlockIndex = ev.BlockIndex,
-                    AgentAddress = ev.Signer.ToString(),
+                    BlockIndex = blockIndex,
+                    AgentAddress = signer.ToString(),
                     AvatarAddress = itemEnhancement.avatarAddress.ToString(),
                     EquipmentItemId = itemEnhancement.itemId.ToString(),
                     MaterialItemId = itemEnhancement.materialId.ToString(),

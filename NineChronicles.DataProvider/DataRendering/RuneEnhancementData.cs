@@ -2,6 +2,8 @@
 {
     using System;
     using Bencodex.Types;
+    using Libplanet;
+    using Libplanet.Action;
     using Libplanet.Assets;
     using Nekoyume.Action;
     using Nekoyume.Extensions;
@@ -13,31 +15,33 @@
     public static class RuneEnhancementData
     {
         public static RuneEnhancementModel GetRuneEnhancementInfo(
-            ActionBase.ActionEvaluation<RuneEnhancement> ev,
             RuneEnhancement runeEnhancement,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            var previousStates = ev.PreviousStates;
-            Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
+            Currency ncgCurrency = outputStates.GetGoldCurrency();
             var prevNCGBalance = previousStates.GetBalance(
-                ev.Signer,
+                signer,
                 ncgCurrency);
-            var outputNCGBalance = ev.OutputStates.GetBalance(
-                ev.Signer,
+            var outputNCGBalance = outputStates.GetBalance(
+                signer,
                 ncgCurrency);
             var burntNCG = prevNCGBalance - outputNCGBalance;
             Currency crystalCurrency = CrystalCalculator.CRYSTAL;
             var prevCrystalBalance = previousStates.GetBalance(
-                ev.Signer,
+                signer,
                 crystalCurrency);
-            var outputCrystalBalance = ev.OutputStates.GetBalance(
-                ev.Signer,
+            var outputCrystalBalance = outputStates.GetBalance(
+                signer,
                 crystalCurrency);
             var burntCrystal = prevCrystalBalance - outputCrystalBalance;
             var runeStateAddress = RuneState.DeriveAddress(runeEnhancement.AvatarAddress, runeEnhancement.RuneId);
             RuneState runeState;
-            if (ev.OutputStates.TryGetState(runeStateAddress, out List rawState))
+            if (outputStates.TryGetState(runeStateAddress, out List rawState))
             {
                 runeState = new RuneState(rawState);
             }
@@ -47,7 +51,7 @@
             }
 
             RuneState previousRuneState;
-            if (ev.PreviousStates.TryGetState(runeStateAddress, out List prevRawState))
+            if (previousStates.TryGetState(runeStateAddress, out List prevRawState))
             {
                 previousRuneState = new RuneState(prevRawState);
             }
@@ -56,7 +60,7 @@
                 previousRuneState = new RuneState(runeEnhancement.RuneId);
             }
 
-            var sheets = ev.OutputStates.GetSheets(
+            var sheets = outputStates.GetSheets(
                 sheetTypes: new[]
                 {
                     typeof(ArenaSheet),
@@ -72,7 +76,7 @@
             var prevRuneBalance = previousStates.GetBalance(
                 runeEnhancement.AvatarAddress,
                 runeCurrency);
-            var outputRuneBalance = ev.OutputStates.GetBalance(
+            var outputRuneBalance = outputStates.GetBalance(
                 runeEnhancement.AvatarAddress,
                 runeCurrency);
             var burntRune = prevRuneBalance - outputRuneBalance;
@@ -80,8 +84,8 @@
             var runeEnhancementModel = new RuneEnhancementModel()
             {
                 Id = runeEnhancement.Id.ToString(),
-                BlockIndex = ev.BlockIndex,
-                AgentAddress = ev.Signer.ToString(),
+                BlockIndex = blockIndex,
+                AgentAddress = signer.ToString(),
                 AvatarAddress = runeEnhancement.AvatarAddress.ToString(),
                 PreviousRuneLevel = previousRuneState.Level,
                 OutputRuneLevel = runeState.Level,

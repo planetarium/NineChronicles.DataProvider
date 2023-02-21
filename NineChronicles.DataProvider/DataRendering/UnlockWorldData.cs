@@ -2,6 +2,8 @@
 {
     using System;
     using System.Collections.Generic;
+    using Libplanet;
+    using Libplanet.Action;
     using Libplanet.Assets;
     using Nekoyume.Action;
     using Nekoyume.Helper;
@@ -10,18 +12,20 @@
     public static class UnlockWorldData
     {
         public static List<UnlockWorldModel> GetUnlockWorldInfo(
-            ActionBase.ActionEvaluation<UnlockWorld> ev,
             UnlockWorld unlockWorld,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            var previousStates = ev.PreviousStates;
             Currency crystalCurrency = CrystalCalculator.CRYSTAL;
             var prevCrystalBalance = previousStates.GetBalance(
-                ev.Signer,
+                signer,
                 crystalCurrency);
-            var outputCrystalBalance = ev.OutputStates.GetBalance(
-                ev.Signer,
+            var outputCrystalBalance = outputStates.GetBalance(
+                signer,
                 crystalCurrency);
             var burntCrystal = prevCrystalBalance - outputCrystalBalance;
             var unlockWorldList = new List<UnlockWorldModel>();
@@ -30,8 +34,8 @@
                 unlockWorldList.Add(new UnlockWorldModel()
                 {
                     Id = unlockWorld.Id.ToString(),
-                    BlockIndex = ev.BlockIndex,
-                    AgentAddress = ev.Signer.ToString(),
+                    BlockIndex = blockIndex,
+                    AgentAddress = signer.ToString(),
                     AvatarAddress = unlockWorld.AvatarAddress.ToString(),
                     UnlockWorldId = worldId,
                     BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),

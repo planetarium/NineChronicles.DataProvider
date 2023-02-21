@@ -1,32 +1,41 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
+    using System.Linq;
+    using Libplanet;
+    using Libplanet.Action;
+    using Libplanet.Assets;
     using Nekoyume.Action;
+    using Nekoyume.Helper;
     using Nekoyume.Model.State;
     using NineChronicles.DataProvider.Store.Models;
+    using static Lib9c.SerializeKeys;
 
     public static class StakeData
     {
         public static StakeModel GetStakeInfo(
-            ActionBase.ActionEvaluation<Stake> ev,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            ev.OutputStates.TryGetStakeState(ev.Signer, out StakeState stakeState);
+            outputStates.TryGetStakeState(signer, out StakeState stakeState);
             var prevStakeStartBlockIndex =
-                !ev.PreviousStates.TryGetStakeState(ev.Signer, out StakeState prevStakeState)
+                !previousStates.TryGetStakeState(signer, out StakeState prevStakeState)
                     ? 0 : prevStakeState.StartedBlockIndex;
             var newStakeStartBlockIndex = stakeState.StartedBlockIndex;
-            var currency = ev.OutputStates.GetGoldCurrency();
-            var balance = ev.OutputStates.GetBalance(ev.Signer, currency);
-            var stakeStateAddress = StakeState.DeriveAddress(ev.Signer);
-            var previousAmount = ev.PreviousStates.GetBalance(stakeStateAddress, currency);
-            var newAmount = ev.OutputStates.GetBalance(stakeStateAddress, currency);
+            var currency = outputStates.GetGoldCurrency();
+            var balance = outputStates.GetBalance(signer, currency);
+            var stakeStateAddress = StakeState.DeriveAddress(signer);
+            var previousAmount = previousStates.GetBalance(stakeStateAddress, currency);
+            var newAmount = outputStates.GetBalance(stakeStateAddress, currency);
 
             var stakeModel = new StakeModel()
             {
-                BlockIndex = ev.BlockIndex,
-                AgentAddress = ev.Signer.ToString(),
+                BlockIndex = blockIndex,
+                AgentAddress = signer.ToString(),
                 PreviousAmount = Convert.ToDecimal(previousAmount.GetQuantityString()),
                 NewAmount = Convert.ToDecimal(newAmount.GetQuantityString()),
                 RemainingNCG = Convert.ToDecimal(balance.GetQuantityString()),

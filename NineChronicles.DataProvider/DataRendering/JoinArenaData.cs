@@ -1,6 +1,8 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
+    using Libplanet;
+    using Libplanet.Action;
     using Libplanet.Assets;
     using Nekoyume.Action;
     using Nekoyume.Helper;
@@ -10,26 +12,28 @@
     public static class JoinArenaData
     {
         public static JoinArenaModel GetJoinArenaInfo(
-            ActionBase.ActionEvaluation<JoinArena> ev,
             JoinArena joinArena,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(joinArena.avatarAddress);
-            var previousStates = ev.PreviousStates;
+            AvatarState avatarState = outputStates.GetAvatarStateV2(joinArena.avatarAddress);
             Currency crystalCurrency = CrystalCalculator.CRYSTAL;
             var prevCrystalBalance = previousStates.GetBalance(
-                ev.Signer,
+                signer,
                 crystalCurrency);
-            var outputCrystalBalance = ev.OutputStates.GetBalance(
-                ev.Signer,
+            var outputCrystalBalance = outputStates.GetBalance(
+                signer,
                 crystalCurrency);
             var burntCrystal = prevCrystalBalance - outputCrystalBalance;
             var joinArenaModel = new JoinArenaModel()
             {
                 Id = joinArena.Id.ToString(),
-                BlockIndex = ev.BlockIndex,
-                AgentAddress = ev.Signer.ToString(),
+                BlockIndex = blockIndex,
+                AgentAddress = signer.ToString(),
                 AvatarAddress = joinArena.avatarAddress.ToString(),
                 AvatarLevel = avatarState.level,
                 ArenaRound = joinArena.round,

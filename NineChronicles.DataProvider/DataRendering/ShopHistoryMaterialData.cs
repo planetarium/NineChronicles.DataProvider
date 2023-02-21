@@ -9,11 +9,11 @@
     public static class ShopHistoryMaterialData
     {
         public static ShopHistoryMaterialModel GetShopHistoryMaterialInfo(
-            ActionBase.ActionEvaluation<Buy> ev,
             Buy buy,
             PurchaseInfo purchaseInfo,
             Material material,
             int itemCount,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
@@ -21,7 +21,7 @@
             {
                 OrderId = purchaseInfo.OrderId.ToString(),
                 TxId = string.Empty,
-                BlockIndex = ev.BlockIndex,
+                BlockIndex = blockIndex,
                 BlockHash = string.Empty,
                 ItemId = material.ItemId.ToString(),
                 SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),

@@ -3,6 +3,7 @@
     using System;
     using Bencodex.Types;
     using Libplanet;
+    using Libplanet.Action;
     using Nekoyume.Action;
     using Nekoyume.Model.State;
     using NineChronicles.DataProvider.Store.Models;
@@ -10,24 +11,27 @@
     public static class MigrateMonsterCollectionData
     {
         public static MigrateMonsterCollectionModel GetMigrateMonsterCollectionInfo(
-            ActionBase.ActionEvaluation<MigrateMonsterCollection> ev,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            ev.OutputStates.TryGetStakeState(ev.Signer, out StakeState stakeState);
-            var agentState = ev.PreviousStates.GetAgentState(ev.Signer);
-            Address collectionAddress = MonsterCollectionState.DeriveAddress(ev.Signer, agentState.MonsterCollectionRound);
-            ev.PreviousStates.TryGetState(collectionAddress, out Dictionary stateDict);
+            outputStates.TryGetStakeState(signer, out StakeState stakeState);
+            var agentState = previousStates.GetAgentState(signer);
+            Address collectionAddress = MonsterCollectionState.DeriveAddress(signer, agentState.MonsterCollectionRound);
+            previousStates.TryGetState(collectionAddress, out Dictionary stateDict);
             var monsterCollectionState = new MonsterCollectionState(stateDict);
-            var currency = ev.OutputStates.GetGoldCurrency();
-            var migrationAmount = ev.PreviousStates.GetBalance(monsterCollectionState.address, currency);
-            var migrationStartBlockIndex = ev.BlockIndex;
+            var currency = outputStates.GetGoldCurrency();
+            var migrationAmount = previousStates.GetBalance(monsterCollectionState.address, currency);
+            var migrationStartBlockIndex = blockIndex;
             var stakeStartBlockIndex = stakeState.StartedBlockIndex;
 
             var migrateMonsterCollectionModel = new MigrateMonsterCollectionModel()
             {
-                BlockIndex = ev.BlockIndex,
-                AgentAddress = ev.Signer.ToString(),
+                BlockIndex = blockIndex,
+                AgentAddress = signer.ToString(),
                 MigrationAmount = Convert.ToDecimal(migrationAmount.GetQuantityString()),
                 MigrationStartBlockIndex = migrationStartBlockIndex,
                 StakeStartBlockIndex = stakeStartBlockIndex,

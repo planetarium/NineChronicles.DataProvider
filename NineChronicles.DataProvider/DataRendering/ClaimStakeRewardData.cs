@@ -1,6 +1,8 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
+    using Libplanet;
+    using Libplanet.Action;
     using Nekoyume.Action;
     using Nekoyume.Extensions;
     using Nekoyume.Model.State;
@@ -11,32 +13,35 @@
     public static class ClaimStakeRewardData
     {
         public static ClaimStakeRewardModel GetClaimStakeRewardInfo(
-            ActionBase.ActionEvaluation<ActionBase> ev,
             IClaimStakeReward claimStakeReward,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
             var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
             var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
             var id = ((GameAction)claimStakeReward).Id;
-            ev.PreviousStates.TryGetStakeState(ev.Signer, out StakeState prevStakeState);
+            previousStates.TryGetStakeState(signer, out StakeState prevStakeState);
 
             var claimStakeStartBlockIndex = prevStakeState.StartedBlockIndex;
             var claimStakeEndBlockIndex = prevStakeState.ReceivedBlockIndex;
-            var currency = ev.OutputStates.GetGoldCurrency();
-            var stakeStateAddress = StakeState.DeriveAddress(ev.Signer);
-            var stakedAmount = ev.OutputStates.GetBalance(stakeStateAddress, currency);
+            var currency = outputStates.GetGoldCurrency();
+            var stakeStateAddress = StakeState.DeriveAddress(signer);
+            var stakedAmount = outputStates.GetBalance(stakeStateAddress, currency);
 
-            var sheets = ev.PreviousStates.GetSheets(
+            var sheets = previousStates.GetSheets(
                 typeof(StakeRegularRewardSheet),
                 typeof(ConsumableItemSheet),
                 typeof(CostumeItemSheet),
                 typeof(EquipmentItemSheet),
                 typeof(MaterialItemSheet));
             StakeRegularRewardSheet stakeRegularRewardSheet = sheets.GetSheet<StakeRegularRewardSheet>();
-            int level = stakeRegularRewardSheet.FindLevelByStakedAmount(ev.Signer, stakedAmount);
+            int level = stakeRegularRewardSheet.FindLevelByStakedAmount(signer, stakedAmount);
             var rewards = stakeRegularRewardSheet[level].Rewards;
-            var accumulatedRewards = prevStakeState.CalculateAccumulatedRewards(ev.BlockIndex);
+            var accumulatedRewards = prevStakeState.CalculateAccumulatedRewards(blockIndex);
             int hourGlassCount = 0;
             int apPotionCount = 0;
             foreach (var reward in rewards)
@@ -59,7 +64,7 @@
                 }
             }
 
-            if (ev.PreviousStates.TryGetSheet<StakeRegularFixedRewardSheet>(
+            if (previousStates.TryGetSheet<StakeRegularFixedRewardSheet>(
                     out var stakeRegularFixedRewardSheet))
             {
                 var fixedRewards = stakeRegularFixedRewardSheet[level].Rewards;
@@ -80,8 +85,8 @@
             var claimStakeRewardModel = new ClaimStakeRewardModel
             {
                 Id = id.ToString(),
-                BlockIndex = ev.BlockIndex,
-                AgentAddress = ev.Signer.ToString(),
+                BlockIndex = blockIndex,
+                AgentAddress = signer.ToString(),
                 ClaimRewardAvatarAddress = avatarAddress.ToString(),
                 HourGlassCount = hourGlassCount,
                 ApPotionCount = apPotionCount,

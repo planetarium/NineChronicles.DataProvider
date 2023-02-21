@@ -3,6 +3,8 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Libplanet;
+    using Libplanet.Action;
     using Libplanet.Assets;
     using Nekoyume.Action;
     using Nekoyume.Extensions;
@@ -14,22 +16,23 @@
     public static class EventDungeonBattleData
     {
         public static EventDungeonBattleModel GetEventDungeonBattleInfo(
-            ActionBase.ActionEvaluation<EventDungeonBattle> ev,
             EventDungeonBattle eventDungeonBattle,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            var previousStates = ev.PreviousStates;
-            var outputStates = ev.OutputStates;
             AvatarState prevAvatarState = previousStates.GetAvatarStateV2(eventDungeonBattle.AvatarAddress);
             AvatarState outputAvatarState = outputStates.GetAvatarStateV2(eventDungeonBattle.AvatarAddress);
             var prevAvatarItems = prevAvatarState.inventory.Items;
             var outputAvatarItems = outputAvatarState.inventory.Items;
             var addressesHex =
-                RenderSubscriber.GetSignerAndOtherAddressesHex(ev.Signer, eventDungeonBattle.AvatarAddress);
+                RenderSubscriber.GetSignerAndOtherAddressesHex(signer, eventDungeonBattle.AvatarAddress);
             var scheduleSheet = previousStates.GetSheet<EventScheduleSheet>();
             var scheduleRow = scheduleSheet.ValidateFromActionForDungeon(
-                ev.BlockIndex,
+                blockIndex,
                 eventDungeonBattle.EventScheduleId,
                 eventDungeonBattle.EventDungeonId,
                 "event_dungeon_battle",
@@ -37,17 +40,17 @@
             var eventDungeonInfoAddr = EventDungeonInfo.DeriveAddress(
                 eventDungeonBattle.AvatarAddress,
                 eventDungeonBattle.EventDungeonId);
-            var eventDungeonInfo = ev.OutputStates.GetState(eventDungeonInfoAddr)
+            var eventDungeonInfo = outputStates.GetState(eventDungeonInfoAddr)
                 is Bencodex.Types.List serializedEventDungeonInfoList
                 ? new EventDungeonInfo(serializedEventDungeonInfoList)
                 : new EventDungeonInfo(remainingTickets: scheduleRow.DungeonTicketsMax);
             bool isClear = eventDungeonInfo.IsCleared(eventDungeonBattle.EventDungeonStageId);
-            Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
+            Currency ncgCurrency = outputStates.GetGoldCurrency();
             var prevNCGBalance = previousStates.GetBalance(
-                ev.Signer,
+                signer,
                 ncgCurrency);
-            var outputNCGBalance = ev.OutputStates.GetBalance(
-                ev.Signer,
+            var outputNCGBalance = outputStates.GetBalance(
+                signer,
                 ncgCurrency);
             var burntNCG = prevNCGBalance - outputNCGBalance;
             var newItems = outputAvatarItems.Except(prevAvatarItems);
@@ -79,7 +82,7 @@
             var eventDungeonBattleModel = new EventDungeonBattleModel
             {
                 Id = eventDungeonBattle.Id.ToString(),
-                AgentAddress = ev.Signer.ToString(),
+                AgentAddress = signer.ToString(),
                 AvatarAddress = eventDungeonBattle.AvatarAddress.ToString(),
                 EventDungeonId = eventDungeonBattle.EventDungeonId,
                 EventScheduleId = eventDungeonBattle.EventScheduleId,
@@ -110,7 +113,7 @@
                 RewardItem9Count = rewardItemData["rewardItem9Count"],
                 RewardItem10Id = rewardItemData["rewardItem10Id"],
                 RewardItem10Count = rewardItemData["rewardItem10Count"],
-                BlockIndex = ev.BlockIndex,
+                BlockIndex = blockIndex,
                 Timestamp = blockTime,
             };
 
