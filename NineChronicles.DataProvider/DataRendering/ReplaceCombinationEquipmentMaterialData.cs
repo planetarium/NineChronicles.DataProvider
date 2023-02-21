@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using Libplanet;
+    using Libplanet.Action;
     using Libplanet.Assets;
     using Nekoyume.Action;
     using Nekoyume.Extensions;
@@ -16,21 +17,24 @@
     public static class ReplaceCombinationEquipmentMaterialData
     {
         public static List<ReplaceCombinationEquipmentMaterialModel> GetReplaceCombinationEquipmentMaterialInfo(
-            ActionBase.ActionEvaluation<CombinationEquipment> ev,
             CombinationEquipment combinationEquipment,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex,
             DateTimeOffset blockTime)
         {
             var replaceCombinationEquipmentMaterialList = new List<ReplaceCombinationEquipmentMaterialModel>();
             Currency crystalCurrency = CrystalCalculator.CRYSTAL;
-            var prevCrystalBalance = ev.PreviousStates.GetBalance(
-                ev.Signer,
+            var prevCrystalBalance = previousStates.GetBalance(
+                signer,
                 crystalCurrency);
-            var outputCrystalBalance = ev.OutputStates.GetBalance(
-                ev.Signer,
+            var outputCrystalBalance = outputStates.GetBalance(
+                signer,
                 crystalCurrency);
             var burntCrystal = prevCrystalBalance - outputCrystalBalance;
             var requiredFungibleItems = new Dictionary<int, int>();
-            Dictionary<Type, (Address, ISheet)> sheets = ev.PreviousStates.GetSheets(
+            Dictionary<Type, (Address, ISheet)> sheets = previousStates.GetSheets(
                 sheetTypes: new[]
                 {
                     typeof(EquipmentItemRecipeSheet),
@@ -79,7 +83,7 @@
                 }
             }
 
-            var inventory = ev.PreviousStates
+            var inventory = previousStates
                 .GetAvatarStateV2(combinationEquipment.avatarAddress).inventory;
             foreach (var pair in requiredFungibleItems.OrderBy(pair => pair.Key))
             {
@@ -96,8 +100,8 @@
                             new ReplaceCombinationEquipmentMaterialModel()
                             {
                                 Id = combinationEquipment.Id.ToString(),
-                                BlockIndex = ev.BlockIndex,
-                                AgentAddress = ev.Signer.ToString(),
+                                BlockIndex = blockIndex,
+                                AgentAddress = signer.ToString(),
                                 AvatarAddress =
                                     combinationEquipment.avatarAddress.ToString(),
                                 ReplacedMaterialId = itemId,

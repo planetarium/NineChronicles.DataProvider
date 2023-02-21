@@ -3,6 +3,8 @@
     using System;
     using System.Globalization;
     using Bencodex.Types;
+    using Libplanet;
+    using Libplanet.Action;
     using Nekoyume.Action;
     using Nekoyume.Model.State;
     using NineChronicles.DataProvider.Store.Models;
@@ -10,22 +12,24 @@
     public static class BattleGrandFinaleData
     {
         public static BattleGrandFinaleModel GetBattleGrandFinaleInfo(
-            ActionBase.ActionEvaluation<BattleGrandFinale> ev,
             BattleGrandFinale battleGrandFinale,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(battleGrandFinale.myAvatarAddress);
-            var previousStates = ev.PreviousStates;
+            AvatarState avatarState = outputStates.GetAvatarStateV2(battleGrandFinale.myAvatarAddress);
             var scoreAddress = battleGrandFinale.myAvatarAddress.Derive(string.Format(CultureInfo.InvariantCulture, BattleGrandFinale.ScoreDeriveKey, battleGrandFinale.grandFinaleId));
             previousStates.TryGetState(scoreAddress, out Integer previousGrandFinaleScore);
-            ev.OutputStates.TryGetState(scoreAddress, out Integer outputGrandFinaleScore);
+            outputStates.TryGetState(scoreAddress, out Integer outputGrandFinaleScore);
 
             var battleGrandFinaleModel = new BattleGrandFinaleModel()
             {
                 Id = battleGrandFinale.Id.ToString(),
-                BlockIndex = ev.BlockIndex,
-                AgentAddress = ev.Signer.ToString(),
+                BlockIndex = blockIndex,
+                AgentAddress = signer.ToString(),
                 AvatarAddress = battleGrandFinale.myAvatarAddress.ToString(),
                 AvatarLevel = avatarState.level,
                 EnemyAvatarAddress = battleGrandFinale.enemyAvatarAddress.ToString(),

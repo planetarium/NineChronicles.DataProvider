@@ -9,11 +9,11 @@
     public static class ShopHistoryCostumeData
     {
         public static ShopHistoryCostumeModel GetShopHistoryCostumeInfo(
-            ActionBase.ActionEvaluation<Buy> ev,
             Buy buy,
             PurchaseInfo purchaseInfo,
             Costume costume,
             int itemCount,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
@@ -21,7 +21,7 @@
             {
                 OrderId = purchaseInfo.OrderId.ToString(),
                 TxId = string.Empty,
-                BlockIndex = ev.BlockIndex,
+                BlockIndex = blockIndex,
                 BlockHash = string.Empty,
                 ItemId = costume.ItemId.ToString(),
                 SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),

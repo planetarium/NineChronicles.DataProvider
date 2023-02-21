@@ -1,6 +1,8 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
+    using Libplanet;
+    using Libplanet.Action;
     using Libplanet.Assets;
     using Nekoyume.Action;
     using NineChronicles.DataProvider.Store.Models;
@@ -8,29 +10,32 @@
     public static class ItemEnhancementData
     {
         public static ItemEnhancementModel GetItemEnhancementInfo(
-            ActionBase.ActionEvaluation<ItemEnhancement> ev,
-            ItemEnhancement itemEnhancement
+            ItemEnhancement itemEnhancement,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex
         )
         {
-            Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
-            var prevNCGBalance = ev.PreviousStates.GetBalance(
-                ev.Signer,
+            Currency ncgCurrency = outputStates.GetGoldCurrency();
+            var prevNCGBalance = previousStates.GetBalance(
+                signer,
                 ncgCurrency);
-            var outputNCGBalance = ev.OutputStates.GetBalance(
-                ev.Signer,
+            var outputNCGBalance = outputStates.GetBalance(
+                signer,
                 ncgCurrency);
             var burntNCG = prevNCGBalance - outputNCGBalance;
 
             var itemenhancementModel = new ItemEnhancementModel()
             {
                 Id = itemEnhancement.Id.ToString(),
-                AgentAddress = ev.Signer.ToString(),
+                AgentAddress = signer.ToString(),
                 AvatarAddress = itemEnhancement.avatarAddress.ToString(),
                 ItemId = itemEnhancement.itemId.ToString(),
                 MaterialId = itemEnhancement.materialId.ToString(),
                 SlotIndex = itemEnhancement.slotIndex,
                 BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
-                BlockIndex = ev.BlockIndex,
+                BlockIndex = blockIndex,
             };
 
             return itemenhancementModel;

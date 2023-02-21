@@ -1,15 +1,15 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
-    using Nekoyume.Action;
+    using Libplanet;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class AgentData
     {
-        public static AgentModel GetAgentInfo(ActionBase.ActionEvaluation<ActionBase> ev)
+        public static AgentModel GetAgentInfo(Address address)
         {
             var agentModel = new AgentModel
             {
-                Address = ev.Signer.ToString(),
+                Address = address.ToString(),
             };
 
             return agentModel;

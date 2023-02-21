@@ -1,6 +1,8 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
+    using Libplanet;
+    using Libplanet.Action;
     using Libplanet.Assets;
     using Nekoyume.Action;
     using Nekoyume.Helper;
@@ -10,27 +12,29 @@
     public static class HackAndSlashRandomBuffData
     {
         public static HasRandomBuffModel GetHasRandomBuffInfo(
-            ActionBase.ActionEvaluation<HackAndSlashRandomBuff> ev,
             HackAndSlashRandomBuff hasRandomBuff,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            var previousStates = ev.PreviousStates;
             AvatarState prevAvatarState = previousStates.GetAvatarStateV2(hasRandomBuff.AvatarAddress);
             prevAvatarState.worldInformation.TryGetLastClearedStageId(out var currentStageId);
             Currency crystalCurrency = CrystalCalculator.CRYSTAL;
             var prevCrystalBalance = previousStates.GetBalance(
-                ev.Signer,
+                signer,
                 crystalCurrency);
-            var outputCrystalBalance = ev.OutputStates.GetBalance(
-                ev.Signer,
+            var outputCrystalBalance = outputStates.GetBalance(
+                signer,
                 crystalCurrency);
             var burntCrystal = prevCrystalBalance - outputCrystalBalance;
             var hasRandomBuffModel = new HasRandomBuffModel()
             {
                 Id = hasRandomBuff.Id.ToString(),
-                BlockIndex = ev.BlockIndex,
-                AgentAddress = ev.Signer.ToString(),
+                BlockIndex = blockIndex,
+                AgentAddress = signer.ToString(),
                 AvatarAddress = hasRandomBuff.AvatarAddress.ToString(),
                 HasStageId = currentStageId,
                 GachaCount = !hasRandomBuff.AdvancedGacha ? 5 : 10,

@@ -1,6 +1,8 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
+    using Libplanet;
+    using Libplanet.Action;
     using Libplanet.Assets;
     using Nekoyume.Action;
     using Nekoyume.Arena;
@@ -14,23 +16,25 @@
     public static class BattleArenaData
     {
         public static BattleArenaModel GetBattleArenaInfo(
-            ActionBase.ActionEvaluation<BattleArena> ev,
             BattleArena battleArena,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(battleArena.myAvatarAddress);
-            var previousStates = ev.PreviousStates;
+            AvatarState avatarState = outputStates.GetAvatarStateV2(battleArena.myAvatarAddress);
             var myArenaScoreAdr =
                 ArenaScore.DeriveAddress(battleArena.myAvatarAddress, battleArena.championshipId, battleArena.round);
             previousStates.TryGetArenaScore(myArenaScoreAdr, out var previousArenaScore);
-            ev.OutputStates.TryGetArenaScore(myArenaScoreAdr, out var currentArenaScore);
-            Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
+            outputStates.TryGetArenaScore(myArenaScoreAdr, out var currentArenaScore);
+            Currency ncgCurrency = outputStates.GetGoldCurrency();
             var prevNCGBalance = previousStates.GetBalance(
-                ev.Signer,
+                signer,
                 ncgCurrency);
-            var outputNCGBalance = ev.OutputStates.GetBalance(
-                ev.Signer,
+            var outputNCGBalance = outputStates.GetBalance(
+                signer,
                 ncgCurrency);
             var burntNCG = prevNCGBalance - outputNCGBalance;
             int ticketCount = battleArena.ticket;
@@ -48,12 +52,12 @@
                     typeof(RuneListSheet),
                     typeof(RuneOptionSheet),
                 });
-            var arenaSheet = ev.OutputStates.GetSheet<ArenaSheet>();
-            var arenaData = arenaSheet.GetRoundByBlockIndex(ev.BlockIndex);
+            var arenaSheet = outputStates.GetSheet<ArenaSheet>();
+            var arenaData = arenaSheet.GetRoundByBlockIndex(blockIndex);
             var arenaInformationAdr =
                 ArenaInformation.DeriveAddress(battleArena.myAvatarAddress, battleArena.championshipId, battleArena.round);
             previousStates.TryGetArenaInformation(arenaInformationAdr, out var previousArenaInformation);
-            ev.OutputStates.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
+            outputStates.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
             var winCount = currentArenaInformation.Win - previousArenaInformation.Win;
             var medalCount = 0;
             if (arenaData.ArenaType != ArenaType.OffSeason &&
@@ -70,8 +74,8 @@
             var battleArenaModel = new BattleArenaModel()
             {
                 Id = battleArena.Id.ToString(),
-                BlockIndex = ev.BlockIndex,
-                AgentAddress = ev.Signer.ToString(),
+                BlockIndex = blockIndex,
+                AgentAddress = signer.ToString(),
                 AvatarAddress = battleArena.myAvatarAddress.ToString(),
                 AvatarLevel = avatarState.level,
                 EnemyAvatarAddress = battleArena.enemyAvatarAddress.ToString(),

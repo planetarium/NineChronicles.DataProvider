@@ -9,11 +9,11 @@
     public static class ShopHistoryConsumableData
     {
         public static ShopHistoryConsumableModel GetShopHistoryConsumableInfo(
-            ActionBase.ActionEvaluation<Buy> ev,
             Buy buy,
             PurchaseInfo purchaseInfo,
             Consumable consumable,
             int itemCount,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
@@ -21,7 +21,7 @@
             {
                 OrderId = purchaseInfo.OrderId.ToString(),
                 TxId = string.Empty,
-                BlockIndex = ev.BlockIndex,
+                BlockIndex = blockIndex,
                 BlockHash = string.Empty,
                 ItemId = consumable.ItemId.ToString(),
                 SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),

@@ -2,6 +2,8 @@
 {
     using System;
     using System.Collections.Generic;
+    using Libplanet;
+    using Libplanet.Action;
     using Nekoyume.Action;
     using Nekoyume.Extensions;
     using Nekoyume.TableData;
@@ -11,14 +13,16 @@
     public static class EventConsumableItemCraftsData
     {
         public static EventConsumableItemCraftsModel GetEventConsumableItemCraftsInfo(
-            ActionBase.ActionEvaluation<EventConsumableItemCrafts> ev,
             EventConsumableItemCrafts eventConsumableItemCrafts,
+            IAccountStateDelta previousStates,
+            IAccountStateDelta outputStates,
+            Address signer,
+            long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            var previousStates = ev.PreviousStates;
             var addressesHex =
-                RenderSubscriber.GetSignerAndOtherAddressesHex(ev.Signer, eventConsumableItemCrafts.AvatarAddress);
+                RenderSubscriber.GetSignerAndOtherAddressesHex(signer, eventConsumableItemCrafts.AvatarAddress);
             var requiredFungibleItems = new Dictionary<int, int>();
             Dictionary<string, int> requiredItemData = new Dictionary<string, int>();
             for (var i = 1; i < 11; i++)
@@ -36,7 +40,7 @@
                 });
             var scheduleSheet = sheets.GetSheet<EventScheduleSheet>();
             scheduleSheet.ValidateFromActionForRecipe(
-                ev.BlockIndex,
+                blockIndex,
                 eventConsumableItemCrafts.EventScheduleId,
                 eventConsumableItemCrafts.EventConsumableItemRecipeId,
                 "event_consumable_item_crafts",
@@ -65,7 +69,7 @@
             var eventConsumableItemCraftsModel = new EventConsumableItemCraftsModel()
             {
                 Id = eventConsumableItemCrafts.Id.ToString(),
-                AgentAddress = ev.Signer.ToString(),
+                AgentAddress = signer.ToString(),
                 AvatarAddress = eventConsumableItemCrafts.AvatarAddress.ToString(),
                 SlotIndex = eventConsumableItemCrafts.SlotIndex,
                 EventScheduleId = eventConsumableItemCrafts.EventScheduleId,
@@ -82,7 +86,7 @@
                 RequiredItem5Count = requiredItemData["requiredItem5Count"],
                 RequiredItem6Id = requiredItemData["requiredItem6Id"],
                 RequiredItem6Count = requiredItemData["requiredItem6Count"],
-                BlockIndex = ev.BlockIndex,
+                BlockIndex = blockIndex,
                 Timestamp = blockTime,
             };
 
