@@ -10,25 +10,28 @@
     public static class HasWithRandomBuffData
     {
         public static HasWithRandomBuffModel GetHasWithRandomBuffInfo(
-            HackAndSlash has,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address avatarAddress,
+            int stageId,
+            int? stageBuffId,
+            Guid actionId,
             long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            AvatarState avatarState = outputStates.GetAvatarStateV2(has.AvatarAddress);
-            bool isClear = avatarState.stageMap.ContainsKey(has.StageId);
+            AvatarState avatarState = outputStates.GetAvatarStateV2(avatarAddress);
+            bool isClear = avatarState.stageMap.ContainsKey(stageId);
 
             var hasModel = new HasWithRandomBuffModel()
             {
-                Id = has.Id.ToString(),
+                Id = actionId.ToString(),
                 BlockIndex = blockIndex,
                 AgentAddress = signer.ToString(),
-                AvatarAddress = has.AvatarAddress.ToString(),
-                StageId = has.StageId,
-                BuffId = (int)has.StageBuffId!,
+                AvatarAddress = avatarAddress.ToString(),
+                StageId = stageId,
+                BuffId = (int)stageBuffId!,
                 Cleared = isClear,
                 TimeStamp = blockTime,
             };

@@ -10,26 +10,28 @@
     public static class RapidCombinationData
     {
         public static RapidCombinationModel GetRapidCombinationInfo(
-            RapidCombination rapidCombination,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address avatarAddress,
+            int slotIndex,
+            Guid actionId,
             long blockIndex,
             DateTimeOffset blockTime
         )
         {
             var states = previousStates;
-            var slotState = states.GetCombinationSlotState(rapidCombination.avatarAddress, rapidCombination.slotIndex);
+            var slotState = states.GetCombinationSlotState(avatarAddress, slotIndex);
             var diff = slotState.Result.itemUsable.RequiredBlockIndex - blockIndex;
             var gameConfigState = states.GetGameConfigState();
             var count = RapidCombination0.CalculateHourglassCount(gameConfigState, diff);
             var rapidCombinationModel = new RapidCombinationModel()
             {
-                Id = rapidCombination.Id.ToString(),
+                Id = actionId.ToString(),
                 BlockIndex = blockIndex,
                 AgentAddress = signer.ToString(),
-                AvatarAddress = rapidCombination.avatarAddress.ToString(),
-                SlotIndex = rapidCombination.slotIndex,
+                AvatarAddress = avatarAddress.ToString(),
+                SlotIndex = slotIndex,
                 HourglassCount = count,
                 Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,

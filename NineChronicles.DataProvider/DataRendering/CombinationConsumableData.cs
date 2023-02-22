@@ -1,27 +1,30 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
+    using System;
     using Libplanet;
     using Libplanet.Action;
-    using Nekoyume.Action;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class CombinationConsumableData
     {
         public static CombinationConsumableModel GetCombinationConsumableInfo(
-            CombinationConsumable combinationConsumable,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address avatarAddress,
+            int recipeId,
+            int slotIndex,
+            Guid actionId,
             long blockIndex
         )
         {
             var combinationConsumableModel = new CombinationConsumableModel()
             {
-                Id = combinationConsumable.Id.ToString(),
+                Id = actionId.ToString(),
                 AgentAddress = signer.ToString(),
-                AvatarAddress = combinationConsumable.avatarAddress.ToString(),
-                RecipeId = combinationConsumable.recipeId,
-                SlotIndex = combinationConsumable.slotIndex,
+                AvatarAddress = avatarAddress.ToString(),
+                RecipeId = recipeId,
+                SlotIndex = slotIndex,
                 BlockIndex = blockIndex,
             };
 

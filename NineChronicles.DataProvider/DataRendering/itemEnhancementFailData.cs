@@ -13,26 +13,29 @@
     public static class ItemEnhancementFailData
     {
         public static ItemEnhancementFailModel? GetItemEnhancementFailInfo(
-            ItemEnhancement itemEnhancement,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address avatarAddress,
+            Guid materialId,
+            Guid itemId,
+            Guid actionId,
             long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            AvatarState avatarState = outputStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
-            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
+            AvatarState avatarState = outputStates.GetAvatarStateV2(avatarAddress);
+            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(avatarAddress);
 
             int prevEquipmentLevel = 0;
-            if (prevAvatarState.inventory.TryGetNonFungibleItem(itemEnhancement.itemId, out ItemUsable prevEnhancementItem)
+            if (prevAvatarState.inventory.TryGetNonFungibleItem(itemId, out ItemUsable prevEnhancementItem)
                 && prevEnhancementItem is Equipment prevEnhancementEquipment)
             {
                 prevEquipmentLevel = prevEnhancementEquipment.level;
             }
 
             int outputEquipmentLevel = 0;
-            if (avatarState.inventory.TryGetNonFungibleItem(itemEnhancement.itemId, out ItemUsable outputEnhancementItem)
+            if (avatarState.inventory.TryGetNonFungibleItem(itemId, out ItemUsable outputEnhancementItem)
                 && outputEnhancementItem is Equipment outputEnhancementEquipment)
             {
                 outputEquipmentLevel = outputEnhancementEquipment.level;
@@ -60,12 +63,12 @@
             {
                 return new ItemEnhancementFailModel()
                 {
-                    Id = itemEnhancement.Id.ToString(),
+                    Id = actionId.ToString(),
                     BlockIndex = blockIndex,
                     AgentAddress = signer.ToString(),
-                    AvatarAddress = itemEnhancement.avatarAddress.ToString(),
-                    EquipmentItemId = itemEnhancement.itemId.ToString(),
-                    MaterialItemId = itemEnhancement.materialId.ToString(),
+                    AvatarAddress = avatarAddress.ToString(),
+                    EquipmentItemId = itemId.ToString(),
+                    MaterialItemId = materialId.ToString(),
                     EquipmentLevel = outputEquipmentLevel,
                     GainedCrystal = Convert.ToDecimal(gainedCrystal.GetQuantityString()),
                     BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),

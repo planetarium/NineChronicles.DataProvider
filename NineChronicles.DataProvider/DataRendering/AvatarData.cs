@@ -133,5 +133,28 @@
 
             return avatarModel;
         }
+
+        public static AvatarModel GetAvatarInfoV1(
+            IAccountStateDelta outputStates,
+            Address signer,
+            Address avatarAddress,
+            DateTimeOffset blockTime)
+        {
+            AvatarState avatarState = outputStates.GetAvatarStateV2(avatarAddress);
+            string avatarName = avatarState.name;
+            var avatarModel = new AvatarModel()
+            {
+                Address = avatarAddress.ToString(),
+                AgentAddress = signer.ToString(),
+                Name = avatarName,
+                AvatarLevel = 0,
+                TitleId = 0,
+                ArmorId = 0,
+                Cp = 0,
+                Timestamp = blockTime,
+            };
+
+            return avatarModel;
+        }
     }
 }

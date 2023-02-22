@@ -15,10 +15,13 @@
     public static class RuneEnhancementData
     {
         public static RuneEnhancementModel GetRuneEnhancementInfo(
-            RuneEnhancement runeEnhancement,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address avatarAddress,
+            int runeId,
+            int tryCount,
+            Guid actionId,
             long blockIndex,
             DateTimeOffset blockTime
         )
@@ -39,7 +42,7 @@
                 signer,
                 crystalCurrency);
             var burntCrystal = prevCrystalBalance - outputCrystalBalance;
-            var runeStateAddress = RuneState.DeriveAddress(runeEnhancement.AvatarAddress, runeEnhancement.RuneId);
+            var runeStateAddress = RuneState.DeriveAddress(avatarAddress, runeId);
             RuneState runeState;
             if (outputStates.TryGetState(runeStateAddress, out List rawState))
             {
@@ -47,7 +50,7 @@
             }
             else
             {
-                runeState = new RuneState(runeEnhancement.RuneId);
+                runeState = new RuneState(runeId);
             }
 
             RuneState previousRuneState;
@@ -57,7 +60,7 @@
             }
             else
             {
-                previousRuneState = new RuneState(runeEnhancement.RuneId);
+                previousRuneState = new RuneState(runeId);
             }
 
             var sheets = outputStates.GetSheets(
@@ -74,23 +77,23 @@
             var runeCurrency = Currency.Legacy(runeRow!.Ticker, 0, minters: null);
 #pragma warning restore CS0618
             var prevRuneBalance = previousStates.GetBalance(
-                runeEnhancement.AvatarAddress,
+                avatarAddress,
                 runeCurrency);
             var outputRuneBalance = outputStates.GetBalance(
-                runeEnhancement.AvatarAddress,
+                avatarAddress,
                 runeCurrency);
             var burntRune = prevRuneBalance - outputRuneBalance;
 
             var runeEnhancementModel = new RuneEnhancementModel()
             {
-                Id = runeEnhancement.Id.ToString(),
+                Id = actionId.ToString(),
                 BlockIndex = blockIndex,
                 AgentAddress = signer.ToString(),
-                AvatarAddress = runeEnhancement.AvatarAddress.ToString(),
+                AvatarAddress = avatarAddress.ToString(),
                 PreviousRuneLevel = previousRuneState.Level,
                 OutputRuneLevel = runeState.Level,
-                RuneId = runeEnhancement.RuneId,
-                TryCount = runeEnhancement.TryCount,
+                RuneId = runeId,
+                TryCount = tryCount,
                 BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
                 BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
                 BurntRune = Convert.ToDecimal(burntRune.GetQuantityString()),

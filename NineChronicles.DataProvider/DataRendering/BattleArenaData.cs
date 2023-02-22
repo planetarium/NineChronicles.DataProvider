@@ -16,17 +16,22 @@
     public static class BattleArenaData
     {
         public static BattleArenaModel GetBattleArenaInfo(
-            BattleArena battleArena,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address myAvatarAddress,
+            Address enemyAvatarAddress,
+            int round,
+            int championshipId,
+            int ticket,
+            Guid actionId,
             long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            AvatarState avatarState = outputStates.GetAvatarStateV2(battleArena.myAvatarAddress);
+            AvatarState avatarState = outputStates.GetAvatarStateV2(myAvatarAddress);
             var myArenaScoreAdr =
-                ArenaScore.DeriveAddress(battleArena.myAvatarAddress, battleArena.championshipId, battleArena.round);
+                ArenaScore.DeriveAddress(myAvatarAddress, championshipId, round);
             previousStates.TryGetArenaScore(myArenaScoreAdr, out var previousArenaScore);
             outputStates.TryGetArenaScore(myArenaScoreAdr, out var currentArenaScore);
             Currency ncgCurrency = outputStates.GetGoldCurrency();
@@ -37,7 +42,7 @@
                 signer,
                 ncgCurrency);
             var burntNCG = prevNCGBalance - outputNCGBalance;
-            int ticketCount = battleArena.ticket;
+            int ticketCount = ticket;
             var sheets = previousStates.GetSheets(
                 sheetTypes: new[]
                 {
@@ -55,7 +60,7 @@
             var arenaSheet = outputStates.GetSheet<ArenaSheet>();
             var arenaData = arenaSheet.GetRoundByBlockIndex(blockIndex);
             var arenaInformationAdr =
-                ArenaInformation.DeriveAddress(battleArena.myAvatarAddress, battleArena.championshipId, battleArena.round);
+                ArenaInformation.DeriveAddress(myAvatarAddress, championshipId, round);
             previousStates.TryGetArenaInformation(arenaInformationAdr, out var previousArenaInformation);
             outputStates.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
             var winCount = currentArenaInformation.Win - previousArenaInformation.Win;
@@ -64,7 +69,7 @@
                 winCount > 0)
             {
                 var materialSheet = sheets.GetSheet<MaterialItemSheet>();
-                var medal = ArenaHelper.GetMedal(battleArena.championshipId, battleArena.round, materialSheet);
+                var medal = ArenaHelper.GetMedal(championshipId, round, materialSheet);
                 if (medal != null)
                 {
                     medalCount += winCount;
@@ -73,14 +78,14 @@
 
             var battleArenaModel = new BattleArenaModel()
             {
-                Id = battleArena.Id.ToString(),
+                Id = actionId.ToString(),
                 BlockIndex = blockIndex,
                 AgentAddress = signer.ToString(),
-                AvatarAddress = battleArena.myAvatarAddress.ToString(),
+                AvatarAddress = myAvatarAddress.ToString(),
                 AvatarLevel = avatarState.level,
-                EnemyAvatarAddress = battleArena.enemyAvatarAddress.ToString(),
-                ChampionshipId = battleArena.championshipId,
-                Round = battleArena.round,
+                EnemyAvatarAddress = enemyAvatarAddress.ToString(),
+                ChampionshipId = championshipId,
+                Round = round,
                 TicketCount = ticketCount,
                 BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
                 Victory = currentArenaScore.Score > previousArenaScore.Score,
