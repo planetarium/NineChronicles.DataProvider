@@ -149,8 +149,9 @@ dotnet ef migrations add AddTransferAsset -- [Connection String]
 
 ## Migrating Past Chain Data to MySQL Database
 
-- This CLI command migrates all action data based on [DataRendering](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider/DataRendering) to the designated MySQL database.
+- This migration tool migrates all action data based on [DataRendering](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider/DataRendering) to the designated MySQL database.
 - Options such as `offset` and `limit` are provided to specify which block data to migrate.
+- **IMPORTANT)** This migration tool requires you to have the necessary `state` data in the blocks you want to migrate (If your chain store lacks the `state` data, this tool will not work). 
 ```
 Usage: NineChronicles.DataProvider.Executable mysql-migration [--store-path <String>] [--mysql-server <String>] [--mysql-port <UInt32>] [--mysql-username <String>] [--mysql-password <String>] [--mysql-database <String>] [--offset <I
 nt32>] [--limit <Int32>] [--help]
