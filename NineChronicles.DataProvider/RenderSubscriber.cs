@@ -92,7 +92,7 @@ namespace NineChronicles.DataProvider
             MySqlStore = mySqlStore;
             _renderedBlockCount = 0;
             _agents = new List<string>();
-            _render = Convert.ToBoolean(Environment.GetEnvironmentVariable("NC_Render"));
+            _render = Convert.ToBoolean(Environment.GetEnvironmentVariable("NC_Render") ?? "true");
             string dataPath = Environment.GetEnvironmentVariable("NC_BlockIndexFilePath")
                               ?? Path.GetTempPath();
             if (!Directory.Exists(dataPath))
