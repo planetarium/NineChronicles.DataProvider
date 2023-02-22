@@ -12,15 +12,18 @@
     public static class JoinArenaData
     {
         public static JoinArenaModel GetJoinArenaInfo(
-            JoinArena joinArena,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address avatarAddress,
+            int round,
+            int championshipId,
+            Guid actionId,
             long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            AvatarState avatarState = outputStates.GetAvatarStateV2(joinArena.avatarAddress);
+            AvatarState avatarState = outputStates.GetAvatarStateV2(avatarAddress);
             Currency crystalCurrency = CrystalCalculator.CRYSTAL;
             var prevCrystalBalance = previousStates.GetBalance(
                 signer,
@@ -31,13 +34,13 @@
             var burntCrystal = prevCrystalBalance - outputCrystalBalance;
             var joinArenaModel = new JoinArenaModel()
             {
-                Id = joinArena.Id.ToString(),
+                Id = actionId.ToString(),
                 BlockIndex = blockIndex,
                 AgentAddress = signer.ToString(),
-                AvatarAddress = joinArena.avatarAddress.ToString(),
+                AvatarAddress = avatarAddress.ToString(),
                 AvatarLevel = avatarState.level,
-                ArenaRound = joinArena.round,
-                ChampionshipId = joinArena.championshipId,
+                ArenaRound = round,
+                ChampionshipId = championshipId,
                 BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
                 TimeStamp = blockTime,
             };

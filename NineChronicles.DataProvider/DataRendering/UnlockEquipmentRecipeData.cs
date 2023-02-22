@@ -5,17 +5,18 @@
     using Libplanet;
     using Libplanet.Action;
     using Libplanet.Assets;
-    using Nekoyume.Action;
     using Nekoyume.Helper;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class UnlockEquipmentRecipeData
     {
         public static List<UnlockEquipmentRecipeModel> GetUnlockEquipmentRecipeInfo(
-            UnlockEquipmentRecipe unlockEquipmentRecipe,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address avatarAddress,
+            List<int> recipeIds,
+            Guid actionId,
             long blockIndex,
             DateTimeOffset blockTime
         )
@@ -29,14 +30,14 @@
                 crystalCurrency);
             var burntCrystal = prevCrystalBalance - outputCrystalBalance;
             var unlockEquipmentRecipeList = new List<UnlockEquipmentRecipeModel>();
-            foreach (var recipeId in unlockEquipmentRecipe.RecipeIds)
+            foreach (var recipeId in recipeIds)
             {
                 unlockEquipmentRecipeList.Add(new UnlockEquipmentRecipeModel()
                 {
-                    Id = unlockEquipmentRecipe.Id.ToString(),
+                    Id = actionId.ToString(),
                     BlockIndex = blockIndex,
                     AgentAddress = signer.ToString(),
-                    AvatarAddress = unlockEquipmentRecipe.AvatarAddress.ToString(),
+                    AvatarAddress = avatarAddress.ToString(),
                     UnlockEquipmentRecipeId = recipeId,
                     BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
                     TimeStamp = blockTime,

@@ -18,15 +18,17 @@
     public static class GrindingData
     {
         public static List<GrindingModel> GetGrindingInfo(
-            Grinding grinding,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address avatarAddress,
+            List<Guid> equipmentIds,
+            Guid actionId,
             long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(grinding.AvatarAddress);
+            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(avatarAddress);
             AgentState agentState = previousStates.GetAgentState(signer);
             Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
                 signer,
@@ -41,7 +43,7 @@
             });
 
             List<Equipment> equipmentList = new List<Equipment>();
-            foreach (var equipmentId in grinding.EquipmentIds)
+            foreach (var equipmentId in equipmentIds)
             {
                 if (prevAvatarState.inventory.TryGetNonFungibleItem(equipmentId, out Equipment equipment))
                 {
@@ -78,9 +80,9 @@
             {
                 grindList.Add(new GrindingModel()
                 {
-                    Id = grinding.Id.ToString(),
+                    Id = actionId.ToString(),
                     AgentAddress = signer.ToString(),
-                    AvatarAddress = grinding.AvatarAddress.ToString(),
+                    AvatarAddress = avatarAddress.ToString(),
                     EquipmentItemId = equipment.ItemId.ToString(),
                     EquipmentId = equipment.Id,
                     EquipmentLevel = equipment.level,

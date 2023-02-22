@@ -12,15 +12,17 @@
     public static class HackAndSlashRandomBuffData
     {
         public static HasRandomBuffModel GetHasRandomBuffInfo(
-            HackAndSlashRandomBuff hasRandomBuff,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address avatarAddress,
+            bool advancedGacha,
+            Guid actionId,
             long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(hasRandomBuff.AvatarAddress);
+            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(avatarAddress);
             prevAvatarState.worldInformation.TryGetLastClearedStageId(out var currentStageId);
             Currency crystalCurrency = CrystalCalculator.CRYSTAL;
             var prevCrystalBalance = previousStates.GetBalance(
@@ -32,12 +34,12 @@
             var burntCrystal = prevCrystalBalance - outputCrystalBalance;
             var hasRandomBuffModel = new HasRandomBuffModel()
             {
-                Id = hasRandomBuff.Id.ToString(),
+                Id = actionId.ToString(),
                 BlockIndex = blockIndex,
                 AgentAddress = signer.ToString(),
-                AvatarAddress = hasRandomBuff.AvatarAddress.ToString(),
+                AvatarAddress = avatarAddress.ToString(),
                 HasStageId = currentStageId,
-                GachaCount = !hasRandomBuff.AdvancedGacha ? 5 : 10,
+                GachaCount = !advancedGacha ? 5 : 10,
                 BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
                 TimeStamp = blockTime,
             };

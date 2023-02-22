@@ -17,10 +17,14 @@
     public static class ReplaceCombinationEquipmentMaterialData
     {
         public static List<ReplaceCombinationEquipmentMaterialModel> GetReplaceCombinationEquipmentMaterialInfo(
-            CombinationEquipment combinationEquipment,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address avatarAddress,
+            int recipeId,
+            int? subRecipeId,
+            bool payByCrystal,
+            Guid actionId,
             long blockIndex,
             DateTimeOffset blockTime)
         {
@@ -49,7 +53,7 @@
             var materialItemSheet = sheets.GetSheet<MaterialItemSheet>();
             var equipmentItemRecipeSheet = sheets.GetSheet<EquipmentItemRecipeSheet>();
             equipmentItemRecipeSheet.TryGetValue(
-                combinationEquipment.recipeId,
+                recipeId,
                 out var recipeRow);
             materialItemSheet.TryGetValue(recipeRow!.MaterialId, out var materialRow);
             if (requiredFungibleItems.ContainsKey(materialRow!.Id))
@@ -61,10 +65,10 @@
                 requiredFungibleItems[materialRow.Id] = recipeRow.MaterialCount;
             }
 
-            if (combinationEquipment.subRecipeId.HasValue)
+            if (subRecipeId.HasValue)
             {
                 var equipmentItemSubRecipeSheetV2 = sheets.GetSheet<EquipmentItemSubRecipeSheetV2>();
-                equipmentItemSubRecipeSheetV2.TryGetValue(combinationEquipment.subRecipeId.Value, out var subRecipeRow);
+                equipmentItemSubRecipeSheetV2.TryGetValue(subRecipeId.Value, out var subRecipeRow);
 
                 // Validate SubRecipe Material
                 for (var i = subRecipeRow!.Materials.Count; i > 0; i--)
@@ -84,7 +88,7 @@
             }
 
             var inventory = previousStates
-                .GetAvatarStateV2(combinationEquipment.avatarAddress).inventory;
+                .GetAvatarStateV2(avatarAddress).inventory;
             foreach (var pair in requiredFungibleItems.OrderBy(pair => pair.Key))
             {
                 var itemId = pair.Key;
@@ -94,16 +98,16 @@
                     int itemCount = inventory.TryGetItem(itemId, out Inventory.Item item)
                         ? item.count
                         : 0;
-                    if (itemCount < requiredCount && combinationEquipment.payByCrystal)
+                    if (itemCount < requiredCount && payByCrystal)
                     {
                         replaceCombinationEquipmentMaterialList.Add(
                             new ReplaceCombinationEquipmentMaterialModel()
                             {
-                                Id = combinationEquipment.Id.ToString(),
+                                Id = actionId.ToString(),
                                 BlockIndex = blockIndex,
                                 AgentAddress = signer.ToString(),
                                 AvatarAddress =
-                                    combinationEquipment.avatarAddress.ToString(),
+                                    avatarAddress.ToString(),
                                 ReplacedMaterialId = itemId,
                                 ReplacedMaterialCount = requiredCount - itemCount,
                                 BurntCrystal =

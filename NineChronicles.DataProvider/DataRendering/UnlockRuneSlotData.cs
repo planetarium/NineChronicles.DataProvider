@@ -10,10 +10,12 @@
     public static class UnlockRuneSlotData
     {
         public static UnlockRuneSlotModel GetUnlockRuneSlotInfo(
-            UnlockRuneSlot unlockRuneSlot,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address avatarAddress,
+            int slotIndex,
+            Guid actionId,
             long blockIndex,
             DateTimeOffset blockTime
         )
@@ -28,11 +30,11 @@
             var burntNCG = prevNCGBalance - outputNCGBalance;
             var unlockRuneSlotModel = new UnlockRuneSlotModel()
             {
-                Id = unlockRuneSlot.Id.ToString(),
+                Id = actionId.ToString(),
                 BlockIndex = blockIndex,
                 AgentAddress = signer.ToString(),
-                AvatarAddress = unlockRuneSlot.AvatarAddress.ToString(),
-                SlotIndex = unlockRuneSlot.SlotIndex,
+                AvatarAddress = avatarAddress.ToString(),
+                SlotIndex = slotIndex,
                 BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
                 Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,

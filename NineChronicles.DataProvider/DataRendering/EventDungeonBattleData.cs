@@ -16,35 +16,43 @@
     public static class EventDungeonBattleData
     {
         public static EventDungeonBattleModel GetEventDungeonBattleInfo(
-            EventDungeonBattle eventDungeonBattle,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address avatarAddress,
+            int eventScheduleId,
+            int eventDungeonId,
+            int eventDungeonStageId,
+            int foodsCount,
+            int costumesCount,
+            int equipmentsCount,
+            Guid actionId,
+            string actionType,
             long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(eventDungeonBattle.AvatarAddress);
-            AvatarState outputAvatarState = outputStates.GetAvatarStateV2(eventDungeonBattle.AvatarAddress);
+            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(avatarAddress);
+            AvatarState outputAvatarState = outputStates.GetAvatarStateV2(avatarAddress);
             var prevAvatarItems = prevAvatarState.inventory.Items;
             var outputAvatarItems = outputAvatarState.inventory.Items;
             var addressesHex =
-                RenderSubscriber.GetSignerAndOtherAddressesHex(signer, eventDungeonBattle.AvatarAddress);
+                RenderSubscriber.GetSignerAndOtherAddressesHex(signer, avatarAddress);
             var scheduleSheet = previousStates.GetSheet<EventScheduleSheet>();
             var scheduleRow = scheduleSheet.ValidateFromActionForDungeon(
                 blockIndex,
-                eventDungeonBattle.EventScheduleId,
-                eventDungeonBattle.EventDungeonId,
-                "event_dungeon_battle",
+                eventScheduleId,
+                eventDungeonId,
+                actionType,
                 addressesHex);
             var eventDungeonInfoAddr = EventDungeonInfo.DeriveAddress(
-                eventDungeonBattle.AvatarAddress,
-                eventDungeonBattle.EventDungeonId);
+                avatarAddress,
+                eventDungeonId);
             var eventDungeonInfo = outputStates.GetState(eventDungeonInfoAddr)
                 is Bencodex.Types.List serializedEventDungeonInfoList
                 ? new EventDungeonInfo(serializedEventDungeonInfoList)
                 : new EventDungeonInfo(remainingTickets: scheduleRow.DungeonTicketsMax);
-            bool isClear = eventDungeonInfo.IsCleared(eventDungeonBattle.EventDungeonStageId);
+            bool isClear = eventDungeonInfo.IsCleared(eventDungeonStageId);
             Currency ncgCurrency = outputStates.GetGoldCurrency();
             var prevNCGBalance = previousStates.GetBalance(
                 signer,
@@ -81,18 +89,18 @@
 
             var eventDungeonBattleModel = new EventDungeonBattleModel
             {
-                Id = eventDungeonBattle.Id.ToString(),
+                Id = actionId.ToString(),
                 AgentAddress = signer.ToString(),
-                AvatarAddress = eventDungeonBattle.AvatarAddress.ToString(),
-                EventDungeonId = eventDungeonBattle.EventDungeonId,
-                EventScheduleId = eventDungeonBattle.EventScheduleId,
-                EventDungeonStageId = eventDungeonBattle.EventDungeonStageId,
+                AvatarAddress = avatarAddress.ToString(),
+                EventDungeonId = eventDungeonId,
+                EventScheduleId = eventScheduleId,
+                EventDungeonStageId = eventDungeonStageId,
                 RemainingTickets = eventDungeonInfo.RemainingTickets,
                 BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
                 Cleared = isClear,
-                FoodsCount = eventDungeonBattle.Foods.Count,
-                CostumesCount = eventDungeonBattle.Costumes.Count,
-                EquipmentsCount = eventDungeonBattle.Equipments.Count,
+                FoodsCount = foodsCount,
+                CostumesCount = costumesCount,
+                EquipmentsCount = equipmentsCount,
                 RewardItem1Id = rewardItemData["rewardItem1Id"],
                 RewardItem1Count = rewardItemData["rewardItem1Count"],
                 RewardItem2Id = rewardItemData["rewardItem2Id"],

@@ -4,16 +4,19 @@
     using System.Collections.Generic;
     using Libplanet;
     using Libplanet.Action;
-    using Nekoyume.Action;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class EventMaterialItemCraftsData
     {
         public static EventMaterialItemCraftsModel GetEventMaterialItemCraftsInfo(
-            EventMaterialItemCrafts eventMaterialItemCrafts,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address avatarAddress,
+            Dictionary<int, int> materialsToUse,
+            int eventScheduleId,
+            int eventMaterialItemRecipeId,
+            Guid actionId,
             long blockIndex,
             DateTimeOffset blockTime
         )
@@ -26,7 +29,7 @@
             }
 
             int itemNumber = 1;
-            foreach (var pair in eventMaterialItemCrafts.MaterialsToUse)
+            foreach (var pair in materialsToUse)
             {
                 materialData[$"material{itemNumber}Id"] = pair.Key;
                 materialData[$"material{itemNumber}Count"] = pair.Value;
@@ -35,11 +38,11 @@
 
             var eventMaterialItemCraftsModel = new EventMaterialItemCraftsModel()
             {
-                Id = eventMaterialItemCrafts.Id.ToString(),
+                Id = actionId.ToString(),
                 AgentAddress = signer.ToString(),
-                AvatarAddress = eventMaterialItemCrafts.AvatarAddress.ToString(),
-                EventScheduleId = eventMaterialItemCrafts.EventScheduleId,
-                EventMaterialItemRecipeId = eventMaterialItemCrafts.EventMaterialItemRecipeId,
+                AvatarAddress = avatarAddress.ToString(),
+                EventScheduleId = eventScheduleId,
+                EventMaterialItemRecipeId = eventMaterialItemRecipeId,
                 Material1Id = materialData["material1Id"],
                 Material1Count = materialData["material1Count"],
                 Material2Id = materialData["material2Id"],

@@ -12,28 +12,31 @@
     public static class BattleGrandFinaleData
     {
         public static BattleGrandFinaleModel GetBattleGrandFinaleInfo(
-            BattleGrandFinale battleGrandFinale,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address myAvatarAddress,
+            Address enemyAvatarAddress,
+            int grandFinaleId,
+            Guid actionId,
             long blockIndex,
             DateTimeOffset blockTime
         )
         {
-            AvatarState avatarState = outputStates.GetAvatarStateV2(battleGrandFinale.myAvatarAddress);
-            var scoreAddress = battleGrandFinale.myAvatarAddress.Derive(string.Format(CultureInfo.InvariantCulture, BattleGrandFinale.ScoreDeriveKey, battleGrandFinale.grandFinaleId));
+            AvatarState avatarState = outputStates.GetAvatarStateV2(myAvatarAddress);
+            var scoreAddress = myAvatarAddress.Derive(string.Format(CultureInfo.InvariantCulture, BattleGrandFinale.ScoreDeriveKey, grandFinaleId));
             previousStates.TryGetState(scoreAddress, out Integer previousGrandFinaleScore);
             outputStates.TryGetState(scoreAddress, out Integer outputGrandFinaleScore);
 
             var battleGrandFinaleModel = new BattleGrandFinaleModel()
             {
-                Id = battleGrandFinale.Id.ToString(),
+                Id = actionId.ToString(),
                 BlockIndex = blockIndex,
                 AgentAddress = signer.ToString(),
-                AvatarAddress = battleGrandFinale.myAvatarAddress.ToString(),
+                AvatarAddress = myAvatarAddress.ToString(),
                 AvatarLevel = avatarState.level,
-                EnemyAvatarAddress = battleGrandFinale.enemyAvatarAddress.ToString(),
-                GrandFinaleId = battleGrandFinale.grandFinaleId,
+                EnemyAvatarAddress = enemyAvatarAddress.ToString(),
+                GrandFinaleId = grandFinaleId,
                 Victory = outputGrandFinaleScore > previousGrandFinaleScore,
                 GrandFinaleScore = outputGrandFinaleScore,
                 Date = blockTime,

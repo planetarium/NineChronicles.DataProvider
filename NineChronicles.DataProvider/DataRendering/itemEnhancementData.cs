@@ -10,10 +10,14 @@
     public static class ItemEnhancementData
     {
         public static ItemEnhancementModel GetItemEnhancementInfo(
-            ItemEnhancement itemEnhancement,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address avatarAddress,
+            int slotIndex,
+            Guid materialId,
+            Guid itemId,
+            Guid actionId,
             long blockIndex
         )
         {
@@ -28,12 +32,12 @@
 
             var itemenhancementModel = new ItemEnhancementModel()
             {
-                Id = itemEnhancement.Id.ToString(),
+                Id = actionId.ToString(),
                 AgentAddress = signer.ToString(),
-                AvatarAddress = itemEnhancement.avatarAddress.ToString(),
-                ItemId = itemEnhancement.itemId.ToString(),
-                MaterialId = itemEnhancement.materialId.ToString(),
-                SlotIndex = itemEnhancement.slotIndex,
+                AvatarAddress = avatarAddress.ToString(),
+                ItemId = itemId.ToString(),
+                MaterialId = materialId.ToString(),
+                SlotIndex = slotIndex,
                 BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
                 BlockIndex = blockIndex,
             };

@@ -5,17 +5,18 @@
     using Libplanet;
     using Libplanet.Action;
     using Libplanet.Assets;
-    using Nekoyume.Action;
     using Nekoyume.Helper;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class UnlockWorldData
     {
         public static List<UnlockWorldModel> GetUnlockWorldInfo(
-            UnlockWorld unlockWorld,
             IAccountStateDelta previousStates,
             IAccountStateDelta outputStates,
             Address signer,
+            Address avatarAddress,
+            List<int> worldIds,
+            Guid actionId,
             long blockIndex,
             DateTimeOffset blockTime
         )
@@ -29,14 +30,14 @@
                 crystalCurrency);
             var burntCrystal = prevCrystalBalance - outputCrystalBalance;
             var unlockWorldList = new List<UnlockWorldModel>();
-            foreach (var worldId in unlockWorld.WorldIds)
+            foreach (var worldId in worldIds)
             {
                 unlockWorldList.Add(new UnlockWorldModel()
                 {
-                    Id = unlockWorld.Id.ToString(),
+                    Id = actionId.ToString(),
                     BlockIndex = blockIndex,
                     AgentAddress = signer.ToString(),
-                    AvatarAddress = unlockWorld.AvatarAddress.ToString(),
+                    AvatarAddress = avatarAddress.ToString(),
                     UnlockWorldId = worldId,
                     BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
                     TimeStamp = blockTime,
