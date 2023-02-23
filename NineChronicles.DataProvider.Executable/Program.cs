@@ -30,6 +30,43 @@ namespace NineChronicles.DataProvider.Executable
                 .RunAsync<Program>(args);
         }
 
+        // EF Core uses this method at design time to access the DbContext
+        public static IHostBuilder CreateHostBuilder(string[] args)
+            => Host.CreateDefaultBuilder(args)
+                .ConfigureServices(services =>
+                {
+                    services.AddDbContextFactory<NineChroniclesContext>(options =>
+                    {
+                        // Get configuration from appsettings or env
+                        var configurationBuilder = new ConfigurationBuilder()
+                            .AddJsonFile("appsettings.json")
+                            .AddEnvironmentVariables("NC_");
+                        IConfiguration config = configurationBuilder.Build();
+                        var headlessConfig = new Configuration();
+                        config.Bind(headlessConfig);
+                        if (headlessConfig.MySqlConnectionString != string.Empty)
+                        {
+                            args = new[] { headlessConfig.MySqlConnectionString };
+                        }
+
+                        if (args.Length == 1)
+                        {
+                            options.UseMySql(
+                                args[0],
+                                ServerVersion.AutoDetect(
+                                    args[0]),
+                                b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable"));
+                        }
+                        else
+                        {
+                            options.UseSqlite(
+                                @"Data Source=9c.gg.db",
+                                b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable")
+                            );
+                        }
+                    });
+                });
+
         [PrimaryCommand]
         public async Task Run()
         {
@@ -163,42 +200,5 @@ namespace NineChronicles.DataProvider.Executable
 
             await hostBuilder.RunConsoleAsync(token);
         }
-
-        // EF Core uses this method at design time to access the DbContext
-        public IHostBuilder CreateHostBuilder(string[] args)
-            => Host.CreateDefaultBuilder(args)
-                .ConfigureServices(services =>
-                {
-                    services.AddDbContextFactory<NineChroniclesContext>(options =>
-                    {
-                        // Get configuration from appsettings or env
-                        var configurationBuilder = new ConfigurationBuilder()
-                            .AddJsonFile("appsettings.json")
-                            .AddEnvironmentVariables("NC_");
-                        IConfiguration config = configurationBuilder.Build();
-                        var headlessConfig = new Configuration();
-                        config.Bind(headlessConfig);
-                        if (headlessConfig.MySqlConnectionString != string.Empty)
-                        {
-                            args = new[] { headlessConfig.MySqlConnectionString };
-                        }
-
-                        if (args.Length == 1)
-                        {
-                            options.UseMySql(
-                                args[0],
-                                ServerVersion.AutoDetect(
-                                    args[0]),
-                                b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable"));
-                        }
-                        else
-                        {
-                            options.UseSqlite(
-                                @"Data Source=9c.gg.db",
-                                b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable")
-                            );
-                        }
-                    });
-                });
     }
 }
