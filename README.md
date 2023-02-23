@@ -9,6 +9,7 @@
 - [Run](#run)
 - [Development Guide](#development-guide)
 - [Current Table Descriptions](#current-table-descriptions)
+- [Migrating Past Chain Data to MySQL Database](#migrating-past-chain-data-to-mysql-database)
 
 ## Pre-requisite
 
@@ -145,3 +146,27 @@ dotnet ef migrations add AddTransferAsset -- [Connection String]
 
 - Tables that `NineChronicles.DataProvider` stores data into are listed in [NineChroniclesContext.cs](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider/Store/NineChroniclesContext.cs).
 - Please refer to each `DbSet`'s comment in [NineChroniclesContext.cs](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider/Store/NineChroniclesContext.cs) for table descriptions.
+
+## Migrating Past Chain Data to MySQL Database
+
+- This migration tool migrates all action data based on [DataRendering](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider/DataRendering) to the designated MySQL database.
+- Options such as `offset` and `limit` are provided to specify which block data to migrate.
+- **IMPORTANT)** This migration tool requires you to have the necessary `state` data in the blocks you want to migrate (If your chain store lacks the `state` data, this tool will not work). 
+```
+Usage: NineChronicles.DataProvider.Executable mysql-migration [--store-path <String>] [--mysql-server <String>] [--mysql-port <UInt32>] [--mysql-username <String>] [--mysql-password <String>] [--mysql-database <String>] [--offset <I
+nt32>] [--limit <Int32>] [--help]
+
+Migrate action data in rocksdb store to mysql db.
+
+Options:
+  -o, --store-path <String>    Rocksdb path to migrate. (Required)
+  --mysql-server <String>      A hostname of MySQL server. (Required)
+  --mysql-port <UInt32>        A port of MySQL server. (Required)
+  --mysql-username <String>    The name of MySQL user. (Required)
+  --mysql-password <String>    The password of MySQL user. (Required)
+  --mysql-database <String>    The name of MySQL database to use. (Required)
+  --offset <Int32>             offset of block index (no entry will migrate from the genesis block).
+  --limit <Int32>              limit of block count (no entry will migrate to the chain tip).
+  -h, --help                   Show help message
+
+```

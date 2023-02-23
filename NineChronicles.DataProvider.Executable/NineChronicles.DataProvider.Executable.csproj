@@ -4,9 +4,10 @@
     <TargetFramework>net6</TargetFramework>
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	<NoWarn>$(NoWarn),1573,1591,1712,SA1200,MEN005,SA1413,MEN003,SA1009,SA1101,SA1111,S1134,SA1309,SA1600,SA1601,SA1633</NoWarn>
+	<NoWarn>$(NoWarn),1573,1591,1712,MEN002,MEN003,MEN005,S1450,SA1009,SA1101,SA1111,SA1116,S1134,SA1200,SA1309,SA1413,SA1600,SA1601,SA1633,EF1001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Cocona.Lite" Version="2.1.0" />
     <PackageReference Include="Menees.Analyzers.2017" Version="2.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.1">
       <PrivateAssets>all</PrivateAssets>

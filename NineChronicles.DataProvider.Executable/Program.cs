@@ -1,32 +1,34 @@
-using System.IO;
-using Lib9c.DevExtensions;
-using Libplanet;
-using Libplanet.Action;
-using Libplanet.Blockchain;
-using Libplanet.Crypto;
-using Libplanet.Headless.Hosting;
-using Nekoyume.Action;
-using NineChronicles.Headless.GraphTypes.States;
-
 namespace NineChronicles.DataProvider.Executable
 {
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Cocona;
+    using Libplanet.Crypto;
     using Libplanet.KeyStore;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using NineChronicles.DataProvider.Executable.Commands;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.Headless;
+    using NineChronicles.Headless.GraphTypes.States;
     using NineChronicles.Headless.Properties;
     using Serilog;
 
-    public static class Program
+    [HasSubCommands(typeof(MySqlMigration), "mysql-migration")]
+    public class Program : CoconaLiteConsoleAppBase
     {
-        public static async Task Main()
+        public static async Task Main(string[] args)
+        {
+            await CoconaLiteApp.CreateHostBuilder()
+                .RunAsync<Program>(args);
+        }
+
+        [PrimaryCommand]
+        public async Task Run()
         {
             // Get configuration
             var configurationBuilder = new ConfigurationBuilder()
@@ -151,7 +153,7 @@ namespace NineChronicles.DataProvider.Executable
         }
 
         // EF Core uses this method at design time to access the DbContext
-        public static IHostBuilder CreateHostBuilder(string[] args)
+        public IHostBuilder CreateHostBuilder(string[] args)
             => Host.CreateDefaultBuilder(args)
                 .ConfigureServices(services =>
                 {
