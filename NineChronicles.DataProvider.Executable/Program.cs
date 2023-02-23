@@ -1,3 +1,9 @@
+using System.IO;
+using System.Reflection;
+using Libplanet.Action;
+using Libplanet.Headless;
+using Nekoyume.Action;
+
 namespace NineChronicles.DataProvider.Executable
 {
     using System;
@@ -90,7 +96,16 @@ namespace NineChronicles.DataProvider.Executable
                     render: headlessConfig.Render,
                     preload: headlessConfig.Preload);
 
-            var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
+            IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
+                Assembly.GetEntryAssembly() is { } entryAssembly
+                    ? new[] { typeof(ActionBase).Assembly, entryAssembly }
+                    : new[] { typeof(ActionBase).Assembly },
+                typeof(ActionBase)
+            );
+
+            IActionTypeLoader actionTypeLoader = MakeStaticActionTypeLoader();
+
+            var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(actionTypeLoader)
             {
                 MinerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
                     ? null

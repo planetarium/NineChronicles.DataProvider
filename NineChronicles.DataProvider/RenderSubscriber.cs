@@ -9,7 +9,7 @@ namespace NineChronicles.DataProvider
     using System.Threading.Tasks;
     using Bencodex.Types;
     using Lib9c.Model.Order;
-    using Lib9c.Renderer;
+    using Lib9c.Renderers;
     using Libplanet;
     using Libplanet.Action;
     using Libplanet.Assets;
@@ -1257,7 +1257,7 @@ namespace NineChronicles.DataProvider
             return Task.CompletedTask;
         }
 
-        private void ProcessAgentAvatarData(ActionBase.ActionEvaluation<ActionBase> ev)
+        private void ProcessAgentAvatarData(ActionEvaluation<ActionBase> ev)
         {
             if (!_agents.Contains(ev.Signer.ToString()))
             {
