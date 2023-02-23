@@ -1,9 +1,11 @@
 namespace NineChronicles.DataProvider.Executable
 {
     using System;
+    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
     using Cocona;
+    using Libplanet.Action;
     using Libplanet.Crypto;
     using Libplanet.KeyStore;
     using Microsoft.AspNetCore.Hosting;
@@ -11,6 +13,7 @@ namespace NineChronicles.DataProvider.Executable
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Nekoyume.Action;
     using NineChronicles.DataProvider.Executable.Commands;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.Headless;
@@ -90,7 +93,16 @@ namespace NineChronicles.DataProvider.Executable
                     render: headlessConfig.Render,
                     preload: headlessConfig.Preload);
 
-            var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
+            IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
+                Assembly.GetEntryAssembly() is { } entryAssembly
+                    ? new[] { typeof(ActionBase).Assembly, entryAssembly }
+                    : new[] { typeof(ActionBase).Assembly },
+                typeof(ActionBase)
+            );
+
+            IActionTypeLoader actionTypeLoader = MakeStaticActionTypeLoader();
+
+            var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(actionTypeLoader)
             {
                 MinerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
                     ? null
