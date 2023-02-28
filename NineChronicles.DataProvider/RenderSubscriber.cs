@@ -503,53 +503,7 @@ namespace NineChronicles.DataProvider
                                 int itemCount = order is FungibleOrder fungibleOrder
                                     ? fungibleOrder.ItemCount
                                     : 1;
-                                if (orderItem.ItemType == ItemType.Equipment)
-                                {
-                                    Equipment equipment = (Equipment)orderItem;
-                                    _buyShopEquipmentsList.Add(ShopHistoryEquipmentData.GetShopHistoryEquipmentInfo(
-                                        buy.buyerAvatarAddress,
-                                        purchaseInfo,
-                                        equipment,
-                                        itemCount,
-                                        ev.BlockIndex,
-                                        _blockTimeOffset));
-                                }
-
-                                if (orderItem.ItemType == ItemType.Costume)
-                                {
-                                    Costume costume = (Costume)orderItem;
-                                    _buyShopCostumesList.Add(ShopHistoryCostumeData.GetShopHistoryCostumeInfo(
-                                        buy.buyerAvatarAddress,
-                                        purchaseInfo,
-                                        costume,
-                                        itemCount,
-                                        ev.BlockIndex,
-                                        _blockTimeOffset));
-                                }
-
-                                if (orderItem.ItemType == ItemType.Material)
-                                {
-                                    Material material = (Material)orderItem;
-                                    _buyShopMaterialsList.Add(ShopHistoryMaterialData.GetShopHistoryMaterialInfo(
-                                        buy.buyerAvatarAddress,
-                                        purchaseInfo,
-                                        material,
-                                        itemCount,
-                                        ev.BlockIndex,
-                                        _blockTimeOffset));
-                                }
-
-                                if (orderItem.ItemType == ItemType.Consumable)
-                                {
-                                    Consumable consumable = (Consumable)orderItem;
-                                    _buyShopConsumablesList.Add(ShopHistoryConsumableData.GetShopHistoryConsumableInfo(
-                                        buy.buyerAvatarAddress,
-                                        purchaseInfo,
-                                        consumable,
-                                        itemCount,
-                                        ev.BlockIndex,
-                                        _blockTimeOffset));
-                                }
+                                AddShopHistoryItem(orderItem, buy.buyerAvatarAddress, purchaseInfo, itemCount, ev.BlockIndex);
 
                                 if (purchaseInfo.ItemSubType == ItemSubType.Armor
                                     || purchaseInfo.ItemSubType == ItemSubType.Belt
@@ -1255,6 +1209,57 @@ namespace NineChronicles.DataProvider
                 });
 
             return Task.CompletedTask;
+        }
+
+        private void AddShopHistoryItem(ITradableItem orderItem, Address buyerAvatarAddress, PurchaseInfo purchaseInfo, int itemCount, long blockIndex)
+        {
+            if (orderItem.ItemType == ItemType.Equipment)
+            {
+                Equipment equipment = (Equipment)orderItem;
+                _buyShopEquipmentsList.Add(ShopHistoryEquipmentData.GetShopHistoryEquipmentInfo(
+                    buyerAvatarAddress,
+                    purchaseInfo,
+                    equipment,
+                    itemCount,
+                    blockIndex,
+                    _blockTimeOffset));
+            }
+
+            if (orderItem.ItemType == ItemType.Costume)
+            {
+                Costume costume = (Costume)orderItem;
+                _buyShopCostumesList.Add(ShopHistoryCostumeData.GetShopHistoryCostumeInfo(
+                    buyerAvatarAddress,
+                    purchaseInfo,
+                    costume,
+                    itemCount,
+                    blockIndex,
+                    _blockTimeOffset));
+            }
+
+            if (orderItem.ItemType == ItemType.Material)
+            {
+                Material material = (Material)orderItem;
+                _buyShopMaterialsList.Add(ShopHistoryMaterialData.GetShopHistoryMaterialInfo(
+                    buyerAvatarAddress,
+                    purchaseInfo,
+                    material,
+                    itemCount,
+                    blockIndex,
+                    _blockTimeOffset));
+            }
+
+            if (orderItem.ItemType == ItemType.Consumable)
+            {
+                Consumable consumable = (Consumable)orderItem;
+                _buyShopConsumablesList.Add(ShopHistoryConsumableData.GetShopHistoryConsumableInfo(
+                    buyerAvatarAddress,
+                    purchaseInfo,
+                    consumable,
+                    itemCount,
+                    blockIndex,
+                    _blockTimeOffset));
+            }
         }
 
         private void ProcessAgentAvatarData(ActionEvaluation<ActionBase> ev)
