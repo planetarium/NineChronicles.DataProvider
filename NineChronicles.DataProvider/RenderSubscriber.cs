@@ -21,6 +21,7 @@ namespace NineChronicles.DataProvider
     using Nekoyume.Helper;
     using Nekoyume.Model.EnumType;
     using Nekoyume.Model.Item;
+    using Nekoyume.Model.Market;
     using Nekoyume.Model.State;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.DataRendering;
@@ -50,6 +51,7 @@ namespace NineChronicles.DataProvider
         private readonly List<ShopHistoryCostumeModel> _buyShopCostumesList = new List<ShopHistoryCostumeModel>();
         private readonly List<ShopHistoryMaterialModel> _buyShopMaterialsList = new List<ShopHistoryMaterialModel>();
         private readonly List<ShopHistoryConsumableModel> _buyShopConsumablesList = new List<ShopHistoryConsumableModel>();
+        private readonly List<ShopHistoryFungibleAssetValueModel> _buyShopFavList = new List<ShopHistoryFungibleAssetValueModel>();
         private readonly List<StakeModel> _stakeList = new List<StakeModel>();
         private readonly List<ClaimStakeRewardModel> _claimStakeList = new List<ClaimStakeRewardModel>();
         private readonly List<MigrateMonsterCollectionModel> _mmcList = new List<MigrateMonsterCollectionModel>();
@@ -537,6 +539,109 @@ namespace NineChronicles.DataProvider
                             Log.Debug(
                                 "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
                                 buy.buyerAvatarAddress,
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<BuyProduct>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } buy)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            foreach (var productInfo in buy.ProductInfos)
+                            {
+                                switch (productInfo)
+                                {
+                                    case FavProductInfo _:
+                                        // Check previous product state. because Set Bencodex.Types.Null in BuyProduct.
+                                        if (ev.PreviousStates.TryGetState(Product.DeriveAddress(productInfo.ProductId), out List productState))
+                                        {
+                                            var favProduct = (FavProduct)ProductFactory.DeserializeProduct(productState);
+                                            _buyShopFavList.Add(new ShopHistoryFungibleAssetValueModel
+                                            {
+                                                OrderId = productInfo.ProductId.ToString(),
+                                                TxId = ev.TxId.ToString(),
+                                                BlockIndex = ev.BlockIndex,
+                                                SellerAvatarAddress = productInfo.AvatarAddress.ToString(),
+                                                BuyerAvatarAddress = buy.AvatarAddress.ToString(),
+                                                Price = decimal.Parse(productInfo.Price.GetQuantityString()),
+                                                Quantity = decimal.Parse(favProduct.Asset.GetQuantityString()),
+                                                Ticker = favProduct.Asset.Currency.Ticker,
+                                                TimeStamp = _blockTimeOffset,
+                                            });
+                                        }
+
+                                        break;
+                                    case ItemProductInfo itemProductInfo:
+                                    {
+                                        ITradableItem orderItem;
+                                        int itemCount = 1;
+
+                                        // backward compatibility for order.
+                                        if (itemProductInfo.Legacy)
+                                        {
+                                            var state = ev.OutputStates.GetState(
+                                                Addresses.GetItemAddress(itemProductInfo.TradableId));
+                                            orderItem =
+                                                (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
+                                            Order order =
+                                                OrderFactory.Deserialize(
+                                                    (Dictionary)ev.OutputStates.GetState(
+                                                        Order.DeriveAddress(itemProductInfo.ProductId))!);
+                                            itemCount = order is FungibleOrder fungibleOrder
+                                                ? fungibleOrder.ItemCount
+                                                : 1;
+                                        }
+                                        else
+                                        {
+                                            // Check previous product state. because Set Bencodex.Types.Null in BuyProduct.
+                                            if (ev.PreviousStates.TryGetState(Product.DeriveAddress(productInfo.ProductId), out List state))
+                                            {
+                                                var product = (ItemProduct)ProductFactory.DeserializeProduct(state);
+                                                orderItem = product.TradableItem;
+                                            }
+                                            else
+                                            {
+                                                continue;
+                                            }
+                                        }
+
+                                        var purchaseInfo = new PurchaseInfo(
+                                            productInfo.ProductId,
+                                            itemProductInfo.TradableId,
+                                            productInfo.AgentAddress,
+                                            productInfo.AvatarAddress,
+                                            itemProductInfo.ItemSubType,
+                                            productInfo.Price
+                                        );
+                                        AddShopHistoryItem(orderItem, buy.AvatarAddress, purchaseInfo, itemCount, ev.BlockIndex);
+                                        if (orderItem.ItemType == ItemType.Equipment)
+                                        {
+                                            var equipment = (Equipment)orderItem;
+                                            _eqList.Add(EquipmentData.GetEquipmentInfo(
+                                                ev.Signer,
+                                                buy.AvatarAddress,
+                                                equipment));
+                                        }
+
+                                        break;
+                                    }
+                                }
+                            }
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug(
+                                "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
+                                buy.AvatarAddress,
                                 ev.BlockIndex,
                                 (end - start).Milliseconds);
                         }
@@ -1340,6 +1445,7 @@ namespace NineChronicles.DataProvider
                         .Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreShopHistoryConsumableList(_buyShopConsumablesList.GroupBy(i => i.OrderId)
                         .Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreShopHistoryFungibleAssetValues(_buyShopFavList);
                     MySqlStore.ProcessEquipmentList(_eqList.GroupBy(i => i.ItemId).Select(i => i.FirstOrDefault())
                         .ToList());
                     MySqlStore.StoreStakingList(_stakeList);
@@ -1382,6 +1488,7 @@ namespace NineChronicles.DataProvider
             _buyShopCostumesList.Clear();
             _buyShopMaterialsList.Clear();
             _buyShopConsumablesList.Clear();
+            _buyShopFavList.Clear();
             _eqList.Clear();
             _stakeList.Clear();
             _claimStakeList.Clear();
