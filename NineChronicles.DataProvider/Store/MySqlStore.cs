@@ -1423,7 +1423,8 @@ namespace NineChronicles.DataProvider.Store
                     tasks.Add(Task.Run(async () =>
                     {
                         await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
-                        if (ctx.Raiders.FindAsync(raider.Id).Result is null)
+                        if (ctx.Raiders.FirstOrDefaultAsync(r =>
+                                r.RaidId == raider.RaidId && r.Address.Equals(raider.Address)).Result is null)
                         {
                             await ctx.Raiders!.AddRangeAsync(raider);
                             await ctx.SaveChangesAsync();
@@ -1563,7 +1564,7 @@ namespace NineChronicles.DataProvider.Store
                     tasks.Add(Task.Run(async () =>
                     {
                         await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
-                        if (ctx.RunesAcquired.FindAsync(runesAcquired.Id).Result is null)
+                        if (ctx.RunesAcquired.FindAsync(runesAcquired.Id, runesAcquired.TickerType).Result is null)
                         {
                             await ctx.RunesAcquired.AddRangeAsync(runesAcquired);
                             await ctx.SaveChangesAsync();

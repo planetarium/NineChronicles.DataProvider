@@ -47,8 +47,6 @@ namespace NineChronicles.DataProvider
 
         public bool NoCors { get; set; }
 
-        public int Workers { get; set; }
-
         public int Confirmations { get; set; }
 
         public bool StrictRendering { get; set; }
