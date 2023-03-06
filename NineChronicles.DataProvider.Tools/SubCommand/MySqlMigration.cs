@@ -580,7 +580,10 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             }
                             else
                             {
-                                WriteMaterial(material, 1, avatarState.agentAddress, avatarAddress);
+                                var inventoryState = new Inventory((List)avatarState.inventory.Serialize());
+                                inventoryState.TryGetFungibleItems(material.ItemId, out var materialItem);
+                                var materialCount = materialItem.Sum(e => e.count);
+                                WriteMaterial(material, materialCount, avatarState.agentAddress, avatarAddress);
                             }
                         }
 
