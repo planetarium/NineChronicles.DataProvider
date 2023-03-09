@@ -54,4 +54,4 @@ RUN apt-get update \
 
 VOLUME /data
 
-ENTRYPOINT ["dotnet", "NineChronicles.DataProvider.Executable.dll"]
+ENTRYPOINT ["dotnet", "NineChronicles.DataProvider.Tools.dll"]
