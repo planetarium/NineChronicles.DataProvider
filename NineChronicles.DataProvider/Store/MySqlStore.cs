@@ -1423,7 +1423,8 @@ namespace NineChronicles.DataProvider.Store
                     tasks.Add(Task.Run(async () =>
                     {
                         await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
-                        if (ctx.Raiders.FindAsync(raider.Id).Result is null)
+                        if (ctx.Raiders.FirstOrDefaultAsync(r =>
+                                r.RaidId == raider.RaidId && r.Address.Equals(raider.Address)).Result is null)
                         {
                             await ctx.Raiders!.AddRangeAsync(raider);
                             await ctx.SaveChangesAsync();
@@ -1563,7 +1564,7 @@ namespace NineChronicles.DataProvider.Store
                     tasks.Add(Task.Run(async () =>
                     {
                         await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
-                        if (ctx.RunesAcquired.FindAsync(runesAcquired.Id).Result is null)
+                        if (ctx.RunesAcquired.FindAsync(runesAcquired.Id, runesAcquired.TickerType).Result is null)
                         {
                             await ctx.RunesAcquired.AddRangeAsync(runesAcquired);
                             await ctx.SaveChangesAsync();
@@ -1609,6 +1610,41 @@ namespace NineChronicles.DataProvider.Store
                             await ctx.DisposeAsync();
                             await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
                             updateCtx.UnlockRuneSlots.UpdateRange(unlockRuneSlot);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreRapidCombinationList(List<RapidCombinationModel> rapidCombinationList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var rapidCombination in rapidCombinationList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.RapidCombinations.FindAsync(rapidCombination.Id).Result is null)
+                        {
+                            await ctx.RapidCombinations.AddRangeAsync(rapidCombination);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.RapidCombinations.UpdateRange(rapidCombination);
                             await updateCtx.SaveChangesAsync();
                             await updateCtx.DisposeAsync();
                         }
