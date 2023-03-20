@@ -111,7 +111,10 @@ namespace NineChronicles.DataProvider.Executable
                     headlessConfig.GenesisBlockPath,
                     headlessConfig.Host,
                     headlessConfig.Port,
+                    headlessConfig.ConsensusPort,
                     headlessConfig.SwarmPrivateKeyString,
+                    headlessConfig.ConsensusPrivateKeyString,
+                    headlessConfig.MinerPrivateKeyString,
                     headlessConfig.StoreType,
                     headlessConfig.StorePath,
                     headlessConfig.NoReduceStore,
@@ -124,9 +127,10 @@ namespace NineChronicles.DataProvider.Executable
                     messageTimeout: headlessConfig.MessageTimeout,
                     tipTimeout: headlessConfig.TipTimeout,
                     demandBuffer: headlessConfig.DemandBuffer,
+                    consensusSeedStrings: headlessConfig.ConsensusSeedStrings,
+                    consensusPeerStrings: headlessConfig.ConsensusPeerStrings,
                     minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget,
                     bucketSize: headlessConfig.BucketSize,
-                    staticPeerStrings: headlessConfig.StaticPeerStrings,
                     render: headlessConfig.Render,
                     preload: headlessConfig.Preload);
 

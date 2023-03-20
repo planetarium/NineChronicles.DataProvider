@@ -1,4 +1,4 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System.Linq;
     using Libplanet.Action;
@@ -16,13 +16,10 @@
                 Index = block.Index,
                 Hash = block.Hash.ToString(),
                 Miner = block.Miner.ToString(),
-                Difficulty = block.Difficulty,
-                Nonce = block.Nonce.ToString(),
                 PreviousHash = block.PreviousHash.ToString(),
                 ProtocolVersion = block.ProtocolVersion,
                 PublicKey = block.PublicKey!.ToString(),
                 StateRootHash = block.StateRootHash.ToString(),
-                TotalDifficulty = (long)block.TotalDifficulty,
                 TxCount = block.Transactions.Count(),
                 TxHash = block.TxHash.ToString(),
                 TimeStamp = block.Timestamp.UtcDateTime,

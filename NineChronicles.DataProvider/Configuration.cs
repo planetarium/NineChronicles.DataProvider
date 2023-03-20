@@ -16,7 +16,11 @@ namespace NineChronicles.DataProvider
 
         public ushort? Port { get; set; }
 
+        public ushort? ConsensusPort { get; set; }
+
         public string? SwarmPrivateKeyString { get; set; }
+
+        public string? ConsensusPrivateKeyString { get; set; }
 
         public string? MinerPrivateKeyString { get; set; }
 
@@ -85,7 +89,9 @@ namespace NineChronicles.DataProvider
 
         public int BucketSize { get; set; }
 
-        public string[]? StaticPeerStrings { get; set; }
+        public string[]? ConsensusSeedStrings { get; set; }
+
+        public string[]? ConsensusPeerStrings { get; set; }
 
         public bool NoReduceStore { get; set; }
 
