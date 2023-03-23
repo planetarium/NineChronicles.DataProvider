@@ -546,7 +546,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         {
                             var equipmentCp = CPHelper.GetCP(equipment);
                             WriteEquipment(tip.Index, equipment, avatarState.agentAddress, avatarAddress);
-                            WriteRankingEquipment(tip.Index, equipment, avatarState.agentAddress, avatarAddress, equipmentCp);
+                            WriteRankingEquipment(equipment, avatarState.agentAddress, avatarAddress, equipmentCp);
                         }
 
                         foreach (var costume in userCostumes)
@@ -776,7 +776,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 // var stm3 = $"RENAME TABLE {UCTDbName} TO {UCTDbName}_Dump; CREATE TABLE {UCTDbName} LIKE {UCTDbName}_Dump;";
                 // var stm4 = $"RENAME TABLE {UMDbName} TO {UMDbName}_Dump; CREATE TABLE {UMDbName} LIKE {UMDbName}_Dump;";
                 // var stm5 = $"RENAME TABLE {UCDbName} TO {UCDbName}_Dump; CREATE TABLE {UCDbName} LIKE {UCDbName}_Dump;";
-                // var stm6 = $"RENAME TABLE {EDbName} TO {EDbName}_Dump; CREATE TABLE {EDbName} LIKE {EDbName}_Dump;";
+                var stm6 = $"RENAME TABLE {EDbName} TO {EDbName}_Dump; CREATE TABLE {EDbName} LIKE {EDbName}_Dump;";
                 // var stm12 = $"RENAME TABLE {USDbName} TO {USDbName}_Dump; CREATE TABLE {USDbName} LIKE {USDbName}_Dump;";
                 // var stm13 = $"RENAME TABLE {UNCGDbName} TO {UNCGDbName}_Dump; CREATE TABLE {UNCGDbName} LIKE {UNCGDbName}_Dump;";
                 // var stm14 = $"RENAME TABLE {UCYDbName} TO {UCYDbName}_Dump; CREATE TABLE {UCYDbName} LIKE {UCYDbName}_Dump;";
@@ -785,13 +785,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 // var stm17 = $"RENAME TABLE {SEDbName} TO {SEDbName}_Dump; CREATE TABLE {SEDbName} LIKE {SEDbName}_Dump;";
                 // var stm19 = $"RENAME TABLE {SCTDbName} TO {SCTDbName}_Dump; CREATE TABLE {SCTDbName} LIKE {SCTDbName}_Dump;";
                 // var stm20 = $"RENAME TABLE {SMDbName} TO {SMDbName}_Dump; CREATE TABLE {SMDbName} LIKE {SMDbName}_Dump;";
-                // var stm23 = $"RENAME TABLE {BARDbName} TO {BARDbName}_Dump; CREATE TABLE {BARDbName} LIKE {BARDbName}_Dump;";
+                var stm23 = $"RENAME TABLE {BARDbName} TO {BARDbName}_Dump; CREATE TABLE {BARDbName} LIKE {BARDbName}_Dump;";
                 // var stm35 = $"RENAME TABLE {URDbName} TO {URDbName}_Dump; CREATE TABLE {URDbName} LIKE {URDbName}_Dump;";
                 // var cmd2 = new MySqlCommand(stm2, connection);
                 // var cmd3 = new MySqlCommand(stm3, connection);
                 // var cmd4 = new MySqlCommand(stm4, connection);
                 // var cmd5 = new MySqlCommand(stm5, connection);
-                // var cmd6 = new MySqlCommand(stm6, connection);
+                var cmd6 = new MySqlCommand(stm6, connection);
                 // var cmd12 = new MySqlCommand(stm12, connection);
                 // var cmd13 = new MySqlCommand(stm13, connection);
                 // var cmd14 = new MySqlCommand(stm14, connection);
@@ -800,7 +800,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 // var cmd17 = new MySqlCommand(stm17, connection);
                 // var cmd19 = new MySqlCommand(stm19, connection);
                 // var cmd20 = new MySqlCommand(stm20, connection);
-                // var cmd23 = new MySqlCommand(stm23, connection);
+                var cmd23 = new MySqlCommand(stm23, connection);
                 // var cmd35 = new MySqlCommand(stm35, connection);
                 foreach (var path in _agentFiles)
                 {
@@ -812,12 +812,12 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     BulkInsert(AvatarDbName, path);
                 }
 
-                // var startMove = DateTimeOffset.Now;
+                var startMove = DateTimeOffset.Now;
                 // connection.Open();
                 // cmd2.CommandTimeout = 300;
                 // cmd2.ExecuteScalar();
                 // connection.Close();
-                // var endMove = DateTimeOffset.Now;
+                var endMove = DateTimeOffset.Now;
                 // Console.WriteLine("Move UserEquipments Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _ueFiles)
                 {
@@ -860,13 +860,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     BulkInsert(UCDbName, path);
                 }
 
-                // startMove = DateTimeOffset.Now;
-                // connection.Open();
-                // cmd6.CommandTimeout = 300;
-                // cmd6.ExecuteScalar();
-                // connection.Close();
-                // endMove = DateTimeOffset.Now;
-                // Console.WriteLine("Move Equipments Complete! Time Elapsed: {0}", endMove - startMove);
+                startMove = DateTimeOffset.Now;
+                connection.Open();
+                cmd6.CommandTimeout = 300;
+                cmd6.ExecuteScalar();
+                connection.Close();
+                endMove = DateTimeOffset.Now;
+                Console.WriteLine("Move Equipments Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _eFiles)
                 {
                     BulkInsert(EDbName, path);
@@ -968,13 +968,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     BulkInsert(SMDbName, path);
                 }
 
-                // startMove = DateTimeOffset.Now;
-                // connection.Open();
-                // cmd23.CommandTimeout = 300;
-                // cmd23.ExecuteScalar();
-                // connection.Close();
-                // endMove = DateTimeOffset.Now;
-                // Console.WriteLine("Move BattleArenaRanking Complete! Time Elapsed: {0}", endMove - startMove);
+                startMove = DateTimeOffset.Now;
+                connection.Open();
+                cmd23.CommandTimeout = 300;
+                cmd23.ExecuteScalar();
+                connection.Close();
+                endMove = DateTimeOffset.Now;
+                Console.WriteLine("Move BattleArenaRanking Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _barFiles)
                 {
                     BulkInsert(BARDbName, path);
@@ -1000,7 +1000,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 // var stm13 = $"DROP TABLE {EDbName}; RENAME TABLE {UCTDbName}_Dump TO {UCTDbName};";
                 // var stm14 = $"DROP TABLE {EDbName}; RENAME TABLE {UMDbName}_Dump TO {UMDbName};";
                 // var stm15 = $"DROP TABLE {EDbName}; RENAME TABLE {UCDbName}_Dump TO {UCDbName};";
-                // var stm16 = $"DROP TABLE {EDbName}; RENAME TABLE {EDbName}_Dump TO {EDbName};";
+                var stm16 = $"DROP TABLE {EDbName}; RENAME TABLE {EDbName}_Dump TO {EDbName};";
                 // var stm17 = $"DROP TABLE {USDbName}; RENAME TABLE {USDbName}_Dump TO {USDbName};";
                 // var stm19 = $"DROP TABLE {UNCGDbName}; RENAME TABLE {UNCGDbName}_Dump TO {UNCGDbName};";
                 // var stm20 = $"DROP TABLE {UCYDbName}; RENAME TABLE {UCYDbName}_Dump TO {UCYDbName};";
@@ -1009,13 +1009,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 // var stm26 = $"DROP TABLE {SEDbName}; RENAME TABLE {SEDbName}_Dump TO {SEDbName};";
                 // var stm27 = $"DROP TABLE {SCTDbName}; RENAME TABLE {SCTDbName}_Dump TO {SCTDbName};";
                 // var stm28 = $"DROP TABLE {SMDbName}; RENAME TABLE {SMDbName}_Dump TO {SMDbName};";
-                // var stm33 = $"DROP TABLE {BARDbName}; RENAME TABLE {BARDbName}_Dump TO {BARDbName};";
+                var stm33 = $"DROP TABLE {BARDbName}; RENAME TABLE {BARDbName}_Dump TO {BARDbName};";
                 // var stm36 = $"DROP TABLE {URDbName}; RENAME TABLE {URDbName}_Dump TO {URDbName};";
                 // var cmd12 = new MySqlCommand(stm12, connection);
                 // var cmd13 = new MySqlCommand(stm13, connection);
                 // var cmd14 = new MySqlCommand(stm14, connection);
                 // var cmd15 = new MySqlCommand(stm15, connection);
-                // var cmd16 = new MySqlCommand(stm16, connection);
+                var cmd16 = new MySqlCommand(stm16, connection);
                 // var cmd17 = new MySqlCommand(stm17, connection);
                 // var cmd19 = new MySqlCommand(stm19, connection);
                 // var cmd20 = new MySqlCommand(stm20, connection);
@@ -1024,14 +1024,14 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 // var cmd26 = new MySqlCommand(stm26, connection);
                 // var cmd27 = new MySqlCommand(stm27, connection);
                 // var cmd28 = new MySqlCommand(stm28, connection);
-                // var cmd33 = new MySqlCommand(stm33, connection);
+                var cmd33 = new MySqlCommand(stm33, connection);
                 // var cmd36 = new MySqlCommand(stm36, connection);
-                // var startRestore = DateTimeOffset.Now;
+                var startRestore = DateTimeOffset.Now;
                 // connection.Open();
                 // cmd12.CommandTimeout = 300;
                 // cmd12.ExecuteScalar();
                 // connection.Close();
-                // var endRestore = DateTimeOffset.Now;
+                var endRestore = DateTimeOffset.Now;
                 // Console.WriteLine("Restore UserEquipments Complete! Time Elapsed: {0}", endRestore - startRestore);
                 // startRestore = DateTimeOffset.Now;
                 // connection.Open();
@@ -1054,13 +1054,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 // connection.Close();
                 // endRestore = DateTimeOffset.Now;
                 // Console.WriteLine("Restore UserConsumables Complete! Time Elapsed: {0}", endRestore - startRestore);
-                // startRestore = DateTimeOffset.Now;
-                // connection.Open();
-                // cmd16.CommandTimeout = 300;
-                // cmd16.ExecuteScalar();
-                // connection.Close();
-                // endRestore = DateTimeOffset.Now;
-                // Console.WriteLine("Restore Equipments Complete! Time Elapsed: {0}", endRestore - startRestore);
+                startRestore = DateTimeOffset.Now;
+                connection.Open();
+                cmd16.CommandTimeout = 300;
+                cmd16.ExecuteScalar();
+                connection.Close();
+                endRestore = DateTimeOffset.Now;
+                Console.WriteLine("Restore Equipments Complete! Time Elapsed: {0}", endRestore - startRestore);
                 // startRestore = DateTimeOffset.Now;
                 // connection.Open();
                 // cmd17.CommandTimeout = 300;
@@ -1117,13 +1117,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 // connection.Close();
                 // endRestore = DateTimeOffset.Now;
                 // Console.WriteLine("Restore ShopMaterials Complete! Time Elapsed: {0}", endRestore - startRestore);
-                // startRestore = DateTimeOffset.Now;
-                // connection.Open();
-                // cmd33.CommandTimeout = 300;
-                // cmd33.ExecuteScalar();
-                // connection.Close();
-                // endRestore = DateTimeOffset.Now;
-                // Console.WriteLine("Restore BattleArenaRanking Complete! Time Elapsed: {0}", endRestore - startRestore);
+                startRestore = DateTimeOffset.Now;
+                connection.Open();
+                cmd33.CommandTimeout = 300;
+                cmd33.ExecuteScalar();
+                connection.Close();
+                endRestore = DateTimeOffset.Now;
+                Console.WriteLine("Restore BattleArenaRanking Complete! Time Elapsed: {0}", endRestore - startRestore);
                 // startRestore = DateTimeOffset.Now;
                 // connection.Open();
                 // cmd36.CommandTimeout = 300;
@@ -1137,7 +1137,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             // var stm8 = $"DROP TABLE {UCTDbName}_Dump;";
             // var stm9 = $"DROP TABLE {UMDbName}_Dump;";
             // var stm10 = $"DROP TABLE {UCDbName}_Dump;";
-            // var stm11 = $"DROP TABLE {EDbName}_Dump;";
+            var stm11 = $"DROP TABLE {EDbName}_Dump;";
             // var stm18 = $"DROP TABLE {USDbName}_Dump;";
             // var stm21 = $"DROP TABLE {UNCGDbName}_Dump;";
             // var stm22 = $"DROP TABLE {UCYDbName}_Dump;";
@@ -1146,13 +1146,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             // var stm30 = $"DROP TABLE {SEDbName}_Dump;";
             // var stm31 = $"DROP TABLE {SCTDbName}_Dump;";
             // var stm32 = $"DROP TABLE {SMDbName}_Dump;";
-            // var stm34 = $"DROP TABLE {BARDbName}_Dump;";
+            var stm34 = $"DROP TABLE {BARDbName}_Dump;";
             // var stm37 = $"DROP TABLE {URDbName}_Dump;";
             // var cmd7 = new MySqlCommand(stm7, connection);
             // var cmd8 = new MySqlCommand(stm8, connection);
             // var cmd9 = new MySqlCommand(stm9, connection);
             // var cmd10 = new MySqlCommand(stm10, connection);
-            // var cmd11 = new MySqlCommand(stm11, connection);
+            var cmd11 = new MySqlCommand(stm11, connection);
             // var cmd18 = new MySqlCommand(stm18, connection);
             // var cmd21 = new MySqlCommand(stm21, connection);
             // var cmd22 = new MySqlCommand(stm22, connection);
@@ -1161,14 +1161,14 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             // var cmd30 = new MySqlCommand(stm30, connection);
             // var cmd31 = new MySqlCommand(stm31, connection);
             // var cmd32 = new MySqlCommand(stm32, connection);
-            // var cmd34 = new MySqlCommand(stm34, connection);
+            var cmd34 = new MySqlCommand(stm34, connection);
             // var cmd37 = new MySqlCommand(stm37, connection);
-            // var startDelete = DateTimeOffset.Now;
+            var startDelete = DateTimeOffset.Now;
             // connection.Open();
             // cmd7.CommandTimeout = 300;
             // cmd7.ExecuteScalar();
             // connection.Close();
-            // var endDelete = DateTimeOffset.Now;
+            var endDelete = DateTimeOffset.Now;
             // Console.WriteLine("Delete UserEquipments_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
             // startDelete = DateTimeOffset.Now;
             // connection.Open();
@@ -1191,13 +1191,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             // connection.Close();
             // endDelete = DateTimeOffset.Now;
             // Console.WriteLine("Delete UserConsumables_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
-            // startDelete = DateTimeOffset.Now;
-            // connection.Open();
-            // cmd11.CommandTimeout = 300;
-            // cmd11.ExecuteScalar();
-            // connection.Close();
-            // endDelete = DateTimeOffset.Now;
-            // Console.WriteLine("Delete Equipments_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd11.CommandTimeout = 300;
+            cmd11.ExecuteScalar();
+            connection.Close();
+            endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Delete Equipments_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
             // startDelete = DateTimeOffset.Now;
             // connection.Open();
             // cmd18.CommandTimeout = 300;
@@ -1254,13 +1254,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             // connection.Close();
             // endDelete = DateTimeOffset.Now;
             // Console.WriteLine("Delete ShopMaterials_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
-            // startDelete = DateTimeOffset.Now;
-            // connection.Open();
-            // cmd34.CommandTimeout = 300;
-            // cmd34.ExecuteScalar();
-            // connection.Close();
-            // endDelete = DateTimeOffset.Now;
-            // Console.WriteLine("Delete BattleArenaRanking_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            startDelete = DateTimeOffset.Now;
+            connection.Open();
+            cmd34.CommandTimeout = 300;
+            cmd34.ExecuteScalar();
+            connection.Close();
+            endDelete = DateTimeOffset.Now;
+            Console.WriteLine("Delete BattleArenaRanking_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
             // startDelete = DateTimeOffset.Now;
             // connection.Open();
             // cmd37.CommandTimeout = 300;
@@ -1513,7 +1513,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         }
 
         private void WriteRankingEquipment(
-            long tipIndex,
             Equipment equipment,
             Address agentAddress,
             Address avatarAddress,
@@ -1522,7 +1521,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             try
             {
                 _eBulkFile.WriteLine(
-                    $"{tipIndex};" +
                     $"{equipment.ItemId.ToString()};" +
                     $"{agentAddress.ToString()};" +
                     $"{avatarAddress.ToString()};" +
