@@ -891,6 +891,41 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreShopHistoryFungibleAssetValues(List<ShopHistoryFungibleAssetValueModel> sfList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var sf in sfList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.ShopHistoryFungibleAssetValues?.FindAsync(sf!.OrderId).Result is null)
+                        {
+                            await ctx.ShopHistoryFungibleAssetValues!.AddRangeAsync(sf!);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.ShopHistoryFungibleAssetValues!.UpdateRange(sf);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public void DeleteCombinationEquipment(Guid id)
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
