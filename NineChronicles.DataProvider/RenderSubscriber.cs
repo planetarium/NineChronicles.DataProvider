@@ -81,6 +81,7 @@ namespace NineChronicles.DataProvider
         private int _renderedBlockCount;
         private DateTimeOffset _blockTimeOffset;
         private Address _miner;
+        private string _blockHash;
 
         public RenderSubscriber(
             NineChroniclesNodeService nodeService,
@@ -149,6 +150,7 @@ namespace NineChronicles.DataProvider
 
                 var block = b.NewTip;
                 _blockTimeOffset = block.Timestamp.UtcDateTime;
+                _blockHash = block.Hash.ToString();
                 _miner = block.Miner;
                 _blockList.Add(BlockData.GetBlockInfo(block));
 
@@ -571,6 +573,7 @@ namespace NineChronicles.DataProvider
                                                 OrderId = productInfo.ProductId.ToString(),
                                                 TxId = ev.TxId.ToString(),
                                                 BlockIndex = ev.BlockIndex,
+                                                BlockHash = _blockHash,
                                                 SellerAvatarAddress = productInfo.AvatarAddress.ToString(),
                                                 BuyerAvatarAddress = buy.AvatarAddress.ToString(),
                                                 Price = decimal.Parse(productInfo.Price.GetQuantityString()),
