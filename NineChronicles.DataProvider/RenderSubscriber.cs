@@ -81,7 +81,7 @@ namespace NineChronicles.DataProvider
         private int _renderedBlockCount;
         private DateTimeOffset _blockTimeOffset;
         private Address _miner;
-        private string _blockHash;
+        private string? _blockHash;
 
         public RenderSubscriber(
             NineChroniclesNodeService nodeService,
