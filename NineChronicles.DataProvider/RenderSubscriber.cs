@@ -76,6 +76,7 @@ namespace NineChronicles.DataProvider
         private readonly List<RunesAcquiredModel> _runesAcquiredList = new List<RunesAcquiredModel>();
         private readonly List<UnlockRuneSlotModel> _unlockRuneSlotList = new List<UnlockRuneSlotModel>();
         private readonly List<RapidCombinationModel> _rapidCombinationList = new List<RapidCombinationModel>();
+        private readonly List<PetEnhancementModel> _petEnhancementList = new List<PetEnhancementModel>();
         private readonly List<string> _agents;
         private readonly bool _render;
         private int _renderedBlockCount;
@@ -1315,6 +1316,34 @@ namespace NineChronicles.DataProvider
                         Console.WriteLine(e);
                     }
                 });
+
+            _actionRenderer.EveryRender<PetEnhancement>().Subscribe(ev =>
+            {
+                try
+                {
+                    if (ev.Exception == null && ev.Action is { } petEnhancement)
+                    {
+                        var start = DateTimeOffset.UtcNow;
+                        _petEnhancementList.Add(PetEnhancementData.GetPetEnhancementInfo(
+                            ev.PreviousStates,
+                            ev.OutputStates,
+                            ev.Signer,
+                            petEnhancement.AvatarAddress,
+                            petEnhancement.PetId,
+                            petEnhancement.TargetLevel,
+                            petEnhancement.Id,
+                            ev.BlockIndex,
+                            _blockTimeOffset
+                        ));
+                        var end = DateTimeOffset.UtcNow;
+                        Log.Debug("Stored PetEnhancement action in block #{BlockIndex}. Time taken: {Time} ms", ev.BlockIndex, end - start);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Error("PetEnhancement RenderSubscriber: {Message}", e.Message);
+                }
+            });
 
             return Task.CompletedTask;
         }
