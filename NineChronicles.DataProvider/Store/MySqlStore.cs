@@ -1771,6 +1771,42 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StorePetEnhancementList(List<PetEnhancementModel> petEnhancementList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var petEnhancement in petEnhancementList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.PetEnhancements.FindAsync(petEnhancement.Id).Result is null)
+                        {
+                            await ctx.PetEnhancements.AddRangeAsync(petEnhancement);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext
+                                updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.PetEnhancements.UpdateRange(petEnhancement);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public IEnumerable<CraftRankingOutputModel> GetCraftRanking(
             Address? avatarAddress = null,
             int? limit = null)
