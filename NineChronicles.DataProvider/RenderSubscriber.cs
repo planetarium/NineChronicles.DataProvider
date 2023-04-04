@@ -1504,6 +1504,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreRunesAcquiredList(_runesAcquiredList);
                     MySqlStore.StoreUnlockRuneSlotList(_unlockRuneSlotList);
                     MySqlStore.StoreRapidCombinationList(_rapidCombinationList);
+                    MySqlStore.StorePetEnhancementList(_petEnhancementList);
                 }),
             };
 
@@ -1546,6 +1547,7 @@ namespace NineChronicles.DataProvider
             _runesAcquiredList.Clear();
             _unlockRuneSlotList.Clear();
             _rapidCombinationList.Clear();
+            _petEnhancementList.Clear();
             var end = DateTimeOffset.Now;
             long blockIndex = b.OldTip.Index;
             StreamWriter blockIndexFile = new StreamWriter(_blockIndexFilePath);
