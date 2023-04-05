@@ -126,7 +126,6 @@ namespace NineChronicles.DataProvider.Executable
                     demandBuffer: headlessConfig.DemandBuffer,
                     minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget,
                     bucketSize: headlessConfig.BucketSize,
-                    staticPeerStrings: headlessConfig.StaticPeerStrings,
                     render: headlessConfig.Render,
                     preload: headlessConfig.Preload);
 

@@ -151,6 +151,9 @@ namespace NineChronicles.DataProvider.Store
         // Table for storing RapidCombination actions
         public DbSet<RapidCombinationModel> RapidCombinations => Set<RapidCombinationModel>();
 
+        // Table for storing PetEnhancement actions
+        public DbSet<PetEnhancementModel> PetEnhancements => Set<PetEnhancementModel>();
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.
