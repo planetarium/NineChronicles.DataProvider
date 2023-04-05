@@ -4442,7 +4442,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
         private List<ActionEvaluation> EvaluateBlock(Block<NCAction> block)
         {
-            var evList = _baseChain.ExecuteActions(block, StateCompleterSet<NCAction>.Reject).ToList();
+            var evList = _baseChain.ExecuteActions(block).ToList();
             return evList;
         }
     }
