@@ -21,6 +21,7 @@ namespace NineChronicles.DataProvider
     using Nekoyume.Helper;
     using Nekoyume.Model.EnumType;
     using Nekoyume.Model.Item;
+    using Nekoyume.Model.Market;
     using Nekoyume.Model.State;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.DataRendering;
@@ -50,6 +51,7 @@ namespace NineChronicles.DataProvider
         private readonly List<ShopHistoryCostumeModel> _buyShopCostumesList = new List<ShopHistoryCostumeModel>();
         private readonly List<ShopHistoryMaterialModel> _buyShopMaterialsList = new List<ShopHistoryMaterialModel>();
         private readonly List<ShopHistoryConsumableModel> _buyShopConsumablesList = new List<ShopHistoryConsumableModel>();
+        private readonly List<ShopHistoryFungibleAssetValueModel> _buyShopFavList = new List<ShopHistoryFungibleAssetValueModel>();
         private readonly List<StakeModel> _stakeList = new List<StakeModel>();
         private readonly List<ClaimStakeRewardModel> _claimStakeList = new List<ClaimStakeRewardModel>();
         private readonly List<MigrateMonsterCollectionModel> _mmcList = new List<MigrateMonsterCollectionModel>();
@@ -74,11 +76,13 @@ namespace NineChronicles.DataProvider
         private readonly List<RunesAcquiredModel> _runesAcquiredList = new List<RunesAcquiredModel>();
         private readonly List<UnlockRuneSlotModel> _unlockRuneSlotList = new List<UnlockRuneSlotModel>();
         private readonly List<RapidCombinationModel> _rapidCombinationList = new List<RapidCombinationModel>();
+        private readonly List<PetEnhancementModel> _petEnhancementList = new List<PetEnhancementModel>();
         private readonly List<string> _agents;
         private readonly bool _render;
         private int _renderedBlockCount;
         private DateTimeOffset _blockTimeOffset;
         private Address _miner;
+        private string? _blockHash;
 
         public RenderSubscriber(
             NineChroniclesNodeService nodeService,
@@ -147,6 +151,7 @@ namespace NineChronicles.DataProvider
 
                 var block = b.NewTip;
                 _blockTimeOffset = block.Timestamp.UtcDateTime;
+                _blockHash = block.Hash.ToString();
                 _miner = block.Miner;
                 _blockList.Add(BlockData.GetBlockInfo(block));
 
@@ -503,53 +508,7 @@ namespace NineChronicles.DataProvider
                                 int itemCount = order is FungibleOrder fungibleOrder
                                     ? fungibleOrder.ItemCount
                                     : 1;
-                                if (orderItem.ItemType == ItemType.Equipment)
-                                {
-                                    Equipment equipment = (Equipment)orderItem;
-                                    _buyShopEquipmentsList.Add(ShopHistoryEquipmentData.GetShopHistoryEquipmentInfo(
-                                        buy.buyerAvatarAddress,
-                                        purchaseInfo,
-                                        equipment,
-                                        itemCount,
-                                        ev.BlockIndex,
-                                        _blockTimeOffset));
-                                }
-
-                                if (orderItem.ItemType == ItemType.Costume)
-                                {
-                                    Costume costume = (Costume)orderItem;
-                                    _buyShopCostumesList.Add(ShopHistoryCostumeData.GetShopHistoryCostumeInfo(
-                                        buy.buyerAvatarAddress,
-                                        purchaseInfo,
-                                        costume,
-                                        itemCount,
-                                        ev.BlockIndex,
-                                        _blockTimeOffset));
-                                }
-
-                                if (orderItem.ItemType == ItemType.Material)
-                                {
-                                    Material material = (Material)orderItem;
-                                    _buyShopMaterialsList.Add(ShopHistoryMaterialData.GetShopHistoryMaterialInfo(
-                                        buy.buyerAvatarAddress,
-                                        purchaseInfo,
-                                        material,
-                                        itemCount,
-                                        ev.BlockIndex,
-                                        _blockTimeOffset));
-                                }
-
-                                if (orderItem.ItemType == ItemType.Consumable)
-                                {
-                                    Consumable consumable = (Consumable)orderItem;
-                                    _buyShopConsumablesList.Add(ShopHistoryConsumableData.GetShopHistoryConsumableInfo(
-                                        buy.buyerAvatarAddress,
-                                        purchaseInfo,
-                                        consumable,
-                                        itemCount,
-                                        ev.BlockIndex,
-                                        _blockTimeOffset));
-                                }
+                                AddShopHistoryItem(orderItem, buy.buyerAvatarAddress, purchaseInfo, itemCount, ev.BlockIndex);
 
                                 if (purchaseInfo.ItemSubType == ItemSubType.Armor
                                     || purchaseInfo.ItemSubType == ItemSubType.Belt
@@ -583,6 +542,110 @@ namespace NineChronicles.DataProvider
                             Log.Debug(
                                 "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
                                 buy.buyerAvatarAddress,
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<BuyProduct>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } buy)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            foreach (var productInfo in buy.ProductInfos)
+                            {
+                                switch (productInfo)
+                                {
+                                    case FavProductInfo _:
+                                        // Check previous product state. because Set Bencodex.Types.Null in BuyProduct.
+                                        if (ev.PreviousStates.TryGetState(Product.DeriveAddress(productInfo.ProductId), out List productState))
+                                        {
+                                            var favProduct = (FavProduct)ProductFactory.DeserializeProduct(productState);
+                                            _buyShopFavList.Add(new ShopHistoryFungibleAssetValueModel
+                                            {
+                                                OrderId = productInfo.ProductId.ToString(),
+                                                TxId = ev.TxId.ToString(),
+                                                BlockIndex = ev.BlockIndex,
+                                                BlockHash = _blockHash,
+                                                SellerAvatarAddress = productInfo.AvatarAddress.ToString(),
+                                                BuyerAvatarAddress = buy.AvatarAddress.ToString(),
+                                                Price = decimal.Parse(productInfo.Price.GetQuantityString()),
+                                                Quantity = decimal.Parse(favProduct.Asset.GetQuantityString()),
+                                                Ticker = favProduct.Asset.Currency.Ticker,
+                                                TimeStamp = _blockTimeOffset,
+                                            });
+                                        }
+
+                                        break;
+                                    case ItemProductInfo itemProductInfo:
+                                    {
+                                        ITradableItem orderItem;
+                                        int itemCount = 1;
+
+                                        // backward compatibility for order.
+                                        if (itemProductInfo.Legacy)
+                                        {
+                                            var state = ev.OutputStates.GetState(
+                                                Addresses.GetItemAddress(itemProductInfo.TradableId));
+                                            orderItem =
+                                                (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
+                                            Order order =
+                                                OrderFactory.Deserialize(
+                                                    (Dictionary)ev.OutputStates.GetState(
+                                                        Order.DeriveAddress(itemProductInfo.ProductId))!);
+                                            itemCount = order is FungibleOrder fungibleOrder
+                                                ? fungibleOrder.ItemCount
+                                                : 1;
+                                        }
+                                        else
+                                        {
+                                            // Check previous product state. because Set Bencodex.Types.Null in BuyProduct.
+                                            if (ev.PreviousStates.TryGetState(Product.DeriveAddress(productInfo.ProductId), out List state))
+                                            {
+                                                var product = (ItemProduct)ProductFactory.DeserializeProduct(state);
+                                                orderItem = product.TradableItem;
+                                            }
+                                            else
+                                            {
+                                                continue;
+                                            }
+                                        }
+
+                                        var purchaseInfo = new PurchaseInfo(
+                                            productInfo.ProductId,
+                                            itemProductInfo.TradableId,
+                                            productInfo.AgentAddress,
+                                            productInfo.AvatarAddress,
+                                            itemProductInfo.ItemSubType,
+                                            productInfo.Price
+                                        );
+                                        AddShopHistoryItem(orderItem, buy.AvatarAddress, purchaseInfo, itemCount, ev.BlockIndex);
+                                        if (orderItem.ItemType == ItemType.Equipment)
+                                        {
+                                            var equipment = (Equipment)orderItem;
+                                            _eqList.Add(EquipmentData.GetEquipmentInfo(
+                                                ev.Signer,
+                                                buy.AvatarAddress,
+                                                equipment));
+                                        }
+
+                                        break;
+                                    }
+                                }
+                            }
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug(
+                                "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
+                                buy.AvatarAddress,
                                 ev.BlockIndex,
                                 (end - start).Milliseconds);
                         }
@@ -1254,7 +1317,86 @@ namespace NineChronicles.DataProvider
                     }
                 });
 
+            _actionRenderer.EveryRender<PetEnhancement>().Subscribe(ev =>
+            {
+                try
+                {
+                    if (ev.Exception == null && ev.Action is { } petEnhancement)
+                    {
+                        var start = DateTimeOffset.UtcNow;
+                        _petEnhancementList.Add(PetEnhancementData.GetPetEnhancementInfo(
+                            ev.PreviousStates,
+                            ev.OutputStates,
+                            ev.Signer,
+                            petEnhancement.AvatarAddress,
+                            petEnhancement.PetId,
+                            petEnhancement.TargetLevel,
+                            petEnhancement.Id,
+                            ev.BlockIndex,
+                            _blockTimeOffset
+                        ));
+                        var end = DateTimeOffset.UtcNow;
+                        Log.Debug("Stored PetEnhancement action in block #{BlockIndex}. Time taken: {Time} ms", ev.BlockIndex, end - start);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Error("PetEnhancement RenderSubscriber: {Message}", e.Message);
+                }
+            });
+
             return Task.CompletedTask;
+        }
+
+        private void AddShopHistoryItem(ITradableItem orderItem, Address buyerAvatarAddress, PurchaseInfo purchaseInfo, int itemCount, long blockIndex)
+        {
+            if (orderItem.ItemType == ItemType.Equipment)
+            {
+                Equipment equipment = (Equipment)orderItem;
+                _buyShopEquipmentsList.Add(ShopHistoryEquipmentData.GetShopHistoryEquipmentInfo(
+                    buyerAvatarAddress,
+                    purchaseInfo,
+                    equipment,
+                    itemCount,
+                    blockIndex,
+                    _blockTimeOffset));
+            }
+
+            if (orderItem.ItemType == ItemType.Costume)
+            {
+                Costume costume = (Costume)orderItem;
+                _buyShopCostumesList.Add(ShopHistoryCostumeData.GetShopHistoryCostumeInfo(
+                    buyerAvatarAddress,
+                    purchaseInfo,
+                    costume,
+                    itemCount,
+                    blockIndex,
+                    _blockTimeOffset));
+            }
+
+            if (orderItem.ItemType == ItemType.Material)
+            {
+                Material material = (Material)orderItem;
+                _buyShopMaterialsList.Add(ShopHistoryMaterialData.GetShopHistoryMaterialInfo(
+                    buyerAvatarAddress,
+                    purchaseInfo,
+                    material,
+                    itemCount,
+                    blockIndex,
+                    _blockTimeOffset));
+            }
+
+            if (orderItem.ItemType == ItemType.Consumable)
+            {
+                Consumable consumable = (Consumable)orderItem;
+                _buyShopConsumablesList.Add(ShopHistoryConsumableData.GetShopHistoryConsumableInfo(
+                    buyerAvatarAddress,
+                    purchaseInfo,
+                    consumable,
+                    itemCount,
+                    blockIndex,
+                    _blockTimeOffset));
+            }
         }
 
         private void ProcessAgentAvatarData(ActionEvaluation<ActionBase> ev)
@@ -1335,6 +1477,7 @@ namespace NineChronicles.DataProvider
                         .Select(i => i.FirstOrDefault()).ToList());
                     MySqlStore.StoreShopHistoryConsumableList(_buyShopConsumablesList.GroupBy(i => i.OrderId)
                         .Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreShopHistoryFungibleAssetValues(_buyShopFavList);
                     MySqlStore.ProcessEquipmentList(_eqList.GroupBy(i => i.ItemId).Select(i => i.FirstOrDefault())
                         .ToList());
                     MySqlStore.StoreStakingList(_stakeList);
@@ -1361,6 +1504,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreRunesAcquiredList(_runesAcquiredList);
                     MySqlStore.StoreUnlockRuneSlotList(_unlockRuneSlotList);
                     MySqlStore.StoreRapidCombinationList(_rapidCombinationList);
+                    MySqlStore.StorePetEnhancementList(_petEnhancementList);
                 }),
             };
 
@@ -1377,6 +1521,7 @@ namespace NineChronicles.DataProvider
             _buyShopCostumesList.Clear();
             _buyShopMaterialsList.Clear();
             _buyShopConsumablesList.Clear();
+            _buyShopFavList.Clear();
             _eqList.Clear();
             _stakeList.Clear();
             _claimStakeList.Clear();
@@ -1402,6 +1547,7 @@ namespace NineChronicles.DataProvider
             _runesAcquiredList.Clear();
             _unlockRuneSlotList.Clear();
             _rapidCombinationList.Clear();
+            _petEnhancementList.Clear();
             var end = DateTimeOffset.Now;
             long blockIndex = b.OldTip.Index;
             StreamWriter blockIndexFile = new StreamWriter(_blockIndexFilePath);

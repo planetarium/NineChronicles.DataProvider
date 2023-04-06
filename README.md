@@ -68,7 +68,7 @@ namespace NineChronicles.DataProvider.Store.Models
 
 ```
 
-- In [NineChronicles.DataProvider/NineChronicles.DataProvider/Store/NineChroniclesContext.csNineChroniclesContext.cs](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider/Store/NineChroniclesContext.cs), add a DbSet called `TransferAssets` and its description for reference.
+- In [NineChronicles.DataProvider/NineChronicles.DataProvider/Store/NineChroniclesContext.cs](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider/Store/NineChroniclesContext.cs), add a DbSet called `TransferAssets` and its description for reference.
 
 ```
 // Table for storing TransferAsset actions
@@ -104,9 +104,13 @@ public void StoreTransferAsset(TransferAssetModel model)
 
 ```
 
-### 3. Render & Store Action Data
+### 3. (Optional) Add Data Getter
+In some cases, you need to handle state to get data to make model.  
+To do this easily, you can make your own data getter inside [NineChronicles.DataProvider/DataRendering/](https://github.com/planetarium/NineChronicles.DataProvider/tree/development/NineChronicles.DataProvider/DataRendering).  
 
-- In [NineChronicles.DataProvider/NineChronicles.DataProvider/RaiderWorker.cs](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider/RaiderWorker.cs), add a following render code
+### 4. Render & Store Action Data
+
+- In [NineChronicles.DataProvider/NineChronicles.DataProvider/RenderSubscriber.cs](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider/RenderSubscriber.cs), add a following render code
 ```
 _actionRenderer.EveryRender<TransferAsset>()
     .Subscribe(ev =>
@@ -134,7 +138,7 @@ _actionRenderer.EveryRender<TransferAsset>()
         }
 ```
 
-### 4. Add Database Migration
+### 5. Add Database Migration
 
 - Navigate to [NineChronicles.DataProvider/NineChronicles.DataProvider.Executable](https://github.com/planetarium/NineChronicles.DataProvider/tree/development/NineChronicles.DataProvider.Executable) directory on your terminal and run the following migration command
 ```
