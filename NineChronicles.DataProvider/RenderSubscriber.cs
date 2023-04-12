@@ -612,6 +612,7 @@ namespace NineChronicles.DataProvider
                                             {
                                                 var product = (ItemProduct)ProductFactory.DeserializeProduct(state);
                                                 orderItem = product.TradableItem;
+                                                itemCount = product.ItemCount;
                                             }
                                             else
                                             {
