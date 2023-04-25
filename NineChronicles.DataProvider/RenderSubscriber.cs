@@ -1020,7 +1020,7 @@ namespace NineChronicles.DataProvider
                             foreach (var runeType in runeSheet.Values)
                             {
 #pragma warning disable CS0618
-                                var runeCurrency = RuneHelper.ToCurrency(runeType, 0, minters: null);
+                                var runeCurrency = RuneHelper.ToCurrency(runeType);
 #pragma warning restore CS0618
                                 var prevRuneBalance = ev.PreviousStates.GetBalance(
                                     claimRaidReward.AvatarAddress,
@@ -1254,7 +1254,7 @@ namespace NineChronicles.DataProvider
                             foreach (var runeType in runeSheet.Values)
                             {
 #pragma warning disable CS0618
-                                var runeCurrency = RuneHelper.ToCurrency(runeType, 0, minters: null);
+                                var runeCurrency = RuneHelper.ToCurrency(runeType);
 #pragma warning restore CS0618
                                 var prevRuneBalance = ev.PreviousStates.GetBalance(
                                     ev.Action.AvatarAddress,

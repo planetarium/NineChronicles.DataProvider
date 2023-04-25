@@ -4455,7 +4455,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
         private List<ActionEvaluation> EvaluateBlock(Block<NCAction> block)
         {
-            var evList = _baseChain.ExecuteActions(block).ToList();
+            var evList = _baseChain.EvaluateBlock(block).ToList();
             return evList;
         }
     }
