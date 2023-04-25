@@ -7,7 +7,6 @@
     [Index(nameof(Id), nameof(ActionType), nameof(TickerType), IsUnique = true)]
     public class RunesAcquiredModel
     {
-        [Key]
         public string? Id { get; set; }
 
         public string? ActionType { get; set; }
