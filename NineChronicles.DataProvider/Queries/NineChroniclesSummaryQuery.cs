@@ -1,5 +1,6 @@
 ﻿namespace NineChronicles.DataProvider.Queries
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using Bencodex.Types;
@@ -314,7 +315,7 @@
                                 : ranking * 100 / raiders.Count;
 
                             // calculate rewards.
-                            var row = rankingRewardSheet.FindRow(ranking, rate);
+                            var row = FindRow(rankingRewardSheet, bossRow.BossId, ranking, rate);
                             return (raider, row.GetRewards(runeSheet));
                         }
                     }
@@ -378,7 +379,7 @@
                                 var rate = raidId == 1
                                     ? ranking / totalCount * 100
                                     : ranking * 100 / totalCount;
-                                var row = rankingRewardSheet.FindRow(ranking, rate);
+                                var row = FindRow(rankingRewardSheet, bossRow.BossId, ranking, rate);
                                 result.Add((raider, row.GetRewards(runeSheet)));
                             }
 
@@ -396,5 +397,18 @@
         private StandaloneContext StandaloneContext { get; }
 
         private StateContext StateContext { get; }
+
+        // FIXME use WorldBossRankingRewardSheet.FindRow
+        // Copy from https://github.com/planetarium/lib9c/blob/v200000/Lib9c/TableData/WorldBossRankingRewardSheet.cs#L72-L79
+        private static WorldBossRankingRewardSheet.Row FindRow(WorldBossRankingRewardSheet sheet, int bossId, int ranking, int rate)
+        {
+            if (ranking <= 0 && rate <= 0)
+            {
+                throw new ArgumentException($"ranking or rate must be greater than 0. ranking: {ranking}, rate: {rate}");
+            }
+
+            return (sheet.OrderedList?.LastOrDefault(r => r.BossId == bossId && r.RankingMin <= ranking && ranking <= r.RankingMax)
+                    ?? sheet.OrderedList?.LastOrDefault(r => r.BossId == bossId && r.RateMin <= rate && rate <= r.RateMax))!;
+        }
     }
 }
