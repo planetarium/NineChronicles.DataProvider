@@ -702,6 +702,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     avatarAddress,
                                     ae.InputContext.BlockIndex,
                                     actionType!,
+                                    runeCurrency.Ticker,
                                     acquiredRune,
                                     DateTimeOffset.Now));
                                 _claimStakeRewardList.Add(ClaimStakeRewardData.GetClaimStakeRewardInfo(claimStakeReward, ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, ae.InputContext.BlockIndex, DateTimeOffset.Now));
@@ -3813,6 +3814,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         avatarAddress,
                                         ae.InputContext.BlockIndex,
                                         actionType!,
+                                        recipient.amount.Currency.Ticker,
                                         recipient.amount,
                                         DateTimeOffset.Now));
                                 }
@@ -3842,6 +3844,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     dailyReward.avatarAddress,
                                     ae.InputContext.BlockIndex,
                                     actionType!,
+                                    runeCurrency.Ticker,
                                     acquiredRune,
                                     DateTimeOffset.Now));
                                 var end = DateTimeOffset.UtcNow;
@@ -3869,6 +3872,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     dailyReward5.avatarAddress,
                                     ae.InputContext.BlockIndex,
                                     actionType!,
+                                    runeCurrency.Ticker,
                                     acquiredRune,
                                     DateTimeOffset.Now));
                                 var end = DateTimeOffset.UtcNow;
@@ -3896,6 +3900,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     dailyReward4.avatarAddress,
                                     ae.InputContext.BlockIndex,
                                     actionType!,
+                                    runeCurrency.Ticker,
                                     acquiredRune,
                                     DateTimeOffset.Now));
                                 var end = DateTimeOffset.UtcNow;
@@ -3923,6 +3928,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     dailyReward3.avatarAddress,
                                     ae.InputContext.BlockIndex,
                                     actionType!,
+                                    runeCurrency.Ticker,
                                     acquiredRune,
                                     DateTimeOffset.Now));
                                 var end = DateTimeOffset.UtcNow;
@@ -3950,6 +3956,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     dailyReward2.avatarAddress,
                                     ae.InputContext.BlockIndex,
                                     actionType!,
+                                    runeCurrency.Ticker,
                                     acquiredRune,
                                     DateTimeOffset.Now));
                                 var end = DateTimeOffset.UtcNow;
@@ -3977,6 +3984,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     dailyReward0.avatarAddress,
                                     ae.InputContext.BlockIndex,
                                     actionType!,
+                                    runeCurrency.Ticker,
                                     acquiredRune,
                                     DateTimeOffset.Now));
                                 var end = DateTimeOffset.UtcNow;
@@ -4014,6 +4022,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             claimRaidReward.AvatarAddress,
                                             ae.InputContext.BlockIndex,
                                             actionType!,
+                                            runeCurrency.Ticker,
                                             acquiredRune,
                                             DateTimeOffset.Now));
                                     }
@@ -4202,6 +4211,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             raid.AvatarAddress,
                                             ae.InputContext.BlockIndex,
                                             actionType!,
+                                            runeCurrency.Ticker,
                                             acquiredRune,
                                             DateTimeOffset.Now));
                                     }
@@ -4269,6 +4279,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             raid3.AvatarAddress,
                                             ae.InputContext.BlockIndex,
                                             actionType!,
+                                            runeCurrency.Ticker,
                                             acquiredRune,
                                             DateTimeOffset.Now));
                                     }
@@ -4336,6 +4347,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             raid2.AvatarAddress,
                                             ae.InputContext.BlockIndex,
                                             actionType!,
+                                            runeCurrency.Ticker,
                                             acquiredRune,
                                             DateTimeOffset.Now));
                                     }
@@ -4403,6 +4415,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             raid1.AvatarAddress,
                                             ae.InputContext.BlockIndex,
                                             actionType!,
+                                            runeCurrency.Ticker,
                                             acquiredRune,
                                             DateTimeOffset.Now));
                                     }
