@@ -1599,7 +1599,7 @@ namespace NineChronicles.DataProvider.Store
                     tasks.Add(Task.Run(async () =>
                     {
                         await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
-                        if (ctx.RunesAcquired.FindAsync(runesAcquired.Id, runesAcquired.TickerType).Result is null)
+                        if (ctx.RunesAcquired.FindAsync(runesAcquired.Id, runesAcquired.ActionType, runesAcquired.TickerType).Result is null)
                         {
                             await ctx.RunesAcquired.AddRangeAsync(runesAcquired);
                             await ctx.SaveChangesAsync();

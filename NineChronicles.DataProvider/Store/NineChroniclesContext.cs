@@ -168,6 +168,10 @@ namespace NineChronicles.DataProvider.Store
             modelBuilder.Entity<BattleArenaRankingModel>().HasNoKey();
             modelBuilder.Entity<ShopMaterialModel>().HasNoKey();
             modelBuilder.Entity<MigrateMonsterCollectionModel>().HasNoKey();
+            modelBuilder.Entity<RunesAcquiredModel>().HasKey(
+                nameof(RunesAcquiredModel.Id),
+                nameof(RunesAcquiredModel.ActionType),
+                nameof(RunesAcquiredModel.TickerType));
             modelBuilder.Entity<WorldBossRankingModel>()
                 .HasNoKey()
                 .ToTable("WorldBossRankings", t => t.ExcludeFromMigrations());
