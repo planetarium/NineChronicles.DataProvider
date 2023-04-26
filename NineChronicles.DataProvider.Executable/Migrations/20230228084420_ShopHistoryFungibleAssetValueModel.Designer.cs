@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
@@ -10,9 +11,10 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20230228084420_ShopHistoryFungibleAssetValueModel")]
+    partial class ShopHistoryFungibleAssetValueModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1162,56 +1164,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.ToTable("MigrateMonsterCollections");
                 });
 
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.PetEnhancementModel", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("AgentAddress")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("AvatarAddress")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<long>("BlockIndex")
-                        .HasColumnType("bigint");
-
-                    b.Property<decimal>("BurntNCG")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.Property<decimal>("BurntSoulStone")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.Property<int>("ChangedLevel")
-                        .HasColumnType("int");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<int>("OutputPetLevel")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PetId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PreviousPetLevel")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TargetLevel")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("TimeStamp")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgentAddress");
-
-                    b.HasIndex("AvatarAddress");
-
-                    b.ToTable("PetEnhancements");
-                });
-
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.RaiderModel", b =>
                 {
                     b.Property<int>("Id")
@@ -1388,14 +1340,11 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("varchar(255)");
 
-                    b.Property<string>("ActionType")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("TickerType")
-                        .HasColumnType("varchar(255)");
-
                     b.Property<decimal>("AcquiredRune")
                         .HasColumnType("decimal(65,30)");
+
+                    b.Property<string>("ActionType")
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("AgentAddress")
                         .HasColumnType("varchar(255)");
@@ -1409,10 +1358,13 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
+                    b.Property<string>("TickerType")
+                        .HasColumnType("varchar(255)");
+
                     b.Property<DateTimeOffset>("TimeStamp")
                         .HasColumnType("datetime(6)");
 
-                    b.HasKey("Id", "ActionType", "TickerType");
+                    b.HasKey("Id");
 
                     b.HasIndex("AgentAddress");
 
@@ -2514,21 +2466,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                         .HasForeignKey("AgentAddress");
 
                     b.Navigation("Agent");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.PetEnhancementModel", b =>
-                {
-                    b.HasOne("NineChronicles.DataProvider.Store.Models.AgentModel", "Agent")
-                        .WithMany()
-                        .HasForeignKey("AgentAddress");
-
-                    b.HasOne("NineChronicles.DataProvider.Store.Models.AvatarModel", "Avatar")
-                        .WithMany()
-                        .HasForeignKey("AvatarAddress");
-
-                    b.Navigation("Agent");
-
-                    b.Navigation("Avatar");
                 });
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.RapidCombinationModel", b =>
