@@ -57,6 +57,9 @@ namespace NineChronicles.DataProvider.Store
         // Table for storing consumable purchase data in the shop
         public DbSet<ShopHistoryConsumableModel>? ShopHistoryConsumables { get; set; }
 
+        // Table for storing FungibleAssetValue purchase data in the shop
+        public DbSet<ShopHistoryFungibleAssetValueModel>? ShopHistoryFungibleAssetValues { get; set; }
+
         // Table for storing Staking actions
         public DbSet<StakeModel>? Stakings { get; set; }
 
@@ -148,6 +151,9 @@ namespace NineChronicles.DataProvider.Store
         // Table for storing RapidCombination actions
         public DbSet<RapidCombinationModel> RapidCombinations => Set<RapidCombinationModel>();
 
+        // Table for storing PetEnhancement actions
+        public DbSet<PetEnhancementModel> PetEnhancements => Set<PetEnhancementModel>();
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.
@@ -162,6 +168,10 @@ namespace NineChronicles.DataProvider.Store
             modelBuilder.Entity<BattleArenaRankingModel>().HasNoKey();
             modelBuilder.Entity<ShopMaterialModel>().HasNoKey();
             modelBuilder.Entity<MigrateMonsterCollectionModel>().HasNoKey();
+            modelBuilder.Entity<RunesAcquiredModel>().HasKey(
+                nameof(RunesAcquiredModel.Id),
+                nameof(RunesAcquiredModel.ActionType),
+                nameof(RunesAcquiredModel.TickerType));
             modelBuilder.Entity<WorldBossRankingModel>()
                 .HasNoKey()
                 .ToTable("WorldBossRankings", t => t.ExcludeFromMigrations());
