@@ -6,13 +6,14 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Nullable>enable</Nullable>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	<NoWarn>$(NoWarn),1573,1591,1712</NoWarn>
+	<NoWarn>$(NoWarn),1573,1591,1712,SA1009,SA1101,SA1111,SA1309,SA1600,SA1633</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\NineChronicles.Headless\NineChronicles.Headless\NineChronicles.Headless.csproj" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.6" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="5.0.6" />
+    <ProjectReference Include="..\NineChronicles.Headless\Lib9c\Lib9c.Utils\Lib9c.Utils.csproj" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.1" />
 	<PackageReference Include="SonarAnalyzer.CSharp" Version="8.18.0.27296">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

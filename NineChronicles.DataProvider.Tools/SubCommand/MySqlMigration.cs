@@ -19,6 +19,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using Nekoyume.Action;
     using Nekoyume.Battle;
     using Nekoyume.BlockChain.Policy;
+    using Nekoyume.Extensions;
     using Nekoyume.Helper;
     using Nekoyume.Model.Arena;
     using Nekoyume.Model.Item;
@@ -49,6 +50,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private const string SCTDbName = "ShopCostumes";
         private const string SMDbName = "ShopMaterials";
         private string BARDbName = "BattleArenaRanking";
+        private string URDbName = "UserRunes";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain<NCAction> _baseChain;
@@ -70,9 +72,12 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private StreamWriter _sctBulkFile;
         private StreamWriter _smBulkFile;
         private StreamWriter _barBulkFile;
+        private StreamWriter _urBulkFile;
         private StreamWriter _agentBulkFile;
         private StreamWriter _avatarBulkFile;
         private List<string> _agentList;
+        private List<string> _hourGlassAgentList;
+        private List<string> _apStoneAgentList;
         private List<string> _avatarList;
         private List<string> _ccFiles;
         private List<string> _ceFiles;
@@ -92,6 +97,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private List<string> _sctFiles;
         private List<string> _smFiles;
         private List<string> _barFiles;
+        private List<string> _urFiles;
         private List<string> _agentFiles;
         private List<string> _avatarFiles;
 
@@ -226,11 +232,14 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _sctFiles = new List<string>();
             _smFiles = new List<string>();
             _barFiles = new List<string>();
+            _urFiles = new List<string>();
             _agentFiles = new List<string>();
             _avatarFiles = new List<string>();
 
             // lists to keep track of inserted addresses to minimize duplicates
             _agentList = new List<string>();
+            _hourGlassAgentList = new List<string>();
+            _apStoneAgentList = new List<string>();
             _avatarList = new List<string>();
 
             CreateBulkFiles();
@@ -262,9 +271,14 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var ev = exec.Last();
                 var avatarCount = 0;
                 AvatarState avatarState;
-                int interval = 1000000;
+                int interval = 10000000;
                 int intervalCount = 0;
                 bool checkBARankingTable = false;
+                var sheets = ev.OutputStates.GetSheets(
+                    sheetTypes: new[]
+                    {
+                        typeof(RuneSheet),
+                    });
 
                 foreach (var avatar in avatars)
                 {
@@ -324,6 +338,28 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             cmd33.ExecuteScalar();
                             connection.Close();
                             checkBARankingTable = true;
+                        }
+
+                        var runeSheet = sheets.GetSheet<RuneSheet>();
+                        foreach (var runeType in runeSheet.Values)
+                        {
+#pragma warning disable CS0618
+                            var runeCurrency = Currency.Legacy(runeType.Ticker, 0, minters: null);
+#pragma warning restore CS0618
+                            var outputRuneBalance = ev.OutputStates.GetBalance(
+                                avatarAddress,
+                                runeCurrency);
+                            if (Convert.ToDecimal(outputRuneBalance.GetQuantityString()) > 0)
+                            {
+                                _urBulkFile.WriteLine(
+                                    $"{tip.Index};" +
+                                    $"{avatarAddress.ToString()};" +
+                                    $"{avatarState.agentAddress.ToString()};" +
+                                    $"{runeType.Ticker};" +
+                                    $"{Convert.ToDecimal(outputRuneBalance.GetQuantityString())};" +
+                                    $"{tip.Timestamp.UtcDateTime:yyyy-MM-dd}"
+                                );
+                            }
                         }
 
                         var arenaScoreAdr =
@@ -497,28 +533,63 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         var userEquipments = avatarState.inventory.Equipments;
                         var userCostumes = avatarState.inventory.Costumes;
                         var userMaterials = avatarState.inventory.Materials;
+                        var materialItemSheet = ev.OutputStates.GetSheet<MaterialItemSheet>();
+                        var hourglassRow = materialItemSheet
+                            .First(pair => pair.Value.ItemSubType == ItemSubType.Hourglass)
+                            .Value;
+                        var apStoneRow = materialItemSheet
+                            .First(pair => pair.Value.ItemSubType == ItemSubType.ApStone)
+                            .Value;
                         var userConsumables = avatarState.inventory.Consumables;
 
                         foreach (var equipment in userEquipments)
                         {
                             var equipmentCp = CPHelper.GetCP(equipment);
-                            WriteEquipment(equipment, avatarState.agentAddress, avatarAddress);
+                            WriteEquipment(tip.Index, equipment, avatarState.agentAddress, avatarAddress);
                             WriteRankingEquipment(equipment, avatarState.agentAddress, avatarAddress, equipmentCp);
                         }
 
                         foreach (var costume in userCostumes)
                         {
-                            WriteCostume(costume, avatarState.agentAddress, avatarAddress);
+                            WriteCostume(tip.Index, costume, avatarState.agentAddress, avatarAddress);
                         }
 
                         foreach (var material in userMaterials)
                         {
-                            WriteMaterial(material, avatarState.agentAddress, avatarAddress);
+                            if (material.ItemId.ToString() == hourglassRow.ItemId.ToString())
+                            {
+                                if (!_hourGlassAgentList.Contains(avatarState.agentAddress.ToString()))
+                                {
+                                     var inventoryState = new Inventory((List)avatarState.inventory.Serialize());
+                                     inventoryState.TryGetFungibleItems(hourglassRow.ItemId, out var hourglasses);
+                                     var hourglassesCount = hourglasses.Sum(e => e.count);
+                                     WriteMaterial(tip.Index, material, hourglassesCount, avatarState.agentAddress, avatarAddress);
+                                     _hourGlassAgentList.Add(avatarState.agentAddress.ToString());
+                                }
+                            }
+                            else if (material.ItemId.ToString() == apStoneRow.ItemId.ToString())
+                            {
+                                if (!_apStoneAgentList.Contains(avatarState.agentAddress.ToString()))
+                                {
+                                    var inventoryState = new Inventory((List)avatarState.inventory.Serialize());
+                                    inventoryState.TryGetFungibleItems(apStoneRow.ItemId, out var apStones);
+                                    var apStonesCount = apStones.Sum(e => e.count);
+                                    WriteMaterial(tip.Index, material, apStonesCount, avatarState.agentAddress, avatarAddress);
+                                    _apStoneAgentList.Add(avatarState.agentAddress.ToString());
+                                }
+                            }
+                            else
+                            {
+                                var inventoryState = new Inventory((List)avatarState.inventory.Serialize());
+                                inventoryState.TryGetFungibleItems(material.ItemId, out var materialItem);
+                                var materialCount = materialItem.Sum(e => e.count);
+                                WriteMaterial(tip.Index, material, materialCount, avatarState.agentAddress, avatarAddress);
+                            }
                         }
 
                         foreach (var consumable in userConsumables)
                         {
-                            WriteConsumable(consumable, avatarState.agentAddress, avatarAddress);
+                            WriteConsumable(tip.Index, consumable, avatarState.agentAddress, avatarAddress);
                         }
 
                         if (!agents.Contains(avatarState.agentAddress.ToString()))
@@ -670,6 +741,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             BulkInsert(BARDbName, path);
                         }
 
+                        foreach (var path in _urFiles)
+                        {
+                            BulkInsert(URDbName, path);
+                        }
+
                         _agentFiles.RemoveAt(0);
                         _avatarFiles.RemoveAt(0);
                         _ueFiles.RemoveAt(0);
@@ -686,6 +762,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         _sctFiles.RemoveAt(0);
                         _smFiles.RemoveAt(0);
                         _barFiles.RemoveAt(0);
+                        _urFiles.RemoveAt(0);
                         CreateBulkFiles();
                         intervalCount = 0;
                     }
@@ -695,35 +772,36 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
 
-                var stm2 = $"RENAME TABLE {UEDbName} TO {UEDbName}_Dump; CREATE TABLE {UEDbName} LIKE {UEDbName}_Dump;";
-                var stm3 = $"RENAME TABLE {UCTDbName} TO {UCTDbName}_Dump; CREATE TABLE {UCTDbName} LIKE {UCTDbName}_Dump;";
-                var stm4 = $"RENAME TABLE {UMDbName} TO {UMDbName}_Dump; CREATE TABLE {UMDbName} LIKE {UMDbName}_Dump;";
-                var stm5 = $"RENAME TABLE {UCDbName} TO {UCDbName}_Dump; CREATE TABLE {UCDbName} LIKE {UCDbName}_Dump;";
+                // var stm2 = $"RENAME TABLE {UEDbName} TO {UEDbName}_Dump; CREATE TABLE {UEDbName} LIKE {UEDbName}_Dump;";
+                // var stm3 = $"RENAME TABLE {UCTDbName} TO {UCTDbName}_Dump; CREATE TABLE {UCTDbName} LIKE {UCTDbName}_Dump;";
+                // var stm4 = $"RENAME TABLE {UMDbName} TO {UMDbName}_Dump; CREATE TABLE {UMDbName} LIKE {UMDbName}_Dump;";
+                // var stm5 = $"RENAME TABLE {UCDbName} TO {UCDbName}_Dump; CREATE TABLE {UCDbName} LIKE {UCDbName}_Dump;";
                 var stm6 = $"RENAME TABLE {EDbName} TO {EDbName}_Dump; CREATE TABLE {EDbName} LIKE {EDbName}_Dump;";
-                var stm12 = $"RENAME TABLE {USDbName} TO {USDbName}_Dump; CREATE TABLE {USDbName} LIKE {USDbName}_Dump;";
-                var stm13 = $"RENAME TABLE {UNCGDbName} TO {UNCGDbName}_Dump; CREATE TABLE {UNCGDbName} LIKE {UNCGDbName}_Dump;";
-                var stm14 = $"RENAME TABLE {UCYDbName} TO {UCYDbName}_Dump; CREATE TABLE {UCYDbName} LIKE {UCYDbName}_Dump;";
-                var stm15 = $"RENAME TABLE {UMCDbName} TO {UMCDbName}_Dump; CREATE TABLE {UMCDbName} LIKE {UMCDbName}_Dump;";
-                var stm16 = $"RENAME TABLE {SCDbName} TO {SCDbName}_Dump; CREATE TABLE {SCDbName} LIKE {SCDbName}_Dump;";
-                var stm17 = $"RENAME TABLE {SEDbName} TO {SEDbName}_Dump; CREATE TABLE {SEDbName} LIKE {SEDbName}_Dump;";
-                var stm19 = $"RENAME TABLE {SCTDbName} TO {SCTDbName}_Dump; CREATE TABLE {SCTDbName} LIKE {SCTDbName}_Dump;";
-                var stm20 = $"RENAME TABLE {SMDbName} TO {SMDbName}_Dump; CREATE TABLE {SMDbName} LIKE {SMDbName}_Dump;";
+                // var stm12 = $"RENAME TABLE {USDbName} TO {USDbName}_Dump; CREATE TABLE {USDbName} LIKE {USDbName}_Dump;";
+                // var stm13 = $"RENAME TABLE {UNCGDbName} TO {UNCGDbName}_Dump; CREATE TABLE {UNCGDbName} LIKE {UNCGDbName}_Dump;";
+                // var stm14 = $"RENAME TABLE {UCYDbName} TO {UCYDbName}_Dump; CREATE TABLE {UCYDbName} LIKE {UCYDbName}_Dump;";
+                // var stm15 = $"RENAME TABLE {UMCDbName} TO {UMCDbName}_Dump; CREATE TABLE {UMCDbName} LIKE {UMCDbName}_Dump;";
+                // var stm16 = $"RENAME TABLE {SCDbName} TO {SCDbName}_Dump; CREATE TABLE {SCDbName} LIKE {SCDbName}_Dump;";
+                // var stm17 = $"RENAME TABLE {SEDbName} TO {SEDbName}_Dump; CREATE TABLE {SEDbName} LIKE {SEDbName}_Dump;";
+                // var stm19 = $"RENAME TABLE {SCTDbName} TO {SCTDbName}_Dump; CREATE TABLE {SCTDbName} LIKE {SCTDbName}_Dump;";
+                // var stm20 = $"RENAME TABLE {SMDbName} TO {SMDbName}_Dump; CREATE TABLE {SMDbName} LIKE {SMDbName}_Dump;";
                 var stm23 = $"RENAME TABLE {BARDbName} TO {BARDbName}_Dump; CREATE TABLE {BARDbName} LIKE {BARDbName}_Dump;";
-                var cmd2 = new MySqlCommand(stm2, connection);
-                var cmd3 = new MySqlCommand(stm3, connection);
-                var cmd4 = new MySqlCommand(stm4, connection);
-                var cmd5 = new MySqlCommand(stm5, connection);
+                // var stm35 = $"RENAME TABLE {URDbName} TO {URDbName}_Dump; CREATE TABLE {URDbName} LIKE {URDbName}_Dump;";
+                // var cmd2 = new MySqlCommand(stm2, connection);
+                // var cmd3 = new MySqlCommand(stm3, connection);
+                // var cmd4 = new MySqlCommand(stm4, connection);
+                // var cmd5 = new MySqlCommand(stm5, connection);
                 var cmd6 = new MySqlCommand(stm6, connection);
-                var cmd12 = new MySqlCommand(stm12, connection);
-                var cmd13 = new MySqlCommand(stm13, connection);
-                var cmd14 = new MySqlCommand(stm14, connection);
-                var cmd15 = new MySqlCommand(stm15, connection);
-                var cmd16 = new MySqlCommand(stm16, connection);
-                var cmd17 = new MySqlCommand(stm17, connection);
-                var cmd19 = new MySqlCommand(stm19, connection);
-                var cmd20 = new MySqlCommand(stm20, connection);
+                // var cmd12 = new MySqlCommand(stm12, connection);
+                // var cmd13 = new MySqlCommand(stm13, connection);
+                // var cmd14 = new MySqlCommand(stm14, connection);
+                // var cmd15 = new MySqlCommand(stm15, connection);
+                // var cmd16 = new MySqlCommand(stm16, connection);
+                // var cmd17 = new MySqlCommand(stm17, connection);
+                // var cmd19 = new MySqlCommand(stm19, connection);
+                // var cmd20 = new MySqlCommand(stm20, connection);
                 var cmd23 = new MySqlCommand(stm23, connection);
-
+                // var cmd35 = new MySqlCommand(stm35, connection);
                 foreach (var path in _agentFiles)
                 {
                     BulkInsert(AgentDbName, path);
@@ -735,49 +813,48 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 }
 
                 var startMove = DateTimeOffset.Now;
-                connection.Open();
-                cmd2.CommandTimeout = 300;
-                cmd2.ExecuteScalar();
-                connection.Close();
+                // connection.Open();
+                // cmd2.CommandTimeout = 300;
+                // cmd2.ExecuteScalar();
+                // connection.Close();
                 var endMove = DateTimeOffset.Now;
-                Console.WriteLine("Move UserEquipments Complete! Time Elapsed: {0}", endMove - startMove);
-
+                // Console.WriteLine("Move UserEquipments Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _ueFiles)
                 {
                     BulkInsert(UEDbName, path);
                 }
 
-                startMove = DateTimeOffset.Now;
-                connection.Open();
-                cmd3.CommandTimeout = 300;
-                cmd3.ExecuteScalar();
-                connection.Close();
-                endMove = DateTimeOffset.Now;
-                Console.WriteLine("Move UserCostumes Complete! Time Elapsed: {0}", endMove - startMove);
+                // startMove = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd3.CommandTimeout = 300;
+                // cmd3.ExecuteScalar();
+                // connection.Close();
+                // endMove = DateTimeOffset.Now;
+                // Console.WriteLine("Move UserCostumes Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _uctFiles)
                 {
                     BulkInsert(UCTDbName, path);
                 }
 
-                startMove = DateTimeOffset.Now;
-                connection.Open();
-                cmd4.CommandTimeout = 300;
-                cmd4.ExecuteScalar();
-                connection.Close();
-                endMove = DateTimeOffset.Now;
-                Console.WriteLine("Move UserMaterials Complete! Time Elapsed: {0}", endMove - startMove);
+                // startMove = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd4.CommandTimeout = 300;
+                // cmd4.ExecuteScalar();
+                // connection.Close();
+                // endMove = DateTimeOffset.Now;
+                // Console.WriteLine("Move UserMaterials Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _umFiles)
                 {
                     BulkInsert(UMDbName, path);
                 }
 
-                startMove = DateTimeOffset.Now;
-                connection.Open();
-                cmd5.CommandTimeout = 300;
-                cmd5.ExecuteScalar();
-                connection.Close();
-                endMove = DateTimeOffset.Now;
-                Console.WriteLine("Move UserConsumables Complete! Time Elapsed: {0}", endMove - startMove);
+                // startMove = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd5.CommandTimeout = 300;
+                // cmd5.ExecuteScalar();
+                // connection.Close();
+                // endMove = DateTimeOffset.Now;
+                // Console.WriteLine("Move UserConsumables Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _ucFiles)
                 {
                     BulkInsert(UCDbName, path);
@@ -795,97 +872,97 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     BulkInsert(EDbName, path);
                 }
 
-                startMove = DateTimeOffset.Now;
-                connection.Open();
-                cmd12.CommandTimeout = 300;
-                cmd12.ExecuteScalar();
-                connection.Close();
-                endMove = DateTimeOffset.Now;
-                Console.WriteLine("Move UserStakings Complete! Time Elapsed: {0}", endMove - startMove);
+                // startMove = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd12.CommandTimeout = 300;
+                // cmd12.ExecuteScalar();
+                // connection.Close();
+                // endMove = DateTimeOffset.Now;
+                // Console.WriteLine("Move UserStakings Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _usFiles)
                 {
                     BulkInsert(USDbName, path);
                 }
 
-                startMove = DateTimeOffset.Now;
-                connection.Open();
-                cmd13.CommandTimeout = 300;
-                cmd13.ExecuteScalar();
-                connection.Close();
-                endMove = DateTimeOffset.Now;
-                Console.WriteLine("Move UserNCGs Complete! Time Elapsed: {0}", endMove - startMove);
+                // startMove = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd13.CommandTimeout = 300;
+                // cmd13.ExecuteScalar();
+                // connection.Close();
+                // endMove = DateTimeOffset.Now;
+                // Console.WriteLine("Move UserNCGs Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _uncgFiles)
                 {
                     BulkInsert(UNCGDbName, path);
                 }
 
-                startMove = DateTimeOffset.Now;
-                connection.Open();
-                cmd14.CommandTimeout = 300;
-                cmd14.ExecuteScalar();
-                connection.Close();
-                endMove = DateTimeOffset.Now;
-                Console.WriteLine("Move UserCrystals Complete! Time Elapsed: {0}", endMove - startMove);
+                // startMove = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd14.CommandTimeout = 300;
+                // cmd14.ExecuteScalar();
+                // connection.Close();
+                // endMove = DateTimeOffset.Now;
+                // Console.WriteLine("Move UserCrystals Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _ucyFiles)
                 {
                     BulkInsert(UCYDbName, path);
                 }
 
-                startMove = DateTimeOffset.Now;
-                connection.Open();
-                cmd15.CommandTimeout = 300;
-                cmd15.ExecuteScalar();
-                connection.Close();
-                endMove = DateTimeOffset.Now;
-                Console.WriteLine("Move UserMonsterCollections Complete! Time Elapsed: {0}", endMove - startMove);
+                // startMove = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd15.CommandTimeout = 300;
+                // cmd15.ExecuteScalar();
+                // connection.Close();
+                // endMove = DateTimeOffset.Now;
+                // Console.WriteLine("Move UserMonsterCollections Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _umcFiles)
                 {
                     BulkInsert(UMCDbName, path);
                 }
 
-                startMove = DateTimeOffset.Now;
-                connection.Open();
-                cmd16.CommandTimeout = 300;
-                cmd16.ExecuteScalar();
-                connection.Close();
-                endMove = DateTimeOffset.Now;
-                Console.WriteLine("Move ShopConsumables Complete! Time Elapsed: {0}", endMove - startMove);
+                // startMove = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd16.CommandTimeout = 300;
+                // cmd16.ExecuteScalar();
+                // connection.Close();
+                // endMove = DateTimeOffset.Now;
+                // Console.WriteLine("Move ShopConsumables Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _scFiles)
                 {
                     BulkInsert(SCDbName, path);
                 }
 
-                startMove = DateTimeOffset.Now;
-                connection.Open();
-                cmd17.CommandTimeout = 300;
-                cmd17.ExecuteScalar();
-                connection.Close();
-                endMove = DateTimeOffset.Now;
-                Console.WriteLine("Move ShopEquipments Complete! Time Elapsed: {0}", endMove - startMove);
+                // startMove = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd17.CommandTimeout = 300;
+                // cmd17.ExecuteScalar();
+                // connection.Close();
+                // endMove = DateTimeOffset.Now;
+                // Console.WriteLine("Move ShopEquipments Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _seFiles)
                 {
                     BulkInsert(SEDbName, path);
                 }
 
-                startMove = DateTimeOffset.Now;
-                connection.Open();
-                cmd19.CommandTimeout = 300;
-                cmd19.ExecuteScalar();
-                connection.Close();
-                endMove = DateTimeOffset.Now;
-                Console.WriteLine("Move ShopCostumes Complete! Time Elapsed: {0}", endMove - startMove);
+                // startMove = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd19.CommandTimeout = 300;
+                // cmd19.ExecuteScalar();
+                // connection.Close();
+                // endMove = DateTimeOffset.Now;
+                // Console.WriteLine("Move ShopCostumes Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _sctFiles)
                 {
                     BulkInsert(SCTDbName, path);
                 }
 
-                startMove = DateTimeOffset.Now;
-                connection.Open();
-                cmd20.CommandTimeout = 300;
-                cmd20.ExecuteScalar();
-                connection.Close();
-                endMove = DateTimeOffset.Now;
-                Console.WriteLine("Move ShopMaterials Complete! Time Elapsed: {0}", endMove - startMove);
+                // startMove = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd20.CommandTimeout = 300;
+                // cmd20.ExecuteScalar();
+                // connection.Close();
+                // endMove = DateTimeOffset.Now;
+                // Console.WriteLine("Move ShopMaterials Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _smFiles)
                 {
                     BulkInsert(SMDbName, path);
@@ -902,67 +979,81 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 {
                     BulkInsert(BARDbName, path);
                 }
+
+                // startMove = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd35.CommandTimeout = 300;
+                // cmd35.ExecuteScalar();
+                // connection.Close();
+                // endMove = DateTimeOffset.Now;
+                // Console.WriteLine("Move UserRunes Complete! Time Elapsed: {0}", endMove - startMove);
+                foreach (var path in _urFiles)
+                {
+                    BulkInsert(URDbName, path);
+                }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
-                Console.WriteLine("Restoring previous tables due to error...");
-                var stm12 = $"DROP TABLE {UEDbName}; RENAME TABLE {UEDbName}_Dump TO {UEDbName};";
-                var stm13 = $"DROP TABLE {EDbName}; RENAME TABLE {UCTDbName}_Dump TO {UCTDbName};";
-                var stm14 = $"DROP TABLE {EDbName}; RENAME TABLE {UMDbName}_Dump TO {UMDbName};";
-                var stm15 = $"DROP TABLE {EDbName}; RENAME TABLE {UCDbName}_Dump TO {UCDbName};";
+                // Console.WriteLine(e.Message);
+                // Console.WriteLine("Restoring previous tables due to error...");
+                // var stm12 = $"DROP TABLE {UEDbName}; RENAME TABLE {UEDbName}_Dump TO {UEDbName};";
+                // var stm13 = $"DROP TABLE {EDbName}; RENAME TABLE {UCTDbName}_Dump TO {UCTDbName};";
+                // var stm14 = $"DROP TABLE {EDbName}; RENAME TABLE {UMDbName}_Dump TO {UMDbName};";
+                // var stm15 = $"DROP TABLE {EDbName}; RENAME TABLE {UCDbName}_Dump TO {UCDbName};";
                 var stm16 = $"DROP TABLE {EDbName}; RENAME TABLE {EDbName}_Dump TO {EDbName};";
-                var stm17 = $"DROP TABLE {USDbName}; RENAME TABLE {USDbName}_Dump TO {USDbName};";
-                var stm19 = $"DROP TABLE {UNCGDbName}; RENAME TABLE {UNCGDbName}_Dump TO {UNCGDbName};";
-                var stm20 = $"DROP TABLE {UCYDbName}; RENAME TABLE {UCYDbName}_Dump TO {UCYDbName};";
-                var stm23 = $"DROP TABLE {UMCDbName}; RENAME TABLE {UMCDbName}_Dump TO {UMCDbName};";
-                var stm25 = $"DROP TABLE {SCDbName}; RENAME TABLE {SCDbName}_Dump TO {SCDbName};";
-                var stm26 = $"DROP TABLE {SEDbName}; RENAME TABLE {SEDbName}_Dump TO {SEDbName};";
-                var stm27 = $"DROP TABLE {SCTDbName}; RENAME TABLE {SCTDbName}_Dump TO {SCTDbName};";
-                var stm28 = $"DROP TABLE {SMDbName}; RENAME TABLE {SMDbName}_Dump TO {SMDbName};";
+                // var stm17 = $"DROP TABLE {USDbName}; RENAME TABLE {USDbName}_Dump TO {USDbName};";
+                // var stm19 = $"DROP TABLE {UNCGDbName}; RENAME TABLE {UNCGDbName}_Dump TO {UNCGDbName};";
+                // var stm20 = $"DROP TABLE {UCYDbName}; RENAME TABLE {UCYDbName}_Dump TO {UCYDbName};";
+                // var stm23 = $"DROP TABLE {UMCDbName}; RENAME TABLE {UMCDbName}_Dump TO {UMCDbName};";
+                // var stm25 = $"DROP TABLE {SCDbName}; RENAME TABLE {SCDbName}_Dump TO {SCDbName};";
+                // var stm26 = $"DROP TABLE {SEDbName}; RENAME TABLE {SEDbName}_Dump TO {SEDbName};";
+                // var stm27 = $"DROP TABLE {SCTDbName}; RENAME TABLE {SCTDbName}_Dump TO {SCTDbName};";
+                // var stm28 = $"DROP TABLE {SMDbName}; RENAME TABLE {SMDbName}_Dump TO {SMDbName};";
                 var stm33 = $"DROP TABLE {BARDbName}; RENAME TABLE {BARDbName}_Dump TO {BARDbName};";
-                var cmd12 = new MySqlCommand(stm12, connection);
-                var cmd13 = new MySqlCommand(stm13, connection);
-                var cmd14 = new MySqlCommand(stm14, connection);
-                var cmd15 = new MySqlCommand(stm15, connection);
+                // var stm36 = $"DROP TABLE {URDbName}; RENAME TABLE {URDbName}_Dump TO {URDbName};";
+                // var cmd12 = new MySqlCommand(stm12, connection);
+                // var cmd13 = new MySqlCommand(stm13, connection);
+                // var cmd14 = new MySqlCommand(stm14, connection);
+                // var cmd15 = new MySqlCommand(stm15, connection);
                 var cmd16 = new MySqlCommand(stm16, connection);
-                var cmd17 = new MySqlCommand(stm17, connection);
-                var cmd19 = new MySqlCommand(stm19, connection);
-                var cmd20 = new MySqlCommand(stm20, connection);
-                var cmd23 = new MySqlCommand(stm23, connection);
-                var cmd25 = new MySqlCommand(stm25, connection);
-                var cmd26 = new MySqlCommand(stm26, connection);
-                var cmd27 = new MySqlCommand(stm27, connection);
-                var cmd28 = new MySqlCommand(stm28, connection);
+                // var cmd17 = new MySqlCommand(stm17, connection);
+                // var cmd19 = new MySqlCommand(stm19, connection);
+                // var cmd20 = new MySqlCommand(stm20, connection);
+                // var cmd23 = new MySqlCommand(stm23, connection);
+                // var cmd25 = new MySqlCommand(stm25, connection);
+                // var cmd26 = new MySqlCommand(stm26, connection);
+                // var cmd27 = new MySqlCommand(stm27, connection);
+                // var cmd28 = new MySqlCommand(stm28, connection);
                 var cmd33 = new MySqlCommand(stm33, connection);
+                // var cmd36 = new MySqlCommand(stm36, connection);
                 var startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd12.CommandTimeout = 300;
-                cmd12.ExecuteScalar();
-                connection.Close();
+                // connection.Open();
+                // cmd12.CommandTimeout = 300;
+                // cmd12.ExecuteScalar();
+                // connection.Close();
                 var endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore UserEquipments Complete! Time Elapsed: {0}", endRestore - startRestore);
-                startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd13.CommandTimeout = 300;
-                cmd13.ExecuteScalar();
-                connection.Close();
-                endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore UserCostumes Complete! Time Elapsed: {0}", endRestore - startRestore);
-                startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd14.CommandTimeout = 300;
-                cmd14.ExecuteScalar();
-                connection.Close();
-                endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore UserMaterials Complete! Time Elapsed: {0}", endRestore - startRestore);
-                startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd15.CommandTimeout = 300;
-                cmd15.ExecuteScalar();
-                connection.Close();
-                endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore UserConsumables Complete! Time Elapsed: {0}", endRestore - startRestore);
+                // Console.WriteLine("Restore UserEquipments Complete! Time Elapsed: {0}", endRestore - startRestore);
+                // startRestore = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd13.CommandTimeout = 300;
+                // cmd13.ExecuteScalar();
+                // connection.Close();
+                // endRestore = DateTimeOffset.Now;
+                // Console.WriteLine("Restore UserCostumes Complete! Time Elapsed: {0}", endRestore - startRestore);
+                // startRestore = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd14.CommandTimeout = 300;
+                // cmd14.ExecuteScalar();
+                // connection.Close();
+                // endRestore = DateTimeOffset.Now;
+                // Console.WriteLine("Restore UserMaterials Complete! Time Elapsed: {0}", endRestore - startRestore);
+                // startRestore = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd15.CommandTimeout = 300;
+                // cmd15.ExecuteScalar();
+                // connection.Close();
+                // endRestore = DateTimeOffset.Now;
+                // Console.WriteLine("Restore UserConsumables Complete! Time Elapsed: {0}", endRestore - startRestore);
                 startRestore = DateTimeOffset.Now;
                 connection.Open();
                 cmd16.CommandTimeout = 300;
@@ -970,62 +1061,62 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 connection.Close();
                 endRestore = DateTimeOffset.Now;
                 Console.WriteLine("Restore Equipments Complete! Time Elapsed: {0}", endRestore - startRestore);
-                startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd17.CommandTimeout = 300;
-                cmd17.ExecuteScalar();
-                connection.Close();
-                endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore UserStakings Complete! Time Elapsed: {0}", endRestore - startRestore);
-                startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd19.CommandTimeout = 300;
-                cmd19.ExecuteScalar();
-                connection.Close();
-                endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore UserNCGs Complete! Time Elapsed: {0}", endRestore - startRestore);
-                startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd20.CommandTimeout = 300;
-                cmd20.ExecuteScalar();
-                connection.Close();
-                endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore UserCrystals Complete! Time Elapsed: {0}", endRestore - startRestore);
-                startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd23.CommandTimeout = 300;
-                cmd23.ExecuteScalar();
-                connection.Close();
-                endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore UserMonsterCollections Complete! Time Elapsed: {0}", endRestore - startRestore);
-                startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd25.CommandTimeout = 300;
-                cmd25.ExecuteScalar();
-                connection.Close();
-                endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore ShopConsumables Complete! Time Elapsed: {0}", endRestore - startRestore);
-                startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd26.CommandTimeout = 300;
-                cmd26.ExecuteScalar();
-                connection.Close();
-                endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore ShopEquipments Complete! Time Elapsed: {0}", endRestore - startRestore);
-                startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd27.CommandTimeout = 300;
-                cmd27.ExecuteScalar();
-                connection.Close();
-                endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore ShopCostumes Complete! Time Elapsed: {0}", endRestore - startRestore);
-                startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd28.CommandTimeout = 300;
-                cmd28.ExecuteScalar();
-                connection.Close();
-                endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore ShopMaterials Complete! Time Elapsed: {0}", endRestore - startRestore);
+                // startRestore = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd17.CommandTimeout = 300;
+                // cmd17.ExecuteScalar();
+                // connection.Close();
+                // endRestore = DateTimeOffset.Now;
+                // Console.WriteLine("Restore UserStakings Complete! Time Elapsed: {0}", endRestore - startRestore);
+                // startRestore = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd19.CommandTimeout = 300;
+                // cmd19.ExecuteScalar();
+                // connection.Close();
+                // endRestore = DateTimeOffset.Now;
+                // Console.WriteLine("Restore UserNCGs Complete! Time Elapsed: {0}", endRestore - startRestore);
+                // startRestore = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd20.CommandTimeout = 300;
+                // cmd20.ExecuteScalar();
+                // connection.Close();
+                // endRestore = DateTimeOffset.Now;
+                // Console.WriteLine("Restore UserCrystals Complete! Time Elapsed: {0}", endRestore - startRestore);
+                // startRestore = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd23.CommandTimeout = 300;
+                // cmd23.ExecuteScalar();
+                // connection.Close();
+                // endRestore = DateTimeOffset.Now;
+                // Console.WriteLine("Restore UserMonsterCollections Complete! Time Elapsed: {0}", endRestore - startRestore);
+                // startRestore = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd25.CommandTimeout = 300;
+                // cmd25.ExecuteScalar();
+                // connection.Close();
+                // endRestore = DateTimeOffset.Now;
+                // Console.WriteLine("Restore ShopConsumables Complete! Time Elapsed: {0}", endRestore - startRestore);
+                // startRestore = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd26.CommandTimeout = 300;
+                // cmd26.ExecuteScalar();
+                // connection.Close();
+                // endRestore = DateTimeOffset.Now;
+                // Console.WriteLine("Restore ShopEquipments Complete! Time Elapsed: {0}", endRestore - startRestore);
+                // startRestore = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd27.CommandTimeout = 300;
+                // cmd27.ExecuteScalar();
+                // connection.Close();
+                // endRestore = DateTimeOffset.Now;
+                // Console.WriteLine("Restore ShopCostumes Complete! Time Elapsed: {0}", endRestore - startRestore);
+                // startRestore = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd28.CommandTimeout = 300;
+                // cmd28.ExecuteScalar();
+                // connection.Close();
+                // endRestore = DateTimeOffset.Now;
+                // Console.WriteLine("Restore ShopMaterials Complete! Time Elapsed: {0}", endRestore - startRestore);
                 startRestore = DateTimeOffset.Now;
                 connection.Open();
                 cmd33.CommandTimeout = 300;
@@ -1033,64 +1124,73 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 connection.Close();
                 endRestore = DateTimeOffset.Now;
                 Console.WriteLine("Restore BattleArenaRanking Complete! Time Elapsed: {0}", endRestore - startRestore);
+                // startRestore = DateTimeOffset.Now;
+                // connection.Open();
+                // cmd36.CommandTimeout = 300;
+                // cmd36.ExecuteScalar();
+                // connection.Close();
+                // endRestore = DateTimeOffset.Now;
+                // Console.WriteLine("Restore UserRunes Complete! Time Elapsed: {0}", endRestore - startRestore);
             }
 
-            var stm7 = $"DROP TABLE {UEDbName}_Dump;";
-            var stm8 = $"DROP TABLE {UCTDbName}_Dump;";
-            var stm9 = $"DROP TABLE {UMDbName}_Dump;";
-            var stm10 = $"DROP TABLE {UCDbName}_Dump;";
+            // var stm7 = $"DROP TABLE {UEDbName}_Dump;";
+            // var stm8 = $"DROP TABLE {UCTDbName}_Dump;";
+            // var stm9 = $"DROP TABLE {UMDbName}_Dump;";
+            // var stm10 = $"DROP TABLE {UCDbName}_Dump;";
             var stm11 = $"DROP TABLE {EDbName}_Dump;";
-            var stm18 = $"DROP TABLE {USDbName}_Dump;";
-            var stm21 = $"DROP TABLE {UNCGDbName}_Dump;";
-            var stm22 = $"DROP TABLE {UCYDbName}_Dump;";
-            var stm24 = $"DROP TABLE {UMCDbName}_Dump;";
-            var stm29 = $"DROP TABLE {SCDbName}_Dump;";
-            var stm30 = $"DROP TABLE {SEDbName}_Dump;";
-            var stm31 = $"DROP TABLE {SCTDbName}_Dump;";
-            var stm32 = $"DROP TABLE {SMDbName}_Dump;";
+            // var stm18 = $"DROP TABLE {USDbName}_Dump;";
+            // var stm21 = $"DROP TABLE {UNCGDbName}_Dump;";
+            // var stm22 = $"DROP TABLE {UCYDbName}_Dump;";
+            // var stm24 = $"DROP TABLE {UMCDbName}_Dump;";
+            // var stm29 = $"DROP TABLE {SCDbName}_Dump;";
+            // var stm30 = $"DROP TABLE {SEDbName}_Dump;";
+            // var stm31 = $"DROP TABLE {SCTDbName}_Dump;";
+            // var stm32 = $"DROP TABLE {SMDbName}_Dump;";
             var stm34 = $"DROP TABLE {BARDbName}_Dump;";
-            var cmd7 = new MySqlCommand(stm7, connection);
-            var cmd8 = new MySqlCommand(stm8, connection);
-            var cmd9 = new MySqlCommand(stm9, connection);
-            var cmd10 = new MySqlCommand(stm10, connection);
+            // var stm37 = $"DROP TABLE {URDbName}_Dump;";
+            // var cmd7 = new MySqlCommand(stm7, connection);
+            // var cmd8 = new MySqlCommand(stm8, connection);
+            // var cmd9 = new MySqlCommand(stm9, connection);
+            // var cmd10 = new MySqlCommand(stm10, connection);
             var cmd11 = new MySqlCommand(stm11, connection);
-            var cmd18 = new MySqlCommand(stm18, connection);
-            var cmd21 = new MySqlCommand(stm21, connection);
-            var cmd22 = new MySqlCommand(stm22, connection);
-            var cmd24 = new MySqlCommand(stm24, connection);
-            var cmd29 = new MySqlCommand(stm29, connection);
-            var cmd30 = new MySqlCommand(stm30, connection);
-            var cmd31 = new MySqlCommand(stm31, connection);
-            var cmd32 = new MySqlCommand(stm32, connection);
+            // var cmd18 = new MySqlCommand(stm18, connection);
+            // var cmd21 = new MySqlCommand(stm21, connection);
+            // var cmd22 = new MySqlCommand(stm22, connection);
+            // var cmd24 = new MySqlCommand(stm24, connection);
+            // var cmd29 = new MySqlCommand(stm29, connection);
+            // var cmd30 = new MySqlCommand(stm30, connection);
+            // var cmd31 = new MySqlCommand(stm31, connection);
+            // var cmd32 = new MySqlCommand(stm32, connection);
             var cmd34 = new MySqlCommand(stm34, connection);
+            // var cmd37 = new MySqlCommand(stm37, connection);
             var startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd7.CommandTimeout = 300;
-            cmd7.ExecuteScalar();
-            connection.Close();
+            // connection.Open();
+            // cmd7.CommandTimeout = 300;
+            // cmd7.ExecuteScalar();
+            // connection.Close();
             var endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Delete UserEquipments_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
-            startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd8.CommandTimeout = 300;
-            cmd8.ExecuteScalar();
-            connection.Close();
-            endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Delete UserCostumes_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
-            startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd9.CommandTimeout = 300;
-            cmd9.ExecuteScalar();
-            connection.Close();
-            endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Delete UserMaterials_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
-            startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd10.CommandTimeout = 300;
-            cmd10.ExecuteScalar();
-            connection.Close();
-            endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Delete UserConsumables_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            // Console.WriteLine("Delete UserEquipments_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            // startDelete = DateTimeOffset.Now;
+            // connection.Open();
+            // cmd8.CommandTimeout = 300;
+            // cmd8.ExecuteScalar();
+            // connection.Close();
+            // endDelete = DateTimeOffset.Now;
+            // Console.WriteLine("Delete UserCostumes_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            // startDelete = DateTimeOffset.Now;
+            // connection.Open();
+            // cmd9.CommandTimeout = 300;
+            // cmd9.ExecuteScalar();
+            // connection.Close();
+            // endDelete = DateTimeOffset.Now;
+            // Console.WriteLine("Delete UserMaterials_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            // startDelete = DateTimeOffset.Now;
+            // connection.Open();
+            // cmd10.CommandTimeout = 300;
+            // cmd10.ExecuteScalar();
+            // connection.Close();
+            // endDelete = DateTimeOffset.Now;
+            // Console.WriteLine("Delete UserConsumables_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
             startDelete = DateTimeOffset.Now;
             connection.Open();
             cmd11.CommandTimeout = 300;
@@ -1098,62 +1198,62 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             connection.Close();
             endDelete = DateTimeOffset.Now;
             Console.WriteLine("Delete Equipments_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
-            startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd18.CommandTimeout = 300;
-            cmd18.ExecuteScalar();
-            connection.Close();
-            endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Delete UserStakings_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
-            startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd21.CommandTimeout = 300;
-            cmd21.ExecuteScalar();
-            connection.Close();
-            endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Delete UserNCGs_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
-            startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd22.CommandTimeout = 300;
-            cmd22.ExecuteScalar();
-            connection.Close();
-            endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Delete UserCrystals_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
-            startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd24.CommandTimeout = 300;
-            cmd24.ExecuteScalar();
-            connection.Close();
-            endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Delete UserMonsterCollections_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
-            startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd29.CommandTimeout = 300;
-            cmd29.ExecuteScalar();
-            connection.Close();
-            endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Delete ShopConsumables_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
-            startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd30.CommandTimeout = 300;
-            cmd30.ExecuteScalar();
-            connection.Close();
-            endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Delete ShopEquipments_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
-            startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd31.CommandTimeout = 300;
-            cmd31.ExecuteScalar();
-            connection.Close();
-            endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Delete ShopCostumes_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
-            startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd32.CommandTimeout = 300;
-            cmd32.ExecuteScalar();
-            connection.Close();
-            endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Delete ShopMaterials_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            // startDelete = DateTimeOffset.Now;
+            // connection.Open();
+            // cmd18.CommandTimeout = 300;
+            // cmd18.ExecuteScalar();
+            // connection.Close();
+            // endDelete = DateTimeOffset.Now;
+            // Console.WriteLine("Delete UserStakings_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            // startDelete = DateTimeOffset.Now;
+            // connection.Open();
+            // cmd21.CommandTimeout = 300;
+            // cmd21.ExecuteScalar();
+            // connection.Close();
+            // endDelete = DateTimeOffset.Now;
+            // Console.WriteLine("Delete UserNCGs_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            // startDelete = DateTimeOffset.Now;
+            // connection.Open();
+            // cmd22.CommandTimeout = 300;
+            // cmd22.ExecuteScalar();
+            // connection.Close();
+            // endDelete = DateTimeOffset.Now;
+            // Console.WriteLine("Delete UserCrystals_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            // startDelete = DateTimeOffset.Now;
+            // connection.Open();
+            // cmd24.CommandTimeout = 300;
+            // cmd24.ExecuteScalar();
+            // connection.Close();
+            // endDelete = DateTimeOffset.Now;
+            // Console.WriteLine("Delete UserMonsterCollections_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            // startDelete = DateTimeOffset.Now;
+            // connection.Open();
+            // cmd29.CommandTimeout = 300;
+            // cmd29.ExecuteScalar();
+            // connection.Close();
+            // endDelete = DateTimeOffset.Now;
+            // Console.WriteLine("Delete ShopConsumables_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            // startDelete = DateTimeOffset.Now;
+            // connection.Open();
+            // cmd30.CommandTimeout = 300;
+            // cmd30.ExecuteScalar();
+            // connection.Close();
+            // endDelete = DateTimeOffset.Now;
+            // Console.WriteLine("Delete ShopEquipments_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            // startDelete = DateTimeOffset.Now;
+            // connection.Open();
+            // cmd31.CommandTimeout = 300;
+            // cmd31.ExecuteScalar();
+            // connection.Close();
+            // endDelete = DateTimeOffset.Now;
+            // Console.WriteLine("Delete ShopCostumes_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            // startDelete = DateTimeOffset.Now;
+            // connection.Open();
+            // cmd32.CommandTimeout = 300;
+            // cmd32.ExecuteScalar();
+            // connection.Close();
+            // endDelete = DateTimeOffset.Now;
+            // Console.WriteLine("Delete ShopMaterials_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
             startDelete = DateTimeOffset.Now;
             connection.Open();
             cmd34.CommandTimeout = 300;
@@ -1161,6 +1261,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             connection.Close();
             endDelete = DateTimeOffset.Now;
             Console.WriteLine("Delete BattleArenaRanking_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            // startDelete = DateTimeOffset.Now;
+            // connection.Open();
+            // cmd37.CommandTimeout = 300;
+            // cmd37.ExecuteScalar();
+            // connection.Close();
+            // endDelete = DateTimeOffset.Now;
+            // Console.WriteLine("Delete UserRunes_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
@@ -1228,6 +1335,9 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             _barBulkFile.Flush();
             _barBulkFile.Close();
+
+            _urBulkFile.Flush();
+            _urBulkFile.Close();
         }
 
         private void CreateBulkFiles()
@@ -1292,6 +1402,9 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             string barFilePath = Path.GetTempFileName();
             _barBulkFile = new StreamWriter(barFilePath);
 
+            string urFilePath = Path.GetTempFileName();
+            _urBulkFile = new StreamWriter(urFilePath);
+
             _agentFiles.Add(agentFilePath);
             _avatarFiles.Add(avatarFilePath);
             _ccFiles.Add(ccFilePath);
@@ -1312,6 +1425,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _sctFiles.Add(sctFilePath);
             _smFiles.Add(smFilePath);
             _barFiles.Add(barFilePath);
+            _urFiles.Add(urFilePath);
         }
 
         private void BulkInsert(
@@ -1364,6 +1478,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         }
 
         private void WriteEquipment(
+            long tipIndex,
             Equipment equipment,
             Address agentAddress,
             Address avatarAddress)
@@ -1371,6 +1486,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             try
             {
                 _ueBulkFile.WriteLine(
+                    $"{tipIndex};" +
                     $"{equipment.ItemId.ToString()};" +
                     $"{agentAddress.ToString()};" +
                     $"{avatarAddress.ToString()};" +
@@ -1421,6 +1537,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         }
 
         private void WriteCostume(
+            long tipIndex,
             Costume costume,
             Address agentAddress,
             Address avatarAddress)
@@ -1428,6 +1545,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             try
             {
                 _uctBulkFile.WriteLine(
+                    $"{tipIndex};" +
                     $"{costume.ItemId.ToString()};" +
                     $"{agentAddress.ToString()};" +
                     $"{avatarAddress.ToString()};" +
@@ -1450,18 +1568,22 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         }
 
         private void WriteMaterial(
+            long tipIndex,
             Material material,
+            int materialCount,
             Address agentAddress,
             Address avatarAddress)
         {
             try
             {
                 _umBulkFile.WriteLine(
+                    $"{tipIndex};" +
                     $"{material.ItemId.ToString()};" +
                     $"{agentAddress.ToString()};" +
                     $"{avatarAddress.ToString()};" +
                     $"{material.ItemType.ToString()};" +
                     $"{material.ItemSubType.ToString()};" +
+                    $"{materialCount};" +
                     $"{material.Id};" +
                     $"{material.ElementalType.ToString()};" +
                     $"{material.Grade}"
@@ -1474,6 +1596,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         }
 
         private void WriteConsumable(
+            long tipIndex,
             Consumable consumable,
             Address agentAddress,
             Address avatarAddress)
@@ -1481,6 +1604,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             try
             {
                 _ucBulkFile.WriteLine(
+                    $"{tipIndex};" +
                     $"{consumable.ItemId.ToString()};" +
                     $"{agentAddress.ToString()};" +
                     $"{avatarAddress.ToString()};" +

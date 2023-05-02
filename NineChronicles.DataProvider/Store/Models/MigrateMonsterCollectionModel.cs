@@ -5,9 +5,9 @@ namespace NineChronicles.DataProvider.Store.Models
 
     public class MigrateMonsterCollectionModel
     {
-        [Key]
         public long BlockIndex { get; set; }
 
+        [Key]
         public string? AgentAddress { get; set; }
 
         public AgentModel? Agent { get; set; }

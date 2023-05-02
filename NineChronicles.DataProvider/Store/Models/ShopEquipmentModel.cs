@@ -5,9 +5,9 @@ namespace NineChronicles.DataProvider.Store.Models
 
     public class ShopEquipmentModel
     {
-        [Key]
         public long BlockIndex { get; set; }
 
+        [Key]
         public string? ItemId { get; set; }
 
         public string? SellerAgentAddress { get; set; }
