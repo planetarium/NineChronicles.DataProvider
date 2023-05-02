@@ -184,7 +184,7 @@ namespace NineChronicles.DataProvider
                                 var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
                                 var id = ((GameAction)claimStakeReward).Id;
 #pragma warning disable CS0618
-                                var runeCurrency = Currency.Legacy(RuneHelper.StakeRune.Ticker, 0, minters: null);
+                                var runeCurrency = RuneHelper.StakeRune;
 #pragma warning restore CS0618
                                 var prevRuneBalance = ev.PreviousStates.GetBalance(
                                     avatarAddress,
@@ -200,6 +200,7 @@ namespace NineChronicles.DataProvider
                                     avatarAddress,
                                     ev.BlockIndex,
                                     actionType!,
+                                    runeCurrency.Ticker,
                                     acquiredRune,
                                     _blockTimeOffset));
                                 _claimStakeList.Add(ClaimStakeRewardData.GetClaimStakeRewardInfo(claimStakeReward, ev.PreviousStates, ev.OutputStates, ev.Signer, ev.BlockIndex, _blockTimeOffset));
@@ -612,6 +613,7 @@ namespace NineChronicles.DataProvider
                                             {
                                                 var product = (ItemProduct)ProductFactory.DeserializeProduct(state);
                                                 orderItem = product.TradableItem;
+                                                itemCount = product.ItemCount;
                                             }
                                             else
                                             {
@@ -947,6 +949,7 @@ namespace NineChronicles.DataProvider
                                     avatarAddress,
                                     ev.BlockIndex,
                                     actionType!,
+                                    recipient.amount.Currency.Ticker,
                                     recipient.amount,
                                     _blockTimeOffset));
                             }
@@ -970,7 +973,7 @@ namespace NineChronicles.DataProvider
                         {
                             var start = DateTimeOffset.UtcNow;
 #pragma warning disable CS0618
-                            var runeCurrency = Currency.Legacy(RuneHelper.DailyRewardRune.Ticker, 0, minters: null);
+                            var runeCurrency = RuneHelper.DailyRewardRune;
 #pragma warning restore CS0618
                             var prevRuneBalance = ev.PreviousStates.GetBalance(
                                 dailyReward.avatarAddress,
@@ -987,6 +990,7 @@ namespace NineChronicles.DataProvider
                                 dailyReward.avatarAddress,
                                 ev.BlockIndex,
                                 actionType!,
+                                runeCurrency.Ticker,
                                 acquiredRune,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
@@ -1016,7 +1020,7 @@ namespace NineChronicles.DataProvider
                             foreach (var runeType in runeSheet.Values)
                             {
 #pragma warning disable CS0618
-                                var runeCurrency = Currency.Legacy(runeType.Ticker, 0, minters: null);
+                                var runeCurrency = RuneHelper.ToCurrency(runeType);
 #pragma warning restore CS0618
                                 var prevRuneBalance = ev.PreviousStates.GetBalance(
                                     claimRaidReward.AvatarAddress,
@@ -1035,6 +1039,7 @@ namespace NineChronicles.DataProvider
                                         claimRaidReward.AvatarAddress,
                                         ev.BlockIndex,
                                         actionType!,
+                                        runeCurrency.Ticker,
                                         acquiredRune,
                                         _blockTimeOffset));
                                 }
@@ -1249,7 +1254,7 @@ namespace NineChronicles.DataProvider
                             foreach (var runeType in runeSheet.Values)
                             {
 #pragma warning disable CS0618
-                                var runeCurrency = Currency.Legacy(runeType.Ticker, 0, minters: null);
+                                var runeCurrency = RuneHelper.ToCurrency(runeType);
 #pragma warning restore CS0618
                                 var prevRuneBalance = ev.PreviousStates.GetBalance(
                                     ev.Action.AvatarAddress,
@@ -1268,6 +1273,7 @@ namespace NineChronicles.DataProvider
                                         ev.Action.AvatarAddress,
                                         ev.BlockIndex,
                                         actionType!,
+                                        runeCurrency.Ticker,
                                         acquiredRune,
                                         _blockTimeOffset));
                                 }

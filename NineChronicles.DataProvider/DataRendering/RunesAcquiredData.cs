@@ -14,6 +14,7 @@
             Address avatarAddress,
             long blockIndex,
             string actionType,
+            string tickerType,
             FungibleAssetValue acquiredRune,
             DateTimeOffset blockTime
         )
@@ -22,7 +23,7 @@
             {
                 Id = id.ToString(),
                 ActionType = actionType,
-                TickerType = RuneHelper.StakeRune.Ticker,
+                TickerType = tickerType,
                 BlockIndex = blockIndex,
                 AgentAddress = agentAddress.ToString(),
                 AvatarAddress = avatarAddress.ToString(),
