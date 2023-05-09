@@ -154,6 +154,9 @@ namespace NineChronicles.DataProvider.Store
         // Table for storing PetEnhancement actions
         public DbSet<PetEnhancementModel> PetEnhancements => Set<PetEnhancementModel>();
 
+        // Table for storing TransferAsset actions
+        public DbSet<TransferAssetModel> TransferAssets => Set<TransferAssetModel>();
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.
