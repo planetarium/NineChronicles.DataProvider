@@ -3961,15 +3961,11 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             if (action.InnerAction is TransferAssets transferAssets)
                             {
                                 var start = DateTimeOffset.UtcNow;
+                                var count = 0;
                                 foreach (var recipient in transferAssets.Recipients)
                                 {
-                                    var actionString = ae.InputContext.BlockIndex +
-                                                       ae.InputContext.TxId.ToString() +
-                                                       ae.InputContext.Signer +
-                                                       recipient.recipient +
-                                                       recipient.amount.Currency.Ticker +
-                                                       recipient.amount.GetQuantityString();
-                                    var actionByteArray = Encoding.UTF8.GetBytes(actionString);
+                                    var actionString = count + ae.InputContext.TxId.ToString();
+                                    var actionByteArray = Encoding.UTF8.GetBytes(actionString).Take(16).ToArray();
                                     var id = new Guid(actionByteArray);
                                     var avatarAddress = recipient.recipient;
                                     var actionType = transferAssets.ToString()!.Split('.').LastOrDefault()
@@ -3993,6 +3989,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         recipient.amount.Currency.Ticker,
                                         recipient.amount,
                                         _blockTimeOffset));
+                                    count++;
                                 }
 
                                 var end = DateTimeOffset.UtcNow;
@@ -4206,9 +4203,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 var runeSheet = sheets.GetSheet<RuneSheet>();
                                 foreach (var runeType in runeSheet.Values)
                                 {
-    #pragma warning disable CS0618
+#pragma warning disable CS0618
                                     var runeCurrency = Currency.Legacy(runeType.Ticker, 0, minters: null);
-    #pragma warning restore CS0618
+#pragma warning restore CS0618
                                     var prevRuneBalance = ae.InputContext.PreviousStates.GetBalance(
                                         claimRaidReward.AvatarAddress,
                                         runeCurrency);
@@ -4411,9 +4408,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 var runeSheet = sheets.GetSheet<RuneSheet>();
                                 foreach (var runeType in runeSheet.Values)
                                 {
-    #pragma warning disable CS0618
+#pragma warning disable CS0618
                                     var runeCurrency = Currency.Legacy(runeType.Ticker, 0, minters: null);
-    #pragma warning restore CS0618
+#pragma warning restore CS0618
                                     var prevRuneBalance = ae.InputContext.PreviousStates.GetBalance(
                                         raid.AvatarAddress,
                                         runeCurrency);
@@ -4479,9 +4476,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 var runeSheet = sheets.GetSheet<RuneSheet>();
                                 foreach (var runeType in runeSheet.Values)
                                 {
-    #pragma warning disable CS0618
+#pragma warning disable CS0618
                                     var runeCurrency = Currency.Legacy(runeType.Ticker, 0, minters: null);
-    #pragma warning restore CS0618
+#pragma warning restore CS0618
                                     var prevRuneBalance = ae.InputContext.PreviousStates.GetBalance(
                                         raid4.AvatarAddress,
                                         runeCurrency);
@@ -4547,9 +4544,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 var runeSheet = sheets.GetSheet<RuneSheet>();
                                 foreach (var runeType in runeSheet.Values)
                                 {
-    #pragma warning disable CS0618
+#pragma warning disable CS0618
                                     var runeCurrency = Currency.Legacy(runeType.Ticker, 0, minters: null);
-    #pragma warning restore CS0618
+#pragma warning restore CS0618
                                     var prevRuneBalance = ae.InputContext.PreviousStates.GetBalance(
                                         raid3.AvatarAddress,
                                         runeCurrency);
@@ -4615,9 +4612,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 var runeSheet = sheets.GetSheet<RuneSheet>();
                                 foreach (var runeType in runeSheet.Values)
                                 {
-    #pragma warning disable CS0618
+#pragma warning disable CS0618
                                     var runeCurrency = Currency.Legacy(runeType.Ticker, 0, minters: null);
-    #pragma warning restore CS0618
+#pragma warning restore CS0618
                                     var prevRuneBalance = ae.InputContext.PreviousStates.GetBalance(
                                         raid2.AvatarAddress,
                                         runeCurrency);
@@ -4683,9 +4680,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 var runeSheet = sheets.GetSheet<RuneSheet>();
                                 foreach (var runeType in runeSheet.Values)
                                 {
-    #pragma warning disable CS0618
+#pragma warning disable CS0618
                                     var runeCurrency = Currency.Legacy(runeType.Ticker, 0, minters: null);
-    #pragma warning restore CS0618
+#pragma warning restore CS0618
                                     var prevRuneBalance = ae.InputContext.PreviousStates.GetBalance(
                                         raid1.AvatarAddress,
                                         runeCurrency);
@@ -4757,13 +4754,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             if (action.InnerAction is TransferAsset transferAsset)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                var actionString = ae.InputContext.BlockIndex +
-                                                   ae.InputContext.TxId.ToString() +
-                                                   ae.InputContext.Signer +
-                                                   transferAsset.Recipient +
-                                                   transferAsset.Amount.Currency.Ticker +
-                                                   transferAsset.Amount.GetQuantityString();
-                                var actionByteArray = Encoding.UTF8.GetBytes(actionString);
+                                var actionString = ae.InputContext.TxId.ToString();
+                                var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
                                 var id = new Guid(actionByteArray);
                                 _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
                                     id,
@@ -4774,6 +4766,48 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     transferAsset.Recipient,
                                     transferAsset.Amount.Currency.Ticker,
                                     transferAsset.Amount,
+                                    _blockTimeOffset));
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (action.InnerAction is TransferAsset2 transferAsset2)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                var actionString = ae.InputContext.TxId.ToString();
+                                var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
+                                var id = new Guid(actionByteArray);
+                                _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
+                                    id,
+                                    (TxId)ae.InputContext.TxId!,
+                                    ae.InputContext.BlockIndex,
+                                    _blockHash!.ToString(),
+                                    transferAsset2.Sender,
+                                    transferAsset2.Recipient,
+                                    transferAsset2.Amount.Currency.Ticker,
+                                    transferAsset2.Amount,
+                                    _blockTimeOffset));
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (action.InnerAction is TransferAsset0 transferAsset0)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                var actionString = ae.InputContext.TxId.ToString();
+                                var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
+                                var id = new Guid(actionByteArray);
+                                _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
+                                    id,
+                                    (TxId)ae.InputContext.TxId!,
+                                    ae.InputContext.BlockIndex,
+                                    _blockHash!.ToString(),
+                                    transferAsset0.Sender,
+                                    transferAsset0.Recipient,
+                                    transferAsset0.Amount.Currency.Ticker,
+                                    transferAsset0.Amount,
                                     _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;

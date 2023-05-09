@@ -934,13 +934,8 @@ namespace NineChronicles.DataProvider
                         if (ev.Exception == null && ev.Action is { } transferAsset)
                         {
                             var start = DateTimeOffset.UtcNow;
-                            var actionString = ev.BlockIndex +
-                                               ev.TxId.ToString() +
-                                               ev.Signer +
-                                               transferAsset.Recipient +
-                                               transferAsset.Amount.Currency.Ticker +
-                                               transferAsset.Amount.GetQuantityString();
-                            var actionByteArray = Encoding.UTF8.GetBytes(actionString);
+                            var actionString = ev.TxId.ToString();
+                            var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
                             var id = new Guid(actionByteArray);
                             _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
                                 id,
@@ -971,15 +966,11 @@ namespace NineChronicles.DataProvider
                         if (ev.Exception == null && ev.Action is { } transferAssets)
                         {
                             var start = DateTimeOffset.UtcNow;
+                            int count = 0;
                             foreach (var recipient in transferAssets.Recipients)
                             {
-                                var actionString = ev.BlockIndex +
-                                                   ev.TxId.ToString() +
-                                                   ev.Signer +
-                                                   recipient.recipient +
-                                                   recipient.amount.Currency.Ticker +
-                                                   recipient.amount.GetQuantityString();
-                                var actionByteArray = Encoding.UTF8.GetBytes(actionString);
+                                var actionString = count + ev.TxId.ToString();
+                                var actionByteArray = Encoding.UTF8.GetBytes(actionString).Take(16).ToArray();
                                 var id = new Guid(actionByteArray);
                                 var avatarAddress = recipient.recipient;
                                 var actionType = transferAssets.ToString()!.Split('.').LastOrDefault()
@@ -1003,6 +994,7 @@ namespace NineChronicles.DataProvider
                                     recipient.amount.Currency.Ticker,
                                     recipient.amount,
                                     _blockTimeOffset));
+                                count++;
                             }
 
                             var end = DateTimeOffset.UtcNow;
