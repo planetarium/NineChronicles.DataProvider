@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6</TargetFramework>
+    <TargetFramework>net7</TargetFramework>
     <LangVersion>8.0</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Nullable>enable</Nullable>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	<NoWarn>$(NoWarn),1573,1591,1712,SA1009,SA1101,SA1111,SA1309,SA1600,SA1633</NoWarn>
+	<NoWarn>$(NoWarn),1573,1591,1712,SA1009,SA1101,SA1111,SA1309,SA1600,SA1633,S1134</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
