@@ -14,6 +14,7 @@ namespace NineChronicles.DataProvider
     using Libplanet.Action;
     using Libplanet.Assets;
     using Libplanet.Blocks;
+    using Libplanet.Tx;
     using Microsoft.Extensions.Hosting;
     using Nekoyume;
     using Nekoyume.Action;
@@ -77,6 +78,7 @@ namespace NineChronicles.DataProvider
         private readonly List<UnlockRuneSlotModel> _unlockRuneSlotList = new List<UnlockRuneSlotModel>();
         private readonly List<RapidCombinationModel> _rapidCombinationList = new List<RapidCombinationModel>();
         private readonly List<PetEnhancementModel> _petEnhancementList = new List<PetEnhancementModel>();
+        private readonly List<TransferAssetModel> _transferAssetList = new List<TransferAssetModel>();
         private readonly List<string> _agents;
         private readonly bool _render;
         private int _renderedBlockCount;
@@ -924,6 +926,38 @@ namespace NineChronicles.DataProvider
                     }
                 });
 
+            _actionRenderer.EveryRender<TransferAsset>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } transferAsset)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            var actionString = ev.TxId.ToString();
+                            var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
+                            var id = new Guid(actionByteArray);
+                            _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
+                                id,
+                                (TxId)ev.TxId!,
+                                ev.BlockIndex,
+                                _blockHash!,
+                                transferAsset.Sender,
+                                transferAsset.Recipient,
+                                transferAsset.Amount.Currency.Ticker,
+                                transferAsset.Amount,
+                                _blockTimeOffset));
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
             _actionRenderer.EveryRender<TransferAssets>()
                 .Subscribe(ev =>
                 {
@@ -932,17 +966,25 @@ namespace NineChronicles.DataProvider
                         if (ev.Exception == null && ev.Action is { } transferAssets)
                         {
                             var start = DateTimeOffset.UtcNow;
+                            int count = 0;
                             foreach (var recipient in transferAssets.Recipients)
                             {
-                                var actionString = ev.BlockIndex +
-                                                   recipient.recipient.ToString() +
-                                                   recipient.amount.Currency.Ticker +
-                                                   recipient.amount.GetQuantityString();
-                                var actionByteArray = Encoding.UTF8.GetBytes(actionString);
+                                var actionString = count + ev.TxId.ToString();
+                                var actionByteArray = Encoding.UTF8.GetBytes(actionString).Take(16).ToArray();
                                 var id = new Guid(actionByteArray);
                                 var avatarAddress = recipient.recipient;
                                 var actionType = transferAssets.ToString()!.Split('.').LastOrDefault()
                                     ?.Replace(">", string.Empty);
+                                _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
+                                    id,
+                                    (TxId)ev.TxId!,
+                                    ev.BlockIndex,
+                                    _blockHash!,
+                                    transferAssets.Sender,
+                                    recipient.recipient,
+                                    recipient.amount.Currency.Ticker,
+                                    recipient.amount,
+                                    _blockTimeOffset));
                                 _runesAcquiredList.Add(RunesAcquiredData.GetRunesAcquiredInfo(
                                     id,
                                     ev.Signer,
@@ -952,6 +994,7 @@ namespace NineChronicles.DataProvider
                                     recipient.amount.Currency.Ticker,
                                     recipient.amount,
                                     _blockTimeOffset));
+                                count++;
                             }
 
                             var end = DateTimeOffset.UtcNow;
@@ -1020,7 +1063,7 @@ namespace NineChronicles.DataProvider
                             foreach (var runeType in runeSheet.Values)
                             {
 #pragma warning disable CS0618
-                                var runeCurrency = RuneHelper.ToCurrency(runeType, 0, minters: null);
+                                var runeCurrency = RuneHelper.ToCurrency(runeType);
 #pragma warning restore CS0618
                                 var prevRuneBalance = ev.PreviousStates.GetBalance(
                                     claimRaidReward.AvatarAddress,
@@ -1254,7 +1297,7 @@ namespace NineChronicles.DataProvider
                             foreach (var runeType in runeSheet.Values)
                             {
 #pragma warning disable CS0618
-                                var runeCurrency = RuneHelper.ToCurrency(runeType, 0, minters: null);
+                                var runeCurrency = RuneHelper.ToCurrency(runeType);
 #pragma warning restore CS0618
                                 var prevRuneBalance = ev.PreviousStates.GetBalance(
                                     ev.Action.AvatarAddress,
@@ -1511,6 +1554,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreUnlockRuneSlotList(_unlockRuneSlotList);
                     MySqlStore.StoreRapidCombinationList(_rapidCombinationList);
                     MySqlStore.StorePetEnhancementList(_petEnhancementList);
+                    MySqlStore.StoreTransferAssetList(_transferAssetList);
                 }),
             };
 
@@ -1554,6 +1598,7 @@ namespace NineChronicles.DataProvider
             _unlockRuneSlotList.Clear();
             _rapidCombinationList.Clear();
             _petEnhancementList.Clear();
+            _transferAssetList.Clear();
             var end = DateTimeOffset.Now;
             long blockIndex = b.OldTip.Index;
             StreamWriter blockIndexFile = new StreamWriter(_blockIndexFilePath);
