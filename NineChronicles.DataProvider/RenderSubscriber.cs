@@ -1498,7 +1498,7 @@ namespace NineChronicles.DataProvider
             }
         }
 
-        private void StoreRenderedData((Block<PolymorphicAction<ActionBase>> OldTip, Block<PolymorphicAction<ActionBase>> NewTip) b)
+        private void StoreRenderedData((Block OldTip, Block NewTip) b)
         {
             var start = DateTimeOffset.Now;
             Log.Debug("Storing Data...");

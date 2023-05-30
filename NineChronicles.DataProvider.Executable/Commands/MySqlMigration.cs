@@ -10,6 +10,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using Cocona;
     using Lib9c.Model.Order;
     using Libplanet.Action;
+    using Libplanet.Action.Loader;
     using Libplanet.Assets;
     using Libplanet.Blockchain;
     using Libplanet.Blockchain.Policies;
@@ -46,6 +47,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private List<string> _avatarCheck;
         private MySqlStore _mySqlStore;
         private BlockHash _blockHash;
+        private long _blockIndex;
         private DateTimeOffset _blockTimeOffset;
         private List<BlockModel> _blockList;
         private List<TransactionModel> _txList;
@@ -180,7 +182,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             IBlockPolicy<NCAction> blockPolicy = blockPolicySource.GetPolicy();
 
             // Setup base chain & new chain
-            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(gHash);
+            Block genesis = _baseStore.GetBlock(gHash);
             _baseChain = new BlockChain<NCAction>(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis);
 
             // Check offset and limit value based on chain height
@@ -249,24 +251,25 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 {
                     int interval = 100;
                     int limitInterval;
-                    Task<List<ActionEvaluation>>[] taskArray;
+                    Task<List<IActionEvaluation>>[] taskArray;
                     if (interval < remainingCount)
                     {
-                        taskArray = new Task<List<ActionEvaluation>>[interval];
+                        taskArray = new Task<List<IActionEvaluation>>[interval];
                         limitInterval = interval;
                     }
                     else
                     {
-                        taskArray = new Task<List<ActionEvaluation>>[remainingCount];
+                        taskArray = new Task<List<IActionEvaluation>>[remainingCount];
                         limitInterval = remainingCount;
                     }
 
                     foreach (var item in
                         _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
                     {
-                        var block = _baseStore.GetBlock<NCAction>(item.value);
+                        var block = _baseStore.GetBlock(item.value);
                         _blockList.Add(BlockData.GetBlockInfo(block));
                         _blockHash = block.Hash;
+                        _blockIndex = block.Index;
                         _blockTimeOffset = block.Timestamp;
                         foreach (var tx in block.Transactions)
                         {
@@ -282,7 +285,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                         taskArray[item.i] = Task.Factory.StartNew(() =>
                         {
-                            List<ActionEvaluation> actionEvaluations = EvaluateBlock(block);
+                            List<IActionEvaluation> actionEvaluations = EvaluateBlock(block);
                             Console.WriteLine($"Block progress: #{block.Index}/{remainingCount}");
                             return actionEvaluations;
                         });
@@ -359,7 +362,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
         }
 
-        private void ProcessTasks(Task<List<ActionEvaluation>>[] taskArray)
+        private void ProcessTasks(Task<List<IActionEvaluation>>[] taskArray)
         {
             foreach (var task in taskArray)
             {
@@ -367,7 +370,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 {
                     foreach (var ae in data)
                     {
-                        if (ae.Action is PolymorphicAction<ActionBase> action)
+                        var actionLoader = new SingleActionLoader(typeof(NCAction));
+                        if (actionLoader.LoadAction(_blockIndex, ae.Action) is PolymorphicAction<ActionBase> action)
                         {
                             // avatarNames will be stored as "N/A" for optimization
                             if (action.InnerAction is HackAndSlash hasAction)
@@ -4819,7 +4823,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             }
         }
 
-        private List<ActionEvaluation> EvaluateBlock(Block<NCAction> block)
+        private List<IActionEvaluation> EvaluateBlock(Block block)
         {
             var evList = _baseChain.EvaluateBlock(block).ToList();
             return evList;
