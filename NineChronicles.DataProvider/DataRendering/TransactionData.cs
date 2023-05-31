@@ -11,11 +11,11 @@
     public static class TransactionData
     {
         public static TransactionModel GetTransactionInfo(
-            Block<PolymorphicAction<ActionBase>> block,
-            Transaction<PolymorphicAction<ActionBase>> transaction
+            Block block,
+            Transaction transaction
         )
         {
-            var actionType = transaction.CustomActions!.Select(action => action.ToString()!.Split('.')
+            var actionType = transaction.Actions!.Select(action => action.ToString()!.Split('.')
                 .LastOrDefault()?.Replace(">", string.Empty));
             var transactionModel = new TransactionModel
             {

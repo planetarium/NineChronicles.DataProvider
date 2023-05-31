@@ -1624,6 +1624,41 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreTransferAssetList(List<TransferAssetModel> transferAssetList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var transferAsset in transferAssetList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.TransferAssets.FindAsync(transferAsset.Id).Result is null)
+                        {
+                            await ctx.TransferAssets.AddRangeAsync(transferAsset);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.TransferAssets.UpdateRange(transferAsset);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public void StoreUnlockRuneSlotList(List<UnlockRuneSlotModel> unlockRuneSlotList)
         {
             try
