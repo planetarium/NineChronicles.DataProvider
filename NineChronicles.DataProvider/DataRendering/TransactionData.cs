@@ -15,15 +15,14 @@
             Transaction transaction
         )
         {
-            var actionType = transaction.Actions!.Select(action => action.ToString()!.Split('.')
-                .LastOrDefault()?.Replace(">", string.Empty));
+            var actionType = transaction.Actions.Actions.FirstOrDefault()!.Inspect(true).Split('"')[3];
             var transactionModel = new TransactionModel
             {
                 BlockIndex = block.Index,
                 BlockHash = block.Hash.ToString(),
                 TxId = transaction.Id.ToString(),
                 Signer = transaction.Signer.ToString(),
-                ActionType = actionType.FirstOrDefault(),
+                ActionType = actionType,
                 Nonce = transaction.Nonce,
                 PublicKey = transaction.PublicKey.ToString(),
                 UpdatedAddressesCount = transaction.UpdatedAddresses.Count(),
