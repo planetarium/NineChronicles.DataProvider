@@ -2,11 +2,13 @@
 {
     using System.Collections.Generic;
     using System.Linq;
+    using Bencodex.Types;
     using Libplanet.Action;
     using Libplanet.Blocks;
     using Libplanet.Tx;
     using Nekoyume.Action;
     using NineChronicles.DataProvider.Store.Models;
+    using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     public static class TransactionData
     {
@@ -15,7 +17,8 @@
             Transaction transaction
         )
         {
-            var actionType = transaction.Actions.Actions.FirstOrDefault()!.Inspect(true).Split('"')[3];
+            var actionType = ToAction(transaction.Actions.FirstOrDefault()!)
+                .ToString().Split('.').LastOrDefault()!.Replace(">", string.Empty);
             var transactionModel = new TransactionModel
             {
                 BlockIndex = block.Index,
@@ -31,6 +34,15 @@
             };
 
             return transactionModel;
+        }
+
+        public static NCAction ToAction(IValue plainValue)
+        {
+    #pragma warning disable CS0612
+            var action = new NCAction();
+    #pragma warning restore CS0612
+            action.LoadPlainValue(plainValue);
+            return action;
         }
     }
 }
