@@ -264,6 +264,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
                     {
                         var block = _baseStore.GetBlock(item.value);
+                        Console.WriteLine("Migrating Block #{0}", block.Index);
                         _blockList.Add(BlockData.GetBlockInfo(block));
                         _blockHash = block.Hash;
                         _blockIndex = block.Index;
@@ -274,6 +275,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 .ToString().Split('.').LastOrDefault()!.Replace(">", string.Empty);
                             if (actionType.StartsWith("HackAndSlashSweep") || actionType.StartsWith("HackAndSlashRandomBuff"))
                             {
+                                Console.WriteLine("Migrating Action {0} in TxId: {1}", actionType, tx.Id);
                                 _txList.Add(TransactionData.GetTransactionInfo(block, tx));
                             }
                         }
