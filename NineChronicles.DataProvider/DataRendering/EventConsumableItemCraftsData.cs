@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using Libplanet;
     using Libplanet.Action;
+    using Libplanet.State;
     using Nekoyume.Action;
     using Nekoyume.Extensions;
     using Nekoyume.TableData;

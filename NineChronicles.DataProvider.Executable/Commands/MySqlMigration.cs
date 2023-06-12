@@ -24,7 +24,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using MySqlConnector;
     using Nekoyume;
     using Nekoyume.Action;
-    using Nekoyume.BlockChain.Policy;
+    using Nekoyume.Action.Loader;
+    using Nekoyume.Blockchain.Policy;
     using Nekoyume.Extensions;
     using Nekoyume.Helper;
     using Nekoyume.Model.Item;
@@ -42,7 +43,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
     {
         private string _connectionString;
         private IStore _baseStore;
-        private BlockChain<NCAction> _baseChain;
+        private BlockChain _baseChain;
         private List<string> _agentCheck;
         private List<string> _avatarCheck;
         private MySqlStore _mySqlStore;
@@ -176,14 +177,20 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 new TrieStateStore(baseStateKeyValueStore);
 
             // Setup block policy
-            IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
+            IStagePolicy stagePolicy = new VolatileStagePolicy();
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
-            IBlockPolicy<NCAction> blockPolicy = blockPolicySource.GetPolicy();
+            IBlockPolicy blockPolicy = blockPolicySource.GetPolicy();
 
             // Setup base chain & new chain
             Block genesis = _baseStore.GetBlock(gHash);
-            _baseChain = new BlockChain<NCAction>(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis);
+            var blockChainStates = new BlockChainStates(_baseStore, baseStateStore);
+            var actionEvaluator = new ActionEvaluator(
+                _ => blockPolicy.BlockAction,
+                blockChainStates,
+                new NCActionLoader(),
+                null);
+            _baseChain = new BlockChain(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, actionEvaluator);
 
             // Check offset and limit value based on chain height
             long height = _baseChain.Tip.Index;

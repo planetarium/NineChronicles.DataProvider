@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
 WORKDIR /app
 ARG COMMIT
 
@@ -35,7 +35,7 @@ RUN dotnet publish NineChronicles.Headless/NineChronicles.Headless.Executable/Ni
     --version-suffix $COMMIT
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/sdk:7.0
+FROM mcr.microsoft.com/dotnet/sdk:6.0
 WORKDIR /app
 RUN dotnet tool install --global dotnet-ef
 ENV PATH="${PATH}:/${HOME}/.dotnet/tools"
