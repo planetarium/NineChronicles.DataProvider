@@ -43,7 +43,7 @@
                 .AddDataLoader()
                 .AddGraphTypes(typeof(NineChroniclesSummarySchema))
                 .AddGraphTypes(typeof(StandaloneSchema))
-                .AddLibplanetExplorer<NCAction>()
+                .AddLibplanetExplorer()
                 .AddUserContextBuilder<UserContextBuilder>();
             services.AddGraphTypes();
             services.AddSingleton<NineChroniclesSummarySchema>();
