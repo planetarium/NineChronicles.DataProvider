@@ -6,6 +6,7 @@ namespace NineChronicles.DataProvider.Executable
     using System.Threading.Tasks;
     using Cocona;
     using Libplanet.Action;
+    using Libplanet.Action.Loader;
     using Libplanet.Crypto;
     using Libplanet.KeyStore;
     using Microsoft.AspNetCore.Hosting;
@@ -20,6 +21,7 @@ namespace NineChronicles.DataProvider.Executable
     using NineChronicles.Headless.GraphTypes.States;
     using NineChronicles.Headless.Properties;
     using Serilog;
+    using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     [HasSubCommands(typeof(MySqlMigration), "mysql-migration")]
     public class Program : CoconaLiteConsoleAppBase
@@ -129,16 +131,9 @@ namespace NineChronicles.DataProvider.Executable
                     render: headlessConfig.Render,
                     preload: headlessConfig.Preload);
 
-            IActionTypeLoader MakeStaticActionTypeLoader() => new StaticActionTypeLoader(
-                Assembly.GetEntryAssembly() is { } entryAssembly
-                    ? new[] { typeof(ActionBase).Assembly, entryAssembly }
-                    : new[] { typeof(ActionBase).Assembly },
-                typeof(ActionBase)
-            );
+            IActionLoader actionLoader = new SingleActionLoader(typeof(NCAction));
 
-            IActionTypeLoader actionTypeLoader = MakeStaticActionTypeLoader();
-
-            var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(actionTypeLoader)
+            var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(actionLoader)
             {
                 MinerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
                     ? null
