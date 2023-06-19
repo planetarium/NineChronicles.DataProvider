@@ -9,7 +9,7 @@
     public static class BlockData
     {
         public static BlockModel GetBlockInfo(
-            Block<PolymorphicAction<ActionBase>> block)
+            Block block)
         {
             var blockModel = new BlockModel()
             {
