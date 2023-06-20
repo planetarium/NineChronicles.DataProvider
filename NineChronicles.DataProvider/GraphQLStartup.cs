@@ -12,7 +12,6 @@
     using NineChronicles.Headless;
     using NineChronicles.Headless.GraphTypes;
     using Sentry;
-    using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     public class GraphQLStartup
     {

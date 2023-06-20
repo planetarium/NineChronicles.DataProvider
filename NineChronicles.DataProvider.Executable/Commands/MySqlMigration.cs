@@ -37,7 +37,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using Serilog;
     using Serilog.Events;
     using static Lib9c.SerializeKeys;
-    using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     public class MySqlMigration
     {
@@ -377,11 +376,11 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 {
                     foreach (var ae in data)
                     {
-                        var actionLoader = new SingleActionLoader(typeof(NCAction));
-                        if (actionLoader.LoadAction(_blockIndex, ae.Action) is PolymorphicAction<ActionBase> action)
+                        var actionLoader = new NCActionLoader();
+                        if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase action)
                         {
                             // avatarNames will be stored as "N/A" for optimization
-                            if (action.InnerAction is HackAndSlash hasAction)
+                            if (action is HackAndSlash hasAction)
                             {
                                 var avatarAddress = hasAction.AvatarAddress;
 
@@ -400,7 +399,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 }
                             }
 
-                            if (action.InnerAction is HackAndSlash19 hasAction19)
+                            if (action is HackAndSlash19 hasAction19)
                             {
                                 var avatarAddress = hasAction19.AvatarAddress;
 
@@ -419,7 +418,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 }
                             }
 
-                            if (action.InnerAction is HackAndSlash18 hasAction18)
+                            if (action is HackAndSlash18 hasAction18)
                             {
                                 var avatarAddress = hasAction18.AvatarAddress;
 
@@ -438,7 +437,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 }
                             }
 
-                            if (action.InnerAction is HackAndSlash17 hasAction17)
+                            if (action is HackAndSlash17 hasAction17)
                             {
                                 var avatarAddress = hasAction17.AvatarAddress;
 
@@ -457,7 +456,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 }
                             }
 
-                            if (action.InnerAction is HackAndSlash16 hasAction16)
+                            if (action is HackAndSlash16 hasAction16)
                             {
                                 var avatarAddress = hasAction16.AvatarAddress;
 
@@ -476,7 +475,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 }
                             }
 
-                            if (action.InnerAction is HackAndSlash15 hasAction15)
+                            if (action is HackAndSlash15 hasAction15)
                             {
                                 var avatarAddress = hasAction15.avatarAddress;
 
@@ -491,7 +490,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 _hackAndSlashList.Add(HackAndSlashData.GetHackAndSlashInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, hasAction15.avatarAddress, hasAction15.stageId, hasAction15.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
                             }
 
-                            if (action.InnerAction is HackAndSlash14 hasAction14)
+                            if (action is HackAndSlash14 hasAction14)
                             {
                                 var avatarAddress = hasAction14.avatarAddress;
 
@@ -506,7 +505,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 _hackAndSlashList.Add(HackAndSlashData.GetHackAndSlashInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, hasAction14.avatarAddress, hasAction14.stageId, hasAction14.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
                             }
 
-                            if (action.InnerAction is HackAndSlash13 hasAction13)
+                            if (action is HackAndSlash13 hasAction13)
                             {
                                 var avatarAddress = hasAction13.avatarAddress;
 
@@ -521,7 +520,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 _hackAndSlashList.Add(HackAndSlashData.GetHackAndSlashInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, hasAction13.avatarAddress, hasAction13.stageId, hasAction13.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
                             }
 
-                            if (action.InnerAction is HackAndSlash12 hasAction12)
+                            if (action is HackAndSlash12 hasAction12)
                             {
                                 var avatarAddress = hasAction12.avatarAddress;
 
@@ -536,7 +535,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 _hackAndSlashList.Add(HackAndSlashData.GetHackAndSlashInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, hasAction12.avatarAddress, hasAction12.stageId, hasAction12.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
                             }
 
-                            if (action.InnerAction is HackAndSlash11 hasAction11)
+                            if (action is HackAndSlash11 hasAction11)
                             {
                                 var avatarAddress = hasAction11.avatarAddress;
 
@@ -551,7 +550,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 _hackAndSlashList.Add(HackAndSlashData.GetHackAndSlashInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, hasAction11.avatarAddress, hasAction11.stageId, hasAction11.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
                             }
 
-                            if (action.InnerAction is HackAndSlash10 hasAction10)
+                            if (action is HackAndSlash10 hasAction10)
                             {
                                 var avatarAddress = hasAction10.avatarAddress;
 
@@ -566,7 +565,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 _hackAndSlashList.Add(HackAndSlashData.GetHackAndSlashInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, hasAction10.avatarAddress, hasAction10.stageId, hasAction10.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
                             }
 
-                            if (action.InnerAction is HackAndSlash9 hasAction9)
+                            if (action is HackAndSlash9 hasAction9)
                             {
                                 var avatarAddress = hasAction9.avatarAddress;
 
@@ -581,7 +580,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 _hackAndSlashList.Add(HackAndSlashData.GetHackAndSlashInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, hasAction9.avatarAddress, hasAction9.stageId, hasAction9.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
                             }
 
-                            if (action.InnerAction is HackAndSlash8 hasAction8)
+                            if (action is HackAndSlash8 hasAction8)
                             {
                                 var avatarAddress = hasAction8.avatarAddress;
 
@@ -596,7 +595,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 _hackAndSlashList.Add(HackAndSlashData.GetHackAndSlashInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, hasAction8.avatarAddress, hasAction8.stageId, hasAction8.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
                             }
 
-                            if (action.InnerAction is HackAndSlash7 hasAction7)
+                            if (action is HackAndSlash7 hasAction7)
                             {
                                 var avatarAddress = hasAction7.avatarAddress;
 
@@ -611,7 +610,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 _hackAndSlashList.Add(HackAndSlashData.GetHackAndSlashInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, hasAction7.avatarAddress, hasAction7.stageId, hasAction7.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
                             }
 
-                            if (action.InnerAction is HackAndSlash6 hasAction6)
+                            if (action is HackAndSlash6 hasAction6)
                             {
                                 var avatarAddress = hasAction6.avatarAddress;
 
@@ -626,7 +625,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 _hackAndSlashList.Add(HackAndSlashData.GetHackAndSlashInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, hasAction6.avatarAddress, hasAction6.stageId, hasAction6.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
                             }
 
-                            if (action.InnerAction is HackAndSlash5 hasAction5)
+                            if (action is HackAndSlash5 hasAction5)
                             {
                                 var avatarAddress = hasAction5.avatarAddress;
 
@@ -641,7 +640,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 _hackAndSlashList.Add(HackAndSlashData.GetHackAndSlashInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, hasAction5.avatarAddress, hasAction5.stageId, hasAction5.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
                             }
 
-                            if (action.InnerAction is HackAndSlash4 hasAction4)
+                            if (action is HackAndSlash4 hasAction4)
                             {
                                 var avatarAddress = hasAction4.avatarAddress;
 
@@ -656,7 +655,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 _hackAndSlashList.Add(HackAndSlashData.GetHackAndSlashInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, hasAction4.avatarAddress, hasAction4.stageId, hasAction4.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
                             }
 
-                            if (action.InnerAction is HackAndSlash3 hasAction3)
+                            if (action is HackAndSlash3 hasAction3)
                             {
                                 var avatarAddress = hasAction3.avatarAddress;
 
@@ -671,7 +670,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 _hackAndSlashList.Add(HackAndSlashData.GetHackAndSlashInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, hasAction3.avatarAddress, hasAction3.stageId, hasAction3.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
                             }
 
-                            if (action.InnerAction is HackAndSlash2 hasAction2)
+                            if (action is HackAndSlash2 hasAction2)
                             {
                                 var avatarAddress = hasAction2.avatarAddress;
 
@@ -686,7 +685,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 _hackAndSlashList.Add(HackAndSlashData.GetHackAndSlashInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, hasAction2.avatarAddress, hasAction2.stageId, hasAction2.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
                             }
 
-                            if (action.InnerAction is HackAndSlash0 hasAction0)
+                            if (action is HackAndSlash0 hasAction0)
                             {
                                 var avatarAddress = hasAction0.avatarAddress;
 
@@ -701,7 +700,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 _hackAndSlashList.Add(HackAndSlashData.GetHackAndSlashInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, hasAction0.avatarAddress, hasAction0.stageId, hasAction0.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
                             }
 
-                            if (action.InnerAction is IClaimStakeReward claimStakeReward)
+                            if (action is IClaimStakeReward claimStakeReward)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
@@ -732,7 +731,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing ClaimStakeReward action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is EventDungeonBattle eventDungeonBattle)
+                            if (action is EventDungeonBattle eventDungeonBattle)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var actionType = eventDungeonBattle.ToString()!.Split('.').LastOrDefault()
@@ -756,7 +755,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing EventDungeonBattle action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is EventDungeonBattleV3 eventDungeonBattle3)
+                            if (action is EventDungeonBattleV3 eventDungeonBattle3)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var actionType = eventDungeonBattle3.ToString()!.Split('.').LastOrDefault()
@@ -780,7 +779,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing EventDungeonBattle action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is EventDungeonBattleV2 eventDungeonBattle2)
+                            if (action is EventDungeonBattleV2 eventDungeonBattle2)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var actionType = eventDungeonBattle2.ToString()!.Split('.').LastOrDefault()
@@ -804,7 +803,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing EventDungeonBattle action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is EventDungeonBattleV1 eventDungeonBattle1)
+                            if (action is EventDungeonBattleV1 eventDungeonBattle1)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var actionType = eventDungeonBattle1.ToString()!.Split('.').LastOrDefault()
@@ -828,7 +827,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing EventDungeonBattle action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is EventConsumableItemCrafts eventConsumableItemCrafts)
+                            if (action is EventConsumableItemCrafts eventConsumableItemCrafts)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _eventConsumableItemCraftsList.Add(EventConsumableItemCraftsData.GetEventConsumableItemCraftsInfo(eventConsumableItemCrafts, ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, ae.InputContext.BlockIndex, _blockTimeOffset));
@@ -836,7 +835,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing EventConsumableItemCrafts action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is HackAndSlashSweep hasSweep)
+                            if (action is HackAndSlashSweep hasSweep)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfo(ae.OutputStates, ae.InputContext.Signer, hasSweep.avatarAddress, hasSweep.runeInfos, _blockTimeOffset));
@@ -858,7 +857,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing HackAndSlashSweep action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is HackAndSlashSweep8 hasSweep8)
+                            if (action is HackAndSlashSweep8 hasSweep8)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfo(ae.OutputStates, ae.InputContext.Signer, hasSweep8.avatarAddress, hasSweep8.runeInfos, _blockTimeOffset));
@@ -880,7 +879,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing HackAndSlashSweep action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is HackAndSlashSweep7 hasSweep7)
+                            if (action is HackAndSlashSweep7 hasSweep7)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfoV1(ae.OutputStates, ae.InputContext.Signer, hasSweep7.avatarAddress, _blockTimeOffset));
@@ -902,7 +901,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing HackAndSlashSweep action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is HackAndSlashSweep6 hasSweep6)
+                            if (action is HackAndSlashSweep6 hasSweep6)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfoV1(ae.OutputStates, ae.InputContext.Signer, hasSweep6.avatarAddress, _blockTimeOffset));
@@ -924,7 +923,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing HackAndSlashSweep action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is HackAndSlashSweep5 hasSweep5)
+                            if (action is HackAndSlashSweep5 hasSweep5)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfoV1(ae.OutputStates, ae.InputContext.Signer, hasSweep5.avatarAddress, _blockTimeOffset));
@@ -946,7 +945,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing HackAndSlashSweep action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is HackAndSlashSweep4 hasSweep4)
+                            if (action is HackAndSlashSweep4 hasSweep4)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfoV1(ae.OutputStates, ae.InputContext.Signer, hasSweep4.avatarAddress, _blockTimeOffset));
@@ -968,7 +967,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing HackAndSlashSweep action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is HackAndSlashSweep3 hasSweep3)
+                            if (action is HackAndSlashSweep3 hasSweep3)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfoV1(ae.OutputStates, ae.InputContext.Signer, hasSweep3.avatarAddress, _blockTimeOffset));
@@ -990,7 +989,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing HackAndSlashSweep action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is HackAndSlashSweep2 hasSweep2)
+                            if (action is HackAndSlashSweep2 hasSweep2)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfoV1(ae.OutputStates, ae.InputContext.Signer, hasSweep2.avatarAddress, _blockTimeOffset));
@@ -1009,7 +1008,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing HackAndSlashSweep action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is HackAndSlashSweep1 hasSweep1)
+                            if (action is HackAndSlashSweep1 hasSweep1)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfoV1(ae.OutputStates, ae.InputContext.Signer, hasSweep1.avatarAddress, _blockTimeOffset));
@@ -1028,7 +1027,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing HackAndSlashSweep action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationConsumable combinationConsumable)
+                            if (action is CombinationConsumable combinationConsumable)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationConsumableList.Add(CombinationConsumableData.GetCombinationConsumableInfo(
@@ -1044,7 +1043,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationConsumable7 combinationConsumable7)
+                            if (action is CombinationConsumable7 combinationConsumable7)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationConsumableList.Add(CombinationConsumableData.GetCombinationConsumableInfo(
@@ -1060,7 +1059,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationConsumable6 combinationConsumable6)
+                            if (action is CombinationConsumable6 combinationConsumable6)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationConsumableList.Add(CombinationConsumableData.GetCombinationConsumableInfo(
@@ -1076,7 +1075,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationConsumable5 combinationConsumable5)
+                            if (action is CombinationConsumable5 combinationConsumable5)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationConsumableList.Add(CombinationConsumableData.GetCombinationConsumableInfo(
@@ -1092,7 +1091,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationConsumable4 combinationConsumable4)
+                            if (action is CombinationConsumable4 combinationConsumable4)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationConsumableList.Add(CombinationConsumableData.GetCombinationConsumableInfo(
@@ -1108,7 +1107,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationConsumable3 combinationConsumable3)
+                            if (action is CombinationConsumable3 combinationConsumable3)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationConsumableList.Add(CombinationConsumableData.GetCombinationConsumableInfo(
@@ -1124,7 +1123,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationConsumable2 combinationConsumable2)
+                            if (action is CombinationConsumable2 combinationConsumable2)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationConsumableList.Add(CombinationConsumableData.GetCombinationConsumableInfo(
@@ -1140,7 +1139,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationConsumable0 combinationConsumable0)
+                            if (action is CombinationConsumable0 combinationConsumable0)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationConsumableList.Add(CombinationConsumableData.GetCombinationConsumableInfo(
@@ -1156,7 +1155,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationEquipment combinationEquipment)
+                            if (action is CombinationEquipment combinationEquipment)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
@@ -1216,7 +1215,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationEquipment15 combinationEquipment15)
+                            if (action is CombinationEquipment15 combinationEquipment15)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
@@ -1276,7 +1275,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationEquipment14 combinationEquipment14)
+                            if (action is CombinationEquipment14 combinationEquipment14)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
@@ -1336,7 +1335,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationEquipment13 combinationEquipment13)
+                            if (action is CombinationEquipment13 combinationEquipment13)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
@@ -1396,7 +1395,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationEquipment12 combinationEquipment12)
+                            if (action is CombinationEquipment12 combinationEquipment12)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
@@ -1456,7 +1455,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationEquipment11 combinationEquipment11)
+                            if (action is CombinationEquipment11 combinationEquipment11)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
@@ -1497,7 +1496,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationEquipment10 combinationEquipment10)
+                            if (action is CombinationEquipment10 combinationEquipment10)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
@@ -1538,7 +1537,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationEquipment9 combinationEquipment9)
+                            if (action is CombinationEquipment9 combinationEquipment9)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
@@ -1579,7 +1578,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationEquipment8 combinationEquipment8)
+                            if (action is CombinationEquipment8 combinationEquipment8)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
@@ -1620,7 +1619,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationEquipment7 combinationEquipment7)
+                            if (action is CombinationEquipment7 combinationEquipment7)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
@@ -1661,7 +1660,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationEquipment6 combinationEquipment6)
+                            if (action is CombinationEquipment6 combinationEquipment6)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
@@ -1702,7 +1701,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationEquipment5 combinationEquipment5)
+                            if (action is CombinationEquipment5 combinationEquipment5)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
@@ -1743,7 +1742,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationEquipment4 combinationEquipment4)
+                            if (action is CombinationEquipment4 combinationEquipment4)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
@@ -1784,7 +1783,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationEquipment3 combinationEquipment3)
+                            if (action is CombinationEquipment3 combinationEquipment3)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
@@ -1825,7 +1824,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationEquipment2 combinationEquipment2)
+                            if (action is CombinationEquipment2 combinationEquipment2)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
@@ -1866,7 +1865,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is CombinationEquipment0 combinationEquipment0)
+                            if (action is CombinationEquipment0 combinationEquipment0)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
@@ -1907,7 +1906,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is ItemEnhancement itemEnhancement)
+                            if (action is ItemEnhancement itemEnhancement)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
@@ -1958,7 +1957,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is ItemEnhancement10 itemEnhancement10)
+                            if (action is ItemEnhancement10 itemEnhancement10)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
@@ -2009,7 +2008,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is ItemEnhancement9 itemEnhancement9)
+                            if (action is ItemEnhancement9 itemEnhancement9)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
@@ -2060,7 +2059,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is ItemEnhancement8 itemEnhancement8)
+                            if (action is ItemEnhancement8 itemEnhancement8)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
@@ -2111,7 +2110,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is ItemEnhancement7 itemEnhancement7)
+                            if (action is ItemEnhancement7 itemEnhancement7)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
@@ -2162,7 +2161,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is ItemEnhancement6 itemEnhancement6)
+                            if (action is ItemEnhancement6 itemEnhancement6)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
@@ -2213,7 +2212,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is ItemEnhancement5 itemEnhancement5)
+                            if (action is ItemEnhancement5 itemEnhancement5)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
@@ -2264,7 +2263,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is ItemEnhancement4 itemEnhancement4)
+                            if (action is ItemEnhancement4 itemEnhancement4)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
@@ -2315,7 +2314,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is ItemEnhancement3 itemEnhancement3)
+                            if (action is ItemEnhancement3 itemEnhancement3)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
@@ -2366,7 +2365,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is ItemEnhancement2 itemEnhancement2)
+                            if (action is ItemEnhancement2 itemEnhancement2)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
@@ -2417,7 +2416,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is ItemEnhancement0 itemEnhancement0)
+                            if (action is ItemEnhancement0 itemEnhancement0)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
@@ -2468,7 +2467,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is Buy buy)
+                            if (action is Buy buy)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ae.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
@@ -2570,7 +2569,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is Buy11 buy11)
+                            if (action is Buy11 buy11)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ae.OutputStates.GetAvatarStateV2(buy11.buyerAvatarAddress);
@@ -2672,7 +2671,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is Buy10 buy10)
+                            if (action is Buy10 buy10)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ae.OutputStates.GetAvatarStateV2(buy10.buyerAvatarAddress);
@@ -2774,7 +2773,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is Buy9 buy9)
+                            if (action is Buy9 buy9)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ae.OutputStates.GetAvatarStateV2(buy9.buyerAvatarAddress);
@@ -2876,7 +2875,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is Buy8 buy8)
+                            if (action is Buy8 buy8)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ae.OutputStates.GetAvatarStateV2(buy8.buyerAvatarAddress);
@@ -2978,7 +2977,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is Buy7 buy7)
+                            if (action is Buy7 buy7)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ae.OutputStates.GetAvatarStateV2(buy7.buyerAvatarAddress);
@@ -3080,7 +3079,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is Buy6 buy6)
+                            if (action is Buy6 buy6)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ae.OutputStates.GetAvatarStateV2(buy6.buyerAvatarAddress);
@@ -3182,7 +3181,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is Buy5 buy5)
+                            if (action is Buy5 buy5)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 AvatarState avatarState = ae.OutputStates.GetAvatarStateV2(buy5.buyerAvatarAddress);
@@ -3284,7 +3283,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is Buy4 buy4)
+                            if (action is Buy4 buy4)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 ShopItem shopItem = buy4.buyerResult.shopItem;
@@ -3358,7 +3357,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is Buy3 buy3)
+                            if (action is Buy3 buy3)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 ShopItem shopItem = buy3.buyerResult.shopItem;
@@ -3432,7 +3431,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is Buy2 buy2)
+                            if (action is Buy2 buy2)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 ShopItem shopItem = buy2.buyerResult.shopItem;
@@ -3506,7 +3505,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is Buy0 buy0)
+                            if (action is Buy0 buy0)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 ShopItem shopItem = buy0.buyerResult.shopItem;
@@ -3580,7 +3579,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is Stake stake)
+                            if (action is Stake stake)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _stakeList.Add(StakeData.GetStakeInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, ae.InputContext.BlockIndex, _blockTimeOffset));
@@ -3588,7 +3587,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing Stake action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is Stake0 stake0)
+                            if (action is Stake0 stake0)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _stakeList.Add(StakeData.GetStakeInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, ae.InputContext.BlockIndex, _blockTimeOffset));
@@ -3596,7 +3595,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing Stake action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is MigrateMonsterCollection migrateMonsterCollection)
+                            if (action is MigrateMonsterCollection migrateMonsterCollection)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _migrateMonsterCollectionList.Add(MigrateMonsterCollectionData.GetMigrateMonsterCollectionInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, ae.InputContext.BlockIndex, _blockTimeOffset));
@@ -3604,7 +3603,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing MigrateMonsterCollection action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is Grinding grinding)
+                            if (action is Grinding grinding)
                             {
                                 var start = DateTimeOffset.UtcNow;
 
@@ -3619,7 +3618,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing Grinding action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is UnlockEquipmentRecipe unlockEquipmentRecipe)
+                            if (action is UnlockEquipmentRecipe unlockEquipmentRecipe)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var unlockEquipmentRecipeList = UnlockEquipmentRecipeData.GetUnlockEquipmentRecipeInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, unlockEquipmentRecipe.AvatarAddress, unlockEquipmentRecipe.RecipeIds, unlockEquipmentRecipe.Id, ae.InputContext.BlockIndex, _blockTimeOffset);
@@ -3632,7 +3631,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing UnlockEquipmentRecipe action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is UnlockEquipmentRecipe1 unlockEquipmentRecipe1)
+                            if (action is UnlockEquipmentRecipe1 unlockEquipmentRecipe1)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var unlockEquipmentRecipeList = UnlockEquipmentRecipeData.GetUnlockEquipmentRecipeInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, unlockEquipmentRecipe1.AvatarAddress, unlockEquipmentRecipe1.RecipeIds, unlockEquipmentRecipe1.Id, ae.InputContext.BlockIndex, _blockTimeOffset);
@@ -3645,7 +3644,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing UnlockEquipmentRecipe action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is UnlockWorld unlockWorld)
+                            if (action is UnlockWorld unlockWorld)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var unlockWorldList = UnlockWorldData.GetUnlockWorldInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, unlockWorld.AvatarAddress, unlockWorld.WorldIds, unlockWorld.Id, ae.InputContext.BlockIndex, _blockTimeOffset);
@@ -3658,7 +3657,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing UnlockWorld action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is UnlockWorld1 unlockWorld1)
+                            if (action is UnlockWorld1 unlockWorld1)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var unlockWorldList = UnlockWorldData.GetUnlockWorldInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, unlockWorld1.AvatarAddress, unlockWorld1.WorldIds, unlockWorld1.Id, ae.InputContext.BlockIndex, _blockTimeOffset);
@@ -3671,7 +3670,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing UnlockWorld action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is HackAndSlashRandomBuff hasRandomBuff)
+                            if (action is HackAndSlashRandomBuff hasRandomBuff)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _hasRandomBuffList.Add(HackAndSlashRandomBuffData.GetHasRandomBuffInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, hasRandomBuff.AvatarAddress, hasRandomBuff.AdvancedGacha, hasRandomBuff.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
@@ -3679,7 +3678,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing HasRandomBuff action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is JoinArena joinArena)
+                            if (action is JoinArena joinArena)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _joinArenaList.Add(JoinArenaData.GetJoinArenaInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, joinArena.avatarAddress, joinArena.round, joinArena.championshipId, joinArena.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
@@ -3687,7 +3686,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing JoinArena action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is JoinArena2 joinArena2)
+                            if (action is JoinArena2 joinArena2)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _joinArenaList.Add(JoinArenaData.GetJoinArenaInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, joinArena2.avatarAddress, joinArena2.round, joinArena2.championshipId, joinArena2.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
@@ -3695,7 +3694,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing JoinArena action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is JoinArena1 joinArena1)
+                            if (action is JoinArena1 joinArena1)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _joinArenaList.Add(JoinArenaData.GetJoinArenaInfo(ae.InputContext.PreviousStates, ae.OutputStates, ae.InputContext.Signer, joinArena1.avatarAddress, joinArena1.round, joinArena1.championshipId, joinArena1.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
@@ -3703,7 +3702,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing JoinArena action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is BattleArena battleArena)
+                            if (action is BattleArena battleArena)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfo(ae.OutputStates, ae.InputContext.Signer, battleArena.myAvatarAddress, battleArena.runeInfos, _blockTimeOffset));
@@ -3723,7 +3722,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing BattleArena action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is BattleArena8 battleArena8)
+                            if (action is BattleArena8 battleArena8)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfo(ae.OutputStates, ae.InputContext.Signer, battleArena8.myAvatarAddress, battleArena8.runeInfos, _blockTimeOffset));
@@ -3743,7 +3742,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing BattleArena action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is BattleArena7 battleArena7)
+                            if (action is BattleArena7 battleArena7)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfo(ae.OutputStates, ae.InputContext.Signer, battleArena7.myAvatarAddress, battleArena7.runeInfos, _blockTimeOffset));
@@ -3763,7 +3762,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing BattleArena action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is BattleArena6 battleArena6)
+                            if (action is BattleArena6 battleArena6)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfoV1(ae.OutputStates, ae.InputContext.Signer, battleArena6.myAvatarAddress, _blockTimeOffset));
@@ -3783,7 +3782,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing BattleArena action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is BattleArena5 battleArena5)
+                            if (action is BattleArena5 battleArena5)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfoV1(ae.OutputStates, ae.InputContext.Signer, battleArena5.myAvatarAddress, _blockTimeOffset));
@@ -3803,7 +3802,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing BattleArena action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is BattleArena4 battleArena4)
+                            if (action is BattleArena4 battleArena4)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfoV1(ae.OutputStates, ae.InputContext.Signer, battleArena4.myAvatarAddress, _blockTimeOffset));
@@ -3823,7 +3822,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing BattleArena action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is BattleArena3 battleArena3)
+                            if (action is BattleArena3 battleArena3)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfoV1(ae.OutputStates, ae.InputContext.Signer, battleArena3.myAvatarAddress, _blockTimeOffset));
@@ -3843,7 +3842,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing BattleArena action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is BattleArena2 battleArena2)
+                            if (action is BattleArena2 battleArena2)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfoV1(ae.OutputStates, ae.InputContext.Signer, battleArena2.myAvatarAddress, _blockTimeOffset));
@@ -3863,7 +3862,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing BattleArena action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is BattleArena1 battleArena1)
+                            if (action is BattleArena1 battleArena1)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _avatarList.Add(AvatarData.GetAvatarInfoV1(ae.OutputStates, ae.InputContext.Signer, battleArena1.myAvatarAddress, _blockTimeOffset));
@@ -3883,7 +3882,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing BattleArena action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is BattleGrandFinale battleGrandFinale)
+                            if (action is BattleGrandFinale battleGrandFinale)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _battleGrandFinaleList.Add(BattleGrandFinaleData.GetBattleGrandFinaleInfo(
@@ -3900,7 +3899,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing BattleGrandFinale action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is BattleGrandFinale1 battleGrandFinale1)
+                            if (action is BattleGrandFinale1 battleGrandFinale1)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _battleGrandFinaleList.Add(BattleGrandFinaleData.GetBattleGrandFinaleInfo(
@@ -3917,7 +3916,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing BattleGrandFinale action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is EventMaterialItemCrafts eventMaterialItemCrafts)
+                            if (action is EventMaterialItemCrafts eventMaterialItemCrafts)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _eventMaterialItemCraftsList.Add(EventMaterialItemCraftsData.GetEventMaterialItemCraftsInfo(
@@ -3935,7 +3934,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing EventMaterialItemCrafts action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is RuneEnhancement runeEnhancement)
+                            if (action is RuneEnhancement runeEnhancement)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _runeEnhancementList.Add(RuneEnhancementData.GetRuneEnhancementInfo(
@@ -3952,7 +3951,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing RuneEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is RuneEnhancement0 runeEnhancement0)
+                            if (action is RuneEnhancement0 runeEnhancement0)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _runeEnhancementList.Add(RuneEnhancementData.GetRuneEnhancementInfo(
@@ -3969,7 +3968,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing RuneEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is TransferAssets transferAssets)
+                            if (action is TransferAssets transferAssets)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var count = 0;
@@ -4007,7 +4006,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing TransferAssets action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is DailyReward dailyReward)
+                            if (action is DailyReward dailyReward)
                             {
                                 var start = DateTimeOffset.UtcNow;
 #pragma warning disable CS0618
@@ -4035,7 +4034,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing DailyReward action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is DailyReward6 dailyReward6)
+                            if (action is DailyReward6 dailyReward6)
                             {
                                 var start = DateTimeOffset.UtcNow;
 #pragma warning disable CS0618
@@ -4063,7 +4062,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing DailyReward action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is DailyReward5 dailyReward5)
+                            if (action is DailyReward5 dailyReward5)
                             {
                                 var start = DateTimeOffset.UtcNow;
 #pragma warning disable CS0618
@@ -4091,7 +4090,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing DailyReward action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is DailyReward4 dailyReward4)
+                            if (action is DailyReward4 dailyReward4)
                             {
                                 var start = DateTimeOffset.UtcNow;
 #pragma warning disable CS0618
@@ -4119,7 +4118,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing DailyReward action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is DailyReward3 dailyReward3)
+                            if (action is DailyReward3 dailyReward3)
                             {
                                 var start = DateTimeOffset.UtcNow;
 #pragma warning disable CS0618
@@ -4147,7 +4146,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing DailyReward action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is DailyReward2 dailyReward2)
+                            if (action is DailyReward2 dailyReward2)
                             {
                                 var start = DateTimeOffset.UtcNow;
 #pragma warning disable CS0618
@@ -4175,7 +4174,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing DailyReward action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is DailyReward0 dailyReward0)
+                            if (action is DailyReward0 dailyReward0)
                             {
                                 var start = DateTimeOffset.UtcNow;
 #pragma warning disable CS0618
@@ -4203,7 +4202,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing DailyReward action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is ClaimRaidReward claimRaidReward)
+                            if (action is ClaimRaidReward claimRaidReward)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var sheets = ae.OutputStates.GetSheets(
@@ -4244,7 +4243,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing ClaimRaidReward action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is UnlockRuneSlot unlockRuneSlot)
+                            if (action is UnlockRuneSlot unlockRuneSlot)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _unlockRuneSlotList.Add(UnlockRuneSlotData.GetUnlockRuneSlotInfo(
@@ -4260,7 +4259,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing UnlockRuneSlot action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is RapidCombination rapidCombination)
+                            if (action is RapidCombination rapidCombination)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
@@ -4276,7 +4275,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing RapidCombination action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is RapidCombination8 rapidCombination8)
+                            if (action is RapidCombination8 rapidCombination8)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
@@ -4292,7 +4291,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing RapidCombination action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is RapidCombination7 rapidCombination7)
+                            if (action is RapidCombination7 rapidCombination7)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
@@ -4308,7 +4307,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing RapidCombination action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is RapidCombination6 rapidCombination6)
+                            if (action is RapidCombination6 rapidCombination6)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
@@ -4324,7 +4323,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing RapidCombination action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is RapidCombination5 rapidCombination5)
+                            if (action is RapidCombination5 rapidCombination5)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
@@ -4340,7 +4339,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing RapidCombination action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is RapidCombination4 rapidCombination4)
+                            if (action is RapidCombination4 rapidCombination4)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
@@ -4356,7 +4355,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing RapidCombination action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is RapidCombination3 rapidCombination3)
+                            if (action is RapidCombination3 rapidCombination3)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
@@ -4372,7 +4371,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing RapidCombination action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is RapidCombination2 rapidCombination2)
+                            if (action is RapidCombination2 rapidCombination2)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
@@ -4388,7 +4387,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing RapidCombination action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is RapidCombination0 rapidCombination0)
+                            if (action is RapidCombination0 rapidCombination0)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
@@ -4404,7 +4403,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing RapidCombination action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is Raid raid)
+                            if (action is Raid raid)
                             {
                                 var sheets = ae.OutputStates.GetSheets(
                                     sheetTypes: new[]
@@ -4472,7 +4471,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 }
                             }
 
-                            if (action.InnerAction is Raid4 raid4)
+                            if (action is Raid4 raid4)
                             {
                                 var sheets = ae.OutputStates.GetSheets(
                                     sheetTypes: new[]
@@ -4540,7 +4539,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 }
                             }
 
-                            if (action.InnerAction is Raid3 raid3)
+                            if (action is Raid3 raid3)
                             {
                                 var sheets = ae.OutputStates.GetSheets(
                                     sheetTypes: new[]
@@ -4608,7 +4607,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 }
                             }
 
-                            if (action.InnerAction is Raid2 raid2)
+                            if (action is Raid2 raid2)
                             {
                                 var sheets = ae.OutputStates.GetSheets(
                                     sheetTypes: new[]
@@ -4676,7 +4675,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 }
                             }
 
-                            if (action.InnerAction is Raid1 raid1)
+                            if (action is Raid1 raid1)
                             {
                                 var sheets = ae.OutputStates.GetSheets(
                                     sheetTypes: new[]
@@ -4744,7 +4743,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 }
                             }
 
-                            if (action.InnerAction is PetEnhancement petEnhancement)
+                            if (action is PetEnhancement petEnhancement)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 _petEnhancementList.Add(PetEnhancementData.GetPetEnhancementInfo(
@@ -4762,7 +4761,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Log.Debug("Stored PetEnhancement action in block #{BlockIndex}. Time taken: {Time} ms", ae.InputContext.BlockIndex, end - start);
                             }
 
-                            if (action.InnerAction is TransferAsset transferAsset)
+                            if (action is TransferAsset transferAsset)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var actionString = ae.InputContext.TxId.ToString();
@@ -4783,7 +4782,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is TransferAsset2 transferAsset2)
+                            if (action is TransferAsset2 transferAsset2)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var actionString = ae.InputContext.TxId.ToString();
@@ -4804,7 +4803,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action.InnerAction is TransferAsset0 transferAsset0)
+                            if (action is TransferAsset0 transferAsset0)
                             {
                                 var start = DateTimeOffset.UtcNow;
                                 var actionString = ae.InputContext.TxId.ToString();
