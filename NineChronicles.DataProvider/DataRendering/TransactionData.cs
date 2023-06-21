@@ -8,7 +8,7 @@
     using Libplanet.Tx;
     using Nekoyume.Action;
     using NineChronicles.DataProvider.Store.Models;
-    using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+    using NineChronicles.Headless;
 
     public static class TransactionData
     {
@@ -17,8 +17,8 @@
             Transaction transaction
         )
         {
-            var actionType = ToAction(transaction.Actions.FirstOrDefault()!)
-                .ToString().Split('.').LastOrDefault()!.Replace(">", string.Empty);
+            var actionType = NCActionUtils.ToAction(transaction.Actions.FirstOrDefault()!)
+                .ToString()!.Split('.').LastOrDefault()!.Replace(">", string.Empty);
             var transactionModel = new TransactionModel
             {
                 BlockIndex = block.Index,
@@ -34,15 +34,6 @@
             };
 
             return transactionModel;
-        }
-
-        public static NCAction ToAction(IValue plainValue)
-        {
-    #pragma warning disable CS0612
-            var action = new NCAction();
-    #pragma warning restore CS0612
-            action.LoadPlainValue(plainValue);
-            return action;
         }
     }
 }

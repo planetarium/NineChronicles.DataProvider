@@ -16,7 +16,6 @@
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless;
     using NineChronicles.Headless.GraphTypes.States;
-    using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     internal class NineChroniclesSummaryQuery : ObjectGraphType
     {
