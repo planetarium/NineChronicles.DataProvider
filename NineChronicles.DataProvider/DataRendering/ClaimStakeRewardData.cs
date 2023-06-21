@@ -79,7 +79,7 @@
                     stakedAmount,
                     currency,
                     level,
-                    itemV1Step,
+                    itemV2Step,
                     stakeRegularRewardSheet,
                     stakeRegularFixedRewardSheet
                 );
