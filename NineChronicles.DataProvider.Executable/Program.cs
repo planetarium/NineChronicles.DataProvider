@@ -25,6 +25,7 @@ namespace NineChronicles.DataProvider.Executable
     using Serilog;
 
     [HasSubCommands(typeof(MySqlMigration), "mysql-migration")]
+    [HasSubCommands(typeof(BattleArenaRankingMigration), "battle-arena-ranking-migration")]
     public class Program : CoconaLiteConsoleAppBase
     {
         public static async Task Main(string[] args)
