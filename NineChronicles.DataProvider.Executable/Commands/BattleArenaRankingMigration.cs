@@ -88,14 +88,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
             if (!(_baseStore.GetCanonicalChainId() is { } chainId))
             {
-                Console.Error.WriteLine("There is no canonical chain: {0}", storePath);
+                Log.Error("There is no canonical chain: {0}", storePath);
                 Environment.Exit(1);
                 return;
             }
 
             if (!(_baseStore.IndexBlockHash(chainId, 0) is { } gHash))
             {
-                Console.Error.WriteLine("There is no genesis block: {0}", storePath);
+                Log.Error("There is no genesis block: {0}", storePath);
                 Environment.Exit(1);
                 return;
             }
@@ -125,7 +125,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             long height = _baseChain.Tip.Index;
             if (migrationBlockIndex > (int)height)
             {
-                Console.Error.WriteLine(
+                Log.Error(
                     "The sum of the offset and limit is greater than the chain tip index: {0}",
                     height);
                 Environment.Exit(1);
@@ -142,16 +142,16 @@ namespace NineChronicles.DataProvider.Executable.Commands
             using MySqlConnection connection = new MySqlConnection(_connectionString);
             connection.Open();
 
-            var stm = "SELECT `Address` from Avatars";
-            var cmd = new MySqlCommand(stm, connection);
+            var statement = "SELECT `Address` from Avatars";
+            var command = new MySqlCommand(statement, connection);
 
-            var rdr = cmd.ExecuteReader();
+            var commandReader = command.ExecuteReader();
             List<string> avatars = new List<string>();
 
-            while (rdr.Read())
+            while (commandReader.Read())
             {
-                Log.Debug("{0}", rdr.GetString(0));
-                avatars.Add(rdr.GetString(0).Replace("0x", string.Empty));
+                Log.Debug("{0}", commandReader.GetString(0));
+                avatars.Add(commandReader.GetString(0).Replace("0x", string.Empty));
             }
 
             connection.Close();
@@ -160,8 +160,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
             {
                 var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, migrationBlockIndex ?? _baseChain.Tip.Index);
                 var tip = _baseStore.GetBlock((BlockHash)tipHash!);
-                var exec = _baseChain.EvaluateBlock(tip);
-                var ev = exec.Last();
+                var blockEvaluation = _baseChain.EvaluateBlock(tip);
+                var evaluation = blockEvaluation.Last();
                 var avatarCount = 0;
                 AvatarState avatarState;
                 bool checkBattleArenaRankingTable = false;
@@ -175,23 +175,23 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         var avatarAddress = new Address(avatar);
                         try
                         {
-                            avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress);
+                            avatarState = evaluation.OutputStates.GetAvatarStateV2(avatarAddress);
                         }
                         catch (Exception)
                         {
-                            avatarState = ev.OutputStates.GetAvatarState(avatarAddress);
+                            avatarState = evaluation.OutputStates.GetAvatarState(avatarAddress);
                         }
 
                         if (avatarState != null)
                         {
                             var avatarLevel = avatarState.level;
-                            var arenaSheet = ev.OutputStates.GetSheet<ArenaSheet>();
+                            var arenaSheet = evaluation.OutputStates.GetSheet<ArenaSheet>();
                             var arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
 
                             if (!checkBattleArenaRankingTable)
                             {
                                 _battleArenaRankingTableName = $"{_battleArenaRankingTableName}_{arenaData.ChampionshipId}_{arenaData.Round}";
-                                var stm33 =
+                                var statement1 =
                                 $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{_battleArenaRankingTableName}` (
                                     `BlockIndex` bigint NOT NULL,
                                     `AgentAddress` varchar(100) NOT NULL,
@@ -218,10 +218,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     KEY `fk_BattleArenaRanking_Agent1_idx` (`AgentAddress`),
                                     KEY `fk_BattleArenaRanking_AvatarAddress1_idx` (`AvatarAddress`)
                                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
-                                var cmd33 = new MySqlCommand(stm33, connection);
+                                var command1 = new MySqlCommand(statement1, connection);
                                 connection.Open();
-                                cmd33.CommandTimeout = 300;
-                                cmd33.ExecuteScalar();
+                                command1.CommandTimeout = 300;
+                                command1.ExecuteScalar();
                                 connection.Close();
                                 checkBattleArenaRankingTable = true;
                             }
@@ -230,8 +230,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 ArenaScore.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
                             var arenaInformationAdr =
                                 ArenaInformation.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
-                            ev.OutputStates.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
-                            ev.OutputStates.TryGetArenaScore(arenaScoreAdr, out var outputArenaScore);
+                            evaluation.OutputStates.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
+                            evaluation.OutputStates.TryGetArenaScore(arenaScoreAdr, out var outputArenaScore);
                             if (currentArenaInformation != null && outputArenaScore != null)
                             {
                                 _barBulkFile.WriteLine(
@@ -277,12 +277,12 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Log.Debug("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
 
-                var stm23 = $"RENAME TABLE {_battleArenaRankingTableName} TO {_battleArenaRankingTableName}_Dump; CREATE TABLE {_battleArenaRankingTableName} LIKE {_battleArenaRankingTableName}_Dump;";
-                var cmd23 = new MySqlCommand(stm23, connection);
+                var statement2 = $"RENAME TABLE {_battleArenaRankingTableName} TO {_battleArenaRankingTableName}_Dump; CREATE TABLE {_battleArenaRankingTableName} LIKE {_battleArenaRankingTableName}_Dump;";
+                var command2 = new MySqlCommand(statement2, connection);
                 var startMove = DateTimeOffset.Now;
                 connection.Open();
-                cmd23.CommandTimeout = 300;
-                cmd23.ExecuteScalar();
+                command2.CommandTimeout = 300;
+                command2.ExecuteScalar();
                 connection.Close();
                 var endMove = DateTimeOffset.Now;
                 Log.Debug("Move BattleArenaRanking Complete! Time Elapsed: {0}", endMove - startMove);
@@ -295,23 +295,23 @@ namespace NineChronicles.DataProvider.Executable.Commands
             {
                 Log.Debug(e.Message);
                 Log.Debug("Restoring previous tables due to error...");
-                var stm33 = $"DROP TABLE {_battleArenaRankingTableName}; RENAME TABLE {_battleArenaRankingTableName}_Dump TO {_battleArenaRankingTableName};";
-                var cmd33 = new MySqlCommand(stm33, connection);
+                var statement1 = $"DROP TABLE {_battleArenaRankingTableName}; RENAME TABLE {_battleArenaRankingTableName}_Dump TO {_battleArenaRankingTableName};";
+                var command1 = new MySqlCommand(statement1, connection);
                 var startRestore = DateTimeOffset.Now;
                 connection.Open();
-                cmd33.CommandTimeout = 300;
-                cmd33.ExecuteScalar();
+                command1.CommandTimeout = 300;
+                command1.ExecuteScalar();
                 connection.Close();
                 var endRestore = DateTimeOffset.Now;
                 Log.Debug("Restore BattleArenaRanking Complete! Time Elapsed: {0}", endRestore - startRestore);
             }
 
-            var stm34 = $"DROP TABLE {_battleArenaRankingTableName}_Dump;";
-            var cmd34 = new MySqlCommand(stm34, connection);
+            var statement3 = $"DROP TABLE {_battleArenaRankingTableName}_Dump;";
+            var command3 = new MySqlCommand(statement3, connection);
             var startDelete = DateTimeOffset.Now;
             connection.Open();
-            cmd34.CommandTimeout = 300;
-            cmd34.ExecuteScalar();
+            command3.CommandTimeout = 300;
+            command3.ExecuteScalar();
             connection.Close();
             var endDelete = DateTimeOffset.Now;
             Log.Debug("Delete BattleArenaRanking_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
