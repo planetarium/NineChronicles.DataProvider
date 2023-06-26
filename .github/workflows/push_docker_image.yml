@@ -8,6 +8,7 @@ on:
       - rc-*
       - 2023q1-previewnet
       - release/*
+      - qa-*
     tags:
         - v*
 
