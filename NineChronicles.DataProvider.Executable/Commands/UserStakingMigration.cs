@@ -33,41 +33,41 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private StreamWriter _usBulkFile;
         private List<string> _usFiles;
 
-        [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
+        [Command(Description = "Migrate staking amounts of users at a specific block index to a mysql database.")]
         public void Migration(
-            [Option('o', Description = "Rocksdb path to migrate.")]
+            [Option('o', Description = "Rocksdb store path to migrate.")]
             string storePath,
             [Option(
                 "mysql-server",
-                Description = "A hostname of MySQL server.")]
+                Description = "Hostname of MySQL server.")]
             string mysqlServer,
             [Option(
                 "mysql-port",
-                Description = "A port of MySQL server.")]
+                Description = "Port of MySQL server.")]
             uint mysqlPort,
             [Option(
                 "mysql-username",
-                Description = "The name of MySQL user.")]
+                Description = "Name of MySQL user.")]
             string mysqlUsername,
             [Option(
                 "mysql-password",
-                Description = "The password of MySQL user.")]
+                Description = "Password of MySQL user.")]
             string mysqlPassword,
             [Option(
                 "mysql-database",
-                Description = "The name of MySQL database to use.")]
+                Description = "Name of MySQL database to use.")]
             string mysqlDatabase,
             [Option(
                 "slack-token",
-                Description = "slack token.")]
+                Description = "slack token to send the migration data.")]
             string slackToken,
             [Option(
                 "slack-channel",
-                Description = "slack channel.")]
+                Description = "slack channel that receives the migration data.")]
             string slackChannel,
             [Option(
-                "migrationBlockIndex",
-                Description = "migrationBlockIndex of chain.")]
+                "migration-block-index",
+                Description = "Block index to migrate.")]
             long? migrationBlockIndex = null
         )
         {
