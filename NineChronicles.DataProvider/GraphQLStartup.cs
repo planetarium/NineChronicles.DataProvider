@@ -12,7 +12,6 @@
     using NineChronicles.Headless;
     using NineChronicles.Headless.GraphTypes;
     using Sentry;
-    using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     public class GraphQLStartup
     {
@@ -43,7 +42,7 @@
                 .AddDataLoader()
                 .AddGraphTypes(typeof(NineChroniclesSummarySchema))
                 .AddGraphTypes(typeof(StandaloneSchema))
-                .AddLibplanetExplorer<NCAction>()
+                .AddLibplanetExplorer()
                 .AddUserContextBuilder<UserContextBuilder>();
             services.AddGraphTypes();
             services.AddSingleton<NineChroniclesSummarySchema>();

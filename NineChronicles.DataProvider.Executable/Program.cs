@@ -1,3 +1,5 @@
+using Nekoyume.Action.Loader;
+
 namespace NineChronicles.DataProvider.Executable
 {
     using System;
@@ -21,7 +23,6 @@ namespace NineChronicles.DataProvider.Executable
     using NineChronicles.Headless.GraphTypes.States;
     using NineChronicles.Headless.Properties;
     using Serilog;
-    using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     [HasSubCommands(typeof(MySqlMigration), "mysql-migration")]
     public class Program : CoconaLiteConsoleAppBase
@@ -131,7 +132,7 @@ namespace NineChronicles.DataProvider.Executable
                     render: headlessConfig.Render,
                     preload: headlessConfig.Preload);
 
-            IActionLoader actionLoader = new SingleActionLoader(typeof(NCAction));
+            IActionLoader actionLoader = new NCActionLoader();
 
             var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(actionLoader)
             {

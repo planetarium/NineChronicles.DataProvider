@@ -1,8 +1,11 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
+    using System.Linq;
     using Libplanet;
     using Libplanet.Action;
+    using Libplanet.Assets;
+    using Libplanet.State;
     using Nekoyume.Action;
     using Nekoyume.Extensions;
     using Nekoyume.Model.State;
@@ -40,46 +43,48 @@
                 typeof(MaterialItemSheet));
             StakeRegularRewardSheet stakeRegularRewardSheet = sheets.GetSheet<StakeRegularRewardSheet>();
             int level = stakeRegularRewardSheet.FindLevelByStakedAmount(signer, stakedAmount);
-            var rewards = stakeRegularRewardSheet[level].Rewards;
-            var accumulatedRewards = prevStakeState.CalculateAccumulatedRewards(blockIndex);
+            prevStakeState.CalculateAccumulatedItemRewards(
+                blockIndex,
+                out var itemV1Step,
+                out var itemV2Step);
+
             int hourGlassCount = 0;
             int apPotionCount = 0;
-            foreach (var reward in rewards)
+            if (itemV1Step > 0)
             {
-                var (quantity, _) = stakedAmount.DivRem(currency * reward.Rate);
-                if (quantity < 1)
-                {
-                    // If the quantity is zero, it doesn't add the item into inventory.
-                    continue;
-                }
-
-                if (reward.ItemId == 400000)
-                {
-                    hourGlassCount += (int)quantity * accumulatedRewards;
-                }
-
-                if (reward.ItemId == 500000)
-                {
-                    apPotionCount += (int)quantity * accumulatedRewards;
-                }
+                StakeRegularRewardSheet stakeRegularRewardSheetV1 = new StakeRegularRewardSheet();
+                stakeRegularRewardSheetV1.Set(ClaimStakeReward.V1.StakeRegularRewardSheetCsv);
+                StakeRegularFixedRewardSheet stakeRegularFixedRewardSheetV1 = new StakeRegularFixedRewardSheet();
+                stakeRegularFixedRewardSheetV1.Set(ClaimStakeReward.V1.StakeRegularFixedRewardSheetCsv);
+                var (hourGlass, apPotion) = CalculateItemCount(
+                    stakedAmount,
+                    currency,
+                    level,
+                    itemV1Step,
+                    stakeRegularRewardSheetV1,
+                    stakeRegularFixedRewardSheetV1
+                );
+                hourGlassCount += hourGlass;
+                apPotionCount += apPotion;
             }
 
-            if (previousStates.TryGetSheet<StakeRegularFixedRewardSheet>(
-                    out var stakeRegularFixedRewardSheet))
+            if (itemV2Step > 0)
             {
-                var fixedRewards = stakeRegularFixedRewardSheet[level].Rewards;
-                foreach (var reward in fixedRewards)
+                if (!previousStates.TryGetSheet<StakeRegularFixedRewardSheet>(out var stakeRegularFixedRewardSheet))
                 {
-                    if (reward.ItemId == 400000)
-                    {
-                        hourGlassCount += reward.Count * accumulatedRewards;
-                    }
-
-                    if (reward.ItemId == 500000)
-                    {
-                        apPotionCount += reward.Count * accumulatedRewards;
-                    }
+                    stakeRegularFixedRewardSheet = new StakeRegularFixedRewardSheet();
                 }
+
+                var (hourGlass, apPotion) = CalculateItemCount(
+                    stakedAmount,
+                    currency,
+                    level,
+                    itemV2Step,
+                    stakeRegularRewardSheet,
+                    stakeRegularFixedRewardSheet
+                );
+                hourGlassCount += hourGlass;
+                apPotionCount += apPotion;
             }
 
             var claimStakeRewardModel = new ClaimStakeRewardModel
@@ -96,6 +101,58 @@
             };
 
             return claimStakeRewardModel;
+        }
+
+        private static (int hourGlassCount, int apPotionCount) CalculateItemCount(
+            FungibleAssetValue stakedAmount,
+            Currency currency,
+            int level,
+            int itemRewardStep,
+            StakeRegularRewardSheet stakeRegularRewardSheet,
+            StakeRegularFixedRewardSheet stakeRegularFixedRewardSheet
+        )
+        {
+            var rewards = stakeRegularRewardSheet[level].Rewards;
+            int hourGlassCount = 0;
+            int apPotionCount = 0;
+            foreach (var reward in rewards)
+            {
+                var (quantity, _) = stakedAmount.DivRem(currency * reward.Rate);
+                if (quantity < 1)
+                {
+                    // If the quantity is zero, it doesn't add the item into inventory.
+                    continue;
+                }
+
+                if (reward.ItemId == 400000)
+                {
+                    hourGlassCount += (int)quantity * itemRewardStep;
+                }
+
+                if (reward.ItemId == 500000)
+                {
+                    apPotionCount += (int)quantity * itemRewardStep;
+                }
+            }
+
+            if (stakeRegularFixedRewardSheet.TryGetValue(level, out var row))
+            {
+                var fixedRewards = row.Rewards;
+                foreach (var reward in fixedRewards)
+                {
+                    if (reward.ItemId == 400000)
+                    {
+                        hourGlassCount += reward.Count * itemRewardStep;
+                    }
+
+                    if (reward.ItemId == 500000)
+                    {
+                        apPotionCount += reward.Count * itemRewardStep;
+                    }
+                }
+            }
+
+            return (hourGlassCount, apPotionCount);
         }
     }
 }
