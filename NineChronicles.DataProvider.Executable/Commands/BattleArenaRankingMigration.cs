@@ -126,7 +126,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             if (migrationBlockIndex > (int)height)
             {
                 Log.Error(
-                    "The sum of the offset and limit is greater than the chain tip index: {0}",
+                    "The block index point to migrate is greater than the chain tip index: {0}",
                     height);
                 Environment.Exit(1);
                 return;
@@ -328,7 +328,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
         private void CreateBulkFiles()
         {
-            string barFilePath = Path.GetTempFileName();
+            string barFilePath = Path.GetRandomFileName();
             _barBulkFile = new StreamWriter(barFilePath);
             _barFiles.Add(barFilePath);
         }
