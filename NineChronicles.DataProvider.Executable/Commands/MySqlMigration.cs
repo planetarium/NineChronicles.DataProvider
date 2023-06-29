@@ -108,8 +108,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     {
                         var block = targetStore.GetBlock(item.value);
                         _baseStore.PutBlock(block);
-                        var blockCommit = targetStore.GetBlockCommit(block.Hash);
-                        Console.WriteLine($"Evaluating Block: #{block.Index} Transaction Count: {block.Transactions.Count} {item.i}/{remainingCount}");
+                        var blockCommit = targetStore.GetBlockCommit(block.Hash) ?? targetChain.GetBlockCommit(block.Hash);
+                        Console.WriteLine($"Evaluating Block: #{block.Index} Hash: {block.Hash} BlockCommit: {blockCommit} Transaction Count: {block.Transactions.Count} {item.i}/{remainingCount}");
                         _baseChain.Append(block, blockCommit);
                     }
             }
