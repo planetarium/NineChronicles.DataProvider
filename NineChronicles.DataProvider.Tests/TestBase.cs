@@ -66,7 +66,7 @@ public abstract class TestBase
             .AddGraphQL()
             .AddGraphTypes(typeof(NineChroniclesSummarySchema))
             .AddGraphTypes(typeof(StandaloneSchema))
-            .AddLibplanetExplorer<PolymorphicAction<ActionBase>>();
+            .AddLibplanetExplorer();
         services.AddSingleton<NineChroniclesSummarySchema>();
         var serviceProvider = services.BuildServiceProvider();
         Schema = new NineChroniclesSummarySchema(serviceProvider);
