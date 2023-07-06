@@ -157,6 +157,9 @@ namespace NineChronicles.DataProvider.Store
         // Table for storing TransferAsset actions
         public DbSet<TransferAssetModel> TransferAssets => Set<TransferAssetModel>();
 
+        // Table for storing RequestPledge actions
+        public DbSet<RequestPledgeModel> RequestPledges => Set<RequestPledgeModel>();
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.

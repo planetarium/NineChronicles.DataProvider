@@ -87,6 +87,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private List<RapidCombinationModel> _rapidCombinationList;
         private List<PetEnhancementModel> _petEnhancementList;
         private List<TransferAssetModel> _transferAssetList;
+        private List<RequestPledgeModel> _requestPledgeList;
 
         [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
         public void Migration(
@@ -246,6 +247,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             _rapidCombinationList = new List<RapidCombinationModel>();
             _petEnhancementList = new List<PetEnhancementModel>();
             _transferAssetList = new List<TransferAssetModel>();
+            _requestPledgeList = new List<RequestPledgeModel>();
 
             try
             {
@@ -358,6 +360,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _mySqlStore.StoreRapidCombinationList(_rapidCombinationList);
                 _mySqlStore.StorePetEnhancementList(_petEnhancementList);
                 _mySqlStore.StoreTransferAssetList(_transferAssetList);
+                _mySqlStore.StoreRequestPledgeList(_requestPledgeList);
             }
             catch (Exception e)
             {
@@ -4822,6 +4825,23 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (action is RequestPledge requestPledge)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                _requestPledgeList.Add(RequestPledgeData.GetRequestPledgeInfo(
+                                    ae.InputContext.TxId!.ToString()!,
+                                    ae.InputContext.BlockIndex,
+                                    _blockHash!.ToString(),
+                                    ae.InputContext.Signer,
+                                    requestPledge.AgentAddress,
+                                    requestPledge.RefillMead,
+                                    _blockTimeOffset));
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug(
+                                    "Stored RequestPledge action in block #{index}. Time Taken: {time} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                     }
