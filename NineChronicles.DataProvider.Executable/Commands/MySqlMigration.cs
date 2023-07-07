@@ -275,21 +275,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
                     {
                         var block = _baseStore.GetBlock(item.value);
-                        _blockList.Add(BlockData.GetBlockInfo(block));
                         _blockHash = block.Hash;
                         _blockIndex = block.Index;
                         _blockTimeOffset = block.Timestamp;
-                        foreach (var tx in block.Transactions)
-                        {
-                            _txList.Add(TransactionData.GetTransactionInfo(block, tx));
-
-                            // check if address is already in _agentCheck
-                            if (!_agentCheck.Contains(tx.Signer.ToString()))
-                            {
-                                _agentList.Add(AgentData.GetAgentInfo(tx.Signer));
-                                _agentCheck.Add(tx.Signer.ToString());
-                            }
-                        }
 
                         taskArray[item.i] = Task.Factory.StartNew(() =>
                         {
@@ -379,24 +367,41 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 {
                     foreach (var ae in data)
                     {
-                        var actionLoader = new NCActionLoader();
-                        if (actionLoader.LoadAction(_blockIndex, ae.Action) is TransferAsset3 transferAsset3)
+                        try
                         {
-                            var actionString = ae.InputContext.TxId.ToString();
-                            var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
-                            var id = new Guid(actionByteArray);
-                            _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
-                                id,
-                                (TxId)ae.InputContext.TxId!,
-                                ae.InputContext.BlockIndex,
-                                _blockHash!.ToString(),
-                                transferAsset3.Sender,
-                                transferAsset3.Recipient,
-                                transferAsset3.Amount.Currency.Ticker,
-                                transferAsset3.Amount,
-                                _blockTimeOffset));
+                            var actionLoader = new NCActionLoader();
+                            if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase action)
+                            {
+                                if (action is TransferAsset3 transferAsset3)
+                                {
+                                    var actionString = ae.InputContext.TxId.ToString();
+                                    var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
+                                    var id = new Guid(actionByteArray);
+                                    _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
+                                        id,
+                                        (TxId)ae.InputContext.TxId!,
+                                        ae.InputContext.BlockIndex,
+                                        _blockHash!.ToString(),
+                                        transferAsset3.Sender,
+                                        transferAsset3.Recipient,
+                                        transferAsset3.Amount.Currency.Ticker,
+                                        transferAsset3.Amount,
+                                        _blockTimeOffset));
 
-                            Log.Debug("Stored TransferAsset action in block #{index}. TxId: {txId} Sender: {sender} Recipient: {recipient}, Ticker: {ticker}, Amount: {amount}.", ae.InputContext.BlockIndex, ae.InputContext.TxId!, transferAsset3.Sender, transferAsset3.Recipient, transferAsset3.Amount.Currency.Ticker, transferAsset3.Amount);
+                                    Console.WriteLine(
+                                        "Stored TransferAsset action in block #{0}. TxId: {1} Sender: {2} Recipient: {3}, Ticker: {4}, Amount: {5}.",
+                                        ae.InputContext.BlockIndex,
+                                        ae.InputContext.TxId!,
+                                        transferAsset3.Sender,
+                                        transferAsset3.Recipient,
+                                        transferAsset3.Amount.Currency.Ticker,
+                                        transferAsset3.Amount);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error Message: {0}", ex.Message);
                         }
                     }
                 }
