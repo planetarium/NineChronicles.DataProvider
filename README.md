@@ -153,7 +153,8 @@ dotnet ef migrations add AddTransferAsset -- [Connection String]
 
 ## Migrating Past Chain Data to MySQL Database
 
-- This migration tool migrates all action data based on [DataRendering](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider/DataRendering) to the designated MySQL database.
+### Migrate All Action Data
+- This command migrates all action data based on [DataRendering](https://github.com/planetarium/NineChronicles.DataProvider/blob/development/NineChronicles.DataProvider/DataRendering) to the designated MySQL database.
 - Options such as `offset` and `limit` are provided to specify which block data to migrate.
 - **IMPORTANT)** This migration tool requires you to have the necessary `state` data in the blocks you want to migrate (If your chain store lacks the `state` data, this tool will not work). 
 ```
@@ -173,4 +174,45 @@ Options:
   --limit <Int32>              limit of block count (no entry will migrate to the chain tip).
   -h, --help                   Show help message
 
+```
+
+### Migrate Battle Arena Ranking Data
+- This command calculates the `battle arena` ranking of all participants at a specific block index (`migration-block-index`) and inserts the data to a designated mysql database.
+```
+Usage: NineChronicles.DataProvider.Executable battle-arena-ranking-migration [--store-path <String>] [--mysql-server <String>] [--mysql-port <UInt32>] [--mysql-username <String>] [--mysql-password <String>] [--mysql-database <Stri
+ng>] [--migration-block-index <Int64>] [--help]
+
+Migrate battle arena ranking data at a specific block index to a mysql database.
+
+Options:
+  -o, --store-path <String>          RocksDB store path to migrate. (Required)
+  --mysql-server <String>            Hostname of MySQL server. (Required)
+  --mysql-port <UInt32>              Port of MySQL server. (Required)
+  --mysql-username <String>          Name of MySQL user. (Required)
+  --mysql-password <String>          Password of MySQL user. (Required)
+  --mysql-database <String>          Name of MySQL database. (Required)
+  --migration-block-index <Int64>    Block index to migrate.
+  -h, --help                         Show help message
+```
+
+### Migrate User Staking Data
+- This command calculates the `NCG staking amount` of all participants at a specific block index (`migration-block-index`) and inserts the data to a designated mysql database.
+- Currently, the `slack-token` and `slack-channel` options for sending the data in `csv` format are required, however, these will be changed to optional in the near future.
+```
+Usage: NineChronicles.DataProvider.Executable user-staking-migration [--store-path <String>] [--mysql-server <String>] [--mysql-port <UInt32>] [--mysql-username <String>] [--mysql-password <String>] [--mysql-database <String>] [--
+slack-token <String>] [--slack-channel <String>] [--migration-block-index <Int64>] [--help]
+
+Migrate staking amounts of users at a specific block index to a mysql database.
+
+Options:
+  -o, --store-path <String>          Rocksdb store path to migrate. (Required)
+  --mysql-server <String>            Hostname of MySQL server. (Required)
+  --mysql-port <UInt32>              Port of MySQL server. (Required)
+  --mysql-username <String>          Name of MySQL user. (Required)
+  --mysql-password <String>          Password of MySQL user. (Required)
+  --mysql-database <String>          Name of MySQL database to use. (Required)
+  --slack-token <String>             slack token to send the migration data. (Required)
+  --slack-channel <String>           slack channel that receives the migration data. (Required)
+  --migration-block-index <Int64>    Block index to migrate.
+  -h, --help                         Show help message
 ```
