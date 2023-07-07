@@ -275,8 +275,11 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         });
                     }
 
-                    Task.WaitAll(taskArray);
-                    ProcessTasks(taskArray);
+                    if (taskArray[0] is not null)
+                    {
+                        Task.WaitAll(taskArray);
+                        ProcessTasks(taskArray);
+                    }
                 }
 
                 DateTimeOffset postDataPrep = _blockTimeOffset;
@@ -376,6 +379,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             transferAsset3.Recipient,
                                             transferAsset3.Amount.Currency.Ticker,
                                             transferAsset3.Amount);
+
+                                        _mySqlStore.StoreTransferAssetList(_transferAssetList);
+                                        _transferAssetList.Clear();
                                     }
                                 }
                             }
