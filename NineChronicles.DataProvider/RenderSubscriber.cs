@@ -977,6 +977,38 @@ namespace NineChronicles.DataProvider
                     }
                 });
 
+            _actionRenderer.EveryRender<TransferAsset3>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } transferAsset3)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            var actionString = ev.TxId.ToString();
+                            var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
+                            var id = new Guid(actionByteArray);
+                            _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
+                                id,
+                                (TxId)ev.TxId!,
+                                ev.BlockIndex,
+                                _blockHash!,
+                                transferAsset3.Sender,
+                                transferAsset3.Recipient,
+                                transferAsset3.Amount.Currency.Ticker,
+                                transferAsset3.Amount,
+                                _blockTimeOffset));
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
             _actionRenderer.EveryRender<TransferAssets>()
                 .Subscribe(ev =>
                 {
