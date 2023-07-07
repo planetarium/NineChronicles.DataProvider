@@ -369,33 +369,36 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     {
                         try
                         {
-                            var actionLoader = new NCActionLoader();
-                            if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase action)
+                            if (ae.Exception is null)
                             {
-                                if (action is TransferAsset3 transferAsset3)
+                                var actionLoader = new NCActionLoader();
+                                if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase action)
                                 {
-                                    var actionString = ae.InputContext.TxId.ToString();
-                                    var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
-                                    var id = new Guid(actionByteArray);
-                                    _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
-                                        id,
-                                        (TxId)ae.InputContext.TxId!,
-                                        ae.InputContext.BlockIndex,
-                                        _blockHash!.ToString(),
-                                        transferAsset3.Sender,
-                                        transferAsset3.Recipient,
-                                        transferAsset3.Amount.Currency.Ticker,
-                                        transferAsset3.Amount,
-                                        _blockTimeOffset));
+                                    if (action is TransferAsset3 transferAsset3)
+                                    {
+                                        var actionString = ae.InputContext.TxId.ToString();
+                                        var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
+                                        var id = new Guid(actionByteArray);
+                                        _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
+                                            id,
+                                            (TxId)ae.InputContext.TxId!,
+                                            ae.InputContext.BlockIndex,
+                                            _blockHash!.ToString(),
+                                            transferAsset3.Sender,
+                                            transferAsset3.Recipient,
+                                            transferAsset3.Amount.Currency.Ticker,
+                                            transferAsset3.Amount,
+                                            _blockTimeOffset));
 
-                                    Console.WriteLine(
-                                        "Stored TransferAsset action in block #{0}. TxId: {1} Sender: {2} Recipient: {3}, Ticker: {4}, Amount: {5}.",
-                                        ae.InputContext.BlockIndex,
-                                        ae.InputContext.TxId!,
-                                        transferAsset3.Sender,
-                                        transferAsset3.Recipient,
-                                        transferAsset3.Amount.Currency.Ticker,
-                                        transferAsset3.Amount);
+                                        Console.WriteLine(
+                                            "Stored TransferAsset action in block #{0}. TxId: {1} Sender: {2} Recipient: {3}, Ticker: {4}, Amount: {5}.",
+                                            ae.InputContext.BlockIndex,
+                                            ae.InputContext.TxId!,
+                                            transferAsset3.Sender,
+                                            transferAsset3.Recipient,
+                                            transferAsset3.Amount.Currency.Ticker,
+                                            transferAsset3.Amount);
+                                    }
                                 }
                             }
                         }
