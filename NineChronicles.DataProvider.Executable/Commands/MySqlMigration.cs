@@ -255,8 +255,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
             try
             {
-                Task<List<IActionEvaluation>>[] taskArray = new Task<List<IActionEvaluation>>[blocks.Count];
-
                 foreach (var index in blocks)
                 {
                     foreach (var item in
@@ -266,17 +264,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         _blockHash = block.Hash;
                         _blockIndex = block.Index;
                         _blockTimeOffset = block.Timestamp;
-
-                        taskArray[item.i] = Task.Factory.StartNew(() =>
-                        {
-                            List<IActionEvaluation> actionEvaluations = EvaluateBlock(block);
-                            Console.WriteLine($"Block progress: #{block.Index} {item.i}/{blocks.Count}");
-                            return actionEvaluations;
-                        });
+                        List<IActionEvaluation> actionEvaluations = EvaluateBlock(block);
+                        Console.WriteLine($"Block progress: #{block.Index} {item.i}/{blocks.Count}");
+                        ProcessTasks(actionEvaluations);
                     }
-
-                    Task.WaitAll(taskArray);
-                    ProcessTasks(taskArray);
                 }
 
                 DateTimeOffset postDataPrep = _blockTimeOffset;
@@ -337,54 +328,48 @@ namespace NineChronicles.DataProvider.Executable.Commands
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
         }
 
-        private void ProcessTasks(Task<List<IActionEvaluation>>[] taskArray)
+        private void ProcessTasks(List<IActionEvaluation> data)
         {
-            foreach (var task in taskArray)
+            foreach (var ae in data)
             {
-                if (task.Result is { } data)
+                try
                 {
-                    foreach (var ae in data)
+                    if (ae.Exception is null)
                     {
-                        try
+                        var actionLoader = new NCActionLoader();
+                        if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase action)
                         {
-                            if (ae.Exception is null)
+                            if (action is TransferAsset3 transferAsset3)
                             {
-                                var actionLoader = new NCActionLoader();
-                                if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase action)
-                                {
-                                    if (action is TransferAsset3 transferAsset3)
-                                    {
-                                        var actionString = ae.InputContext.TxId.ToString();
-                                        var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
-                                        var id = new Guid(actionByteArray);
-                                        _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
-                                            id,
-                                            (TxId)ae.InputContext.TxId!,
-                                            ae.InputContext.BlockIndex,
-                                            _blockHash!.ToString(),
-                                            transferAsset3.Sender,
-                                            transferAsset3.Recipient,
-                                            transferAsset3.Amount.Currency.Ticker,
-                                            transferAsset3.Amount,
-                                            _blockTimeOffset));
+                                var actionString = ae.InputContext.TxId.ToString();
+                                var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
+                                var id = new Guid(actionByteArray);
+                                _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
+                                    id,
+                                    (TxId)ae.InputContext.TxId!,
+                                    ae.InputContext.BlockIndex,
+                                    _blockHash!.ToString(),
+                                    transferAsset3.Sender,
+                                    transferAsset3.Recipient,
+                                    transferAsset3.Amount.Currency.Ticker,
+                                    transferAsset3.Amount,
+                                    _blockTimeOffset));
 
-                                        Console.WriteLine(
-                                            "Stored TransferAsset action in block #{0}. TxId: {1} Sender: {2} Recipient: {3}, Ticker: {4}, Amount: {5}.",
-                                            ae.InputContext.BlockIndex,
-                                            ae.InputContext.TxId!,
-                                            transferAsset3.Sender,
-                                            transferAsset3.Recipient,
-                                            transferAsset3.Amount.Currency.Ticker,
-                                            transferAsset3.Amount);
-                                    }
-                                }
+                                Console.WriteLine(
+                                    "Stored TransferAsset action in block #{0}. TxId: {1} Sender: {2} Recipient: {3}, Ticker: {4}, Amount: {5}.",
+                                    ae.InputContext.BlockIndex,
+                                    ae.InputContext.TxId!,
+                                    transferAsset3.Sender,
+                                    transferAsset3.Recipient,
+                                    transferAsset3.Amount.Currency.Ticker,
+                                    transferAsset3.Amount);
                             }
                         }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine("Error Message: {0}", ex.Message);
-                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error Message: {0}", ex.Message);
                 }
             }
         }
