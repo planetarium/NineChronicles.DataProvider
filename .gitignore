@@ -452,3 +452,9 @@ modules.xml
 
 # Except NineChronicles.Standalone.sln
 !NineChronicles.Standalone.sln
+
+# env
+.env
+
+# for docker compose
+.localstore
