@@ -178,6 +178,27 @@ namespace NineChronicles.DataProvider
 
                             ProcessAgentAvatarData(ev);
 
+                            if (ev.Action is ITransferAsset transferAsset)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                var actionString = ev.TxId.ToString();
+                                var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
+                                var id = new Guid(actionByteArray);
+                                _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
+                                    id,
+                                    (TxId)ev.TxId!,
+                                    ev.BlockIndex,
+                                    _blockHash!,
+                                    transferAsset.Sender,
+                                    transferAsset.Recipient,
+                                    transferAsset.Amount.Currency.Ticker,
+                                    transferAsset.Amount,
+                                    _blockTimeOffset));
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
                             if (ev.Action is IClaimStakeReward claimStakeReward)
                             {
                                 var start = DateTimeOffset.UtcNow;
@@ -937,38 +958,6 @@ namespace NineChronicles.DataProvider
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("Stored RuneEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
-                    }
-                });
-
-            _actionRenderer.EveryRender<TransferAsset>()
-                .Subscribe(ev =>
-                {
-                    try
-                    {
-                        if (ev.Exception == null && ev.Action is { } transferAsset)
-                        {
-                            var start = DateTimeOffset.UtcNow;
-                            var actionString = ev.TxId.ToString();
-                            var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
-                            var id = new Guid(actionByteArray);
-                            _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
-                                id,
-                                (TxId)ev.TxId!,
-                                ev.BlockIndex,
-                                _blockHash!,
-                                transferAsset.Sender,
-                                transferAsset.Recipient,
-                                transferAsset.Amount.Currency.Ticker,
-                                transferAsset.Amount,
-                                _blockTimeOffset));
-
-                            var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
