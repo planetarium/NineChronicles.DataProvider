@@ -30,8 +30,8 @@ services:
       NC_Preload: 'false'
       NC_NoMiner: 'true'
       NC_Render: 'false'
-      NC_TrustedAppProtocolVersionSigners__0: '030ffa9bd579ee1503ce008394f687c182279da913bfaec12baca34e79698a7cd1'
-      NC_GenesisBlockPath: 'https://release.nine-chronicles.com/genesis-block-9c-main'
+      NC_TrustedAppProtocolVersionSigners__0: ${NC_TrustedAppProtocolVersionSigners__0}
+      NC_GenesisBlockPath: ${NC_GenesisBlockPath}
       NC_BlockInsertInterval: '10'
       NC_BlockIndexFilePath: /data
       NC_TxLifeTime: '10'
