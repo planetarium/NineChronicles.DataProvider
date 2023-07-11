@@ -175,17 +175,17 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         var avatarAddress = new Address(avatar);
                         try
                         {
-                            avatarState = evaluation.OutputStates.GetAvatarStateV2(avatarAddress);
+                            avatarState = evaluation.OutputState.GetAvatarStateV2(avatarAddress);
                         }
                         catch (Exception)
                         {
-                            avatarState = evaluation.OutputStates.GetAvatarState(avatarAddress);
+                            avatarState = evaluation.OutputState.GetAvatarState(avatarAddress);
                         }
 
                         if (avatarState != null)
                         {
                             var avatarLevel = avatarState.level;
-                            var arenaSheet = evaluation.OutputStates.GetSheet<ArenaSheet>();
+                            var arenaSheet = evaluation.OutputState.GetSheet<ArenaSheet>();
                             var arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
 
                             if (!checkBattleArenaRankingTable)
@@ -230,8 +230,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 ArenaScore.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
                             var arenaInformationAdr =
                                 ArenaInformation.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
-                            evaluation.OutputStates.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
-                            evaluation.OutputStates.TryGetArenaScore(arenaScoreAdr, out var outputArenaScore);
+                            evaluation.OutputState.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
+                            evaluation.OutputState.TryGetArenaScore(arenaScoreAdr, out var outputArenaScore);
                             if (currentArenaInformation != null && outputArenaScore != null)
                             {
                                 _barBulkFile.WriteLine(
