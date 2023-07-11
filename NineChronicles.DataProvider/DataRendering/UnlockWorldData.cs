@@ -5,6 +5,7 @@
     using Libplanet;
     using Libplanet.Action;
     using Libplanet.Assets;
+    using Libplanet.State;
     using Nekoyume.Helper;
     using NineChronicles.DataProvider.Store.Models;
 

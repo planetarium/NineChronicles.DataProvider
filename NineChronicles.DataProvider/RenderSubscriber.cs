@@ -11,8 +11,6 @@ namespace NineChronicles.DataProvider
     using Lib9c.Model.Order;
     using Lib9c.Renderers;
     using Libplanet;
-    using Libplanet.Action;
-    using Libplanet.Assets;
     using Libplanet.Blocks;
     using Libplanet.Tx;
     using Microsoft.Extensions.Hosting;
@@ -79,6 +77,7 @@ namespace NineChronicles.DataProvider
         private readonly List<RapidCombinationModel> _rapidCombinationList = new List<RapidCombinationModel>();
         private readonly List<PetEnhancementModel> _petEnhancementList = new List<PetEnhancementModel>();
         private readonly List<TransferAssetModel> _transferAssetList = new List<TransferAssetModel>();
+        private readonly List<RequestPledgeModel> _requestPledgeList = new List<RequestPledgeModel>();
         private readonly List<string> _agents;
         private readonly bool _render;
         private int _renderedBlockCount;
@@ -262,6 +261,26 @@ namespace NineChronicles.DataProvider
                             _eventConsumableItemCraftsList.Add(EventConsumableItemCraftsData.GetEventConsumableItemCraftsInfo(eventConsumableItemCrafts, ev.PreviousStates, ev.OutputStates, ev.Signer, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("Stored EventConsumableItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<RequestPledge>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } requestPledge)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _requestPledgeList.Add(RequestPledgeData.GetRequestPledgeInfo(ev.TxId.ToString()!, ev.BlockIndex, _blockHash!, ev.Signer, requestPledge.AgentAddress, requestPledge.RefillMead, _blockTimeOffset));
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored RequestPledge action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -958,6 +977,38 @@ namespace NineChronicles.DataProvider
                     }
                 });
 
+            _actionRenderer.EveryRender<TransferAsset3>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } transferAsset3)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            var actionString = ev.TxId.ToString();
+                            var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
+                            var id = new Guid(actionByteArray);
+                            _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
+                                id,
+                                (TxId)ev.TxId!,
+                                ev.BlockIndex,
+                                _blockHash!,
+                                transferAsset3.Sender,
+                                transferAsset3.Recipient,
+                                transferAsset3.Amount.Currency.Ticker,
+                                transferAsset3.Amount,
+                                _blockTimeOffset));
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
             _actionRenderer.EveryRender<TransferAssets>()
                 .Subscribe(ev =>
                 {
@@ -1555,6 +1606,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreRapidCombinationList(_rapidCombinationList);
                     MySqlStore.StorePetEnhancementList(_petEnhancementList);
                     MySqlStore.StoreTransferAssetList(_transferAssetList);
+                    MySqlStore.StoreRequestPledgeList(_requestPledgeList);
                 }),
             };
 
@@ -1599,6 +1651,7 @@ namespace NineChronicles.DataProvider
             _rapidCombinationList.Clear();
             _petEnhancementList.Clear();
             _transferAssetList.Clear();
+            _requestPledgeList.Clear();
             var end = DateTimeOffset.Now;
             long blockIndex = b.OldTip.Index;
             StreamWriter blockIndexFile = new StreamWriter(_blockIndexFilePath);
