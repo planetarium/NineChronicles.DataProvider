@@ -198,11 +198,11 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         var avatarAddress = new Address(avatar);
                         try
                         {
-                            avatarState = evaluation.OutputStates.GetAvatarStateV2(avatarAddress);
+                            avatarState = evaluation.OutputState.GetAvatarStateV2(avatarAddress);
                         }
                         catch (Exception)
                         {
-                            avatarState = evaluation.OutputStates.GetAvatarState(avatarAddress);
+                            avatarState = evaluation.OutputState.GetAvatarState(avatarAddress);
                         }
 
                         if (!checkUserStakingTable)
@@ -230,11 +230,11 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         if (!agents.Contains(avatarState.agentAddress.ToString()))
                         {
                             agents.Add(avatarState.agentAddress.ToString());
-                            if (evaluation.OutputStates.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
+                            if (evaluation.OutputState.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
                             {
                                 var stakeStateAddress = StakeState.DeriveAddress(avatarState.agentAddress);
-                                var currency = evaluation.OutputStates.GetGoldCurrency();
-                                var stakedBalance = evaluation.OutputStates.GetBalance(stakeStateAddress, currency);
+                                var currency = evaluation.OutputState.GetGoldCurrency();
+                                var stakedBalance = evaluation.OutputState.GetBalance(stakeStateAddress, currency);
                                 _usBulkFile.WriteLine(
                                     $"{tip.Index};" +
                                     "V2;" +
@@ -246,17 +246,17 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 );
                             }
 
-                            var agentState = evaluation.OutputStates.GetAgentState(avatarState.agentAddress);
+                            var agentState = evaluation.OutputState.GetAgentState(avatarState.agentAddress);
                             Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
                                 avatarState.agentAddress,
                                 agentState.MonsterCollectionRound
                             );
-                            if (evaluation.OutputStates.TryGetState(monsterCollectionAddress, out Dictionary stateDict))
+                            if (evaluation.OutputState.TryGetState(monsterCollectionAddress, out Dictionary stateDict))
                             {
                                 var monsterCollectionStates = new MonsterCollectionState(stateDict);
-                                var currency = evaluation.OutputStates.GetGoldCurrency();
+                                var currency = evaluation.OutputState.GetGoldCurrency();
                                 FungibleAssetValue monsterCollectionBalance =
-                                    evaluation.OutputStates.GetBalance(monsterCollectionAddress, currency);
+                                    evaluation.OutputState.GetBalance(monsterCollectionAddress, currency);
                                 _usBulkFile.WriteLine(
                                     $"{tip.Index};" +
                                     "V1;" +
