@@ -10,6 +10,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using Cocona;
     using Lib9c.Model.Order;
     using Libplanet;
+    using Libplanet.Action;
     using Libplanet.Assets;
     using Libplanet.Blockchain;
     using Libplanet.Blockchain.Policies;
@@ -19,8 +20,9 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using MySqlConnector;
     using Nekoyume;
     using Nekoyume.Action;
+    using Nekoyume.Action.Loader;
     using Nekoyume.Battle;
-    using Nekoyume.BlockChain.Policy;
+    using Nekoyume.Blockchain.Policy;
     using Nekoyume.Helper;
     using Nekoyume.Model.Arena;
     using Nekoyume.Model.Item;
@@ -28,14 +30,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using Nekoyume.TableData;
     using Serilog;
     using Serilog.Events;
-    using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     public class MySqlMigration
     {
         private string USDbName = "UserStakings";
         private string _connectionString;
         private IStore _baseStore;
-        private BlockChain<NCAction> _baseChain;
+        private BlockChain _baseChain;
         private StreamWriter _usBulkFile;
         private List<string> _usFiles;
 
@@ -141,14 +142,20 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 new TrieStateStore(baseStateKeyValueStore);
 
             // Setup block policy
-            IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
+            IStagePolicy stagePolicy = new VolatileStagePolicy();
             LogEventLevel logLevel = LogEventLevel.Debug;
             var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
-            IBlockPolicy<NCAction> blockPolicy = blockPolicySource.GetPolicy();
+            IBlockPolicy blockPolicy = blockPolicySource.GetPolicy();
 
             // Setup base chain & new chain
             Block genesis = _baseStore.GetBlock(gHash);
-            _baseChain = new BlockChain<NCAction>(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis);
+            var blockChainStates = new BlockChainStates(_baseStore, baseStateStore);
+            var actionEvaluator = new ActionEvaluator(
+                _ => blockPolicy.BlockAction,
+                blockChainStates,
+                new NCActionLoader(),
+                null);
+            _baseChain = new BlockChain(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, actionEvaluator);
 
             // Prepare block hashes to append to new chain
             long height = _baseChain.Tip.Index;
