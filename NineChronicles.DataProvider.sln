@@ -18,6 +18,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NineChronicles.DataProvider
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NineChronicles.DataProvider.Batch", "NineChronicles.DataProvider.Batch\NineChronicles.DataProvider.Batch.csproj", "{F9EA10C0-4CF6-4E77-BB83-3B667409531D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NineChronicles.DataProvider.HangfireDashboard", "NineChronicles.DataProvider.HangfireDashboard\NineChronicles.DataProvider.HangfireDashboard.csproj", "{34CEA9C1-62D2-4963-B3AB-DE76EA146E20}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -88,6 +90,18 @@ Global
 		{F9EA10C0-4CF6-4E77-BB83-3B667409531D}.Release|x64.Build.0 = Release|Any CPU
 		{F9EA10C0-4CF6-4E77-BB83-3B667409531D}.Release|x86.ActiveCfg = Release|Any CPU
 		{F9EA10C0-4CF6-4E77-BB83-3B667409531D}.Release|x86.Build.0 = Release|Any CPU
+		{34CEA9C1-62D2-4963-B3AB-DE76EA146E20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34CEA9C1-62D2-4963-B3AB-DE76EA146E20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34CEA9C1-62D2-4963-B3AB-DE76EA146E20}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{34CEA9C1-62D2-4963-B3AB-DE76EA146E20}.Debug|x64.Build.0 = Debug|Any CPU
+		{34CEA9C1-62D2-4963-B3AB-DE76EA146E20}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{34CEA9C1-62D2-4963-B3AB-DE76EA146E20}.Debug|x86.Build.0 = Debug|Any CPU
+		{34CEA9C1-62D2-4963-B3AB-DE76EA146E20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34CEA9C1-62D2-4963-B3AB-DE76EA146E20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34CEA9C1-62D2-4963-B3AB-DE76EA146E20}.Release|x64.ActiveCfg = Release|Any CPU
+		{34CEA9C1-62D2-4963-B3AB-DE76EA146E20}.Release|x64.Build.0 = Release|Any CPU
+		{34CEA9C1-62D2-4963-B3AB-DE76EA146E20}.Release|x86.ActiveCfg = Release|Any CPU
+		{34CEA9C1-62D2-4963-B3AB-DE76EA146E20}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
