@@ -1,0 +1,5 @@
+CREATE DATABASE IF NOT EXISTS `data_provider`;
+CREATE DATABASE IF NOT EXISTS `hangfire`;
+
+CREATE USER 'root'@'localhost' IDENTIFIED BY 'local';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%';
