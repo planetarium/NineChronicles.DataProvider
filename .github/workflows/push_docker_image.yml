@@ -9,7 +9,7 @@ on:
       - 2023q1-previewnet
       - release/*
     tags:
-        - v*
+        - "*"
 
 env:
   DOCKER_REPO: planetariumhq/ninechronicles-dataprovider
