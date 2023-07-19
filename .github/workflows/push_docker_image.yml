@@ -10,7 +10,7 @@ on:
       - release/*
       - user-migration*
     tags:
-        - v*
+        - "*"
 
 env:
   DOCKER_REPO: planetariumhq/ninechronicles-dataprovider
