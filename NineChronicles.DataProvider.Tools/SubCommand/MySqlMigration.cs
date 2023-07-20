@@ -281,7 +281,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 int interval = 10000000;
                 int intervalCount = 0;
                 bool checkBARankingTable = false;
-                var sheets = ev.OutputStates.GetSheets(
+                var sheets = ev.OutputState.GetSheets(
                     sheetTypes: new[]
                     {
                         typeof(RuneSheet),
@@ -298,15 +298,15 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         var avatarAddress = new Address(avatar);
                         try
                         {
-                            avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress);
+                            avatarState = ev.OutputState.GetAvatarStateV2(avatarAddress);
                         }
                         catch (Exception ex)
                         {
-                            avatarState = ev.OutputStates.GetAvatarState(avatarAddress);
+                            avatarState = ev.OutputState.GetAvatarState(avatarAddress);
                         }
 
                         var avatarLevel = avatarState.level;
-                        var arenaSheet = ev.OutputStates.GetSheet<ArenaSheet>();
+                        var arenaSheet = ev.OutputState.GetSheet<ArenaSheet>();
                         var arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
 
                         if (!checkBARankingTable)
@@ -353,7 +353,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 #pragma warning disable CS0618
                             var runeCurrency = Currency.Legacy(runeType.Ticker, 0, minters: null);
 #pragma warning restore CS0618
-                            var outputRuneBalance = ev.OutputStates.GetBalance(
+                            var outputRuneBalance = ev.OutputState.GetBalance(
                                 avatarAddress,
                                 runeCurrency);
                             if (Convert.ToDecimal(outputRuneBalance.GetQuantityString()) > 0)
@@ -373,8 +373,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             ArenaScore.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
                         var arenaInformationAdr =
                             ArenaInformation.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
-                        ev.OutputStates.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
-                        ev.OutputStates.TryGetArenaScore(arenaScoreAdr, out var outputArenaScore);
+                        ev.OutputState.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
+                        ev.OutputState.TryGetArenaScore(arenaScoreAdr, out var outputArenaScore);
                         if (currentArenaInformation != null && outputArenaScore != null)
                         {
                             _barBulkFile.WriteLine(
@@ -404,14 +404,14 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         }
 
                         Address orderReceiptAddress = OrderDigestListState.DeriveAddress(avatarAddress);
-                        var orderReceiptList = ev.OutputStates.TryGetState(orderReceiptAddress, out Dictionary receiptDict)
+                        var orderReceiptList = ev.OutputState.TryGetState(orderReceiptAddress, out Dictionary receiptDict)
                             ? new OrderDigestListState(receiptDict)
                             : new OrderDigestListState(orderReceiptAddress);
                         foreach (var orderReceipt in orderReceiptList.OrderDigestList)
                         {
                             if (orderReceipt.ExpiredBlockIndex >= tip.Index)
                             {
-                                var state = ev.OutputStates.GetState(
+                                var state = ev.OutputState.GetState(
                                     Addresses.GetItemAddress(orderReceipt.TradableId));
                                 ITradableItem orderItem =
                                     (ITradableItem)ItemFactory.Deserialize((Dictionary)state);
@@ -540,7 +540,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         var userEquipments = avatarState.inventory.Equipments;
                         var userCostumes = avatarState.inventory.Costumes;
                         var userMaterials = avatarState.inventory.Materials;
-                        var materialItemSheet = ev.OutputStates.GetSheet<MaterialItemSheet>();
+                        var materialItemSheet = ev.OutputState.GetSheet<MaterialItemSheet>();
                         var hourglassRow = materialItemSheet
                             .First(pair => pair.Value.ItemSubType == ItemSubType.Hourglass)
                             .Value;
@@ -602,8 +602,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         if (!agents.Contains(avatarState.agentAddress.ToString()))
                         {
                             agents.Add(avatarState.agentAddress.ToString());
-                            Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
-                            var ncgBalance = ev.OutputStates.GetBalance(
+                            Currency ncgCurrency = ev.OutputState.GetGoldCurrency();
+                            var ncgBalance = ev.OutputState.GetBalance(
                                 avatarState.agentAddress,
                                 ncgCurrency);
                             _uncgBulkFile.WriteLine(
@@ -612,7 +612,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 $"{Convert.ToDecimal(ncgBalance.GetQuantityString())}"
                             );
                             Currency crystalCurrency = CrystalCalculator.CRYSTAL;
-                            var crystalBalance = ev.OutputStates.GetBalance(
+                            var crystalBalance = ev.OutputState.GetBalance(
                                 avatarState.agentAddress,
                                 crystalCurrency);
                             _ucyBulkFile.WriteLine(
@@ -620,16 +620,16 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 $"{avatarState.agentAddress.ToString()};" +
                                 $"{Convert.ToDecimal(crystalBalance.GetQuantityString())}"
                             );
-                            var agentState = ev.OutputStates.GetAgentState(avatarState.agentAddress);
+                            var agentState = ev.OutputState.GetAgentState(avatarState.agentAddress);
                             Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
                                 avatarState.agentAddress,
                                 agentState.MonsterCollectionRound
                             );
-                            if (ev.OutputStates.TryGetState(monsterCollectionAddress, out Dictionary stateDict))
+                            if (ev.OutputState.TryGetState(monsterCollectionAddress, out Dictionary stateDict))
                             {
                                 var mcStates = new MonsterCollectionState(stateDict);
-                                var currency = ev.OutputStates.GetGoldCurrency();
-                                FungibleAssetValue mcBalance = ev.OutputStates.GetBalance(monsterCollectionAddress, currency);
+                                var currency = ev.OutputState.GetGoldCurrency();
+                                FungibleAssetValue mcBalance = ev.OutputState.GetBalance(monsterCollectionAddress, currency);
                                 _umcBulkFile.WriteLine(
                                     $"{tip.Index};" +
                                     $"{avatarState.agentAddress.ToString()};" +
@@ -642,11 +642,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 );
                             }
 
-                            if (ev.OutputStates.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
+                            if (ev.OutputState.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
                             {
                                 var stakeStateAddress = StakeState.DeriveAddress(avatarState.agentAddress);
-                                var currency = ev.OutputStates.GetGoldCurrency();
-                                var stakedBalance = ev.OutputStates.GetBalance(stakeStateAddress, currency);
+                                var currency = ev.OutputState.GetGoldCurrency();
+                                var stakedBalance = ev.OutputState.GetBalance(stakeStateAddress, currency);
                                 _usBulkFile.WriteLine(
                                     $"{tip.Index};" +
                                     $"{avatarState.agentAddress.ToString()};" +
