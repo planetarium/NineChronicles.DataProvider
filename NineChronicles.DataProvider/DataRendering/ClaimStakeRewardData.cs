@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+    using Bencodex.Types;
     using Libplanet;
     using Libplanet.State;
     using Nekoyume.Action;
@@ -21,8 +22,8 @@
             DateTimeOffset blockTime
         )
         {
-            var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
-            var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
+            var plainValue = (Dictionary)claimStakeReward.PlainValue;
+            var avatarAddress = ((Dictionary)plainValue["values"])[AvatarAddressKey].ToAddress();
             var id = ((GameAction)claimStakeReward).Id;
             previousStates.TryGetStakeState(signer, out StakeState prevStakeState);
 
