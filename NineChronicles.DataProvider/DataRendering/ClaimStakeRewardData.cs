@@ -37,33 +37,33 @@
             var outputApPotionCount = 0;
             var outputHourGlassCount = 0;
 
-            var previousApPotion = avatarPreviousState.inventory.Items
-                .FirstOrDefault(x => x.item.ItemSubType == ItemSubType.ApStone);
-            var previousHourGlass = avatarPreviousState.inventory.Items
-                .FirstOrDefault(x => x.item.ItemSubType == ItemSubType.Hourglass);
-            if (previousApPotion != null)
+            var previousApPotions =
+                avatarPreviousState.inventory.Items.Where(x => x.item.ItemSubType == ItemSubType.ApStone);
+            var previousHourGlasses =
+                avatarPreviousState.inventory.Items.Where(x => x.item.ItemSubType == ItemSubType.Hourglass);
+            foreach (var potion in previousApPotions)
             {
-                previousApPotionCount = previousApPotion.count;
+                previousApPotionCount += potion.count;
             }
 
-            if (previousHourGlass != null)
+            foreach (var hourGlass in previousHourGlasses)
             {
-                previousHourGlassCount = previousHourGlass.count;
+                previousHourGlassCount += hourGlass.count;
             }
 
-            var outputApPotion = avatarOutputState.inventory.Items
-                .FirstOrDefault(x => x.item.ItemSubType == ItemSubType.ApStone);
-            var outputHourGlass = avatarOutputState.inventory.Items
-                .FirstOrDefault(x => x.item.ItemSubType == ItemSubType.Hourglass);
+            var outputApPotions =
+                avatarOutputState.inventory.Items.Where(x => x.item.ItemSubType == ItemSubType.ApStone);
+            var outputHourGlasses =
+                avatarOutputState.inventory.Items.Where(x => x.item.ItemSubType == ItemSubType.Hourglass);
 
-            if (outputApPotion != null)
+            foreach (var potion in outputApPotions)
             {
-                outputApPotionCount = outputApPotion.count;
+                outputApPotionCount += potion.count;
             }
 
-            if (outputHourGlass != null)
+            foreach (var hourGlass in outputHourGlasses)
             {
-                outputHourGlassCount = outputHourGlass.count;
+                outputHourGlassCount += hourGlass.count;
             }
 
             var claimStakeRewardModel = new ClaimStakeRewardModel
