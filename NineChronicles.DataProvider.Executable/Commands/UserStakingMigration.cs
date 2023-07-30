@@ -205,28 +205,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             avatarState = evaluation.OutputState.GetAvatarState(avatarAddress);
                         }
 
-                        if (!checkUserStakingTable)
-                        {
-                            _userStakingTableName = $"{_userStakingTableName}_{tip.Index}";
-                            var statement1 =
-                            $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{_userStakingTableName}` (
-                              `BlockIndex` bigint NOT NULL,
-                              `StakeVersion` varchar(100) NOT NULL,
-                              `AgentAddress` varchar(100) NOT NULL,
-                              `StakingAmount` decimal(13,2) NOT NULL,
-                              `StartedBlockIndex` bigint NOT NULL,
-                              `ReceivedBlockIndex` bigint NOT NULL,
-                              `CancellableBlockIndex` bigint NOT NULL,
-                              `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-                            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
-                            var command1 = new MySqlCommand(statement1, connection);
-                            connection.Open();
-                            command1.CommandTimeout = 300;
-                            command1.ExecuteScalar();
-                            connection.Close();
-                            checkUserStakingTable = true;
-                        }
-
                         if (!agents.Contains(avatarState.agentAddress.ToString()))
                         {
                             agents.Add(avatarState.agentAddress.ToString());
@@ -280,6 +258,28 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Log.Debug("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
+
+                if (!checkUserStakingTable)
+                {
+                    _userStakingTableName = $"{_userStakingTableName}_{tip.Index}";
+                    var statement1 =
+                        $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{_userStakingTableName}` (
+                              `BlockIndex` bigint NOT NULL,
+                              `StakeVersion` varchar(100) NOT NULL,
+                              `AgentAddress` varchar(100) NOT NULL,
+                              `StakingAmount` decimal(13,2) NOT NULL,
+                              `StartedBlockIndex` bigint NOT NULL,
+                              `ReceivedBlockIndex` bigint NOT NULL,
+                              `CancellableBlockIndex` bigint NOT NULL,
+                              `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+                            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+                    var command1 = new MySqlCommand(statement1, connection);
+                    connection.Open();
+                    command1.CommandTimeout = 300;
+                    command1.ExecuteScalar();
+                    connection.Close();
+                    checkUserStakingTable = true;
+                }
 
                 var statement2 = $"DROP TABLE IF EXISTS {_userStakingTableName}_Dump;";
                 var command2 = new MySqlCommand(statement2, connection);
