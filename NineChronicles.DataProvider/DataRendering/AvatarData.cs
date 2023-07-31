@@ -6,7 +6,8 @@
     using Bencodex.Types;
     using Libplanet;
     using Libplanet.Action;
-    using Libplanet.State;
+    using Libplanet.Action.State;
+    using Libplanet.Crypto;
     using Nekoyume.Action;
     using Nekoyume.Battle;
     using Nekoyume.Extensions;
