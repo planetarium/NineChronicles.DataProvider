@@ -11,7 +11,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using Lib9c.Model.Order;
     using Libplanet.Action;
     using Libplanet.Action.Loader;
-    using Libplanet.Assets;
+    using Libplanet.Types.Assets;
     using Libplanet.Blockchain;
     using Libplanet.Blockchain.Policies;
     using Libplanet.Blocks;

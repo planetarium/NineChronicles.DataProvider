@@ -4,8 +4,8 @@
     using System.Linq;
     using Bencodex.Types;
     using Libplanet.Action;
-    using Libplanet.Blocks;
-    using Libplanet.Tx;
+    using Libplanet.Types.Blocks;
+    using Libplanet.Types.Tx;
     using Nekoyume.Action;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless;

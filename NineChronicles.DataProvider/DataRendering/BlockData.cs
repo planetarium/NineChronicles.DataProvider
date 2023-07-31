@@ -2,7 +2,7 @@
 {
     using System.Linq;
     using Libplanet.Action;
-    using Libplanet.Blocks;
+    using Libplanet.Types.Blocks;
     using Nekoyume.Action;
     using NineChronicles.DataProvider.Store.Models;
 
