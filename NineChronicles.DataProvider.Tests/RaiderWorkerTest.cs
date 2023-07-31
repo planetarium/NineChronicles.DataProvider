@@ -3,42 +3,36 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Bencodex.Types;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Action.State;
+using Libplanet.Common;
 using Libplanet.Crypto;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.Extensions.DependencyInjection;
 using Nekoyume;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.DataProvider.Store;
 using NineChronicles.DataProvider.Store.Models;
+using NineChronicles.Headless.GraphTypes.States;
 using Xunit;
 
 namespace NineChronicles.DataProvider.Tests;
 
 public class RaiderWorkerTest : TestBase
 {
-    private CancellationTokenSource _cts;
-    private Address _worldBossListSheetAddress;
-    private readonly Address _avatarAddress;
-    private readonly Address _raiderAddress;
-    private readonly Address _raiderListAddress;
-    private readonly RaiderState _raiderState;
-
+    private static readonly Address AvatarAddress = new PrivateKey().ToAddress();
+    private static readonly Address RaiderAddress = Addresses.GetRaiderAddress(AvatarAddress, 1);
+    private static readonly Address RaiderListAddress = Addresses.GetRaiderListAddress(1);
+    private static readonly RaiderState RaiderState = new()
+    {
+        AvatarAddress = AvatarAddress
+    };
+    private readonly CancellationTokenSource _cts;
 
     public RaiderWorkerTest()
     {
         _cts = new CancellationTokenSource();
-        _worldBossListSheetAddress = Addresses.GetSheetAddress<WorldBossListSheet>();
-        _avatarAddress = new PrivateKey().ToAddress();
-        _raiderAddress = Addresses.GetRaiderAddress(_avatarAddress, 1);
-        _raiderListAddress = Addresses.GetRaiderListAddress(1);
-        _raiderState = new RaiderState
-        {
-            AvatarAddress = _avatarAddress
-        };
     }
+
     [Theory]
     [InlineData(11L, true, false)]
     [InlineData(11L, true, true)]
@@ -68,14 +62,14 @@ public class RaiderWorkerTest : TestBase
         Context.Blocks.Add(block);
         var model = new RaiderModel(
             1,
-            _raiderState.AvatarName,
-            updated ? 100 : _raiderState.HighScore,
-            _raiderState.TotalScore,
-            _raiderState.Cp,
-            _raiderState.IconId,
-            _raiderState.Level,
-            _raiderState.AvatarAddress.ToHex(),
-            _raiderState.PurchaseCount
+            RaiderState.AvatarName,
+            updated ? 100 : RaiderState.HighScore,
+            RaiderState.TotalScore,
+            RaiderState.Cp,
+            RaiderState.IconId,
+            RaiderState.Level,
+            RaiderState.AvatarAddress.ToHex(),
+            RaiderState.PurchaseCount
         );
         Context.Raiders.Add(model);
         Assert.Equal(model.CreatedAt, model.UpdatedAt);
@@ -92,29 +86,14 @@ public class RaiderWorkerTest : TestBase
             Assert.Equal(updated, model.CreatedAt != updatedModel.UpdatedAt);
         }
     }
-    protected override IValue? GetStateMock(Address address)
+
+    protected override IAccountState GetMockState()
     {
-        if (address.Equals(_raiderAddress))
-        {
-            return _raiderState.Serialize();
-        }
-
-        if (address.Equals(_raiderListAddress))
-        {
-            return new List(_raiderAddress.Serialize());
-        }
-
-        if (address.Equals(_worldBossListSheetAddress))
-        {
-            return @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
-1,900001,0,10,300,200,100,10".Serialize();
-        }
-
-        return null;
-    }
-
-    protected override FungibleAssetValue GetBalanceMock(Address address, Currency currency)
-    {
-        throw new System.NotImplementedException();
+        return MockState.Empty
+            .SetState(RaiderAddress, RaiderState.Serialize())
+            .SetState(RaiderListAddress, List.Empty.Add(RaiderAddress.Serialize()))
+            .SetState(Addresses.GetSheetAddress<WorldBossListSheet>(),
+                @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
+1,900001,0,10,300,200,100,10".Serialize());
     }
 }
