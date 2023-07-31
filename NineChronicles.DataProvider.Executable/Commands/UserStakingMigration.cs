@@ -157,7 +157,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
             var commandReader = command.ExecuteReader();
             List<string> avatars = new List<string>();
-            List<string> agents = new List<string>();
 
             while (commandReader.Read())
             {
@@ -184,16 +183,13 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var evaluation = blockEvaluation.Last();
                 var avatarCount = 0;
                 AvatarState avatarState;
-                int intervalCount = 0;
                 bool checkUserStakingTable = false;
 
                 foreach (var avatar in avatars)
                 {
                     try
                     {
-                        intervalCount++;
                         avatarCount++;
-                        Console.WriteLine("Interval Count {0}", intervalCount);
                         Console.WriteLine("Migrating {0}/{1}", avatarCount, avatars.Count);
                         var avatarAddress = new Address(avatar);
                         try
@@ -205,9 +201,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             avatarState = evaluation.OutputState.GetAvatarState(avatarAddress);
                         }
 
-                        if (!agents.Contains(avatarState.agentAddress.ToString()))
+                        if (avatarState != null)
                         {
-                            agents.Add(avatarState.agentAddress.ToString());
                             if (evaluation.OutputState.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
                             {
                                 var stakeStateAddress = StakeState.DeriveAddress(avatarState.agentAddress);
@@ -245,6 +240,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     $"{monsterCollectionStates.ExpiredBlockIndex}"
                                 );
                             }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"No Avatar State: {avatarAddress.ToString()}");
                         }
 
                         Console.WriteLine("Migrating Complete {0}/{1}", avatarCount, avatars.Count);
