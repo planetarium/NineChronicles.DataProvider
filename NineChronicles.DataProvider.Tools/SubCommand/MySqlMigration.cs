@@ -226,43 +226,21 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         var avatarAddress = new Address(avatar);
                         try
                         {
-                            avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress);
+                            avatarState = ev.OutputState.GetAvatarStateV2(avatarAddress);
                         }
                         catch (Exception ex)
                         {
-                            avatarState = ev.OutputStates.GetAvatarState(avatarAddress);
-                        }
-
-                        if (!checkBARankingTable)
-                        {
-                            USDbName = $"{USDbName}_{tip.Index}";
-                            var stm33 =
-                            $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{USDbName}` (
-                              `BlockIndex` bigint NOT NULL,
-                              `StakeVersion` varchar(100) NOT NULL,
-                              `AgentAddress` varchar(100) NOT NULL,
-                              `StakingAmount` decimal(13,2) NOT NULL,
-                              `StartedBlockIndex` bigint NOT NULL,
-                              `ReceivedBlockIndex` bigint NOT NULL,
-                              `CancellableBlockIndex` bigint NOT NULL,
-                              `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-                            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
-                            var cmd33 = new MySqlCommand(stm33, connection);
-                            connection.Open();
-                            cmd33.CommandTimeout = 300;
-                            cmd33.ExecuteScalar();
-                            connection.Close();
-                            checkBARankingTable = true;
+                            avatarState = ev.OutputState.GetAvatarState(avatarAddress);
                         }
 
                         if (!agents.Contains(avatarState.agentAddress.ToString()))
                         {
                             agents.Add(avatarState.agentAddress.ToString());
-                            if (ev.OutputStates.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
+                            if (ev.OutputState.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
                             {
                                 var stakeStateAddress = StakeState.DeriveAddress(avatarState.agentAddress);
-                                var currency = ev.OutputStates.GetGoldCurrency();
-                                var stakedBalance = ev.OutputStates.GetBalance(stakeStateAddress, currency);
+                                var currency = ev.OutputState.GetGoldCurrency();
+                                var stakedBalance = ev.OutputState.GetBalance(stakeStateAddress, currency);
                                 _usBulkFile.WriteLine(
                                     $"{tip.Index};" +
                                     "V2;" +
@@ -274,17 +252,17 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 );
                             }
 
-                            var agentState = ev.OutputStates.GetAgentState(avatarState.agentAddress);
+                            var agentState = ev.OutputState.GetAgentState(avatarState.agentAddress);
                             Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
                                 avatarState.agentAddress,
                                 agentState.MonsterCollectionRound
                             );
-                            if (ev.OutputStates.TryGetState(monsterCollectionAddress, out Dictionary stateDict))
+                            if (ev.OutputState.TryGetState(monsterCollectionAddress, out Dictionary stateDict))
                             {
                                 var mcStates = new MonsterCollectionState(stateDict);
-                                var currency = ev.OutputStates.GetGoldCurrency();
+                                var currency = ev.OutputState.GetGoldCurrency();
                                 FungibleAssetValue mcBalance =
-                                    ev.OutputStates.GetBalance(monsterCollectionAddress, currency);
+                                    ev.OutputState.GetBalance(monsterCollectionAddress, currency);
                                 _usBulkFile.WriteLine(
                                     $"{tip.Index};" +
                                     "V1;" +
@@ -308,6 +286,24 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
+
+                USDbName = $"{USDbName}_{tip.Index}";
+                var stm33 =
+                    $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{USDbName}` (
+                              `BlockIndex` bigint NOT NULL,
+                              `StakeVersion` varchar(100) NOT NULL,
+                              `AgentAddress` varchar(100) NOT NULL,
+                              `StakingAmount` decimal(13,2) NOT NULL,
+                              `StartedBlockIndex` bigint NOT NULL,
+                              `ReceivedBlockIndex` bigint NOT NULL,
+                              `CancellableBlockIndex` bigint NOT NULL,
+                              `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+                            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+                var cmd33 = new MySqlCommand(stm33, connection);
+                connection.Open();
+                cmd33.CommandTimeout = 300;
+                cmd33.ExecuteScalar();
+                connection.Close();
 
                 var stm11 = $"DROP TABLE IF EXISTS {USDbName}_Dump;";
                 var cmd11 = new MySqlCommand(stm11, connection);
