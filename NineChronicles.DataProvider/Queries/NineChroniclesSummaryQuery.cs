@@ -7,8 +7,9 @@
     using GraphQL;
     using GraphQL.Types;
     using Libplanet;
-    using Libplanet.Assets;
+    using Libplanet.Crypto;
     using Libplanet.Explorer.GraphTypes;
+    using Libplanet.Types.Assets;
     using Nekoyume;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.GraphTypes;

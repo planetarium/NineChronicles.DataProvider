@@ -11,13 +11,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using Lib9c.Model.Order;
     using Libplanet.Action;
     using Libplanet.Action.Loader;
-    using Libplanet.Assets;
     using Libplanet.Blockchain;
     using Libplanet.Blockchain.Policies;
-    using Libplanet.Blocks;
+    using Libplanet.Crypto;
     using Libplanet.RocksDBStore;
     using Libplanet.Store;
-    using Libplanet.Tx;
+    using Libplanet.Types.Assets;
+    using Libplanet.Types.Blocks;
+    using Libplanet.Types.Tx;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Internal;
     using Microsoft.Extensions.DependencyInjection;
@@ -188,8 +189,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             var actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 blockChainStates,
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             _baseChain = new BlockChain(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, actionEvaluator);
 
             // Check offset and limit value based on chain height
