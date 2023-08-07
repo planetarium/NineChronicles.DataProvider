@@ -9,12 +9,13 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using Lib9c.Model.Order;
     using Libplanet;
     using Libplanet.Action;
-    using Libplanet.Assets;
     using Libplanet.Blockchain;
     using Libplanet.Blockchain.Policies;
-    using Libplanet.Blocks;
+    using Libplanet.Crypto;
     using Libplanet.RocksDBStore;
     using Libplanet.Store;
+    using Libplanet.Types.Assets;
+    using Libplanet.Types.Blocks;
     using MySqlConnector;
     using Nekoyume;
     using Nekoyume.Action;
@@ -203,8 +204,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             var actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
                 blockChainStates,
-                new NCActionLoader(),
-                null);
+                new NCActionLoader());
             _baseChain = new BlockChain(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, actionEvaluator);
 
             // Prepare block hashes to append to new chain
