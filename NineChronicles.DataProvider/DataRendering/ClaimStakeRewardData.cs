@@ -2,14 +2,13 @@
 {
     using System;
     using System.Linq;
+    using Bencodex.Types;
     using Libplanet;
-    using Libplanet.Action;
-    using Libplanet.Assets;
-    using Libplanet.State;
+    using Libplanet.Action.State;
+    using Libplanet.Crypto;
     using Nekoyume.Action;
-    using Nekoyume.Extensions;
+    using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
-    using Nekoyume.TableData;
     using NineChronicles.DataProvider.Store.Models;
     using static Lib9c.SerializeKeys;
 
@@ -24,67 +23,48 @@
             DateTimeOffset blockTime
         )
         {
-            var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
-            var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
+            var plainValue = (Dictionary)claimStakeReward.PlainValue;
+            var avatarAddress = ((Dictionary)plainValue["values"])[AvatarAddressKey].ToAddress();
             var id = ((GameAction)claimStakeReward).Id;
             previousStates.TryGetStakeState(signer, out StakeState prevStakeState);
 
             var claimStakeStartBlockIndex = prevStakeState.StartedBlockIndex;
             var claimStakeEndBlockIndex = prevStakeState.ReceivedBlockIndex;
-            var currency = outputStates.GetGoldCurrency();
-            var stakeStateAddress = StakeState.DeriveAddress(signer);
-            var stakedAmount = outputStates.GetBalance(stakeStateAddress, currency);
+            var avatarPreviousState = previousStates.GetAvatarStateV2(avatarAddress);
+            var avatarOutputState = outputStates.GetAvatarStateV2(avatarAddress);
 
-            var sheets = previousStates.GetSheets(
-                typeof(StakeRegularRewardSheet),
-                typeof(ConsumableItemSheet),
-                typeof(CostumeItemSheet),
-                typeof(EquipmentItemSheet),
-                typeof(MaterialItemSheet));
-            StakeRegularRewardSheet stakeRegularRewardSheet = sheets.GetSheet<StakeRegularRewardSheet>();
-            int level = stakeRegularRewardSheet.FindLevelByStakedAmount(signer, stakedAmount);
-            prevStakeState.CalculateAccumulatedItemRewards(
-                blockIndex,
-                out var itemV1Step,
-                out var itemV2Step);
+            var previousApPotionCount = 0;
+            var previousHourGlassCount = 0;
+            var outputApPotionCount = 0;
+            var outputHourGlassCount = 0;
 
-            int hourGlassCount = 0;
-            int apPotionCount = 0;
-            if (itemV1Step > 0)
+            var previousApPotions =
+                avatarPreviousState.inventory.Items.Where(x => x.item.ItemSubType == ItemSubType.ApStone);
+            var previousHourGlasses =
+                avatarPreviousState.inventory.Items.Where(x => x.item.ItemSubType == ItemSubType.Hourglass);
+            foreach (var potion in previousApPotions)
             {
-                StakeRegularRewardSheet stakeRegularRewardSheetV1 = new StakeRegularRewardSheet();
-                stakeRegularRewardSheetV1.Set(ClaimStakeReward.V1.StakeRegularRewardSheetCsv);
-                StakeRegularFixedRewardSheet stakeRegularFixedRewardSheetV1 = new StakeRegularFixedRewardSheet();
-                stakeRegularFixedRewardSheetV1.Set(ClaimStakeReward.V1.StakeRegularFixedRewardSheetCsv);
-                var (hourGlass, apPotion) = CalculateItemCount(
-                    stakedAmount,
-                    currency,
-                    level,
-                    itemV1Step,
-                    stakeRegularRewardSheetV1,
-                    stakeRegularFixedRewardSheetV1
-                );
-                hourGlassCount += hourGlass;
-                apPotionCount += apPotion;
+                previousApPotionCount += potion.count;
             }
 
-            if (itemV2Step > 0)
+            foreach (var hourGlass in previousHourGlasses)
             {
-                if (!previousStates.TryGetSheet<StakeRegularFixedRewardSheet>(out var stakeRegularFixedRewardSheet))
-                {
-                    stakeRegularFixedRewardSheet = new StakeRegularFixedRewardSheet();
-                }
+                previousHourGlassCount += hourGlass.count;
+            }
 
-                var (hourGlass, apPotion) = CalculateItemCount(
-                    stakedAmount,
-                    currency,
-                    level,
-                    itemV2Step,
-                    stakeRegularRewardSheet,
-                    stakeRegularFixedRewardSheet
-                );
-                hourGlassCount += hourGlass;
-                apPotionCount += apPotion;
+            var outputApPotions =
+                avatarOutputState.inventory.Items.Where(x => x.item.ItemSubType == ItemSubType.ApStone);
+            var outputHourGlasses =
+                avatarOutputState.inventory.Items.Where(x => x.item.ItemSubType == ItemSubType.Hourglass);
+
+            foreach (var potion in outputApPotions)
+            {
+                outputApPotionCount += potion.count;
+            }
+
+            foreach (var hourGlass in outputHourGlasses)
+            {
+                outputHourGlassCount += hourGlass.count;
             }
 
             var claimStakeRewardModel = new ClaimStakeRewardModel
@@ -93,66 +73,14 @@
                 BlockIndex = blockIndex,
                 AgentAddress = signer.ToString(),
                 ClaimRewardAvatarAddress = avatarAddress.ToString(),
-                HourGlassCount = hourGlassCount,
-                ApPotionCount = apPotionCount,
+                HourGlassCount = outputHourGlassCount - previousHourGlassCount,
+                ApPotionCount = outputApPotionCount - previousApPotionCount,
                 ClaimStakeStartBlockIndex = claimStakeStartBlockIndex,
                 ClaimStakeEndBlockIndex = claimStakeEndBlockIndex,
                 TimeStamp = blockTime,
             };
 
             return claimStakeRewardModel;
-        }
-
-        private static (int hourGlassCount, int apPotionCount) CalculateItemCount(
-            FungibleAssetValue stakedAmount,
-            Currency currency,
-            int level,
-            int itemRewardStep,
-            StakeRegularRewardSheet stakeRegularRewardSheet,
-            StakeRegularFixedRewardSheet stakeRegularFixedRewardSheet
-        )
-        {
-            var rewards = stakeRegularRewardSheet[level].Rewards;
-            int hourGlassCount = 0;
-            int apPotionCount = 0;
-            foreach (var reward in rewards)
-            {
-                var (quantity, _) = stakedAmount.DivRem(currency * reward.Rate);
-                if (quantity < 1)
-                {
-                    // If the quantity is zero, it doesn't add the item into inventory.
-                    continue;
-                }
-
-                if (reward.ItemId == 400000)
-                {
-                    hourGlassCount += (int)quantity * itemRewardStep;
-                }
-
-                if (reward.ItemId == 500000)
-                {
-                    apPotionCount += (int)quantity * itemRewardStep;
-                }
-            }
-
-            if (stakeRegularFixedRewardSheet.TryGetValue(level, out var row))
-            {
-                var fixedRewards = row.Rewards;
-                foreach (var reward in fixedRewards)
-                {
-                    if (reward.ItemId == 400000)
-                    {
-                        hourGlassCount += reward.Count * itemRewardStep;
-                    }
-
-                    if (reward.ItemId == 500000)
-                    {
-                        apPotionCount += reward.Count * itemRewardStep;
-                    }
-                }
-            }
-
-            return (hourGlassCount, apPotionCount);
         }
     }
 }

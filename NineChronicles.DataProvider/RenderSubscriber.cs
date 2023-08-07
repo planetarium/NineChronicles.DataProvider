@@ -11,8 +11,9 @@ namespace NineChronicles.DataProvider
     using Lib9c.Model.Order;
     using Lib9c.Renderers;
     using Libplanet;
-    using Libplanet.Blocks;
-    using Libplanet.Tx;
+    using Libplanet.Crypto;
+    using Libplanet.Types.Blocks;
+    using Libplanet.Types.Tx;
     using Microsoft.Extensions.Hosting;
     using Nekoyume;
     using Nekoyume.Action;
@@ -202,8 +203,8 @@ namespace NineChronicles.DataProvider
                             if (ev.Action is IClaimStakeReward claimStakeReward)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
-                                var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
+                                var plainValue = (Dictionary)claimStakeReward.PlainValue;
+                                var avatarAddress = ((Dictionary)plainValue["values"])[AvatarAddressKey].ToAddress();
                                 var id = ((GameAction)claimStakeReward).Id;
 #pragma warning disable CS0618
                                 var runeCurrency = RuneHelper.StakeRune;
@@ -1356,7 +1357,7 @@ namespace NineChronicles.DataProvider
                                 }
                                 catch (Exception)
                                 {
-                                    avatarState = ev.OutputState.GetAvatarState(avatarAddress);
+                                    avatarState = ev.OutputState.GetAvatarState(address: avatarAddress);
                                 }
 
                                 if (avatarState == null)

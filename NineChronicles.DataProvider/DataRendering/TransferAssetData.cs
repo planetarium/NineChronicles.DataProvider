@@ -2,9 +2,9 @@
 {
     using System;
     using Libplanet;
-    using Libplanet.Assets;
-    using Libplanet.Blocks;
-    using Libplanet.Tx;
+    using Libplanet.Crypto;
+    using Libplanet.Types.Assets;
+    using Libplanet.Types.Tx;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class TransferAssetData

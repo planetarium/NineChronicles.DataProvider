@@ -3,8 +3,9 @@
     using System;
     using Libplanet;
     using Libplanet.Action;
-    using Libplanet.Assets;
-    using Libplanet.State;
+    using Libplanet.Action.State;
+    using Libplanet.Crypto;
+    using Libplanet.Types.Assets;
     using Nekoyume.Action;
     using NineChronicles.DataProvider.Store.Models;
 
