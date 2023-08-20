@@ -5,6 +5,7 @@ namespace NineChronicles.DataProvider.Store
     using System.Linq;
     using System.Threading.Tasks;
     using Libplanet;
+    using Libplanet.Crypto;
     using Microsoft.EntityFrameworkCore;
     using Nekoyume.Model.Item;
     using NineChronicles.DataProvider.Store.Models;

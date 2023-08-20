@@ -3,7 +3,8 @@
     using System;
     using System.Linq;
     using Libplanet;
-    using Libplanet.Assets;
+    using Libplanet.Crypto;
+    using Libplanet.Types.Assets;
     using Nekoyume.Action;
     using Nekoyume.Model.Item;
     using NineChronicles.DataProvider.Store.Models;

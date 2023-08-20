@@ -7,6 +7,7 @@ namespace NineChronicles.DataProvider
     using System.Threading.Tasks;
     using Bencodex.Types;
     using Libplanet;
+    using Libplanet.Crypto;
     using Microsoft.Extensions.Hosting;
     using Nekoyume;
     using Nekoyume.Extensions;

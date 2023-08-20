@@ -4,7 +4,8 @@
     using System.Collections.Generic;
     using Libplanet;
     using Libplanet.Action;
-    using Libplanet.State;
+    using Libplanet.Action.State;
+    using Libplanet.Crypto;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class EventMaterialItemCraftsData

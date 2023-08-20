@@ -4,7 +4,8 @@
     using System.Linq;
     using Bencodex.Types;
     using Libplanet;
-    using Libplanet.State;
+    using Libplanet.Action.State;
+    using Libplanet.Crypto;
     using Nekoyume.Action;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.State;

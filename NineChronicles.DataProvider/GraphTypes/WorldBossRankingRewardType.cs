@@ -2,7 +2,7 @@ namespace NineChronicles.DataProvider.GraphTypes
 {
     using System.Collections.Generic;
     using GraphQL.Types;
-    using Libplanet.Assets;
+    using Libplanet.Types.Assets;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless.GraphTypes;
 

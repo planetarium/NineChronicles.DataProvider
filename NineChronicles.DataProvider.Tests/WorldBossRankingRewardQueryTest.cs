@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Bencodex.Types;
 using GraphQL.Execution;
-using GraphQL.Types;
-using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Action.State;
+using Libplanet.Common;
+using Libplanet.Types.Assets;
 using Libplanet.Crypto;
 using Nekoyume;
 using Nekoyume.Model.State;
@@ -19,7 +18,6 @@ namespace NineChronicles.DataProvider.Tests;
 
 public class WorldBossRankingRewardQueryTest : TestBase
 {
-    private string _csv = string.Empty;
 
     [Theory]
     [InlineData(1, 1L, false, false, 1, "0")]
@@ -44,8 +42,6 @@ public class WorldBossRankingRewardQueryTest : TestBase
     {
         if (canReceive)
         {
-            _csv = $@"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
-{raidId},900001,0,10,300,200,100,10";
             Context.WorldBossSeasonMigrationModels.Add(new WorldBossSeasonMigrationModel { RaidId = raidId });
         }
         string queryAddress = null;
@@ -132,11 +128,6 @@ public class WorldBossRankingRewardQueryTest : TestBase
     [InlineData(11L, false, 100, 2, 100, 2)]
     public async Task WorldBossRankingRewards(long blockIndex, bool canReceive, int offset, int limit, int expectedRank, int expectedCount)
     {
-        if (canReceive)
-        {
-            _csv = @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
-1,900001,0,10,300,200,100,10";
-        }
         for (int i = 0; i < 200; i++)
         {
             var avatarAddress = new PrivateKey().ToAddress();
@@ -156,9 +147,9 @@ public class WorldBossRankingRewardQueryTest : TestBase
 
         await SaveBlock(blockIndex);
 
-
+        int raidId = canReceive ? 1 : -1;
         var query = $@"query {{
-        worldBossRankingRewards(raidId: 1, offset: {offset}, limit: {limit}) {{
+        worldBossRankingRewards(raidId: {raidId}, offset: {offset}, limit: {limit}) {{
             raider {{
                 ranking
             }}
@@ -212,9 +203,6 @@ public class WorldBossRankingRewardQueryTest : TestBase
     [InlineData(2, 198, 199, "15000")]
     public async Task WorldBossRankingRewards_Rate(int raidId, int offset, int expectedRank, string expectedCrystal)
     {
-        _csv = $@"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
-{raidId},900001,0,10,300,200,100,10";
-
         for (int i = 0; i < 200; i++)
         {
             var avatarAddress = new PrivateKey().ToAddress();
@@ -275,47 +263,6 @@ public class WorldBossRankingRewardQueryTest : TestBase
         }
     }
 
-    protected override IValue? GetStateMock(Address address)
-    {
-        if (address.Equals(Addresses.GetSheetAddress<WorldBossListSheet>()))
-        {
-            return _csv.Serialize();
-        }
-
-        if (address.Equals(Addresses.GetSheetAddress<RuneSheet>()))
-        {
-            return @"id,ticker
-1001,RUNE_FENRIR1
-1002,RUNE_FENRIR2
-1003,RUNE_FENRIR3
-".Serialize();
-        }
-
-        if (address.Equals(Addresses.GetSheetAddress<WorldBossRankingRewardSheet>()))
-        {
-            return @"id,boss_id,ranking_min,ranking_max,rate_min,rate_max,rune_1_id,rune_1_qty,rune_2_id,rune_2_qty,rune_3_id,rune_3_qty,crystal
-1,900001,1,1,0,0,1001,3500,1002,1200,1003,300,900000
-2,900001,2,2,0,0,1001,2200,1002,650,1003,150,625000
-3,900001,3,3,0,0,1001,1450,1002,450,1003,100,400000
-4,900001,4,10,0,0,1001,1000,1002,330,1003,70,250000
-5,900001,11,100,0,0,1001,560,1002,150,1003,40,150000
-6,900001,0,0,1,30,1001,370,1002,105,1003,25,100000
-7,900001,0,0,31,50,1001,230,1002,60,1003,10,50000
-8,900001,0,0,51,70,1001,75,1002,20,1003,5,25000
-9,900001,0,0,71,100,1001,40,1002,10,0,0,15000".Serialize();
-        }
-
-        return null;
-    }
-
-    private IReadOnlyList<IValue?> GetStatesMock(IReadOnlyList<Address> addresses) =>
-        addresses.Select(GetStateMock).ToArray();
-
-    protected override FungibleAssetValue GetBalanceMock(Address address, Currency currency)
-    {
-        return FungibleAssetValue.FromRawValue(currency, 0);
-    }
-
     private async Task SaveBlock(long blockIndex)
     {
 
@@ -337,5 +284,30 @@ public class WorldBossRankingRewardQueryTest : TestBase
         };
         Context.Blocks.Add(block);
         await Context.SaveChangesAsync();        
+    }
+    
+    protected override IAccountState GetMockState()
+    {
+        return MockState.Empty
+            .SetState(Addresses.GetSheetAddress<WorldBossListSheet>(), @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
+1,900001,0,10,300,200,100,10
+2,900001,0,10,300,200,100,10
+3,900001,0,10,300,200,100,10".Serialize())
+            .SetState(Addresses.GetSheetAddress<RuneSheet>(), @"id,ticker
+1001,RUNE_FENRIR1
+1002,RUNE_FENRIR2
+1003,RUNE_FENRIR3
+".Serialize())
+            .SetState(Addresses.GetSheetAddress<WorldBossRankingRewardSheet>(),
+                @"id,boss_id,ranking_min,ranking_max,rate_min,rate_max,rune_1_id,rune_1_qty,rune_2_id,rune_2_qty,rune_3_id,rune_3_qty,crystal
+1,900001,1,1,0,0,1001,3500,1002,1200,1003,300,900000
+2,900001,2,2,0,0,1001,2200,1002,650,1003,150,625000
+3,900001,3,3,0,0,1001,1450,1002,450,1003,100,400000
+4,900001,4,10,0,0,1001,1000,1002,330,1003,70,250000
+5,900001,11,100,0,0,1001,560,1002,150,1003,40,150000
+6,900001,0,0,1,30,1001,370,1002,105,1003,25,100000
+7,900001,0,0,31,50,1001,230,1002,60,1003,10,50000
+8,900001,0,0,51,70,1001,75,1002,20,1003,5,25000
+9,900001,0,0,71,100,1001,40,1002,10,0,0,15000".Serialize());
     }
 }
