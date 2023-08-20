@@ -1,0 +1,52 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:8.0.30
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root-pw
+      MYSQL_DATABASE: data_provider
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user-pw
+    ports:
+      - 3306:3306
+    networks:
+      - net
+
+  data-provider-write:
+    build: 
+      context: .
+      dockerfile: ${DOCKERFILE:-Dockerfile}
+      args:
+        - COMMIT=temp
+    volumes:
+      - ./data:/data
+    environment:
+      NC_StorePath: /data/data-provider
+      NC_AppProtocolVersionToken: ${NC_AppProtocolVersionToken}
+      NC_Confirmations: '0'
+      NC_Preload: 'false'
+      NC_NoMiner: 'true'
+      NC_Render: 'false'
+      NC_TrustedAppProtocolVersionSigners__0: ${NC_TrustedAppProtocolVersionSigners__0}
+      NC_GenesisBlockPath: ${NC_GenesisBlockPath}
+      NC_BlockInsertInterval: '10'
+      NC_BlockIndexFilePath: /data
+      NC_TxLifeTime: '10'
+      NC_MySqlConnectionString: ${NC_MySqlConnectionString}
+    command: "/bin/sh -c '/app/NineChronicles.DataProvider.Executable'"
+    ports:
+      - 80:80
+      - 31234:31234
+    depends_on:
+      - db
+    networks:
+      - net
+
+volumes:
+  db_data:
+
+networks:
+  net:

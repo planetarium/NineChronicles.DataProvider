@@ -1,6 +1,7 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
     using Libplanet;
+    using Libplanet.Crypto;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class AgentData

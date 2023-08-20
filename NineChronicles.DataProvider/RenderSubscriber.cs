@@ -11,8 +11,9 @@ namespace NineChronicles.DataProvider
     using Lib9c.Model.Order;
     using Lib9c.Renderers;
     using Libplanet;
-    using Libplanet.Blocks;
-    using Libplanet.Tx;
+    using Libplanet.Crypto;
+    using Libplanet.Types.Blocks;
+    using Libplanet.Types.Tx;
     using Microsoft.Extensions.Hosting;
     using Nekoyume;
     using Nekoyume.Action;
@@ -178,19 +179,40 @@ namespace NineChronicles.DataProvider
 
                             ProcessAgentAvatarData(ev);
 
+                            if (ev.Action is ITransferAsset transferAsset)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                var actionString = ev.TxId.ToString();
+                                var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
+                                var id = new Guid(actionByteArray);
+                                _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
+                                    id,
+                                    (TxId)ev.TxId!,
+                                    ev.BlockIndex,
+                                    _blockHash!,
+                                    transferAsset.Sender,
+                                    transferAsset.Recipient,
+                                    transferAsset.Amount.Currency.Ticker,
+                                    transferAsset.Amount,
+                                    _blockTimeOffset));
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
                             if (ev.Action is IClaimStakeReward claimStakeReward)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
-                                var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
+                                var plainValue = (Dictionary)claimStakeReward.PlainValue;
+                                var avatarAddress = ((Dictionary)plainValue["values"])[AvatarAddressKey].ToAddress();
                                 var id = ((GameAction)claimStakeReward).Id;
 #pragma warning disable CS0618
                                 var runeCurrency = RuneHelper.StakeRune;
 #pragma warning restore CS0618
-                                var prevRuneBalance = ev.PreviousStates.GetBalance(
+                                var prevRuneBalance = ev.PreviousState.GetBalance(
                                     avatarAddress,
                                     runeCurrency);
-                                var outputRuneBalance = ev.OutputStates.GetBalance(
+                                var outputRuneBalance = ev.OutputState.GetBalance(
                                     avatarAddress,
                                     runeCurrency);
                                 var acquiredRune = outputRuneBalance - prevRuneBalance;
@@ -204,7 +226,7 @@ namespace NineChronicles.DataProvider
                                     runeCurrency.Ticker,
                                     acquiredRune,
                                     _blockTimeOffset));
-                                _claimStakeList.Add(ClaimStakeRewardData.GetClaimStakeRewardInfo(claimStakeReward, ev.PreviousStates, ev.OutputStates, ev.Signer, ev.BlockIndex, _blockTimeOffset));
+                                _claimStakeList.Add(ClaimStakeRewardData.GetClaimStakeRewardInfo(claimStakeReward, ev.PreviousState, ev.OutputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Log.Debug("Stored ClaimStakeReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
@@ -226,8 +248,8 @@ namespace NineChronicles.DataProvider
                             var actionType = eventDungeonBattle.ToString()!.Split('.').LastOrDefault()
                                 ?.Replace(">", string.Empty);
                             _eventDungeonBattleList.Add(EventDungeonBattleData.GetEventDungeonBattleInfo(
-                                ev.PreviousStates,
-                                ev.OutputStates,
+                                ev.PreviousState,
+                                ev.OutputState,
                                 ev.Signer,
                                 eventDungeonBattle.AvatarAddress,
                                 eventDungeonBattle.EventScheduleId,
@@ -258,7 +280,7 @@ namespace NineChronicles.DataProvider
                         if (ev.Exception == null && ev.Action is { } eventConsumableItemCrafts)
                         {
                             var start = DateTimeOffset.UtcNow;
-                            _eventConsumableItemCraftsList.Add(EventConsumableItemCraftsData.GetEventConsumableItemCraftsInfo(eventConsumableItemCrafts, ev.PreviousStates, ev.OutputStates, ev.Signer, ev.BlockIndex, _blockTimeOffset));
+                            _eventConsumableItemCraftsList.Add(EventConsumableItemCraftsData.GetEventConsumableItemCraftsInfo(eventConsumableItemCrafts, ev.PreviousState, ev.OutputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("Stored EventConsumableItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
@@ -297,11 +319,11 @@ namespace NineChronicles.DataProvider
                         if (ev.Exception == null && ev.Action is { } has)
                         {
                             var start = DateTimeOffset.UtcNow;
-                            _avatarList.Add(AvatarData.GetAvatarInfo(ev.OutputStates, ev.Signer, has.AvatarAddress, has.RuneInfos, _blockTimeOffset));
-                            _hasList.Add(HackAndSlashData.GetHackAndSlashInfo(ev.PreviousStates, ev.OutputStates, ev.Signer, has.AvatarAddress, has.StageId, has.Id, ev.BlockIndex, _blockTimeOffset));
+                            _avatarList.Add(AvatarData.GetAvatarInfo(ev.OutputState, ev.Signer, has.AvatarAddress, has.RuneInfos, _blockTimeOffset));
+                            _hasList.Add(HackAndSlashData.GetHackAndSlashInfo(ev.PreviousState, ev.OutputState, ev.Signer, has.AvatarAddress, has.StageId, has.Id, ev.BlockIndex, _blockTimeOffset));
                             if (has.StageBuffId.HasValue)
                             {
-                                _hasWithRandomBuffList.Add(HasWithRandomBuffData.GetHasWithRandomBuffInfo(ev.PreviousStates, ev.OutputStates, ev.Signer, has.AvatarAddress, has.StageId, has.StageBuffId, has.Id, ev.BlockIndex, _blockTimeOffset));
+                                _hasWithRandomBuffList.Add(HasWithRandomBuffData.GetHasWithRandomBuffInfo(ev.PreviousState, ev.OutputState, ev.Signer, has.AvatarAddress, has.StageId, has.StageBuffId, has.Id, ev.BlockIndex, _blockTimeOffset));
                             }
 
                             var end = DateTimeOffset.UtcNow;
@@ -322,10 +344,10 @@ namespace NineChronicles.DataProvider
                         if (ev.Exception == null && ev.Action is { } hasSweep)
                         {
                             var start = DateTimeOffset.UtcNow;
-                            _avatarList.Add(AvatarData.GetAvatarInfo(ev.OutputStates, ev.Signer, hasSweep.avatarAddress, hasSweep.runeInfos, _blockTimeOffset));
+                            _avatarList.Add(AvatarData.GetAvatarInfo(ev.OutputState, ev.Signer, hasSweep.avatarAddress, hasSweep.runeInfos, _blockTimeOffset));
                             _hasSweepList.Add(HackAndSlashSweepData.GetHackAndSlashSweepInfo(
-                                ev.PreviousStates,
-                                ev.OutputStates,
+                                ev.PreviousState,
+                                ev.OutputState,
                                 ev.Signer,
                                 hasSweep.avatarAddress,
                                 hasSweep.stageId,
@@ -356,8 +378,8 @@ namespace NineChronicles.DataProvider
                         {
                             var start = DateTimeOffset.UtcNow;
                             _ccList.Add(CombinationConsumableData.GetCombinationConsumableInfo(
-                                ev.PreviousStates,
-                                ev.OutputStates,
+                                ev.PreviousState,
+                                ev.OutputState,
                                 ev.Signer,
                                 combinationConsumable.avatarAddress,
                                 combinationConsumable.recipeId,
@@ -383,8 +405,8 @@ namespace NineChronicles.DataProvider
                         {
                             var start = DateTimeOffset.UtcNow;
                             _ceList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
-                                ev.PreviousStates,
-                                ev.OutputStates,
+                                ev.PreviousState,
+                                ev.OutputState,
                                 ev.Signer,
                                 combinationEquipment.avatarAddress,
                                 combinationEquipment.recipeId,
@@ -396,8 +418,8 @@ namespace NineChronicles.DataProvider
                             {
                                 var replaceCombinationEquipmentMaterialList = ReplaceCombinationEquipmentMaterialData
                                     .GetReplaceCombinationEquipmentMaterialInfo(
-                                        ev.PreviousStates,
-                                        ev.OutputStates,
+                                        ev.PreviousState,
+                                        ev.OutputState,
                                         ev.Signer,
                                         combinationEquipment.avatarAddress,
                                         combinationEquipment.recipeId,
@@ -419,7 +441,7 @@ namespace NineChronicles.DataProvider
                                 (end - start).Milliseconds);
                             start = DateTimeOffset.UtcNow;
 
-                            var slotState = ev.OutputStates.GetCombinationSlotState(
+                            var slotState = ev.OutputState.GetCombinationSlotState(
                                 combinationEquipment.avatarAddress,
                                 combinationEquipment.slotIndex);
 
@@ -454,8 +476,8 @@ namespace NineChronicles.DataProvider
                         {
                             var start = DateTimeOffset.UtcNow;
                             if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
-                                    ev.PreviousStates,
-                                    ev.OutputStates,
+                                    ev.PreviousState,
+                                    ev.OutputState,
                                     ev.Signer,
                                     itemEnhancement.avatarAddress,
                                     itemEnhancement.materialId,
@@ -468,8 +490,8 @@ namespace NineChronicles.DataProvider
                             }
 
                             _ieList.Add(ItemEnhancementData.GetItemEnhancementInfo(
-                                ev.PreviousStates,
-                                ev.OutputStates,
+                                ev.PreviousState,
+                                ev.OutputState,
                                 ev.Signer,
                                 itemEnhancement.avatarAddress,
                                 itemEnhancement.slotIndex,
@@ -481,7 +503,7 @@ namespace NineChronicles.DataProvider
                             Log.Debug("Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             start = DateTimeOffset.UtcNow;
 
-                            var slotState = ev.OutputStates.GetCombinationSlotState(
+                            var slotState = ev.OutputState.GetCombinationSlotState(
                                 itemEnhancement.avatarAddress,
                                 itemEnhancement.slotIndex);
 
@@ -515,17 +537,17 @@ namespace NineChronicles.DataProvider
                         if (ev.Exception == null && ev.Action is { } buy)
                         {
                             var start = DateTimeOffset.UtcNow;
-                            AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
+                            AvatarState avatarState = ev.OutputState.GetAvatarStateV2(buy.buyerAvatarAddress);
                             var buyerInventory = avatarState.inventory;
                             foreach (var purchaseInfo in buy.purchaseInfos)
                             {
-                                var state = ev.OutputStates.GetState(
+                                var state = ev.OutputState.GetState(
                                 Addresses.GetItemAddress(purchaseInfo.TradableId));
                                 ITradableItem orderItem =
                                     (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
                                 Order order =
                                     OrderFactory.Deserialize(
-                                        (Dictionary)ev.OutputStates.GetState(
+                                        (Dictionary)ev.OutputState.GetState(
                                             Order.DeriveAddress(purchaseInfo.OrderId))!);
                                 int itemCount = order is FungibleOrder fungibleOrder
                                     ? fungibleOrder.ItemCount
@@ -538,7 +560,7 @@ namespace NineChronicles.DataProvider
                                     || purchaseInfo.ItemSubType == ItemSubType.Ring
                                     || purchaseInfo.ItemSubType == ItemSubType.Weapon)
                                 {
-                                    var sellerState = ev.OutputStates.GetAvatarStateV2(purchaseInfo.SellerAvatarAddress);
+                                    var sellerState = ev.OutputState.GetAvatarStateV2(purchaseInfo.SellerAvatarAddress);
                                     var sellerInventory = sellerState.inventory;
 
                                     if (buyerInventory.Equipments == null || sellerInventory.Equipments == null)
@@ -588,7 +610,7 @@ namespace NineChronicles.DataProvider
                                 {
                                     case FavProductInfo _:
                                         // Check previous product state. because Set Bencodex.Types.Null in BuyProduct.
-                                        if (ev.PreviousStates.TryGetState(Product.DeriveAddress(productInfo.ProductId), out List productState))
+                                        if (ev.PreviousState.TryGetState(Product.DeriveAddress(productInfo.ProductId), out List productState))
                                         {
                                             var favProduct = (FavProduct)ProductFactory.DeserializeProduct(productState);
                                             _buyShopFavList.Add(new ShopHistoryFungibleAssetValueModel
@@ -615,13 +637,13 @@ namespace NineChronicles.DataProvider
                                         // backward compatibility for order.
                                         if (itemProductInfo.Legacy)
                                         {
-                                            var state = ev.OutputStates.GetState(
+                                            var state = ev.OutputState.GetState(
                                                 Addresses.GetItemAddress(itemProductInfo.TradableId));
                                             orderItem =
                                                 (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
                                             Order order =
                                                 OrderFactory.Deserialize(
-                                                    (Dictionary)ev.OutputStates.GetState(
+                                                    (Dictionary)ev.OutputState.GetState(
                                                         Order.DeriveAddress(itemProductInfo.ProductId))!);
                                             itemCount = order is FungibleOrder fungibleOrder
                                                 ? fungibleOrder.ItemCount
@@ -630,7 +652,7 @@ namespace NineChronicles.DataProvider
                                         else
                                         {
                                             // Check previous product state. because Set Bencodex.Types.Null in BuyProduct.
-                                            if (ev.PreviousStates.TryGetState(Product.DeriveAddress(productInfo.ProductId), out List state))
+                                            if (ev.PreviousState.TryGetState(Product.DeriveAddress(productInfo.ProductId), out List state))
                                             {
                                                 var product = (ItemProduct)ProductFactory.DeserializeProduct(state);
                                                 orderItem = product.TradableItem;
@@ -687,7 +709,7 @@ namespace NineChronicles.DataProvider
                         if (ev.Exception == null && ev.Action is { } stake)
                         {
                             var start = DateTimeOffset.UtcNow;
-                            _stakeList.Add(StakeData.GetStakeInfo(ev.PreviousStates, ev.OutputStates, ev.Signer, ev.BlockIndex, _blockTimeOffset));
+                            _stakeList.Add(StakeData.GetStakeInfo(ev.PreviousState, ev.OutputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("Stored Stake action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
@@ -706,7 +728,7 @@ namespace NineChronicles.DataProvider
                         if (ev.Exception == null && ev.Action is { } mc)
                         {
                             var start = DateTimeOffset.UtcNow;
-                            _mmcList.Add(MigrateMonsterCollectionData.GetMigrateMonsterCollectionInfo(ev.PreviousStates, ev.OutputStates, ev.Signer, ev.BlockIndex, _blockTimeOffset));
+                            _mmcList.Add(MigrateMonsterCollectionData.GetMigrateMonsterCollectionInfo(ev.PreviousState, ev.OutputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
@@ -726,7 +748,7 @@ namespace NineChronicles.DataProvider
                         {
                             var start = DateTimeOffset.UtcNow;
 
-                            var grindList = GrindingData.GetGrindingInfo(ev.PreviousStates, ev.OutputStates, ev.Signer, grinding.AvatarAddress, grinding.EquipmentIds, grinding.Id, ev.BlockIndex, _blockTimeOffset);
+                            var grindList = GrindingData.GetGrindingInfo(ev.PreviousState, ev.OutputState, ev.Signer, grinding.AvatarAddress, grinding.EquipmentIds, grinding.Id, ev.BlockIndex, _blockTimeOffset);
 
                             foreach (var grind in grindList)
                             {
@@ -751,7 +773,7 @@ namespace NineChronicles.DataProvider
                         if (ev.Exception == null && ev.Action is { } unlockEquipmentRecipe)
                         {
                             var start = DateTimeOffset.UtcNow;
-                            var unlockEquipmentRecipeList = UnlockEquipmentRecipeData.GetUnlockEquipmentRecipeInfo(ev.PreviousStates, ev.OutputStates, ev.Signer, unlockEquipmentRecipe.AvatarAddress, unlockEquipmentRecipe.RecipeIds, unlockEquipmentRecipe.Id, ev.BlockIndex, _blockTimeOffset);
+                            var unlockEquipmentRecipeList = UnlockEquipmentRecipeData.GetUnlockEquipmentRecipeInfo(ev.PreviousState, ev.OutputState, ev.Signer, unlockEquipmentRecipe.AvatarAddress, unlockEquipmentRecipe.RecipeIds, unlockEquipmentRecipe.Id, ev.BlockIndex, _blockTimeOffset);
                             foreach (var unlockEquipmentRecipeData in unlockEquipmentRecipeList)
                             {
                                 _unlockEquipmentRecipeList.Add(unlockEquipmentRecipeData);
@@ -775,7 +797,7 @@ namespace NineChronicles.DataProvider
                         if (ev.Exception == null && ev.Action is { } unlockWorld)
                         {
                             var start = DateTimeOffset.UtcNow;
-                            var unlockWorldList = UnlockWorldData.GetUnlockWorldInfo(ev.PreviousStates, ev.OutputStates, ev.Signer, unlockWorld.AvatarAddress, unlockWorld.WorldIds, unlockWorld.Id, ev.BlockIndex, _blockTimeOffset);
+                            var unlockWorldList = UnlockWorldData.GetUnlockWorldInfo(ev.PreviousState, ev.OutputState, ev.Signer, unlockWorld.AvatarAddress, unlockWorld.WorldIds, unlockWorld.Id, ev.BlockIndex, _blockTimeOffset);
                             foreach (var unlockWorldData in unlockWorldList)
                             {
                                 _unlockWorldList.Add(unlockWorldData);
@@ -799,7 +821,7 @@ namespace NineChronicles.DataProvider
                         if (ev.Exception == null && ev.Action is { } hasRandomBuff)
                         {
                             var start = DateTimeOffset.UtcNow;
-                            _hasRandomBuffList.Add(HackAndSlashRandomBuffData.GetHasRandomBuffInfo(ev.PreviousStates, ev.OutputStates, ev.Signer, hasRandomBuff.AvatarAddress, hasRandomBuff.AdvancedGacha, hasRandomBuff.Id, ev.BlockIndex, _blockTimeOffset));
+                            _hasRandomBuffList.Add(HackAndSlashRandomBuffData.GetHasRandomBuffInfo(ev.PreviousState, ev.OutputState, ev.Signer, hasRandomBuff.AvatarAddress, hasRandomBuff.AdvancedGacha, hasRandomBuff.Id, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("Stored HasRandomBuff action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
@@ -818,7 +840,7 @@ namespace NineChronicles.DataProvider
                         if (ev.Exception == null && ev.Action is { } joinArena)
                         {
                             var start = DateTimeOffset.UtcNow;
-                            _joinArenaList.Add(JoinArenaData.GetJoinArenaInfo(ev.PreviousStates, ev.OutputStates, ev.Signer, joinArena.avatarAddress, joinArena.round, joinArena.championshipId, joinArena.Id, ev.BlockIndex, _blockTimeOffset));
+                            _joinArenaList.Add(JoinArenaData.GetJoinArenaInfo(ev.PreviousState, ev.OutputState, ev.Signer, joinArena.avatarAddress, joinArena.round, joinArena.championshipId, joinArena.Id, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("Stored JoinArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
@@ -837,10 +859,10 @@ namespace NineChronicles.DataProvider
                         if (ev.Exception == null && ev.Action is { } battleArena)
                         {
                             var start = DateTimeOffset.UtcNow;
-                            _avatarList.Add(AvatarData.GetAvatarInfo(ev.OutputStates, ev.Signer, battleArena.myAvatarAddress, battleArena.runeInfos, _blockTimeOffset));
+                            _avatarList.Add(AvatarData.GetAvatarInfo(ev.OutputState, ev.Signer, battleArena.myAvatarAddress, battleArena.runeInfos, _blockTimeOffset));
                             _battleArenaList.Add(BattleArenaData.GetBattleArenaInfo(
-                                ev.PreviousStates,
-                                ev.OutputStates,
+                                ev.PreviousState,
+                                ev.OutputState,
                                 ev.Signer,
                                 battleArena.myAvatarAddress,
                                 battleArena.enemyAvatarAddress,
@@ -869,8 +891,8 @@ namespace NineChronicles.DataProvider
                         {
                             var start = DateTimeOffset.UtcNow;
                             _battleGrandFinaleList.Add(BattleGrandFinaleData.GetBattleGrandFinaleInfo(
-                                ev.PreviousStates,
-                                ev.OutputStates,
+                                ev.PreviousState,
+                                ev.OutputState,
                                 ev.Signer,
                                 battleGrandFinale.myAvatarAddress,
                                 battleGrandFinale.enemyAvatarAddress,
@@ -897,8 +919,8 @@ namespace NineChronicles.DataProvider
                         {
                             var start = DateTimeOffset.UtcNow;
                             _eventMaterialItemCraftsList.Add(EventMaterialItemCraftsData.GetEventMaterialItemCraftsInfo(
-                                ev.PreviousStates,
-                                ev.OutputStates,
+                                ev.PreviousState,
+                                ev.OutputState,
                                 ev.Signer,
                                 eventMaterialItemCrafts.AvatarAddress,
                                 eventMaterialItemCrafts.MaterialsToUse,
@@ -926,8 +948,8 @@ namespace NineChronicles.DataProvider
                         {
                             var start = DateTimeOffset.UtcNow;
                             _runeEnhancementList.Add(RuneEnhancementData.GetRuneEnhancementInfo(
-                                ev.PreviousStates,
-                                ev.OutputStates,
+                                ev.PreviousState,
+                                ev.OutputState,
                                 ev.Signer,
                                 runeEnhancement.AvatarAddress,
                                 runeEnhancement.RuneId,
@@ -937,70 +959,6 @@ namespace NineChronicles.DataProvider
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("Stored RuneEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
-                    }
-                });
-
-            _actionRenderer.EveryRender<TransferAsset>()
-                .Subscribe(ev =>
-                {
-                    try
-                    {
-                        if (ev.Exception == null && ev.Action is { } transferAsset)
-                        {
-                            var start = DateTimeOffset.UtcNow;
-                            var actionString = ev.TxId.ToString();
-                            var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
-                            var id = new Guid(actionByteArray);
-                            _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
-                                id,
-                                (TxId)ev.TxId!,
-                                ev.BlockIndex,
-                                _blockHash!,
-                                transferAsset.Sender,
-                                transferAsset.Recipient,
-                                transferAsset.Amount.Currency.Ticker,
-                                transferAsset.Amount,
-                                _blockTimeOffset));
-
-                            var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
-                    }
-                });
-
-            _actionRenderer.EveryRender<TransferAsset3>()
-                .Subscribe(ev =>
-                {
-                    try
-                    {
-                        if (ev.Exception == null && ev.Action is { } transferAsset3)
-                        {
-                            var start = DateTimeOffset.UtcNow;
-                            var actionString = ev.TxId.ToString();
-                            var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
-                            var id = new Guid(actionByteArray);
-                            _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
-                                id,
-                                (TxId)ev.TxId!,
-                                ev.BlockIndex,
-                                _blockHash!,
-                                transferAsset3.Sender,
-                                transferAsset3.Recipient,
-                                transferAsset3.Amount.Currency.Ticker,
-                                transferAsset3.Amount,
-                                _blockTimeOffset));
-
-                            var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -1069,10 +1027,10 @@ namespace NineChronicles.DataProvider
 #pragma warning disable CS0618
                             var runeCurrency = RuneHelper.DailyRewardRune;
 #pragma warning restore CS0618
-                            var prevRuneBalance = ev.PreviousStates.GetBalance(
+                            var prevRuneBalance = ev.PreviousState.GetBalance(
                                 dailyReward.avatarAddress,
                                 runeCurrency);
-                            var outputRuneBalance = ev.OutputStates.GetBalance(
+                            var outputRuneBalance = ev.OutputState.GetBalance(
                                 dailyReward.avatarAddress,
                                 runeCurrency);
                             var acquiredRune = outputRuneBalance - prevRuneBalance;
@@ -1105,7 +1063,7 @@ namespace NineChronicles.DataProvider
                         if (ev.Exception == null && ev.Action is { } claimRaidReward)
                         {
                             var start = DateTimeOffset.UtcNow;
-                            var sheets = ev.OutputStates.GetSheets(
+                            var sheets = ev.OutputState.GetSheets(
                                 sheetTypes: new[]
                                 {
                                     typeof(RuneSheet),
@@ -1116,10 +1074,10 @@ namespace NineChronicles.DataProvider
 #pragma warning disable CS0618
                                 var runeCurrency = RuneHelper.ToCurrency(runeType);
 #pragma warning restore CS0618
-                                var prevRuneBalance = ev.PreviousStates.GetBalance(
+                                var prevRuneBalance = ev.PreviousState.GetBalance(
                                     claimRaidReward.AvatarAddress,
                                     runeCurrency);
-                                var outputRuneBalance = ev.OutputStates.GetBalance(
+                                var outputRuneBalance = ev.OutputState.GetBalance(
                                     claimRaidReward.AvatarAddress,
                                     runeCurrency);
                                 var acquiredRune = outputRuneBalance - prevRuneBalance;
@@ -1158,8 +1116,8 @@ namespace NineChronicles.DataProvider
                         {
                             var start = DateTimeOffset.UtcNow;
                             _unlockRuneSlotList.Add(UnlockRuneSlotData.GetUnlockRuneSlotInfo(
-                                ev.PreviousStates,
-                                ev.OutputStates,
+                                ev.PreviousState,
+                                ev.OutputState,
                                 ev.Signer,
                                 unlockRuneSlot.AvatarAddress,
                                 unlockRuneSlot.SlotIndex,
@@ -1185,8 +1143,8 @@ namespace NineChronicles.DataProvider
                         {
                             var start = DateTimeOffset.UtcNow;
                             _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
-                                ev.PreviousStates,
-                                ev.OutputStates,
+                                ev.PreviousState,
+                                ev.OutputState,
                                 ev.Signer,
                                 rapidCombination.avatarAddress,
                                 rapidCombination.slotIndex,
@@ -1203,130 +1161,6 @@ namespace NineChronicles.DataProvider
                     }
                 });
 
-            _actionRenderer.EveryUnrender<ActionBase>()
-                .Subscribe(
-                    ev =>
-                    {
-                        try
-                        {
-                            if (ev.Exception != null)
-                            {
-                                return;
-                            }
-
-                            if (ev.Action is HackAndSlash has)
-                            {
-                                MySqlStore.DeleteHackAndSlash(has.Id);
-                                Log.Debug("Deleted HackAndSlash action in block #{index}", ev.BlockIndex);
-                            }
-
-                            if (ev.Action is CombinationConsumable combinationConsumable)
-                            {
-                                MySqlStore.DeleteCombinationConsumable(combinationConsumable.Id);
-                                Log.Debug("Deleted CombinationConsumable action in block #{index}", ev.BlockIndex);
-                            }
-
-                            if (ev.Action is CombinationEquipment combinationEquipment)
-                            {
-                                MySqlStore.DeleteCombinationEquipment(combinationEquipment.Id);
-                                Log.Debug("Deleted CombinationEquipment action in block #{index}", ev.BlockIndex);
-                                var slotState = ev.OutputStates.GetCombinationSlotState(
-                                    combinationEquipment.avatarAddress,
-                                    combinationEquipment.slotIndex);
-
-                                if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
-                                {
-                                    _eqList.Add(EquipmentData.GetEquipmentInfo(
-                                        ev.Signer,
-                                        combinationEquipment.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
-                                }
-
-                                Log.Debug(
-                                    "Reverted avatar {address}'s equipments in block #{index}",
-                                    combinationEquipment.avatarAddress,
-                                    ev.BlockIndex);
-                            }
-
-                            if (ev.Action is ItemEnhancement itemEnhancement)
-                            {
-                                MySqlStore.DeleteItemEnhancement(itemEnhancement.Id);
-                                Log.Debug("Deleted ItemEnhancement action in block #{index}", ev.BlockIndex);
-                                var slotState = ev.OutputStates.GetCombinationSlotState(
-                                    itemEnhancement.avatarAddress,
-                                    itemEnhancement.slotIndex);
-
-                                if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
-                                {
-                                    _eqList.Add(EquipmentData.GetEquipmentInfo(
-                                        ev.Signer,
-                                        itemEnhancement.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
-                                }
-
-                                Log.Debug(
-                                    "Reverted avatar {address}'s equipments in block #{index}",
-                                    itemEnhancement.avatarAddress,
-                                    ev.BlockIndex);
-                            }
-
-                            if (ev.Action is Buy buy)
-                            {
-                                var buyerInventory = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress).inventory;
-
-                                foreach (var purchaseInfo in buy.purchaseInfos)
-                                {
-                                    if (purchaseInfo.ItemSubType == ItemSubType.Armor
-                                        || purchaseInfo.ItemSubType == ItemSubType.Belt
-                                        || purchaseInfo.ItemSubType == ItemSubType.Necklace
-                                        || purchaseInfo.ItemSubType == ItemSubType.Ring
-                                        || purchaseInfo.ItemSubType == ItemSubType.Weapon)
-                                    {
-                                        AvatarState sellerState = ev.OutputStates.GetAvatarStateV2(purchaseInfo.SellerAvatarAddress);
-                                        var sellerInventory = sellerState.inventory;
-                                        string avatarName = sellerState.name;
-
-                                        if (buyerInventory.Equipments == null || sellerInventory.Equipments == null)
-                                        {
-                                            continue;
-                                        }
-
-                                        MySqlStore.StoreAgent(ev.Signer);
-                                        MySqlStore.StoreAvatar(
-                                            purchaseInfo.SellerAvatarAddress,
-                                            purchaseInfo.SellerAgentAddress,
-                                            avatarName,
-                                            _blockTimeOffset,
-                                            null,
-                                            null,
-                                            null,
-                                            null);
-                                        Equipment? equipment = buyerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.TradableId);
-
-                                        if (equipment is { } equipmentNotNull)
-                                        {
-                                            _eqList.Add(EquipmentData.GetEquipmentInfo(
-                                                purchaseInfo.SellerAgentAddress,
-                                                purchaseInfo.SellerAvatarAddress,
-                                                equipmentNotNull));
-                                        }
-                                    }
-                                }
-
-                                Log.Debug(
-                                    "Reverted avatar {address}'s equipment in block #{index}",
-                                    buy.buyerAvatarAddress,
-                                    ev.BlockIndex);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Error("RenderSubscriber: {message}", ex.Message);
-                        }
-                    });
-
             _actionRenderer.EveryRender<Raid>()
                 .Subscribe(ev =>
                 {
@@ -1334,7 +1168,7 @@ namespace NineChronicles.DataProvider
                     {
                         if (ev.Exception is null)
                         {
-                            var sheets = ev.OutputStates.GetSheets(
+                            var sheets = ev.OutputState.GetSheets(
                                 sheetTypes: new[]
                                 {
                                     typeof(CharacterSheet),
@@ -1350,10 +1184,10 @@ namespace NineChronicles.DataProvider
 #pragma warning disable CS0618
                                 var runeCurrency = RuneHelper.ToCurrency(runeType);
 #pragma warning restore CS0618
-                                var prevRuneBalance = ev.PreviousStates.GetBalance(
+                                var prevRuneBalance = ev.PreviousState.GetBalance(
                                     ev.Action.AvatarAddress,
                                     runeCurrency);
-                                var outputRuneBalance = ev.OutputStates.GetBalance(
+                                var outputRuneBalance = ev.OutputState.GetBalance(
                                     ev.Action.AvatarAddress,
                                     runeCurrency);
                                 var acquiredRune = outputRuneBalance - prevRuneBalance;
@@ -1373,13 +1207,13 @@ namespace NineChronicles.DataProvider
                                 }
                             }
 
-                            _avatarList.Add(AvatarData.GetAvatarInfo(ev.OutputStates, ev.Signer, ev.Action.AvatarAddress, ev.Action.RuneInfos, _blockTimeOffset));
+                            _avatarList.Add(AvatarData.GetAvatarInfo(ev.OutputState, ev.Signer, ev.Action.AvatarAddress, ev.Action.RuneInfos, _blockTimeOffset));
 
                             int raidId = 0;
                             bool found = false;
                             for (int i = 0; i < 99; i++)
                             {
-                                if (ev.OutputStates.UpdatedAddresses.Contains(
+                                if (ev.OutputState.Delta.UpdatedAddresses.Contains(
                                         Addresses.GetRaiderAddress(ev.Action.AvatarAddress, i)))
                                 {
                                     raidId = i;
@@ -1391,7 +1225,7 @@ namespace NineChronicles.DataProvider
                             if (found)
                             {
                                 RaiderState raiderState =
-                                    ev.OutputStates.GetRaiderState(ev.Action.AvatarAddress, raidId);
+                                    ev.OutputState.GetRaiderState(ev.Action.AvatarAddress, raidId);
                                 var model = new RaiderModel(
                                     raidId,
                                     raiderState.AvatarName,
@@ -1425,8 +1259,8 @@ namespace NineChronicles.DataProvider
                     {
                         var start = DateTimeOffset.UtcNow;
                         _petEnhancementList.Add(PetEnhancementData.GetPetEnhancementInfo(
-                            ev.PreviousStates,
-                            ev.OutputStates,
+                            ev.PreviousState,
+                            ev.OutputState,
                             ev.Signer,
                             petEnhancement.AvatarAddress,
                             petEnhancement.PetId,
@@ -1508,7 +1342,7 @@ namespace NineChronicles.DataProvider
 
                 if (ev.Signer != _miner)
                 {
-                    var agentState = ev.OutputStates.GetAgentState(ev.Signer);
+                    var agentState = ev.OutputState.GetAgentState(ev.Signer);
                     if (agentState is { } ag)
                     {
                         var avatarAddresses = ag.avatarAddresses;
@@ -1519,11 +1353,11 @@ namespace NineChronicles.DataProvider
                                 AvatarState avatarState;
                                 try
                                 {
-                                    avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress);
+                                    avatarState = ev.OutputState.GetAvatarStateV2(avatarAddress);
                                 }
                                 catch (Exception)
                                 {
-                                    avatarState = ev.OutputStates.GetAvatarState(avatarAddress);
+                                    avatarState = ev.OutputState.GetAvatarState(address: avatarAddress);
                                 }
 
                                 if (avatarState == null)
@@ -1532,12 +1366,12 @@ namespace NineChronicles.DataProvider
                                 }
 
                                 var runeSlotStateAddress = RuneSlotState.DeriveAddress(avatarAddress, BattleType.Adventure);
-                                var runeSlotState = ev.OutputStates.TryGetState(runeSlotStateAddress, out List rawRuneSlotState)
+                                var runeSlotState = ev.OutputState.TryGetState(runeSlotStateAddress, out List rawRuneSlotState)
                                     ? new RuneSlotState(rawRuneSlotState)
                                     : new RuneSlotState(BattleType.Adventure);
                                 var runeSlotInfos = runeSlotState.GetEquippedRuneSlotInfos();
 
-                                _avatarList.Add(AvatarData.GetAvatarInfo(ev.OutputStates, ev.Signer, avatarAddress, runeSlotInfos, _blockTimeOffset));
+                                _avatarList.Add(AvatarData.GetAvatarInfo(ev.OutputState, ev.Signer, avatarAddress, runeSlotInfos, _blockTimeOffset));
                             }
                             catch (Exception ex)
                             {

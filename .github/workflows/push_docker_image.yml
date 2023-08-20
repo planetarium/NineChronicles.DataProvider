@@ -10,7 +10,7 @@ on:
       - baranking-migration
       - release/*
     tags:
-        - v*
+        - "*"
 
 env:
   DOCKER_REPO: planetariumhq/ninechronicles-dataprovider

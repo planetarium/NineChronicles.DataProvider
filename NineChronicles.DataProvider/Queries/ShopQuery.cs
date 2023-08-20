@@ -3,6 +3,7 @@
     using GraphQL;
     using GraphQL.Types;
     using Libplanet;
+    using Libplanet.Crypto;
     using NineChronicles.DataProvider.GraphTypes;
     using NineChronicles.DataProvider.Store;
 

@@ -25,6 +25,8 @@ namespace NineChronicles.DataProvider.Executable
     using Serilog;
 
     [HasSubCommands(typeof(MySqlMigration), "mysql-migration")]
+    [HasSubCommands(typeof(BattleArenaRankingMigration), "battle-arena-ranking-migration")]
+    [HasSubCommands(typeof(UserStakingMigration), "user-staking-migration")]
     public class Program : CoconaLiteConsoleAppBase
     {
         public static async Task Main(string[] args)
@@ -163,8 +165,7 @@ namespace NineChronicles.DataProvider.Executable
             hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, context);
 
             var stateContext = new StateContext(
-                context.BlockChain!.ToAccountStateGetter(),
-                context.BlockChain!.ToAccountBalanceGetter(),
+                context.BlockChain!.GetBlockState(),
                 context.BlockChain!.Tip.Index
             );
 

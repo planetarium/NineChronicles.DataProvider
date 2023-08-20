@@ -4,7 +4,8 @@ using System.Threading.Tasks;
 using Bencodex.Types;
 using GraphQL.Execution;
 using Libplanet;
-using Libplanet.Assets;
+using Libplanet.Action.State;
+using Libplanet.Types.Assets;
 using Libplanet.Crypto;
 using NineChronicles.DataProvider.Store.Models;
 using Xunit;
@@ -42,13 +43,8 @@ public class AgentQueryTest : TestBase, IDisposable
         CleanUp();
     }
 
-    protected override IValue? GetStateMock(Address address)
+    protected override IAccountState GetMockState()
     {
-        throw new NotImplementedException();
-    }
-
-    protected override FungibleAssetValue GetBalanceMock(Address address, Currency currency)
-    {
-        throw new NotImplementedException();
+        return MockState.Empty;
     }
 }

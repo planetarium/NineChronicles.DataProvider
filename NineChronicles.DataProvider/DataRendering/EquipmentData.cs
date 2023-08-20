@@ -1,6 +1,7 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
     using Libplanet;
+    using Libplanet.Crypto;
     using Nekoyume.Battle;
     using Nekoyume.Model.Item;
     using NineChronicles.DataProvider.Store.Models;
