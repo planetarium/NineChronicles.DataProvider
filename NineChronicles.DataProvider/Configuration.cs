@@ -89,6 +89,8 @@ namespace NineChronicles.DataProvider
 
         public bool NoReduceStore { get; set; }
 
+        public StateServiceManagerServiceOptions? StateServiceManagerService { get; set; }
+
 #pragma warning restore SA1011 // Closing square brackets should be spaced correctly
 #nullable disable
         public string MySqlConnectionString { get; set; }
