@@ -20,7 +20,7 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public string? MaterialId { get; set; }
 
-        public List<string>? MateairlIds { get; set; }
+        public List<string>? MaterialIds { get; set; }
 
         public int SlotIndex { get; set; }
 
