@@ -1,6 +1,7 @@
 ﻿namespace NineChronicles.DataProvider.Store.Models
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
 
     public class ItemEnhancementFailModel
@@ -21,6 +22,8 @@
         public string? EquipmentItemId { get; set; }
 
         public string? MaterialItemId { get; set; }
+
+        public List<string>? MaterialIds { get; set; }
 
         public int EquipmentLevel { get; set; }
 

@@ -1,5 +1,6 @@
 namespace NineChronicles.DataProvider.Store.Models
 {
+    using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
 
     public class ItemEnhancementModel
@@ -18,6 +19,8 @@ namespace NineChronicles.DataProvider.Store.Models
         public string? ItemId { get; set; }
 
         public string? MaterialId { get; set; }
+
+        public List<string>? MateairlIds { get; set; }
 
         public int SlotIndex { get; set; }
 
