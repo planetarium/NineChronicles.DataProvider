@@ -23,7 +23,7 @@
 
         public string? MaterialItemId { get; set; }
 
-        public List<string>? MaterialIds { get; set; }
+        public int MaterialIdsCount { get; set; }
 
         public int EquipmentLevel { get; set; }
 

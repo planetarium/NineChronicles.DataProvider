@@ -40,7 +40,7 @@
                 AvatarAddress = avatarAddress.ToString(),
                 ItemId = itemId.ToString(),
                 MaterialId = materialId.ToString(),
-                MaterialIds = materialIds.Select(m => m.ToString()).ToList(),
+                MaterialIdsCount = materialIds.Count,
                 SlotIndex = slotIndex,
                 BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
                 BlockIndex = blockIndex,

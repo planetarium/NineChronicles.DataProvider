@@ -964,7 +964,7 @@ namespace NineChronicles.DataProvider.Store
                     AvatarAddress = avatarAddress.ToString(),
                     ItemId = itemId.ToString(),
                     MaterialId = materialId.ToString(),
-                    MaterialIds = materialIds.Select(m => m.ToString()).ToList(),
+                    MaterialIdsCount = materialIds.Count,
                     SlotIndex = slotIndex,
                     BurntNCG = burntNCG,
                     BlockIndex = blockIndex,

@@ -72,7 +72,7 @@
                     AvatarAddress = avatarAddress.ToString(),
                     EquipmentItemId = itemId.ToString(),
                     MaterialItemId = materialId.ToString(),
-                    MaterialIds = materialIds.Select(m => m.ToString()).ToList(),
+                    MaterialIdsCount = materialIds.Count,
                     EquipmentLevel = outputEquipmentLevel,
                     GainedCrystal = Convert.ToDecimal(gainedCrystal.GetQuantityString()),
                     BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
