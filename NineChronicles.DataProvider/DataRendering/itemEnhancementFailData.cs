@@ -1,8 +1,8 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
-    using Libplanet;
-    using Libplanet.Action;
+    using System.Collections.Generic;
+    using System.Linq;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Libplanet.Types.Assets;
@@ -20,6 +20,7 @@
             Address signer,
             Address avatarAddress,
             Guid materialId,
+            List<Guid> materialIds,
             Guid itemId,
             Guid actionId,
             long blockIndex,
@@ -71,6 +72,7 @@
                     AvatarAddress = avatarAddress.ToString(),
                     EquipmentItemId = itemId.ToString(),
                     MaterialItemId = materialId.ToString(),
+                    MaterialIds = materialIds.Select(m => m.ToString()).ToList(),
                     EquipmentLevel = outputEquipmentLevel,
                     GainedCrystal = Convert.ToDecimal(gainedCrystal.GetQuantityString()),
                     BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
