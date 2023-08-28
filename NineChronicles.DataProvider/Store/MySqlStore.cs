@@ -950,6 +950,7 @@ namespace NineChronicles.DataProvider.Store
             Address avatarAddress,
             Guid itemId,
             Guid materialId,
+            List<Guid> materialIds,
             int slotIndex,
             decimal burntNCG,
             long blockIndex)
@@ -963,6 +964,7 @@ namespace NineChronicles.DataProvider.Store
                     AvatarAddress = avatarAddress.ToString(),
                     ItemId = itemId.ToString(),
                     MaterialId = materialId.ToString(),
+                    MateairlIds = materialIds.Select(m => m.ToString()).ToList(),
                     SlotIndex = slotIndex,
                     BurntNCG = burntNCG,
                     BlockIndex = blockIndex,
