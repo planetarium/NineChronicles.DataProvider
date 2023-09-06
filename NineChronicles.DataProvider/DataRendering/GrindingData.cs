@@ -20,8 +20,8 @@
     public static class GrindingData
     {
         public static List<GrindingModel> GetGrindingInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             List<Guid> equipmentIds,

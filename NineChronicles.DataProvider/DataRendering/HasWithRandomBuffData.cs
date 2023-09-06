@@ -12,8 +12,8 @@
     public static class HasWithRandomBuffData
     {
         public static HasWithRandomBuffModel GetHasWithRandomBuffInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             int stageId,

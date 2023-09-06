@@ -14,8 +14,8 @@
     public static class JoinArenaData
     {
         public static JoinArenaModel GetJoinArenaInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             int round,

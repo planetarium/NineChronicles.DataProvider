@@ -14,8 +14,8 @@
     public static class BattleGrandFinaleData
     {
         public static BattleGrandFinaleModel GetBattleGrandFinaleInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address myAvatarAddress,
             Address enemyAvatarAddress,

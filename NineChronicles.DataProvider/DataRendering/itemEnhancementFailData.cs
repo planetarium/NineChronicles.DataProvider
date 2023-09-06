@@ -15,8 +15,8 @@
     public static class ItemEnhancementFailData
     {
         public static ItemEnhancementFailModel? GetItemEnhancementFailInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             Guid materialId,
