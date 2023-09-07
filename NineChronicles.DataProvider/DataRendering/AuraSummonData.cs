@@ -28,5 +28,29 @@ namespace NineChronicles.DataProvider.DataRendering
                 BlockIndex = blockIndex,
             };
         }
+
+        public static AuraSummonFailModel GetAuraSummonFailInfo(
+            IAccount previousStates,
+            IAccount outputStates,
+            Address signer,
+            Address avatarAddress,
+            int groupId,
+            int summonCount,
+            Guid actionId,
+            long blockIndex,
+            Exception exc
+        )
+        {
+            return new AuraSummonFailModel
+            {
+                Id = actionId.ToString(),
+                AgentAddress = signer.ToString(),
+                AvatarAddress = avatarAddress.ToString(),
+                GroupId = groupId,
+                SummonCount = summonCount,
+                BlockIndex = blockIndex,
+                Exception = exc.ToString(),
+            };
+        }
     }
 }

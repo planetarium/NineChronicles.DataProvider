@@ -1802,6 +1802,41 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreAuraSummonFailList(List<AuraSummonFailModel> auraSummonFailList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var auraSummonFail in auraSummonFailList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.AuraSummonFails.FindAsync(auraSummonFail.Id).Result is null)
+                        {
+                            await ctx.AuraSummonFails.AddRangeAsync(auraSummonFail);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.AuraSummonFails.UpdateRange(auraSummonFail);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public List<RaiderModel> GetRaiderList()
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();

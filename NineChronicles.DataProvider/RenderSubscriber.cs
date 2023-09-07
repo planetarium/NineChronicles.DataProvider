@@ -79,6 +79,7 @@ namespace NineChronicles.DataProvider
         private readonly List<TransferAssetModel> _transferAssetList = new List<TransferAssetModel>();
         private readonly List<RequestPledgeModel> _requestPledgeList = new List<RequestPledgeModel>();
         private readonly List<AuraSummonModel> _auraSummonList = new List<AuraSummonModel>();
+        private readonly List<AuraSummonFailModel> _auraSummonFailList = new List<AuraSummonFailModel>();
         private readonly List<string> _agents;
         private readonly bool _render;
         private int _renderedBlockCount;
@@ -1285,18 +1286,35 @@ namespace NineChronicles.DataProvider
             {
                 try
                 {
-                    if (ev.Exception is null && ev.Action is { } auraSummon)
+                    if (ev.Action is { } auraSummon)
                     {
-                        _auraSummonList.Add(AuraSummonData.GetAuraSummonInfo(
-                            ev.PreviousState,
-                            ev.OutputState,
-                            ev.Signer,
-                            auraSummon.AvatarAddress,
-                            auraSummon.GroupId,
-                            auraSummon.SummonCount,
-                            auraSummon.Id,
-                            ev.BlockIndex
+                        if (ev.Exception is null)
+                        {
+                            _auraSummonList.Add(AuraSummonData.GetAuraSummonInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                auraSummon.AvatarAddress,
+                                auraSummon.GroupId,
+                                auraSummon.SummonCount,
+                                auraSummon.Id,
+                                ev.BlockIndex
+                                ));
+                        }
+                        else
+                        {
+                            _auraSummonFailList.Add(AuraSummonData.GetAuraSummonFailInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                auraSummon.AvatarAddress,
+                                auraSummon.GroupId,
+                                auraSummon.SummonCount,
+                                auraSummon.Id,
+                                ev.BlockIndex,
+                                ev.Exception
                             ));
+                        }
                     }
                 }
                 catch (Exception e)
@@ -1468,6 +1486,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreTransferAssetList(_transferAssetList);
                     MySqlStore.StoreRequestPledgeList(_requestPledgeList);
                     MySqlStore.StoreAuraSummonList(_auraSummonList);
+                    MySqlStore.StoreAuraSummonFailList(_auraSummonFailList);
                 }),
             };
 
@@ -1513,6 +1532,9 @@ namespace NineChronicles.DataProvider
             _petEnhancementList.Clear();
             _transferAssetList.Clear();
             _requestPledgeList.Clear();
+            _auraSummonList.Clear();
+            _auraSummonFailList.Clear();
+
             var end = DateTimeOffset.Now;
             long blockIndex = b.OldTip.Index;
             StreamWriter blockIndexFile = new StreamWriter(_blockIndexFilePath);
