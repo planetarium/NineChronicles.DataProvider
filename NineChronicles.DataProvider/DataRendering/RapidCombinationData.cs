@@ -11,8 +11,8 @@
     public static class RapidCombinationData
     {
         public static RapidCombinationModel GetRapidCombinationInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             int slotIndex,

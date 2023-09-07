@@ -11,8 +11,8 @@
     public static class EventMaterialItemCraftsData
     {
         public static EventMaterialItemCraftsModel GetEventMaterialItemCraftsInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             Dictionary<int, int> materialsToUse,
