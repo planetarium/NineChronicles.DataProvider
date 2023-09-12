@@ -24,7 +24,7 @@ namespace NineChronicles.DataProvider.DataRendering
             var prevAura = previousStates.GetAvatarStateV2(avatarAddress).inventory.Equipments
                 .Where(e => e.ItemSubType == ItemSubType.Aura).Select(e => e.ItemId);
             var gainedAura = string.Join(",", outputStates.GetAvatarStateV2(avatarAddress).inventory.Equipments
-                .Where(e => !prevAura.Contains(e.ItemId)));
+                .Where(e => !prevAura.Contains(e.ItemId)).Select(e => e.Id));
 
             return new AuraSummonModel
             {
