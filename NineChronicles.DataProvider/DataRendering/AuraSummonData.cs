@@ -1,8 +1,11 @@
 namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
+    using System.Linq;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
+    using Nekoyume.Action;
+    using Nekoyume.Model.Item;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class AuraSummonData
@@ -18,6 +21,11 @@ namespace NineChronicles.DataProvider.DataRendering
             long blockIndex
         )
         {
+            var prevAura = previousStates.GetAvatarStateV2(avatarAddress).inventory.Equipments
+                .Where(e => e.ItemSubType == ItemSubType.Aura).Select(e => e.ItemId);
+            var gainedAura = string.Join(",", outputStates.GetAvatarStateV2(avatarAddress).inventory.Equipments
+                .Where(e => !prevAura.Contains(e.ItemId)));
+
             return new AuraSummonModel
             {
                 Id = actionId.ToString(),
@@ -25,6 +33,7 @@ namespace NineChronicles.DataProvider.DataRendering
                 AvatarAddress = avatarAddress.ToString(),
                 GroupId = groupId,
                 SummonCount = summonCount,
+                SummonResult = gainedAura,
                 BlockIndex = blockIndex,
             };
         }

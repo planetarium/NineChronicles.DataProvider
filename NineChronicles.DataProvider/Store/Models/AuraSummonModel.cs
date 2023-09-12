@@ -19,6 +19,8 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public int SummonCount { get; set; }
 
+        public string? SummonResult { get; set; }
+
         public long BlockIndex { get; set; }
     }
 }
