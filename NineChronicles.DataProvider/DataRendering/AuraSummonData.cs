@@ -23,9 +23,6 @@ namespace NineChronicles.DataProvider.DataRendering
         {
             var prevAura = previousStates.GetAvatarStateV2(avatarAddress).inventory.Equipments
                 .Where(e => e.ItemSubType == ItemSubType.Aura).Select(e => e.ItemId);
-            var gained = outputStates.GetAvatarStateV2(avatarAddress).inventory.Equipments
-                .Where(e => e.ItemSubType == ItemSubType.Aura && !prevAura.Contains(e.ItemId)).Select(e => e.Id);
-            Console.WriteLine(gained);
             var gainedAura = string.Join(",", outputStates.GetAvatarStateV2(avatarAddress).inventory.Equipments
                 .Where(e => e.ItemSubType == ItemSubType.Aura && !prevAura.Contains(e.ItemId)).Select(e => e.Id));
 
