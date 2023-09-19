@@ -18,8 +18,8 @@
     public static class EventDungeonBattleData
     {
         public static EventDungeonBattleModel GetEventDungeonBattleInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             int eventScheduleId,

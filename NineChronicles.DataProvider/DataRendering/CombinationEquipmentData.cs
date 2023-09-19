@@ -10,8 +10,8 @@
     public static class CombinationEquipmentData
     {
         public static CombinationEquipmentModel GetCombinationEquipmentInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             int recipeId,

@@ -15,8 +15,8 @@
     public static class StakeData
     {
         public static StakeModel GetStakeInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             long blockIndex,
             DateTimeOffset blockTime

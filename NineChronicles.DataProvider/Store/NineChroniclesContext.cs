@@ -160,6 +160,11 @@ namespace NineChronicles.DataProvider.Store
         // Table for storing RequestPledge actions
         public DbSet<RequestPledgeModel> RequestPledges => Set<RequestPledgeModel>();
 
+        // Table for storing AuraSummon actions
+        public DbSet<AuraSummonModel> AuraSummons => Set<AuraSummonModel>();
+
+        public DbSet<AuraSummonFailModel> AuraSummonFails => Set<AuraSummonFailModel>();
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.

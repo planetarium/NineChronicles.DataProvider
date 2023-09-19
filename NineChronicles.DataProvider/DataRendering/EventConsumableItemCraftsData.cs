@@ -16,8 +16,8 @@
     {
         public static EventConsumableItemCraftsModel GetEventConsumableItemCraftsInfo(
             EventConsumableItemCrafts eventConsumableItemCrafts,
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             long blockIndex,
             DateTimeOffset blockTime

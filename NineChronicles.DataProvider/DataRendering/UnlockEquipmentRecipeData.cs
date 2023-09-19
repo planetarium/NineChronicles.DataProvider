@@ -13,8 +13,8 @@
     public static class UnlockEquipmentRecipeData
     {
         public static List<UnlockEquipmentRecipeModel> GetUnlockEquipmentRecipeInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             List<int> recipeIds,

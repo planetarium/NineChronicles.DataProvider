@@ -12,8 +12,8 @@
     public static class HackAndSlashRandomBuffData
     {
         public static HasRandomBuffModel GetHasRandomBuffInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             bool advancedGacha,

@@ -12,8 +12,8 @@
     public static class UnlockRuneSlotData
     {
         public static UnlockRuneSlotModel GetUnlockRuneSlotInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             int slotIndex,
