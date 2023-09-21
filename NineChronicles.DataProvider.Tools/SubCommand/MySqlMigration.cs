@@ -298,6 +298,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
 
                 BARDbName = $"{BARDbName}_{arenaData.ChampionshipId}_{arenaData.Round}";
+                Console.WriteLine("1");
+                connection.Open();
                 var stm33 =
                     $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{BARDbName}` (
                         `BlockIndex` bigint NOT NULL,
@@ -327,28 +329,31 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
 
                 var cmd33 = new MySqlCommand(stm33, connection);
-                connection.Open();
                 cmd33.CommandTimeout = 300;
                 cmd33.ExecuteScalar();
                 connection.Close();
 
+                Console.WriteLine("2");
                 var prevArenaEndIndex = arenaData.StartBlockIndex - 1;
                 var prevArenaData = arenaSheet.GetRoundByBlockIndex(prevArenaEndIndex);
                 var finalizeBarankingTip = prevArenaEndIndex;
                 fbBARDbName = $"{fbBARDbName}_{prevArenaData.ChampionshipId}_{prevArenaData.Round}";
+
                 connection.Open();
                 var preBarQuery = $"SELECT `BlockIndex` FROM data_provider.{fbBARDbName} limit 1";
                 var preBarCmd = new MySqlCommand(preBarQuery, connection);
 
                 var dataReader = preBarCmd.ExecuteReader();
                 long prevBarDbTip = 0;
+                Console.WriteLine("3");
                 while (dataReader.Read())
                 {
-                    Console.WriteLine("{0}", rdr.GetInt64(0));
-                    prevBarDbTip = rdr.GetInt64(0);
+                    Console.WriteLine("{0}", dataReader.GetInt64(0));
+                    prevBarDbTip = dataReader.GetInt64(0);
                 }
 
                 connection.Close();
+                Console.WriteLine("4");
                 if (prevBarDbTip != 0 && prevBarDbTip < finalizeBarankingTip)
                 {
                     finalizeBaranking = true;
@@ -369,6 +374,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         var fbavatarCount = 0;
 
                         fbUSDbName = $"{fbUSDbName}_{fbTip.Index}";
+                        Console.WriteLine("5");
+                        connection.Open();
                         var s =
                             $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{fbUSDbName}` (
                                   `BlockIndex` bigint NOT NULL,
@@ -381,11 +388,11 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                   `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
                                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
                         var c = new MySqlCommand(s, connection);
-                        connection.Open();
                         c.CommandTimeout = 300;
                         c.ExecuteScalar();
                         connection.Close();
 
+                        Console.WriteLine("6");
                         foreach (var fbAvatar in avatars)
                         {
                             try
