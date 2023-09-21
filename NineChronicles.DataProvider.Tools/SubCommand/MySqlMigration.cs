@@ -52,6 +52,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private const string SCTDbName = "ShopCostumes";
         private const string SMDbName = "ShopMaterials";
         private string BARDbName = "BattleArenaRanking";
+        private string fbBARDbName = "BattleArenaRanking";
+        private string fbUSDbName = "UserStakings";
         private string URDbName = "UserRunes";
         private string _connectionString;
         private IStore _baseStore;
@@ -65,6 +67,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private StreamWriter _umBulkFile;
         private StreamWriter _ucBulkFile;
         private StreamWriter _usBulkFile;
+        private StreamWriter _fbUsBulkFile;
         private StreamWriter _umcBulkFile;
         private StreamWriter _uncgBulkFile;
         private StreamWriter _ucyBulkFile;
@@ -74,6 +77,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private StreamWriter _sctBulkFile;
         private StreamWriter _smBulkFile;
         private StreamWriter _barBulkFile;
+        private StreamWriter _fbBarBulkFile;
         private StreamWriter _urBulkFile;
         private StreamWriter _agentBulkFile;
         private StreamWriter _avatarBulkFile;
@@ -90,6 +94,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private List<string> _umFiles;
         private List<string> _ucFiles;
         private List<string> _usFiles;
+        private List<string> _fbUsFiles;
         private List<string> _umcFiles;
         private List<string> _uncgFiles;
         private List<string> _ucyFiles;
@@ -99,6 +104,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private List<string> _sctFiles;
         private List<string> _smFiles;
         private List<string> _barFiles;
+        private List<string> _fbBarFiles;
         private List<string> _urFiles;
         private List<string> _agentFiles;
         private List<string> _avatarFiles;
@@ -230,6 +236,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _umFiles = new List<string>();
             _ucFiles = new List<string>();
             _usFiles = new List<string>();
+            _fbUsFiles = new List<string>();
             _umcFiles = new List<string>();
             _uncgFiles = new List<string>();
             _ucyFiles = new List<string>();
@@ -239,6 +246,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _sctFiles = new List<string>();
             _smFiles = new List<string>();
             _barFiles = new List<string>();
+            _fbBarFiles = new List<string>();
             _urFiles = new List<string>();
             _agentFiles = new List<string>();
             _avatarFiles = new List<string>();
@@ -269,6 +277,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
             connection.Close();
             int shopOrderCount = 0;
+            bool finalizeBaranking = false;
 
             try
             {
@@ -280,12 +289,244 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 AvatarState avatarState;
                 int interval = 10000000;
                 int intervalCount = 0;
-                bool checkBARankingTable = false;
                 var sheets = ev.OutputState.GetSheets(
                     sheetTypes: new[]
                     {
                         typeof(RuneSheet),
                     });
+                var arenaSheet = ev.OutputState.GetSheet<ArenaSheet>();
+                var arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
+
+                BARDbName = $"{BARDbName}_{arenaData.ChampionshipId}_{arenaData.Round}";
+                var stm33 =
+                    $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{BARDbName}` (
+                        `BlockIndex` bigint NOT NULL,
+                        `AgentAddress` varchar(100) NOT NULL,
+                        `AvatarAddress` varchar(100) NOT NULL,
+                        `AvatarLevel` int NOT NULL,
+                        `ChampionshipId` int NOT NULL,
+                        `Round` int NOT NULL,
+                        `ArenaType` varchar(100) NOT NULL,
+                        `Score` int NOT NULL,
+                        `WinCount` int NOT NULL,
+                        `MedalCount` int NOT NULL,
+                        `LossCount` int NOT NULL,
+                        `Ticket` int NOT NULL,
+                        `PurchasedTicketCount` int NOT NULL,
+                        `TicketResetCount` int NOT NULL,
+                        `EntranceFee` bigint NOT NULL,
+                        `TicketPrice` bigint NOT NULL,
+                        `AdditionalTicketPrice` bigint NOT NULL,
+                        `RequiredMedalCount` int NOT NULL,
+                        `StartBlockIndex` bigint NOT NULL,
+                        `EndBlockIndex` bigint NOT NULL,
+                        `Ranking` int NOT NULL,
+                        `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        KEY `fk_BattleArenaRanking_Agent1_idx` (`AgentAddress`),
+                        KEY `fk_BattleArenaRanking_AvatarAddress1_idx` (`AvatarAddress`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+
+                var cmd33 = new MySqlCommand(stm33, connection);
+                connection.Open();
+                cmd33.CommandTimeout = 300;
+                cmd33.ExecuteScalar();
+                connection.Close();
+
+                var prevArenaEndIndex = arenaData.StartBlockIndex - 1;
+                var prevArenaData = arenaSheet.GetRoundByBlockIndex(prevArenaEndIndex);
+                var finalizeBarankingTip = prevArenaEndIndex;
+                fbBARDbName = $"{fbBARDbName}_{prevArenaData.ChampionshipId}_{prevArenaData.Round}";
+                connection.Open();
+                var preBarQuery = $"SELECT `BlockIndex` FROM data_provider.{fbBARDbName} limit 1";
+                var preBarCmd = new MySqlCommand(preBarQuery, connection);
+
+                var dataReader = preBarCmd.ExecuteReader();
+                long prevBarDbTip = 0;
+                while (dataReader.Read())
+                {
+                    Console.WriteLine("{0}", rdr.GetInt64(0));
+                    prevBarDbTip = rdr.GetInt64(0);
+                }
+
+                connection.Close();
+                if (prevBarDbTip != 0 && prevBarDbTip < finalizeBarankingTip)
+                {
+                    finalizeBaranking = true;
+                }
+
+                if (finalizeBaranking)
+                {
+                    try
+                    {
+                        Console.WriteLine($"Finalize {fbBARDbName} Table!");
+                        var fbTipHash = _baseStore.IndexBlockHash(_baseChain.Id, finalizeBarankingTip);
+                        var fbTip = _baseStore.GetBlock((BlockHash)fbTipHash!);
+                        var fbExec = _baseChain.EvaluateBlock(fbTip);
+                        var fbEv = fbExec.Last();
+                        var fbArenaSheet = fbEv.OutputState.GetSheet<ArenaSheet>();
+                        var fbArenaData = fbArenaSheet.GetRoundByBlockIndex(fbTip.Index);
+                        List<string> fbAgents = new List<string>();
+                        var fbavatarCount = 0;
+
+                        fbUSDbName = $"{fbUSDbName}_{fbTip.Index}";
+                        var s =
+                            $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{fbUSDbName}` (
+                                  `BlockIndex` bigint NOT NULL,
+                                  `StakeVersion` varchar(100) NOT NULL,
+                                  `AgentAddress` varchar(100) NOT NULL,
+                                  `StakingAmount` decimal(13,2) NOT NULL,
+                                  `StartedBlockIndex` bigint NOT NULL,
+                                  `ReceivedBlockIndex` bigint NOT NULL,
+                                  `CancellableBlockIndex` bigint NOT NULL,
+                                  `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+                        var c = new MySqlCommand(s, connection);
+                        connection.Open();
+                        c.CommandTimeout = 300;
+                        c.ExecuteScalar();
+                        connection.Close();
+
+                        foreach (var fbAvatar in avatars)
+                        {
+                            try
+                            {
+                                fbavatarCount++;
+                                Console.WriteLine("Migrating {0}/{1}", fbavatarCount, avatars.Count);
+                                AvatarState fbAvatarState;
+                                var fbAvatarAddress = new Address(fbAvatar);
+                                try
+                                {
+                                    fbAvatarState = fbEv.OutputState.GetAvatarStateV2(fbAvatarAddress);
+                                }
+                                catch (Exception ex)
+                                {
+                                    fbAvatarState = fbEv.OutputState.GetAvatarState(fbAvatarAddress);
+                                }
+
+                                var fbAvatarLevel = fbAvatarState.level;
+
+                                var fbArenaScoreAdr =
+                                ArenaScore.DeriveAddress(fbAvatarAddress, fbArenaData.ChampionshipId, fbArenaData.Round);
+                                var fbArenaInformationAdr =
+                                    ArenaInformation.DeriveAddress(fbAvatarAddress, fbArenaData.ChampionshipId, fbArenaData.Round);
+                                fbEv.OutputState.TryGetArenaInformation(fbArenaInformationAdr, out var fbCurrentArenaInformation);
+                                fbEv.OutputState.TryGetArenaScore(fbArenaScoreAdr, out var fbOutputArenaScore);
+                                if (fbCurrentArenaInformation != null && fbOutputArenaScore != null)
+                                {
+                                    _fbBarBulkFile.WriteLine(
+                                        $"{fbTip.Index};" +
+                                        $"{fbAvatarState.agentAddress.ToString()};" +
+                                        $"{fbAvatarAddress.ToString()};" +
+                                        $"{fbAvatarLevel};" +
+                                        $"{fbArenaData.ChampionshipId};" +
+                                        $"{fbArenaData.Round};" +
+                                        $"{fbArenaData.ArenaType.ToString()};" +
+                                        $"{fbOutputArenaScore.Score};" +
+                                        $"{fbCurrentArenaInformation.Win};" +
+                                        $"{fbCurrentArenaInformation.Win};" +
+                                        $"{fbCurrentArenaInformation.Lose};" +
+                                        $"{fbCurrentArenaInformation.Ticket};" +
+                                        $"{fbCurrentArenaInformation.PurchasedTicketCount};" +
+                                        $"{fbCurrentArenaInformation.TicketResetCount};" +
+                                        $"{fbArenaData.EntranceFee};" +
+                                        $"{fbArenaData.TicketPrice};" +
+                                        $"{fbArenaData.AdditionalTicketPrice};" +
+                                        $"{fbArenaData.RequiredMedalCount};" +
+                                        $"{fbArenaData.StartBlockIndex};" +
+                                        $"{fbArenaData.EndBlockIndex};" +
+                                        $"{0};" +
+                                        $"{fbTip.Timestamp.UtcDateTime:yyyy-MM-dd}"
+                                    );
+                                }
+
+                                if (!fbAgents.Contains(fbAvatarState.agentAddress.ToString()))
+                                {
+                                    fbAgents.Add(fbAvatarState.agentAddress.ToString());
+                                    if (fbEv.OutputState.TryGetStakeState(fbAvatarState.agentAddress, out StakeState fbStakeState))
+                                    {
+                                        var fbStakeStateAddress = StakeState.DeriveAddress(fbAvatarState.agentAddress);
+                                        var fbCurrency = fbEv.OutputState.GetGoldCurrency();
+                                        var fbStakedBalance = fbEv.OutputState.GetBalance(fbStakeStateAddress, fbCurrency);
+                                        _usBulkFile.WriteLine(
+                                            $"{fbTip.Index};" +
+                                            "V2;" +
+                                            $"{fbAvatarState.agentAddress.ToString()};" +
+                                            $"{Convert.ToDecimal(fbStakedBalance.GetQuantityString())};" +
+                                            $"{fbStakeState.StartedBlockIndex};" +
+                                            $"{fbStakeState.ReceivedBlockIndex};" +
+                                            $"{fbStakeState.CancellableBlockIndex}"
+                                        );
+                                    }
+
+                                    var fbAgentState = fbEv.OutputState.GetAgentState(fbAvatarState.agentAddress);
+                                    Address fbMonsterCollectionAddress = MonsterCollectionState.DeriveAddress(
+                                        fbAvatarState.agentAddress,
+                                        fbAgentState.MonsterCollectionRound
+                                    );
+                                    if (fbEv.OutputState.TryGetState(fbMonsterCollectionAddress, out Dictionary fbStateDict))
+                                    {
+                                        var fbMonsterCollectionStates = new MonsterCollectionState(fbStateDict);
+                                        var fbCurrency = fbEv.OutputState.GetGoldCurrency();
+                                        FungibleAssetValue fbMonsterCollectionBalance =
+                                            fbEv.OutputState.GetBalance(fbMonsterCollectionAddress, fbCurrency);
+                                        _usBulkFile.WriteLine(
+                                            $"{fbTip.Index};" +
+                                            "V1;" +
+                                            $"{fbAvatarState.agentAddress.ToString()};" +
+                                            $"{Convert.ToDecimal(fbMonsterCollectionBalance.GetQuantityString())};" +
+                                            $"{fbMonsterCollectionStates.StartedBlockIndex};" +
+                                            $"{fbMonsterCollectionStates.ReceivedBlockIndex};" +
+                                            $"{fbMonsterCollectionStates.ExpiredBlockIndex}"
+                                        );
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(ex.Message);
+                                Console.WriteLine(ex.StackTrace);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                        Console.WriteLine(ex.StackTrace);
+                    }
+
+                    _fbUsBulkFile.Flush();
+                    _fbUsBulkFile.Close();
+
+                    _fbBarBulkFile.Flush();
+                    _fbBarBulkFile.Close();
+
+                    var fbstm23 = $"RENAME TABLE {fbBARDbName} TO {fbBARDbName}_Dump; CREATE TABLE {fbBARDbName} LIKE {fbBARDbName}_Dump;";
+                    var fbcmd23 = new MySqlCommand(fbstm23, connection);
+                    connection.Open();
+                    fbcmd23.CommandTimeout = 300;
+                    fbcmd23.ExecuteScalar();
+                    connection.Close();
+                    Console.WriteLine($"Move {fbBARDbName} Complete!");
+
+                    foreach (var path in _fbUsFiles)
+                    {
+                        BulkInsert(fbUSDbName, path);
+                    }
+
+                    foreach (var path in _fbBarFiles)
+                    {
+                        BulkInsert(fbBARDbName, path);
+                    }
+
+                    var fbstm34 = $"DROP TABLE {fbBARDbName}_Dump;";
+                    var fbcmd34 = new MySqlCommand(fbstm34, connection);
+                    connection.Open();
+                    fbcmd34.CommandTimeout = 300;
+                    fbcmd34.ExecuteScalar();
+                    connection.Close();
+                    Console.WriteLine($"Delete {fbBARDbName}_Dump Complete!");
+                    Console.WriteLine($"Finalize {fbBARDbName} & {fbUSDbName} Tables Complete!");
+                }
 
                 foreach (var avatar in avatars)
                 {
@@ -306,46 +547,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         }
 
                         var avatarLevel = avatarState.level;
-                        var arenaSheet = ev.OutputState.GetSheet<ArenaSheet>();
-                        var arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
-
-                        if (!checkBARankingTable)
-                        {
-                            BARDbName = $"{BARDbName}_{arenaData.ChampionshipId}_{arenaData.Round}";
-                            var stm33 =
-                            $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{BARDbName}` (
-                                `BlockIndex` bigint NOT NULL,
-                                `AgentAddress` varchar(100) NOT NULL,
-                                `AvatarAddress` varchar(100) NOT NULL,
-                                `AvatarLevel` int NOT NULL,
-                                `ChampionshipId` int NOT NULL,
-                                `Round` int NOT NULL,
-                                `ArenaType` varchar(100) NOT NULL,
-                                `Score` int NOT NULL,
-                                `WinCount` int NOT NULL,
-                                `MedalCount` int NOT NULL,
-                                `LossCount` int NOT NULL,
-                                `Ticket` int NOT NULL,
-                                `PurchasedTicketCount` int NOT NULL,
-                                `TicketResetCount` int NOT NULL,
-                                `EntranceFee` bigint NOT NULL,
-                                `TicketPrice` bigint NOT NULL,
-                                `AdditionalTicketPrice` bigint NOT NULL,
-                                `RequiredMedalCount` int NOT NULL,
-                                `StartBlockIndex` bigint NOT NULL,
-                                `EndBlockIndex` bigint NOT NULL,
-                                `Ranking` int NOT NULL,
-                                `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                KEY `fk_BattleArenaRanking_Agent1_idx` (`AgentAddress`),
-                                KEY `fk_BattleArenaRanking_AvatarAddress1_idx` (`AvatarAddress`)
-                            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
-                            var cmd33 = new MySqlCommand(stm33, connection);
-                            connection.Open();
-                            cmd33.CommandTimeout = 300;
-                            cmd33.ExecuteScalar();
-                            connection.Close();
-                            checkBARankingTable = true;
-                        }
 
                         var runeSheet = sheets.GetSheet<RuneSheet>();
                         foreach (var runeType in runeSheet.Values)
@@ -663,6 +864,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     catch (Exception ex)
                     {
                         Console.WriteLine(ex.Message);
+                        Console.WriteLine(ex.StackTrace);
                     }
 
                     if (intervalCount == interval)
@@ -1412,6 +1614,12 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             string urFilePath = Path.GetTempFileName();
             _urBulkFile = new StreamWriter(urFilePath);
 
+            string fbBarFilePath = Path.GetTempFileName();
+            _fbBarBulkFile = new StreamWriter(fbBarFilePath);
+
+            string fbUsFilePath = Path.GetTempFileName();
+            _fbUsBulkFile = new StreamWriter(fbUsFilePath);
+
             _agentFiles.Add(agentFilePath);
             _avatarFiles.Add(avatarFilePath);
             _ccFiles.Add(ccFilePath);
@@ -1433,6 +1641,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             _smFiles.Add(smFilePath);
             _barFiles.Add(barFilePath);
             _urFiles.Add(urFilePath);
+            _fbBarFiles.Add(fbBarFilePath);
+            _fbUsFiles.Add(fbUsFilePath);
         }
 
         private void BulkInsert(
@@ -1516,6 +1726,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
         }
 
@@ -1540,6 +1751,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
         }
 
@@ -1571,6 +1783,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
         }
 
@@ -1599,6 +1812,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
         }
 
@@ -1631,6 +1845,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
         }
 
