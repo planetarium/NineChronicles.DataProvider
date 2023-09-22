@@ -1,13 +1,13 @@
+using System.Collections.Concurrent;
 using Nekoyume.Action.Loader;
+using IPAddress = System.Net.IPAddress;
 
 namespace NineChronicles.DataProvider.Executable
 {
     using System;
-    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
     using Cocona;
-    using Libplanet.Action;
     using Libplanet.Action.Loader;
     using Libplanet.Crypto;
     using Libplanet.KeyStore;
@@ -16,7 +16,6 @@ namespace NineChronicles.DataProvider.Executable
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using Nekoyume.Action;
     using NineChronicles.DataProvider.Executable.Commands;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.Headless;
@@ -152,6 +151,21 @@ namespace NineChronicles.DataProvider.Executable
                 MinerCount = headlessConfig.NoMiner ? 0 : 1,
                 NetworkType = headlessConfig.NetworkType,
             };
+            NineChroniclesNodeService service =
+                NineChroniclesNodeService.Create(nineChroniclesProperties, context);
+            ActionEvaluationPublisher publisher = new ActionEvaluationPublisher(
+                context.NineChroniclesNodeService!.BlockRenderer,
+                context.NineChroniclesNodeService!.ActionRenderer,
+                context.NineChroniclesNodeService!.ExceptionRenderer,
+                context.NineChroniclesNodeService!.NodeStatusRenderer,
+                IPAddress.Loopback.ToString(),
+                0,
+                new RpcContext
+                {
+                    RpcRemoteSever = false
+                },
+                new ConcurrentDictionary<string, Sentry.ITransaction>()
+            );
 
             if (headlessConfig.LogActionRenders)
             {
@@ -163,7 +177,7 @@ namespace NineChronicles.DataProvider.Executable
                 services.AddSingleton(_ => context);
             });
 
-            hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, context);
+            hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, context, publisher, service);
 
             var stateContext = new StateContext(
                 context.BlockChain!.GetAccountState(context.BlockChain!.Tip.Hash),
