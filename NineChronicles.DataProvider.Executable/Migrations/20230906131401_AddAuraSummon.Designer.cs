@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
@@ -10,9 +11,10 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20230906131401_AddAuraSummon")]
+    partial class AddAuraSummon
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -58,38 +60,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.ToTable("Agents");
                 });
 
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.AuraSummonFailModel", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("AgentAddress")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("AvatarAddress")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<long>("BlockIndex")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Exception")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("GroupId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SummonCount")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgentAddress");
-
-                    b.HasIndex("AvatarAddress");
-
-                    b.ToTable("AuraSummonFails");
-                });
-
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.AuraSummonModel", b =>
                 {
                     b.Property<string>("Id")
@@ -109,9 +79,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
                     b.Property<int>("SummonCount")
                         .HasColumnType("int");
-
-                    b.Property<string>("SummonResult")
-                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
@@ -2392,21 +2359,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                         .IsUnique();
 
                     b.ToTable("WorldBossSeasonMigrationModels");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.AuraSummonFailModel", b =>
-                {
-                    b.HasOne("NineChronicles.DataProvider.Store.Models.AgentModel", "Agent")
-                        .WithMany()
-                        .HasForeignKey("AgentAddress");
-
-                    b.HasOne("NineChronicles.DataProvider.Store.Models.AvatarModel", "Avatar")
-                        .WithMany()
-                        .HasForeignKey("AvatarAddress");
-
-                    b.Navigation("Agent");
-
-                    b.Navigation("Avatar");
                 });
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.AuraSummonModel", b =>

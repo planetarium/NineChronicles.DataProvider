@@ -12,8 +12,8 @@
     public static class HackAndSlashData
     {
         public static HackAndSlashModel GetHackAndSlashInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             int stageId,

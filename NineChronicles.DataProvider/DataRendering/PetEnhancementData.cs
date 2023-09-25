@@ -16,8 +16,8 @@ namespace NineChronicles.DataProvider.DataRendering
     public static class PetEnhancementData
     {
         public static PetEnhancementModel GetPetEnhancementInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             int petId,

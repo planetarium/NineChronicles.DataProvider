@@ -2573,8 +2573,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         }
 
                                         Equipment equipment = buyerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.TradableId);
+                                            i.ItemId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
+                                            i.ItemId == purchaseInfo.TradableId);
 
                                         if (equipment is { } equipmentNotNull)
                                         {
@@ -2675,8 +2675,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         }
 
                                         Equipment equipment = buyerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.TradableId);
+                                            i.ItemId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
+                                            i.ItemId == purchaseInfo.TradableId);
 
                                         if (equipment is { } equipmentNotNull)
                                         {
@@ -2777,8 +2777,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         }
 
                                         Equipment equipment = buyerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.TradableId);
+                                            i.ItemId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
+                                            i.ItemId == purchaseInfo.TradableId);
 
                                         if (equipment is { } equipmentNotNull)
                                         {
@@ -2879,8 +2879,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         }
 
                                         Equipment equipment = buyerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.TradableId);
+                                            i.ItemId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
+                                            i.ItemId == purchaseInfo.TradableId);
 
                                         if (equipment is { } equipmentNotNull)
                                         {
@@ -2981,8 +2981,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         }
 
                                         Equipment equipment = buyerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.TradableId);
+                                            i.ItemId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
+                                            i.ItemId == purchaseInfo.TradableId);
 
                                         if (equipment is { } equipmentNotNull)
                                         {
@@ -3083,8 +3083,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         }
 
                                         Equipment equipment = buyerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.productId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.productId);
+                                            i.ItemId == purchaseInfo.productId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
+                                            i.ItemId == purchaseInfo.productId);
 
                                         if (equipment is { } equipmentNotNull)
                                         {
@@ -3185,8 +3185,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         }
 
                                         Equipment equipment = buyerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.productId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.productId);
+                                            i.ItemId == purchaseInfo.productId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
+                                            i.ItemId == purchaseInfo.productId);
 
                                         if (equipment is { } equipmentNotNull)
                                         {
@@ -3287,8 +3287,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         }
 
                                         Equipment equipment = buyerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.productId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.productId);
+                                            i.ItemId == purchaseInfo.productId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
+                                            i.ItemId == purchaseInfo.productId);
 
                                         if (equipment is { } equipmentNotNull)
                                         {

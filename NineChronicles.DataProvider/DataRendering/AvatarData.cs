@@ -21,7 +21,7 @@
     public static class AvatarData
     {
         public static AvatarModel GetAvatarInfo(
-            IAccountStateDelta outputStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             List<RuneSlotInfo> runeInfos,
@@ -137,7 +137,7 @@
         }
 
         public static AvatarModel GetAvatarInfoV1(
-            IAccountStateDelta outputStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             DateTimeOffset blockTime)

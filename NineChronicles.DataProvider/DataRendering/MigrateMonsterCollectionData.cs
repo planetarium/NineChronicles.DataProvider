@@ -13,8 +13,8 @@
     public static class MigrateMonsterCollectionData
     {
         public static MigrateMonsterCollectionModel GetMigrateMonsterCollectionInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             long blockIndex,
             DateTimeOffset blockTime
