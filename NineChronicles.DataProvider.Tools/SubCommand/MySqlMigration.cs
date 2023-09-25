@@ -644,7 +644,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                         $"{equipment.SpineResourcePath};" +
                                         $"{equipment.RequiredBlockIndex};" +
                                         $"{equipment.NonFungibleId.ToString()};" +
-                                        $"{equipment.TradableId.ToString()};" +
+                                        $"{equipment.NonFungibleId.ToString()};" +
                                         $"{equipment.UniqueStatType.ToString()};" +
                                         $"{Convert.ToDecimal(orderReceipt.Price.GetQuantityString())};" +
                                         $"{orderReceipt.OrderId};" +
@@ -1726,7 +1726,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     $"{equipment.SpineResourcePath};" +
                     $"{equipment.RequiredBlockIndex};" +
                     $"{equipment.NonFungibleId.ToString()};" +
-                    $"{equipment.TradableId.ToString()};" +
+                    $"{equipment.NonFungibleId.ToString()};" +
                     $"{equipment.UniqueStatType.ToString()}"
                 );
             }
