@@ -454,7 +454,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                         var fbStakeStateAddress = StakeState.DeriveAddress(fbAvatarState.agentAddress);
                                         var fbCurrency = fbEv.OutputState.GetGoldCurrency();
                                         var fbStakedBalance = fbEv.OutputState.GetBalance(fbStakeStateAddress, fbCurrency);
-                                        _usBulkFile.WriteLine(
+                                        _fbUsBulkFile.WriteLine(
                                             $"{fbTip.Index};" +
                                             "V2;" +
                                             $"{fbAvatarState.agentAddress.ToString()};" +
@@ -476,7 +476,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                         var fbCurrency = fbEv.OutputState.GetGoldCurrency();
                                         FungibleAssetValue fbMonsterCollectionBalance =
                                             fbEv.OutputState.GetBalance(fbMonsterCollectionAddress, fbCurrency);
-                                        _usBulkFile.WriteLine(
+                                        _fbUsBulkFile.WriteLine(
                                             $"{fbTip.Index};" +
                                             "V1;" +
                                             $"{fbAvatarState.agentAddress.ToString()};" +
