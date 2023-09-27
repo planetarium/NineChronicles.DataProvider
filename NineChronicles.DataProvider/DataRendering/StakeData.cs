@@ -35,7 +35,7 @@
                 prevStakeStartBlockIndex = 0;
             }
 
-            if (!outputStates.TryGetStakeStateV2(signer, out var stakeStateV2))
+            if (outputStates.TryGetStakeStateV2(signer, out var stakeStateV2))
             {
                 newAmount = outputStates.GetBalance(stakeAddress, currency);
                 newStakeStartBlockIndex = stakeStateV2.StartedBlockIndex;
