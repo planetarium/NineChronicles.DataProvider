@@ -377,24 +377,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                         fbUSDbName = $"{fbUSDbName}_{fbTip.Index}";
                         Console.WriteLine("5");
-                        connection.Open();
-                        var s =
-                            $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{fbUSDbName}` (
-                                  `BlockIndex` bigint NOT NULL,
-                                  `StakeVersion` varchar(100) NOT NULL,
-                                  `AgentAddress` varchar(100) NOT NULL,
-                                  `StakingAmount` decimal(13,2) NOT NULL,
-                                  `StartedBlockIndex` bigint NOT NULL,
-                                  `ReceivedBlockIndex` bigint NOT NULL,
-                                  `CancellableBlockIndex` bigint NOT NULL,
-                                  `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-                                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
-                        var c = new MySqlCommand(s, connection);
-                        c.CommandTimeout = 300;
-                        c.ExecuteScalar();
-                        connection.Close();
 
-                        Console.WriteLine("6");
                         foreach (var fbAvatar in avatars)
                         {
                             try
@@ -525,6 +508,25 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
 
                     _fbBarBulkFile.Flush();
                     _fbBarBulkFile.Close();
+
+                    connection.Open();
+                    var s =
+                        $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{fbUSDbName}` (
+                                  `BlockIndex` bigint NOT NULL,
+                                  `StakeVersion` varchar(100) NOT NULL,
+                                  `AgentAddress` varchar(100) NOT NULL,
+                                  `StakingAmount` decimal(13,2) NOT NULL,
+                                  `StartedBlockIndex` bigint NOT NULL,
+                                  `ReceivedBlockIndex` bigint NOT NULL,
+                                  `CancellableBlockIndex` bigint NOT NULL,
+                                  `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+                    var c = new MySqlCommand(s, connection);
+                    c.CommandTimeout = 300;
+                    c.ExecuteScalar();
+                    connection.Close();
+
+                    Console.WriteLine("6");
 
                     var fbstm23 = $"RENAME TABLE {fbBARDbName} TO {fbBARDbName}_Dump; CREATE TABLE {fbBARDbName} LIKE {fbBARDbName}_Dump;";
                     var fbcmd23 = new MySqlCommand(fbstm23, connection);
