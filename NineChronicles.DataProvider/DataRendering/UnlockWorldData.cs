@@ -13,8 +13,8 @@
     public static class UnlockWorldData
     {
         public static List<UnlockWorldModel> GetUnlockWorldInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             List<int> worldIds,

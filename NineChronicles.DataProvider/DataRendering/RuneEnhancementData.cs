@@ -17,8 +17,8 @@
     public static class RuneEnhancementData
     {
         public static RuneEnhancementModel GetRuneEnhancementInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             int runeId,

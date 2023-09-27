@@ -18,8 +18,8 @@
     public static class BattleArenaData
     {
         public static BattleArenaModel GetBattleArenaInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address myAvatarAddress,
             Address enemyAvatarAddress,

@@ -12,8 +12,8 @@
     public static class HackAndSlashSweepData
     {
         public static HackAndSlashSweepModel GetHackAndSlashSweepInfo(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             int stageId,
@@ -51,8 +51,8 @@
         }
 
         public static HackAndSlashSweepModel GetHackAndSlashSweepInfoV1(
-            IAccountStateDelta previousStates,
-            IAccountStateDelta outputStates,
+            IAccount previousStates,
+            IAccount outputStates,
             Address signer,
             Address avatarAddress,
             int stageId,

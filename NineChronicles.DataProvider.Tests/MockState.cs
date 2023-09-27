@@ -6,6 +6,7 @@ using System.Numerics;
 using Bencodex.Types;
 using Libplanet.Action.State;
 using Libplanet.Crypto;
+using Libplanet.Store.Trie;
 using Libplanet.Types.Assets;
 using Libplanet.Types.Consensus;
 
@@ -115,6 +116,7 @@ namespace NineChronicles.DataProvider.Tests
         }
 
         public ValidatorSet GetValidatorSet() => _validatorSet;
+        public ITrie Trie => throw new NotSupportedException();
 
         public MockState SetState(Address address, IValue state) =>
             new MockState(

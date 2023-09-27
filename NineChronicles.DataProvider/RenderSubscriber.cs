@@ -10,7 +10,6 @@ namespace NineChronicles.DataProvider
     using Bencodex.Types;
     using Lib9c.Model.Order;
     using Lib9c.Renderers;
-    using Libplanet;
     using Libplanet.Crypto;
     using Libplanet.Types.Blocks;
     using Libplanet.Types.Tx;
@@ -79,6 +78,8 @@ namespace NineChronicles.DataProvider
         private readonly List<PetEnhancementModel> _petEnhancementList = new List<PetEnhancementModel>();
         private readonly List<TransferAssetModel> _transferAssetList = new List<TransferAssetModel>();
         private readonly List<RequestPledgeModel> _requestPledgeList = new List<RequestPledgeModel>();
+        private readonly List<AuraSummonModel> _auraSummonList = new List<AuraSummonModel>();
+        private readonly List<AuraSummonFailModel> _auraSummonFailList = new List<AuraSummonFailModel>();
         private readonly List<string> _agents;
         private readonly bool _render;
         private int _renderedBlockCount;
@@ -571,8 +572,8 @@ namespace NineChronicles.DataProvider
                                     }
 
                                     Equipment? equipment = buyerInventory.Equipments.SingleOrDefault(i =>
-                                        i.TradableId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
-                                        i.TradableId == purchaseInfo.TradableId);
+                                        i.ItemId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
+                                        i.ItemId == purchaseInfo.TradableId);
 
                                     if (equipment is { } equipmentNotNull)
                                     {
@@ -1281,6 +1282,47 @@ namespace NineChronicles.DataProvider
                 }
             });
 
+            _actionRenderer.EveryRender<AuraSummon>().Subscribe(ev =>
+            {
+                try
+                {
+                    if (ev.Action is { } auraSummon)
+                    {
+                        if (ev.Exception is null)
+                        {
+                            _auraSummonList.Add(AuraSummonData.GetAuraSummonInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                auraSummon.AvatarAddress,
+                                auraSummon.GroupId,
+                                auraSummon.SummonCount,
+                                auraSummon.Id,
+                                ev.BlockIndex
+                                ));
+                        }
+                        else
+                        {
+                            _auraSummonFailList.Add(AuraSummonData.GetAuraSummonFailInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                auraSummon.AvatarAddress,
+                                auraSummon.GroupId,
+                                auraSummon.SummonCount,
+                                auraSummon.Id,
+                                ev.BlockIndex,
+                                ev.Exception
+                            ));
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"AuraSummon RenderSubscriber: {e.Message}");
+                }
+            });
+
             return Task.CompletedTask;
         }
 
@@ -1443,6 +1485,8 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StorePetEnhancementList(_petEnhancementList);
                     MySqlStore.StoreTransferAssetList(_transferAssetList);
                     MySqlStore.StoreRequestPledgeList(_requestPledgeList);
+                    MySqlStore.StoreAuraSummonList(_auraSummonList);
+                    MySqlStore.StoreAuraSummonFailList(_auraSummonFailList);
                 }),
             };
 
@@ -1488,6 +1532,9 @@ namespace NineChronicles.DataProvider
             _petEnhancementList.Clear();
             _transferAssetList.Clear();
             _requestPledgeList.Clear();
+            _auraSummonList.Clear();
+            _auraSummonFailList.Clear();
+
             var end = DateTimeOffset.Now;
             long blockIndex = b.OldTip.Index;
             StreamWriter blockIndexFile = new StreamWriter(_blockIndexFilePath);
