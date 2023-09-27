@@ -1,3 +1,5 @@
+using Nekoyume.Model.Stake;
+
 namespace NineChronicles.DataProvider.Tools.SubCommand
 {
     using System;
@@ -449,6 +451,23 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                 if (!fbAgents.Contains(fbAvatarState.agentAddress.ToString()))
                                 {
                                     fbAgents.Add(fbAvatarState.agentAddress.ToString());
+
+                                    if (fbEv.OutputState.TryGetStakeStateV2(fbAvatarState.agentAddress, out StakeStateV2 fbStakeState2))
+                                    {
+                                        var fbStakeStateAddress = StakeStateV2.DeriveAddress(fbAvatarState.agentAddress);
+                                        var fbCurrency = fbEv.OutputState.GetGoldCurrency();
+                                        var fbStakedBalance = fbEv.OutputState.GetBalance(fbStakeStateAddress, fbCurrency);
+                                        _fbUsBulkFile.WriteLine(
+                                            $"{fbTip.Index};" +
+                                            "V3;" +
+                                            $"{fbAvatarState.agentAddress.ToString()};" +
+                                            $"{Convert.ToDecimal(fbStakedBalance.GetQuantityString())};" +
+                                            $"{fbStakeState2.StartedBlockIndex};" +
+                                            $"{fbStakeState2.ReceivedBlockIndex};" +
+                                            $"{fbStakeState2.CancellableBlockIndex}"
+                                        );
+                                    }
+
                                     if (fbEv.OutputState.TryGetStakeState(fbAvatarState.agentAddress, out StakeState fbStakeState))
                                     {
                                         var fbStakeStateAddress = StakeState.DeriveAddress(fbAvatarState.agentAddress);
@@ -863,6 +882,23 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                     $"{stakeState.ReceivedBlockIndex};" +
                                     $"{stakeState.CancellableBlockIndex}"
                                 );
+                            }
+                            else
+                            {
+                                if (ev.OutputState.TryGetStakeStateV2(avatarState.agentAddress, out StakeStateV2 stakeState2))
+                                {
+                                    var stakeStateAddress = StakeStateV2.DeriveAddress(avatarState.agentAddress);
+                                    var currency = ev.OutputState.GetGoldCurrency();
+                                    var stakedBalance = ev.OutputState.GetBalance(stakeStateAddress, currency);
+                                    _usBulkFile.WriteLine(
+                                        $"{tip.Index};" +
+                                        $"{avatarState.agentAddress.ToString()};" +
+                                        $"{Convert.ToDecimal(stakedBalance.GetQuantityString())};" +
+                                        $"{stakeState.StartedBlockIndex};" +
+                                        $"{stakeState.ReceivedBlockIndex};" +
+                                        $"{stakeState.CancellableBlockIndex}"
+                                    );
+                                }
                             }
                         }
 
