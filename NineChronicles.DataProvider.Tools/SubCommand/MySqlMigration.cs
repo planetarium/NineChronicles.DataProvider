@@ -1,3 +1,5 @@
+using Nekoyume.Model.Stake;
+
 namespace NineChronicles.DataProvider.Tools.SubCommand
 {
     using System;
@@ -236,6 +238,22 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                         if (!agents.Contains(avatarState.agentAddress.ToString()))
                         {
                             agents.Add(avatarState.agentAddress.ToString());
+                            if (ev.OutputState.TryGetStakeStateV2(avatarState.agentAddress, out StakeStateV2 stakeState2))
+                            {
+                                var stakeStateAddress = StakeStateV2.DeriveAddress(avatarState.agentAddress);
+                                var currency = ev.OutputState.GetGoldCurrency();
+                                var stakedBalance = ev.OutputState.GetBalance(stakeStateAddress, currency);
+                                _usBulkFile.WriteLine(
+                                    $"{tip.Index};" +
+                                    "V3;" +
+                                    $"{avatarState.agentAddress.ToString()};" +
+                                    $"{Convert.ToDecimal(stakedBalance.GetQuantityString())};" +
+                                    $"{stakeState2.StartedBlockIndex};" +
+                                    $"{stakeState2.ReceivedBlockIndex};" +
+                                    $"{stakeState2.CancellableBlockIndex}"
+                                );
+                            }
+
                             if (ev.OutputState.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
                             {
                                 var stakeStateAddress = StakeState.DeriveAddress(avatarState.agentAddress);
