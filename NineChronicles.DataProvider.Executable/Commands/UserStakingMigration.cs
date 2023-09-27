@@ -1,5 +1,3 @@
-using Nekoyume.Model.Stake;
-
 namespace NineChronicles.DataProvider.Executable.Commands
 {
     using System;
@@ -23,6 +21,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using Nekoyume.Action;
     using Nekoyume.Action.Loader;
     using Nekoyume.Blockchain.Policy;
+    using Nekoyume.Model.Stake;
     using Nekoyume.Model.State;
     using Serilog;
     using Serilog.Events;
