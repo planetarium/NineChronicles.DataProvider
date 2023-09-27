@@ -1,16 +1,12 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
-    using System.Linq;
-    using Libplanet;
-    using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
+    using Libplanet.Types.Assets;
     using Nekoyume.Action;
-    using Nekoyume.Helper;
-    using Nekoyume.Model.State;
+    using Nekoyume.Model.Stake;
     using NineChronicles.DataProvider.Store.Models;
-    using static Lib9c.SerializeKeys;
 
     public static class StakeData
     {
@@ -22,18 +18,36 @@
             DateTimeOffset blockTime
         )
         {
-            outputStates.TryGetStakeState(signer, out StakeState stakeState);
-            var prevStakeStartBlockIndex =
-                !previousStates.TryGetStakeState(signer, out StakeState prevStakeState)
-                    ? 0 : prevStakeState.StartedBlockIndex;
-            var newStakeStartBlockIndex = stakeState.StartedBlockIndex;
             var currency = outputStates.GetGoldCurrency();
-            var balance = outputStates.GetBalance(signer, currency);
-            var stakeStateAddress = StakeState.DeriveAddress(signer);
-            var previousAmount = previousStates.GetBalance(stakeStateAddress, currency);
-            var newAmount = outputStates.GetBalance(stakeStateAddress, currency);
+            var stakeAddress = StakeStateV2.DeriveAddress(signer);
+            FungibleAssetValue previousAmount;
+            FungibleAssetValue newAmount;
+            long prevStakeStartBlockIndex;
+            long newStakeStartBlockIndex;
+            if (previousStates.TryGetStakeStateV2(signer, out var prevStakeStateV2))
+            {
+                previousAmount = previousStates.GetBalance(stakeAddress, currency);
+                prevStakeStartBlockIndex = prevStakeStateV2.StartedBlockIndex;
+            }
+            else
+            {
+                previousAmount = new FungibleAssetValue(currency, 0, 0);
+                prevStakeStartBlockIndex = 0;
+            }
 
-            var stakeModel = new StakeModel()
+            if (!outputStates.TryGetStakeStateV2(signer, out var stakeStateV2))
+            {
+                newAmount = outputStates.GetBalance(stakeAddress, currency);
+                newStakeStartBlockIndex = stakeStateV2.StartedBlockIndex;
+            }
+            else
+            {
+                newAmount = new FungibleAssetValue(currency, 0, 0);
+                newStakeStartBlockIndex = 0;
+            }
+
+            var balance = outputStates.GetBalance(signer, currency);
+            var stakeModel = new StakeModel
             {
                 BlockIndex = blockIndex,
                 AgentAddress = signer.ToString(),
