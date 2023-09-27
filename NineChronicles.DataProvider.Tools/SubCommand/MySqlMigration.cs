@@ -894,9 +894,9 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                         $"{tip.Index};" +
                                         $"{avatarState.agentAddress.ToString()};" +
                                         $"{Convert.ToDecimal(stakedBalance.GetQuantityString())};" +
-                                        $"{stakeState.StartedBlockIndex};" +
-                                        $"{stakeState.ReceivedBlockIndex};" +
-                                        $"{stakeState.CancellableBlockIndex}"
+                                        $"{stakeState2.StartedBlockIndex};" +
+                                        $"{stakeState2.ReceivedBlockIndex};" +
+                                        $"{stakeState2.CancellableBlockIndex}"
                                     );
                                 }
                             }
