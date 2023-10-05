@@ -12,6 +12,7 @@
     using Nekoyume.Extensions;
     using Nekoyume.Helper;
     using Nekoyume.Model.Item;
+    using Nekoyume.Model.Stake;
     using Nekoyume.Model.State;
     using Nekoyume.TableData;
     using Nekoyume.TableData.Crystal;
@@ -55,9 +56,10 @@
 
             Currency currency = previousStates.GetGoldCurrency();
             FungibleAssetValue stakedAmount = 0 * currency;
-            if (previousStates.TryGetStakeState(signer, out StakeState stakeState))
+            if (previousStates.TryGetStakeStateV2(signer, out _))
             {
-                stakedAmount = previousStates.GetBalance(stakeState.address, currency);
+                var stakeAddr = StakeStateV2.DeriveAddress(signer);
+                stakedAmount = previousStates.GetBalance(stakeAddr, currency);
             }
             else
             {
