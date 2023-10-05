@@ -21,6 +21,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using Nekoyume.Action;
     using Nekoyume.Action.Loader;
     using Nekoyume.Blockchain.Policy;
+    using Nekoyume.Model.Stake;
     using Nekoyume.Model.State;
     using Serilog;
     using Serilog.Events;
@@ -229,19 +230,21 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         if (!agents.Contains(avatarState.agentAddress.ToString()))
                         {
                             agents.Add(avatarState.agentAddress.ToString());
-                            if (evaluation.OutputState.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
+                            if (evaluation.OutputState.TryGetStakeStateV2(
+                                    avatarState.agentAddress,
+                                    out var stakeStateV2))
                             {
-                                var stakeStateAddress = StakeState.DeriveAddress(avatarState.agentAddress);
+                                var stakeAddress = StakeStateV2.DeriveAddress(avatarState.agentAddress);
                                 var currency = evaluation.OutputState.GetGoldCurrency();
-                                var stakedBalance = evaluation.OutputState.GetBalance(stakeStateAddress, currency);
+                                var stakedBalance = evaluation.OutputState.GetBalance(stakeAddress, currency);
                                 _usBulkFile.WriteLine(
                                     $"{tip.Index};" +
                                     "V2;" +
                                     $"{avatarState.agentAddress.ToString()};" +
                                     $"{Convert.ToDecimal(stakedBalance.GetQuantityString())};" +
-                                    $"{stakeState.StartedBlockIndex};" +
-                                    $"{stakeState.ReceivedBlockIndex};" +
-                                    $"{stakeState.CancellableBlockIndex}"
+                                    $"{stakeStateV2.StartedBlockIndex};" +
+                                    $"{stakeStateV2.ReceivedBlockIndex};" +
+                                    $"{stakeStateV2.CancellableBlockIndex}"
                                 );
                             }
 

@@ -3,7 +3,6 @@
     using System;
     using System.Linq;
     using Bencodex.Types;
-    using Libplanet;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Nekoyume.Action;
@@ -23,53 +22,41 @@
             DateTimeOffset blockTime
         )
         {
+            long claimStakeStartBlockIndex;
+            long claimStakeEndBlockIndex;
+            if (previousStates.TryGetStakeStateV2(signer, out var prevStakeStateV2))
+            {
+                claimStakeStartBlockIndex = prevStakeStateV2.StartedBlockIndex;
+                claimStakeEndBlockIndex = prevStakeStateV2.ReceivedBlockIndex;
+            }
+            else
+            {
+                claimStakeStartBlockIndex = 0;
+                claimStakeEndBlockIndex = 0;
+            }
+
             var plainValue = (Dictionary)claimStakeReward.PlainValue;
             var avatarAddress = ((Dictionary)plainValue["values"])[AvatarAddressKey].ToAddress();
-            var id = ((GameAction)claimStakeReward).Id;
-            previousStates.TryGetStakeState(signer, out StakeState prevStakeState);
 
-            var claimStakeStartBlockIndex = prevStakeState.StartedBlockIndex;
-            var claimStakeEndBlockIndex = prevStakeState.ReceivedBlockIndex;
-            var avatarPreviousState = previousStates.GetAvatarStateV2(avatarAddress);
-            var avatarOutputState = outputStates.GetAvatarStateV2(avatarAddress);
+            var previousAvatarState = previousStates.GetAvatarStateV2(avatarAddress);
+            var previousApPotionCount = previousAvatarState.inventory.Items
+                .Where(x => x.item.ItemSubType == ItemSubType.ApStone)
+                .Sum(potion => potion.count);
+            var previousHourGlassCount = previousAvatarState.inventory.Items
+                .Where(x => x.item.ItemSubType == ItemSubType.Hourglass)
+                .Sum(hourGlass => hourGlass.count);
 
-            var previousApPotionCount = 0;
-            var previousHourGlassCount = 0;
-            var outputApPotionCount = 0;
-            var outputHourGlassCount = 0;
-
-            var previousApPotions =
-                avatarPreviousState.inventory.Items.Where(x => x.item.ItemSubType == ItemSubType.ApStone);
-            var previousHourGlasses =
-                avatarPreviousState.inventory.Items.Where(x => x.item.ItemSubType == ItemSubType.Hourglass);
-            foreach (var potion in previousApPotions)
-            {
-                previousApPotionCount += potion.count;
-            }
-
-            foreach (var hourGlass in previousHourGlasses)
-            {
-                previousHourGlassCount += hourGlass.count;
-            }
-
-            var outputApPotions =
-                avatarOutputState.inventory.Items.Where(x => x.item.ItemSubType == ItemSubType.ApStone);
-            var outputHourGlasses =
-                avatarOutputState.inventory.Items.Where(x => x.item.ItemSubType == ItemSubType.Hourglass);
-
-            foreach (var potion in outputApPotions)
-            {
-                outputApPotionCount += potion.count;
-            }
-
-            foreach (var hourGlass in outputHourGlasses)
-            {
-                outputHourGlassCount += hourGlass.count;
-            }
+            var outputAvatarState = outputStates.GetAvatarStateV2(avatarAddress);
+            var outputApPotionCount = outputAvatarState.inventory.Items
+                .Where(x => x.item.ItemSubType == ItemSubType.ApStone)
+                .Sum(potion => potion.count);
+            var outputHourGlassCount = outputAvatarState.inventory.Items
+                .Where(x => x.item.ItemSubType == ItemSubType.Hourglass)
+                .Sum(hourGlass => hourGlass.count);
 
             var claimStakeRewardModel = new ClaimStakeRewardModel
             {
-                Id = id.ToString(),
+                Id = ((GameAction)claimStakeReward).Id.ToString(),
                 BlockIndex = blockIndex,
                 AgentAddress = signer.ToString(),
                 ClaimRewardAvatarAddress = avatarAddress.ToString(),
