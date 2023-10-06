@@ -203,7 +203,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
             // Setup block policy
             IStagePolicy stagePolicy = new VolatileStagePolicy();
             LogEventLevel logLevel = LogEventLevel.Debug;
-            var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
+            var blockPolicySource = new BlockPolicySource();
             IBlockPolicy blockPolicy = blockPolicySource.GetPolicy();
 
             // Setup base chain & new chain
