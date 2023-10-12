@@ -128,6 +128,11 @@ public class WorldBossRankingRewardQueryTest : TestBase
     [InlineData(11L, false, 100, 2, 100, 2)]
     public async Task WorldBossRankingRewards(long blockIndex, bool canReceive, int offset, int limit, int expectedRank, int expectedCount)
     {
+        if (canReceive)
+        {
+            Context.WorldBossSeasonMigrationModels.Add(new WorldBossSeasonMigrationModel { RaidId = 1 });
+        }
+
         for (int i = 0; i < 200; i++)
         {
             var avatarAddress = new PrivateKey().ToAddress();
@@ -203,6 +208,8 @@ public class WorldBossRankingRewardQueryTest : TestBase
     [InlineData(2, 198, 199, "15000")]
     public async Task WorldBossRankingRewards_Rate(int raidId, int offset, int expectedRank, string expectedCrystal)
     {
+        Context.WorldBossSeasonMigrationModels.Add(new WorldBossSeasonMigrationModel { RaidId = raidId });
+
         for (int i = 0; i < 200; i++)
         {
             var avatarAddress = new PrivateKey().ToAddress();
