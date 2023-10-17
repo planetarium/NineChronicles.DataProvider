@@ -10,6 +10,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using Cocona;
     using Libplanet;
     using Libplanet.Action;
+    using Libplanet.Action.State;
     using Libplanet.Blockchain;
     using Libplanet.Blockchain.Policies;
     using Libplanet.Crypto;
@@ -127,7 +128,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             var blockChainStates = new BlockChainStates(_baseStore, baseStateStore);
             var actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
-                blockChainStates,
+                baseStateStore,
                 new NCActionLoader());
             _baseChain = new BlockChain(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, actionEvaluator);
 
@@ -182,6 +183,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var tip = _baseStore.GetBlock((BlockHash)tipHash!);
                 var blockEvaluation = _baseChain.EvaluateBlock(tip);
                 var evaluation = blockEvaluation.Last();
+                var outputState = new Account(_baseChain.GetAccountState(evaluation.OutputState));
+
                 var avatarCount = 0;
                 AvatarState avatarState;
                 int intervalCount = 0;
@@ -198,11 +201,11 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         var avatarAddress = new Address(avatar);
                         try
                         {
-                            avatarState = evaluation.OutputState.GetAvatarStateV2(avatarAddress);
+                            avatarState = outputState.GetAvatarStateV2(avatarAddress);
                         }
                         catch (Exception)
                         {
-                            avatarState = evaluation.OutputState.GetAvatarState(avatarAddress);
+                            avatarState = outputState.GetAvatarState(avatarAddress);
                         }
 
                         if (!checkUserStakingTable)
@@ -230,13 +233,13 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         if (!agents.Contains(avatarState.agentAddress.ToString()))
                         {
                             agents.Add(avatarState.agentAddress.ToString());
-                            if (evaluation.OutputState.TryGetStakeStateV2(
+                            if (outputState.TryGetStakeStateV2(
                                     avatarState.agentAddress,
                                     out var stakeStateV2))
                             {
                                 var stakeAddress = StakeStateV2.DeriveAddress(avatarState.agentAddress);
-                                var currency = evaluation.OutputState.GetGoldCurrency();
-                                var stakedBalance = evaluation.OutputState.GetBalance(stakeAddress, currency);
+                                var currency = outputState.GetGoldCurrency();
+                                var stakedBalance = outputState.GetBalance(stakeAddress, currency);
                                 _usBulkFile.WriteLine(
                                     $"{tip.Index};" +
                                     "V2;" +
@@ -248,17 +251,17 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 );
                             }
 
-                            var agentState = evaluation.OutputState.GetAgentState(avatarState.agentAddress);
+                            var agentState = outputState.GetAgentState(avatarState.agentAddress);
                             Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
                                 avatarState.agentAddress,
                                 agentState.MonsterCollectionRound
                             );
-                            if (evaluation.OutputState.TryGetState(monsterCollectionAddress, out Dictionary stateDict))
+                            if (outputState.TryGetState(monsterCollectionAddress, out Dictionary stateDict))
                             {
                                 var monsterCollectionStates = new MonsterCollectionState(stateDict);
-                                var currency = evaluation.OutputState.GetGoldCurrency();
+                                var currency = outputState.GetGoldCurrency();
                                 FungibleAssetValue monsterCollectionBalance =
-                                    evaluation.OutputState.GetBalance(monsterCollectionAddress, currency);
+                                    outputState.GetBalance(monsterCollectionAddress, currency);
                                 _usBulkFile.WriteLine(
                                     $"{tip.Index};" +
                                     "V1;" +

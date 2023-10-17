@@ -137,7 +137,7 @@ namespace NineChronicles.DataProvider.Executable
             IActionLoader actionLoader = new NCActionLoader();
 
             var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(
-                actionLoader, headlessConfig.StateServiceManagerService)
+                actionLoader, headlessConfig.StateServiceManagerService, null)
             {
                 MinerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
                     ? null
@@ -159,6 +159,7 @@ namespace NineChronicles.DataProvider.Executable
                 context.NineChroniclesNodeService!.ActionRenderer,
                 context.NineChroniclesNodeService!.ExceptionRenderer,
                 context.NineChroniclesNodeService!.NodeStatusRenderer,
+                context.NineChroniclesNodeService!.BlockChain,
                 IPAddress.Loopback.ToString(),
                 0,
                 new RpcContext

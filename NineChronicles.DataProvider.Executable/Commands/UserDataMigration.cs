@@ -8,6 +8,7 @@
     using Cocona;
     using Lib9c.Model.Order;
     using Libplanet.Action;
+    using Libplanet.Action.State;
     using Libplanet.Blockchain;
     using Libplanet.Blockchain.Policies;
     using Libplanet.Crypto;
@@ -179,7 +180,7 @@
             var blockChainStates = new BlockChainStates(_baseStore, baseStateStore);
             var actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
-                blockChainStates,
+                baseStateStore,
                 new NCActionLoader());
             _baseChain = new BlockChain(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, actionEvaluator);
 
@@ -237,16 +238,17 @@
                 var tip = _baseStore.GetBlock((BlockHash)tipHash);
                 var exec = _baseChain.EvaluateBlock(tip);
                 var ev = exec.Last();
+                var outputState = new Account(blockChainStates.GetAccountState(ev.OutputState));
                 var avatarCount = 0;
                 AvatarState avatarState;
                 int interval = 10000000;
                 int intervalCount = 0;
-                var sheets = ev.OutputState.GetSheets(
+                var sheets = outputState.GetSheets(
                     sheetTypes: new[]
                     {
                         typeof(RuneSheet),
                     });
-                var arenaSheet = ev.OutputState.GetSheet<ArenaSheet>();
+                var arenaSheet = outputState.GetSheet<ArenaSheet>();
                 var arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
 
                 _barDbName = $"{_barDbName}_{arenaData.ChampionshipId}_{arenaData.Round}";
@@ -320,7 +322,8 @@
                         var fbTip = _baseStore.GetBlock((BlockHash)fbTipHash!);
                         var fbExec = _baseChain.EvaluateBlock(fbTip);
                         var fbEv = fbExec.Last();
-                        var fbArenaSheet = fbEv.OutputState.GetSheet<ArenaSheet>();
+                        var fbOutputState = new Account(blockChainStates.GetAccountState(fbEv.OutputState));
+                        var fbArenaSheet = fbOutputState.GetSheet<ArenaSheet>();
                         var fbArenaData = fbArenaSheet.GetRoundByBlockIndex(fbTip.Index);
                         List<string> fbAgents = new List<string>();
                         var fbavatarCount = 0;
@@ -338,13 +341,13 @@
                                 var fbAvatarAddress = new Address(fbAvatar);
                                 try
                                 {
-                                    fbAvatarState = fbEv.OutputState.GetAvatarStateV2(fbAvatarAddress);
+                                    fbAvatarState = fbOutputState.GetAvatarStateV2(fbAvatarAddress);
                                 }
                                 catch (Exception ex)
                                 {
                                     Console.WriteLine(ex.Message);
                                     Console.WriteLine(ex.StackTrace);
-                                    fbAvatarState = fbEv.OutputState.GetAvatarState(fbAvatarAddress);
+                                    fbAvatarState = fbOutputState.GetAvatarState(fbAvatarAddress);
                                 }
 
                                 var fbAvatarLevel = fbAvatarState.level;
@@ -353,8 +356,8 @@
                                 ArenaScore.DeriveAddress(fbAvatarAddress, fbArenaData.ChampionshipId, fbArenaData.Round);
                                 var fbArenaInformationAdr =
                                     ArenaInformation.DeriveAddress(fbAvatarAddress, fbArenaData.ChampionshipId, fbArenaData.Round);
-                                fbEv.OutputState.TryGetArenaInformation(fbArenaInformationAdr, out var fbCurrentArenaInformation);
-                                fbEv.OutputState.TryGetArenaScore(fbArenaScoreAdr, out var fbOutputArenaScore);
+                                fbOutputState.TryGetArenaInformation(fbArenaInformationAdr, out var fbCurrentArenaInformation);
+                                fbOutputState.TryGetArenaScore(fbArenaScoreAdr, out var fbOutputArenaScore);
                                 if (fbCurrentArenaInformation != null && fbOutputArenaScore != null)
                                 {
                                     _fbBarBulkFile.WriteLine(
@@ -387,11 +390,11 @@
                                 {
                                     fbAgents.Add(fbAvatarState.agentAddress.ToString());
 
-                                    if (fbEv.OutputState.TryGetStakeStateV2(fbAvatarState.agentAddress, out StakeStateV2 fbStakeState2))
+                                    if (fbOutputState.TryGetStakeStateV2(fbAvatarState.agentAddress, out StakeStateV2 fbStakeState2))
                                     {
                                         var fbStakeStateAddress = StakeStateV2.DeriveAddress(fbAvatarState.agentAddress);
-                                        var fbCurrency = fbEv.OutputState.GetGoldCurrency();
-                                        var fbStakedBalance = fbEv.OutputState.GetBalance(fbStakeStateAddress, fbCurrency);
+                                        var fbCurrency = fbOutputState.GetGoldCurrency();
+                                        var fbStakedBalance = fbOutputState.GetBalance(fbStakeStateAddress, fbCurrency);
                                         _fbUsBulkFile.WriteLine(
                                             $"{fbTip.Index};" +
                                             "V3;" +
@@ -403,11 +406,11 @@
                                         );
                                     }
 
-                                    if (fbEv.OutputState.TryGetStakeState(fbAvatarState.agentAddress, out StakeState fbStakeState))
+                                    if (fbOutputState.TryGetStakeState(fbAvatarState.agentAddress, out StakeState fbStakeState))
                                     {
                                         var fbStakeStateAddress = StakeState.DeriveAddress(fbAvatarState.agentAddress);
-                                        var fbCurrency = fbEv.OutputState.GetGoldCurrency();
-                                        var fbStakedBalance = fbEv.OutputState.GetBalance(fbStakeStateAddress, fbCurrency);
+                                        var fbCurrency = fbOutputState.GetGoldCurrency();
+                                        var fbStakedBalance = fbOutputState.GetBalance(fbStakeStateAddress, fbCurrency);
                                         _fbUsBulkFile.WriteLine(
                                             $"{fbTip.Index};" +
                                             "V2;" +
@@ -419,17 +422,17 @@
                                         );
                                     }
 
-                                    var fbAgentState = fbEv.OutputState.GetAgentState(fbAvatarState.agentAddress);
+                                    var fbAgentState = fbOutputState.GetAgentState(fbAvatarState.agentAddress);
                                     Address fbMonsterCollectionAddress = MonsterCollectionState.DeriveAddress(
                                         fbAvatarState.agentAddress,
                                         fbAgentState.MonsterCollectionRound
                                     );
-                                    if (fbEv.OutputState.TryGetState(fbMonsterCollectionAddress, out Dictionary fbStateDict))
+                                    if (fbOutputState.TryGetState(fbMonsterCollectionAddress, out Dictionary fbStateDict))
                                     {
                                         var fbMonsterCollectionStates = new MonsterCollectionState(fbStateDict);
-                                        var fbCurrency = fbEv.OutputState.GetGoldCurrency();
+                                        var fbCurrency = fbOutputState.GetGoldCurrency();
                                         FungibleAssetValue fbMonsterCollectionBalance =
-                                            fbEv.OutputState.GetBalance(fbMonsterCollectionAddress, fbCurrency);
+                                            fbOutputState.GetBalance(fbMonsterCollectionAddress, fbCurrency);
                                         _fbUsBulkFile.WriteLine(
                                             $"{fbTip.Index};" +
                                             "V1;" +
@@ -519,13 +522,13 @@
                         var avatarAddress = new Address(avatar);
                         try
                         {
-                            avatarState = ev.OutputState.GetAvatarStateV2(avatarAddress);
+                            avatarState = outputState.GetAvatarStateV2(avatarAddress);
                         }
                         catch (Exception ex)
                         {
                             Console.WriteLine(ex.Message);
                             Console.WriteLine(ex.StackTrace);
-                            avatarState = ev.OutputState.GetAvatarState(avatarAddress);
+                            avatarState = outputState.GetAvatarState(avatarAddress);
                         }
 
                         var avatarLevel = avatarState.level;
@@ -536,7 +539,7 @@
 #pragma warning disable CS0618
                             var runeCurrency = Currency.Legacy(runeType.Ticker, 0, minters: null);
 #pragma warning restore CS0618
-                            var outputRuneBalance = ev.OutputState.GetBalance(
+                            var outputRuneBalance = outputState.GetBalance(
                                 avatarAddress,
                                 runeCurrency);
                             if (Convert.ToDecimal(outputRuneBalance.GetQuantityString()) > 0)
@@ -556,8 +559,8 @@
                             ArenaScore.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
                         var arenaInformationAdr =
                             ArenaInformation.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
-                        ev.OutputState.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
-                        ev.OutputState.TryGetArenaScore(arenaScoreAdr, out var outputArenaScore);
+                        outputState.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
+                        outputState.TryGetArenaScore(arenaScoreAdr, out var outputArenaScore);
                         if (currentArenaInformation != null && outputArenaScore != null)
                         {
                             _barBulkFile.WriteLine(
@@ -587,14 +590,14 @@
                         }
 
                         Address orderReceiptAddress = OrderDigestListState.DeriveAddress(avatarAddress);
-                        var orderReceiptList = ev.OutputState.TryGetState(orderReceiptAddress, out Dictionary receiptDict)
+                        var orderReceiptList = outputState.TryGetState(orderReceiptAddress, out Dictionary receiptDict)
                             ? new OrderDigestListState(receiptDict)
                             : new OrderDigestListState(orderReceiptAddress);
                         foreach (var orderReceipt in orderReceiptList.OrderDigestList)
                         {
                             if (orderReceipt.ExpiredBlockIndex >= tip.Index)
                             {
-                                var state = ev.OutputState.GetState(
+                                var state = outputState.GetState(
                                     Addresses.GetItemAddress(orderReceipt.TradableId));
                                 ITradableItem orderItem =
                                     (ITradableItem)ItemFactory.Deserialize((Dictionary)state);
@@ -723,7 +726,7 @@
                         var userEquipments = avatarState.inventory.Equipments;
                         var userCostumes = avatarState.inventory.Costumes;
                         var userMaterials = avatarState.inventory.Materials;
-                        var materialItemSheet = ev.OutputState.GetSheet<MaterialItemSheet>();
+                        var materialItemSheet = outputState.GetSheet<MaterialItemSheet>();
                         var hourglassRow = materialItemSheet
                             .First(pair => pair.Value.ItemSubType == ItemSubType.Hourglass)
                             .Value;
@@ -785,8 +788,8 @@
                         if (!agents.Contains(avatarState.agentAddress.ToString()))
                         {
                             agents.Add(avatarState.agentAddress.ToString());
-                            Currency ncgCurrency = ev.OutputState.GetGoldCurrency();
-                            var ncgBalance = ev.OutputState.GetBalance(
+                            Currency ncgCurrency = outputState.GetGoldCurrency();
+                            var ncgBalance = outputState.GetBalance(
                                 avatarState.agentAddress,
                                 ncgCurrency);
                             _uncgBulkFile.WriteLine(
@@ -795,7 +798,7 @@
                                 $"{Convert.ToDecimal(ncgBalance.GetQuantityString())}"
                             );
                             Currency crystalCurrency = CrystalCalculator.CRYSTAL;
-                            var crystalBalance = ev.OutputState.GetBalance(
+                            var crystalBalance = outputState.GetBalance(
                                 avatarState.agentAddress,
                                 crystalCurrency);
                             _ucyBulkFile.WriteLine(
@@ -803,16 +806,16 @@
                                 $"{avatarState.agentAddress.ToString()};" +
                                 $"{Convert.ToDecimal(crystalBalance.GetQuantityString())}"
                             );
-                            var agentState = ev.OutputState.GetAgentState(avatarState.agentAddress);
+                            var agentState = outputState.GetAgentState(avatarState.agentAddress);
                             Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
                                 avatarState.agentAddress,
                                 agentState.MonsterCollectionRound
                             );
-                            if (ev.OutputState.TryGetState(monsterCollectionAddress, out Dictionary stateDict))
+                            if (outputState.TryGetState(monsterCollectionAddress, out Dictionary stateDict))
                             {
                                 var mcStates = new MonsterCollectionState(stateDict);
-                                var currency = ev.OutputState.GetGoldCurrency();
-                                FungibleAssetValue mcBalance = ev.OutputState.GetBalance(monsterCollectionAddress, currency);
+                                var currency = outputState.GetGoldCurrency();
+                                FungibleAssetValue mcBalance = outputState.GetBalance(monsterCollectionAddress, currency);
                                 _umcBulkFile.WriteLine(
                                     $"{tip.Index};" +
                                     $"{avatarState.agentAddress.ToString()};" +
@@ -825,11 +828,11 @@
                                 );
                             }
 
-                            if (ev.OutputState.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
+                            if (outputState.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
                             {
                                 var stakeStateAddress = StakeState.DeriveAddress(avatarState.agentAddress);
-                                var currency = ev.OutputState.GetGoldCurrency();
-                                var stakedBalance = ev.OutputState.GetBalance(stakeStateAddress, currency);
+                                var currency = outputState.GetGoldCurrency();
+                                var stakedBalance = outputState.GetBalance(stakeStateAddress, currency);
                                 _usBulkFile.WriteLine(
                                     $"{tip.Index};" +
                                     $"{avatarState.agentAddress.ToString()};" +
@@ -841,11 +844,11 @@
                             }
                             else
                             {
-                                if (ev.OutputState.TryGetStakeStateV2(avatarState.agentAddress, out StakeStateV2 stakeState2))
+                                if (outputState.TryGetStakeStateV2(avatarState.agentAddress, out StakeStateV2 stakeState2))
                                 {
                                     var stakeStateAddress = StakeStateV2.DeriveAddress(avatarState.agentAddress);
-                                    var currency = ev.OutputState.GetGoldCurrency();
-                                    var stakedBalance = ev.OutputState.GetBalance(stakeStateAddress, currency);
+                                    var currency = outputState.GetGoldCurrency();
+                                    var stakedBalance = outputState.GetBalance(stakeStateAddress, currency);
                                     _usBulkFile.WriteLine(
                                         $"{tip.Index};" +
                                         $"{avatarState.agentAddress.ToString()};" +
