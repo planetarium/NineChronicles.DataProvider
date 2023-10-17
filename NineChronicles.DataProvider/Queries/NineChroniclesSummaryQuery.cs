@@ -288,36 +288,18 @@
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
 
                     // Use database block tip because sync db & store delay.
+                    var (sheet, runeSheet, rankingRewardSheet) = GetWorldBossSheets(Store, stateContext, raidId);
                     var blockIndex = Store.GetTip();
-                    var worldBossListSheetAddress = Addresses.GetSheetAddress<WorldBossListSheet>();
-                    var runeSheetAddress = Addresses.GetSheetAddress<RuneSheet>();
-                    var rewardSheetAddress = Addresses.GetSheetAddress<WorldBossRankingRewardSheet>();
-                    var values = stateContext.GetStates(new[] { worldBossListSheetAddress, runeSheetAddress, rewardSheetAddress });
-                    if (values[0] is Text wbs && values[1] is Text rs && values[2] is Text wrs)
+                    var bossRow = sheet.OrderedList!.First(r => r.Id == raidId);
+                    if (bossRow.EndedBlockIndex <= blockIndex)
                     {
-                        var sheet = new WorldBossListSheet();
-                        sheet.Set(wbs);
-                        var runeSheet = new RuneSheet();
-                        runeSheet.Set(rs);
-                        var rankingRewardSheet = new WorldBossRankingRewardSheet();
-                        rankingRewardSheet.Set(wrs);
-                        var bossRow = sheet.OrderedList!.First(r => r.Id == raidId);
-                        if (bossRow.EndedBlockIndex <= blockIndex && Store.MigrationExists(raidId))
-                        {
-                            // Check ranking.
-                            var raiders = Store.GetWorldBossRanking(raidId, null, null);
-                            var raider = raiders.First(r => r.Address == avatarAddress.ToHex());
-                            var ranking = raider.Ranking;
+                        // Check ranking.
+                        var raiders = Store.GetWorldBossRanking(raidId, null, null);
+                        var totalCount = raiders.Count;
+                        var raider = raiders.First(r => r.Address == avatarAddress.ToHex());
 
-                            // backward compatibility for season 1. because season 1 reward already distributed.
-                            var rate = raidId == 1
-                                ? ranking / raiders.Count * 100
-                                : ranking * 100 / raiders.Count;
-
-                            // calculate rewards.
-                            var row = FindRow(rankingRewardSheet, bossRow.BossId, ranking, rate);
-                            return (raider, row.GetRewards(runeSheet));
-                        }
+                        // calculate rewards.
+                        return GetWorldBossRankingReward(raidId, totalCount, raider, rankingRewardSheet, bossRow, runeSheet);
                     }
 
                     throw new ExecutionError("can't receive");
@@ -351,40 +333,21 @@
 
                     // Check calculate state end.
                     // Use database block tip because sync db & store delay.
+                    var (sheet, runeSheet, rankingRewardSheet) = GetWorldBossSheets(Store, stateContext, raidId);
                     var blockIndex = Store.GetTip();
-                    var worldBossListSheetAddress = Addresses.GetSheetAddress<WorldBossListSheet>();
-                    var runeSheetAddress = Addresses.GetSheetAddress<RuneSheet>();
-                    var rewardSheetAddress = Addresses.GetSheetAddress<WorldBossRankingRewardSheet>();
-                    var values = stateContext.GetStates(new[] { worldBossListSheetAddress, runeSheetAddress, rewardSheetAddress });
-                    if (values[0] is Text wbs && values[1] is Text rs && values[2] is Text wrs)
+                    var bossRow = sheet.OrderedList!.First(r => r.Id == raidId);
+                    if (bossRow.EndedBlockIndex <= blockIndex)
                     {
-                        var sheet = new WorldBossListSheet();
-                        sheet.Set(wbs);
-                        var runeSheet = new RuneSheet();
-                        runeSheet.Set(rs);
-                        var rankingRewardSheet = new WorldBossRankingRewardSheet();
-                        rankingRewardSheet.Set(wrs);
-                        var bossRow = sheet.OrderedList!.First(r => r.Id == raidId);
-                        if (bossRow.EndedBlockIndex <= blockIndex)
+                        // Check ranking.
+                        var raiders = Store.GetWorldBossRanking(raidId, offset, limit);
+                        int totalCount = Store.GetTotalRaiders(raidId);
+                        var result = new List<(WorldBossRankingModel, List<FungibleAssetValue>)>();
+                        foreach (var raider in raiders)
                         {
-                            // Check ranking.
-                            var raiders = Store.GetWorldBossRanking(raidId, offset, limit);
-                            int totalCount = Store.GetTotalRaiders(raidId);
-                            var result = new List<(WorldBossRankingModel, List<FungibleAssetValue>)>();
-                            foreach (var raider in raiders)
-                            {
-                                var ranking = raider.Ranking;
-
-                                // backward compatibility for season 1. because season 1 reward already distributed.
-                                var rate = raidId == 1
-                                    ? ranking / totalCount * 100
-                                    : ranking * 100 / totalCount;
-                                var row = FindRow(rankingRewardSheet, bossRow.BossId, ranking, rate);
-                                result.Add((raider, row.GetRewards(runeSheet)));
-                            }
-
-                            return result;
+                            result.Add(GetWorldBossRankingReward(raidId, totalCount, raider, rankingRewardSheet, bossRow, runeSheet));
                         }
+
+                        return result;
                     }
 
                     throw new ExecutionError("can't receive");
@@ -409,6 +372,46 @@
 
             return (sheet.OrderedList?.LastOrDefault(r => r.BossId == bossId && r.RankingMin <= ranking && ranking <= r.RankingMax)
                     ?? sheet.OrderedList?.LastOrDefault(r => r.BossId == bossId && r.RateMin <= rate && rate <= r.RateMax))!;
+        }
+
+        private static (WorldBossListSheet, RuneSheet, WorldBossRankingRewardSheet) GetWorldBossSheets(MySqlStore store, StateContext stateContext, int raidId)
+        {
+            if (store.MigrationExists(raidId))
+            {
+                var worldBossListSheetAddress = Addresses.GetSheetAddress<WorldBossListSheet>();
+                var runeSheetAddress = Addresses.GetSheetAddress<RuneSheet>();
+                var rewardSheetAddress = Addresses.GetSheetAddress<WorldBossRankingRewardSheet>();
+                var values = stateContext.GetStates(new[] { worldBossListSheetAddress, runeSheetAddress, rewardSheetAddress });
+                if (values[0] is Text wbs && values[1] is Text rs && values[2] is Text wrs)
+                {
+                    var sheet = new WorldBossListSheet();
+                    sheet.Set(wbs);
+                    var runeSheet = new RuneSheet();
+                    runeSheet.Set(rs);
+                    var rankingRewardSheet = new WorldBossRankingRewardSheet();
+                    rankingRewardSheet.Set(wrs);
+                    return (sheet, runeSheet, rankingRewardSheet);
+                }
+            }
+
+            throw new ExecutionError("can't receive");
+        }
+
+        private static int GetRankingRate(int raidId, int ranking, int totalCount)
+        {
+            // backward compatibility for season 1. because season 1 reward already distributed.
+            var rate = raidId == 1
+                ? ranking / totalCount * 100
+                : ranking * 100 / totalCount;
+            return rate;
+        }
+
+        private static (WorldBossRankingModel, List<FungibleAssetValue>) GetWorldBossRankingReward(int raidId, int totalCount, WorldBossRankingModel raider, WorldBossRankingRewardSheet rankingRewardSheet, WorldBossListSheet.Row bossRow, RuneSheet runeSheet)
+        {
+            var ranking = raider.Ranking;
+            var rate = GetRankingRate(raidId, ranking, totalCount);
+            var row = FindRow(rankingRewardSheet, bossRow.BossId, ranking, rate);
+            return (raider, row.GetRewards(runeSheet));
         }
     }
 }
