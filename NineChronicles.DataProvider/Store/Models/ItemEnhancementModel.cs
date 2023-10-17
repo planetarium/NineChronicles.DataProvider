@@ -1,6 +1,5 @@
 namespace NineChronicles.DataProvider.Store.Models
 {
-    using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
 
     public class ItemEnhancementModel
@@ -27,5 +26,11 @@ namespace NineChronicles.DataProvider.Store.Models
         public decimal BurntNCG { get; set; }
 
         public long BlockIndex { get; set; }
+
+        public int? SheetId { get; set; }
+
+        public int? Level { get; set; }
+
+        public long? Exp { get; set; }
     }
 }
