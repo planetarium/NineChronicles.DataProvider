@@ -33,7 +33,10 @@
                 ncgCurrency);
             var burntNCG = prevNCGBalance - outputNCGBalance;
 
-            var itemenhancementModel = new ItemEnhancementModel()
+            var equipment = outputStates.GetAvatarState(avatarAddress).inventory.Equipments
+                .First(e => e.ItemId == itemId);
+
+            var itemEnhancementModel = new ItemEnhancementModel()
             {
                 Id = actionId.ToString(),
                 AgentAddress = signer.ToString(),
@@ -44,9 +47,12 @@
                 SlotIndex = slotIndex,
                 BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
                 BlockIndex = blockIndex,
+                SheetId = equipment.Id,
+                Level = equipment.level,
+                Exp = equipment.Exp,
             };
 
-            return itemenhancementModel;
+            return itemEnhancementModel;
         }
     }
 }
