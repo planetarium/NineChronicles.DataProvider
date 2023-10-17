@@ -4477,10 +4477,13 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 int raidId = 0;
                                 bool found = false;
+                                var accountDiff = AccountDiff.Create(inputState, outputState);
+                                var updatedAddresses = accountDiff.StateDiffs.Keys
+                                    .Union(accountDiff.FungibleAssetValueDiffs.Select(kv => kv.Key.Item1))
+                                    .ToHashSet();
                                 for (int i = 0; i < 99; i++)
                                 {
-                                    if (outputState.Delta.UpdatedAddresses.Contains(
-                                            Addresses.GetRaiderAddress(raid.AvatarAddress, i)))
+                                    if (updatedAddresses.Contains(Addresses.GetRaiderAddress(raid.AvatarAddress, i)))
                                     {
                                         raidId = i;
                                         found = true;
@@ -4545,10 +4548,13 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 int raidId = 0;
                                 bool found = false;
+                                var accountDiff = AccountDiff.Create(inputState, outputState);
+                                var updatedAddresses = accountDiff.StateDiffs.Keys
+                                    .Union(accountDiff.FungibleAssetValueDiffs.Select(kv => kv.Key.Item1))
+                                    .ToHashSet();
                                 for (int i = 0; i < 99; i++)
                                 {
-                                    if (outputState.Delta.UpdatedAddresses.Contains(
-                                            Addresses.GetRaiderAddress(raid4.AvatarAddress, i)))
+                                    if (updatedAddresses.Contains(Addresses.GetRaiderAddress(raid4.AvatarAddress, i)))
                                     {
                                         raidId = i;
                                         found = true;
@@ -4613,10 +4619,13 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 int raidId = 0;
                                 bool found = false;
+                                var accountDiff = AccountDiff.Create(inputState, outputState);
+                                var updatedAddresses = accountDiff.StateDiffs.Keys
+                                    .Union(accountDiff.FungibleAssetValueDiffs.Select(kv => kv.Key.Item1))
+                                    .ToHashSet();
                                 for (int i = 0; i < 99; i++)
                                 {
-                                    if (outputState.Delta.UpdatedAddresses.Contains(
-                                            Addresses.GetRaiderAddress(raid3.AvatarAddress, i)))
+                                    if (updatedAddresses.Contains(Addresses.GetRaiderAddress(raid3.AvatarAddress, i)))
                                     {
                                         raidId = i;
                                         found = true;
@@ -4681,10 +4690,13 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 int raidId = 0;
                                 bool found = false;
+                                var accountDiff = AccountDiff.Create(inputState, outputState);
+                                var updatedAddresses = accountDiff.StateDiffs.Keys
+                                    .Union(accountDiff.FungibleAssetValueDiffs.Select(kv => kv.Key.Item1))
+                                    .ToHashSet();
                                 for (int i = 0; i < 99; i++)
                                 {
-                                    if (outputState.Delta.UpdatedAddresses.Contains(
-                                            Addresses.GetRaiderAddress(raid2.AvatarAddress, i)))
+                                    if (updatedAddresses.Contains(Addresses.GetRaiderAddress(raid2.AvatarAddress, i)))
                                     {
                                         raidId = i;
                                         found = true;
@@ -4749,10 +4761,13 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 int raidId = 0;
                                 bool found = false;
+                                var accountDiff = AccountDiff.Create(inputState, outputState);
+                                var updatedAddresses = accountDiff.StateDiffs.Keys
+                                    .Union(accountDiff.FungibleAssetValueDiffs.Select(kv => kv.Key.Item1))
+                                    .ToHashSet();
                                 for (int i = 0; i < 99; i++)
                                 {
-                                    if (outputState.Delta.UpdatedAddresses.Contains(
-                                            Addresses.GetRaiderAddress(raid1.AvatarAddress, i)))
+                                    if (updatedAddresses.Contains(Addresses.GetRaiderAddress(raid1.AvatarAddress, i)))
                                     {
                                         raidId = i;
                                         found = true;
