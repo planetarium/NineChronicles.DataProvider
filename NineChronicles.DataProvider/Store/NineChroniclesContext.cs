@@ -42,6 +42,21 @@ namespace NineChronicles.DataProvider.Store
         // Table for ranking avatars' equipment combat points
         public DbSet<EquipmentRankingModel>? EquipmentRanking { get; set; }
 
+        // Table for ranking avatars' armor combat points
+        public DbSet<EquipmentRankingModel>? EquipmentRankingArmor { get; set; }
+
+        // Table for ranking avatars' belt combat points
+        public DbSet<EquipmentRankingModel>? EquipmentRankingBelt { get; set; }
+
+        // Table for ranking avatars' necklace combat points
+        public DbSet<EquipmentRankingModel>? EquipmentRankingNecklace { get; set; }
+
+        // Table for ranking avatars' ring combat points
+        public DbSet<EquipmentRankingModel>? EquipmentRankingRing { get; set; }
+
+        // Table for ranking avatars' weapon combat points
+        public DbSet<EquipmentRankingModel>? EquipmentRankingWeapon { get; set; }
+
         // Table for ranking avatars' total combat points
         public DbSet<AbilityRankingModel>? AbilityRanking { get; set; }
 
