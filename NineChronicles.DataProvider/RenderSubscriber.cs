@@ -9,24 +9,21 @@ namespace NineChronicles.DataProvider
     using System.Threading.Tasks;
     using Bencodex.Types;
     using Lib9c.Model.Order;
-    using Lib9c.Renderer;
-    using Libplanet;
-    using Libplanet.Assets;
+    using Lib9c.Renderers;
+    using Libplanet.Crypto;
+    using Libplanet.Types.Blocks;
+    using Libplanet.Types.Tx;
     using Microsoft.Extensions.Hosting;
     using Nekoyume;
     using Nekoyume.Action;
-    using Nekoyume.Arena;
-    using Nekoyume.Battle;
     using Nekoyume.Extensions;
     using Nekoyume.Helper;
-    using Nekoyume.Model.Arena;
     using Nekoyume.Model.EnumType;
-    using Nekoyume.Model.Event;
     using Nekoyume.Model.Item;
+    using Nekoyume.Model.Market;
     using Nekoyume.Model.State;
     using Nekoyume.TableData;
-    using Nekoyume.TableData.Crystal;
-    using Nekoyume.TableData.Event;
+    using NineChronicles.DataProvider.DataRendering;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless;
@@ -35,7 +32,7 @@ namespace NineChronicles.DataProvider
 
     public class RenderSubscriber : BackgroundService
     {
-        private const int DefaultInsertInterval = 30;
+        private const int DefaultInsertInterval = 1;
         private readonly int _blockInsertInterval;
         private readonly string _blockIndexFilePath;
         private readonly BlockRenderer _blockRenderer;
@@ -53,6 +50,7 @@ namespace NineChronicles.DataProvider
         private readonly List<ShopHistoryCostumeModel> _buyShopCostumesList = new List<ShopHistoryCostumeModel>();
         private readonly List<ShopHistoryMaterialModel> _buyShopMaterialsList = new List<ShopHistoryMaterialModel>();
         private readonly List<ShopHistoryConsumableModel> _buyShopConsumablesList = new List<ShopHistoryConsumableModel>();
+        private readonly List<ShopHistoryFungibleAssetValueModel> _buyShopFavList = new List<ShopHistoryFungibleAssetValueModel>();
         private readonly List<StakeModel> _stakeList = new List<StakeModel>();
         private readonly List<ClaimStakeRewardModel> _claimStakeList = new List<ClaimStakeRewardModel>();
         private readonly List<MigrateMonsterCollectionModel> _mmcList = new List<MigrateMonsterCollectionModel>();
@@ -70,10 +68,24 @@ namespace NineChronicles.DataProvider
         private readonly List<HackAndSlashSweepModel> _hasSweepList = new List<HackAndSlashSweepModel>();
         private readonly List<EventDungeonBattleModel> _eventDungeonBattleList = new List<EventDungeonBattleModel>();
         private readonly List<EventConsumableItemCraftsModel> _eventConsumableItemCraftsList = new List<EventConsumableItemCraftsModel>();
+        private readonly List<RaiderModel> _raiderList = new List<RaiderModel>();
+        private readonly List<BattleGrandFinaleModel> _battleGrandFinaleList = new List<BattleGrandFinaleModel>();
+        private readonly List<EventMaterialItemCraftsModel> _eventMaterialItemCraftsList = new List<EventMaterialItemCraftsModel>();
+        private readonly List<RuneEnhancementModel> _runeEnhancementList = new List<RuneEnhancementModel>();
+        private readonly List<RunesAcquiredModel> _runesAcquiredList = new List<RunesAcquiredModel>();
+        private readonly List<UnlockRuneSlotModel> _unlockRuneSlotList = new List<UnlockRuneSlotModel>();
+        private readonly List<RapidCombinationModel> _rapidCombinationList = new List<RapidCombinationModel>();
+        private readonly List<PetEnhancementModel> _petEnhancementList = new List<PetEnhancementModel>();
+        private readonly List<TransferAssetModel> _transferAssetList = new List<TransferAssetModel>();
+        private readonly List<RequestPledgeModel> _requestPledgeList = new List<RequestPledgeModel>();
+        private readonly List<AuraSummonModel> _auraSummonList = new List<AuraSummonModel>();
+        private readonly List<AuraSummonFailModel> _auraSummonFailList = new List<AuraSummonFailModel>();
         private readonly List<string> _agents;
+        private readonly bool _render;
         private int _renderedBlockCount;
         private DateTimeOffset _blockTimeOffset;
         private Address _miner;
+        private string? _blockHash;
 
         public RenderSubscriber(
             NineChroniclesNodeService nodeService,
@@ -87,6 +99,7 @@ namespace NineChronicles.DataProvider
             MySqlStore = mySqlStore;
             _renderedBlockCount = 0;
             _agents = new List<string>();
+            _render = Convert.ToBoolean(Environment.GetEnvironmentVariable("NC_Render") ?? "true");
             string dataPath = Environment.GetEnvironmentVariable("NC_BlockIndexFilePath")
                               ?? Path.GetTempPath();
             if (!Directory.Exists(dataPath))
@@ -112,67 +125,1339 @@ namespace NineChronicles.DataProvider
 
         internal MySqlStore MySqlStore { get; }
 
+        public static string GetSignerAndOtherAddressesHex(Address signer, params Address[] addresses)
+        {
+            StringBuilder sb = new StringBuilder($"[{signer.ToHex()}");
+
+            foreach (Address address in addresses)
+            {
+                sb.Append($", {address.ToHex()}");
+            }
+
+            sb.Append("]");
+            return sb.ToString();
+        }
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _blockRenderer.BlockSubject.Subscribe(b =>
             {
+                if (!_render)
+                {
+                    return;
+                }
+
+                if (_renderedBlockCount == _blockInsertInterval)
+                {
+                    StoreRenderedData(b);
+                }
+
                 var block = b.NewTip;
                 _blockTimeOffset = block.Timestamp.UtcDateTime;
+                _blockHash = block.Hash.ToString();
                 _miner = block.Miner;
-                _blockList.Add(new BlockModel()
-                {
-                    Index = block.Index,
-                    Hash = block.Hash.ToString(),
-                    Miner = block.Miner.ToString(),
-                    Difficulty = block.Difficulty,
-                    Nonce = block.Nonce.ToString(),
-                    PreviousHash = block.PreviousHash.ToString(),
-                    ProtocolVersion = block.ProtocolVersion,
-                    PublicKey = block.PublicKey!.ToString(),
-                    StateRootHash = block.StateRootHash.ToString(),
-                    TotalDifficulty = (long)block.TotalDifficulty,
-                    TxCount = block.Transactions.Count(),
-                    TxHash = block.TxHash.ToString(),
-                    TimeStamp = block.Timestamp.UtcDateTime,
-                });
+                _blockList.Add(BlockData.GetBlockInfo(block));
 
                 foreach (var transaction in block.Transactions)
                 {
-                    var actionType = transaction.CustomActions!.Select(action => action.ToString()!.Split('.')
-                        .LastOrDefault()?.Replace(">", string.Empty));
-                    _transactionList.Add(new TransactionModel()
-                    {
-                        BlockIndex = block.Index,
-                        BlockHash = block.Hash.ToString(),
-                        TxId = transaction.Id.ToString(),
-                        Signer = transaction.Signer.ToString(),
-                        ActionType = actionType.FirstOrDefault(),
-                        Nonce = transaction.Nonce,
-                        PublicKey = transaction.PublicKey.ToString(),
-                        UpdatedAddressesCount = transaction.UpdatedAddresses.Count(),
-                        Date = transaction.Timestamp.UtcDateTime,
-                        TimeStamp = transaction.Timestamp.UtcDateTime,
-                    });
+                    _transactionList.Add(TransactionData.GetTransactionInfo(block, transaction));
                 }
 
                 _renderedBlockCount++;
                 Log.Debug($"Rendered Block Count: #{_renderedBlockCount} at Block #{block.Index}");
+            });
 
-                if (_renderedBlockCount == _blockInsertInterval)
+            _actionRenderer.EveryRender<ActionBase>()
+                .Subscribe(
+                    ev =>
+                    {
+                        try
+                        {
+                            if (ev.Exception != null)
+                            {
+                                return;
+                            }
+
+                            ProcessAgentAvatarData(ev);
+
+                            if (ev.Action is ITransferAsset transferAsset)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                var actionString = ev.TxId.ToString();
+                                var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
+                                var id = new Guid(actionByteArray);
+                                _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
+                                    id,
+                                    (TxId)ev.TxId!,
+                                    ev.BlockIndex,
+                                    _blockHash!,
+                                    transferAsset.Sender,
+                                    transferAsset.Recipient,
+                                    transferAsset.Amount.Currency.Ticker,
+                                    transferAsset.Amount,
+                                    _blockTimeOffset));
+
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (ev.Action is IClaimStakeReward claimStakeReward)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                var plainValue = (Dictionary)claimStakeReward.PlainValue;
+                                var avatarAddress = ((Dictionary)plainValue["values"])[AvatarAddressKey].ToAddress();
+                                var id = ((GameAction)claimStakeReward).Id;
+#pragma warning disable CS0618
+                                var runeCurrency = RuneHelper.StakeRune;
+#pragma warning restore CS0618
+                                var prevRuneBalance = ev.PreviousState.GetBalance(
+                                    avatarAddress,
+                                    runeCurrency);
+                                var outputRuneBalance = ev.OutputState.GetBalance(
+                                    avatarAddress,
+                                    runeCurrency);
+                                var acquiredRune = outputRuneBalance - prevRuneBalance;
+                                var actionType = claimStakeReward.ToString()!.Split('.').LastOrDefault()?.Replace(">", string.Empty);
+                                _runesAcquiredList.Add(RunesAcquiredData.GetRunesAcquiredInfo(
+                                    id,
+                                    ev.Signer,
+                                    avatarAddress,
+                                    ev.BlockIndex,
+                                    actionType!,
+                                    runeCurrency.Ticker,
+                                    acquiredRune,
+                                    _blockTimeOffset));
+                                _claimStakeList.Add(ClaimStakeRewardData.GetClaimStakeRewardInfo(claimStakeReward, ev.PreviousState, ev.OutputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
+                                var end = DateTimeOffset.UtcNow;
+                                Log.Debug("Stored ClaimStakeReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error("RenderSubscriber: {message}", ex.Message);
+                        }
+                    });
+
+            _actionRenderer.EveryRender<EventDungeonBattle>()
+                .Subscribe(ev =>
                 {
-                    var start = DateTimeOffset.Now;
-                    Log.Debug("Storing Data");
-                    MySqlStore.StoreAgentList(_agentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreAvatarList(_avatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreHackAndSlashList(_hasList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreCombinationConsumableList(_ccList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreCombinationEquipmentList(_ceList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreItemEnhancementList(_ieList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreShopHistoryEquipmentList(_buyShopEquipmentsList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreShopHistoryCostumeList(_buyShopCostumesList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreShopHistoryMaterialList(_buyShopMaterialsList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.StoreShopHistoryConsumableList(_buyShopConsumablesList.GroupBy(i => i.OrderId).Select(i => i.FirstOrDefault()).ToList());
-                    MySqlStore.ProcessEquipmentList(_eqList.GroupBy(i => i.ItemId).Select(i => i.FirstOrDefault()).ToList());
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } eventDungeonBattle)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            var actionType = eventDungeonBattle.ToString()!.Split('.').LastOrDefault()
+                                ?.Replace(">", string.Empty);
+                            _eventDungeonBattleList.Add(EventDungeonBattleData.GetEventDungeonBattleInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                eventDungeonBattle.AvatarAddress,
+                                eventDungeonBattle.EventScheduleId,
+                                eventDungeonBattle.EventDungeonId,
+                                eventDungeonBattle.EventDungeonStageId,
+                                eventDungeonBattle.Foods.Count,
+                                eventDungeonBattle.Costumes.Count,
+                                eventDungeonBattle.Equipments.Count,
+                                eventDungeonBattle.Id,
+                                actionType!,
+                                ev.BlockIndex,
+                                _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored EventDungeonBattle action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<EventConsumableItemCrafts>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } eventConsumableItemCrafts)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _eventConsumableItemCraftsList.Add(EventConsumableItemCraftsData.GetEventConsumableItemCraftsInfo(eventConsumableItemCrafts, ev.PreviousState, ev.OutputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored EventConsumableItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<RequestPledge>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } requestPledge)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _requestPledgeList.Add(RequestPledgeData.GetRequestPledgeInfo(ev.TxId.ToString()!, ev.BlockIndex, _blockHash!, ev.Signer, requestPledge.AgentAddress, requestPledge.RefillMead, _blockTimeOffset));
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored RequestPledge action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<HackAndSlash>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } has)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _avatarList.Add(AvatarData.GetAvatarInfo(ev.OutputState, ev.Signer, has.AvatarAddress, has.RuneInfos, _blockTimeOffset));
+                            _hasList.Add(HackAndSlashData.GetHackAndSlashInfo(ev.PreviousState, ev.OutputState, ev.Signer, has.AvatarAddress, has.StageId, has.Id, ev.BlockIndex, _blockTimeOffset));
+                            if (has.StageBuffId.HasValue)
+                            {
+                                _hasWithRandomBuffList.Add(HasWithRandomBuffData.GetHasWithRandomBuffInfo(ev.PreviousState, ev.OutputState, ev.Signer, has.AvatarAddress, has.StageId, has.StageBuffId, has.Id, ev.BlockIndex, _blockTimeOffset));
+                            }
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<HackAndSlashSweep>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } hasSweep)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _avatarList.Add(AvatarData.GetAvatarInfo(ev.OutputState, ev.Signer, hasSweep.avatarAddress, hasSweep.runeInfos, _blockTimeOffset));
+                            _hasSweepList.Add(HackAndSlashSweepData.GetHackAndSlashSweepInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                hasSweep.avatarAddress,
+                                hasSweep.stageId,
+                                hasSweep.worldId,
+                                hasSweep.apStoneCount,
+                                hasSweep.actionPoint,
+                                hasSweep.costumes.Count,
+                                hasSweep.equipments.Count,
+                                hasSweep.Id,
+                                ev.BlockIndex,
+                                _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored HackAndSlashSweep action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<CombinationConsumable>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } combinationConsumable)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _ccList.Add(CombinationConsumableData.GetCombinationConsumableInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                combinationConsumable.avatarAddress,
+                                combinationConsumable.recipeId,
+                                combinationConsumable.slotIndex,
+                                combinationConsumable.Id,
+                                ev.BlockIndex));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored CombinationConsumable action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<CombinationEquipment>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } combinationEquipment)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _ceList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                combinationEquipment.avatarAddress,
+                                combinationEquipment.recipeId,
+                                combinationEquipment.slotIndex,
+                                combinationEquipment.subRecipeId,
+                                combinationEquipment.Id,
+                                ev.BlockIndex));
+                            if (combinationEquipment.payByCrystal)
+                            {
+                                var replaceCombinationEquipmentMaterialList = ReplaceCombinationEquipmentMaterialData
+                                    .GetReplaceCombinationEquipmentMaterialInfo(
+                                        ev.PreviousState,
+                                        ev.OutputState,
+                                        ev.Signer,
+                                        combinationEquipment.avatarAddress,
+                                        combinationEquipment.recipeId,
+                                        combinationEquipment.subRecipeId,
+                                        combinationEquipment.payByCrystal,
+                                        combinationEquipment.Id,
+                                        ev.BlockIndex,
+                                        _blockTimeOffset);
+                                foreach (var replaceCombinationEquipmentMaterial in replaceCombinationEquipmentMaterialList)
+                                {
+                                    _replaceCombinationEquipmentMaterialList.Add(replaceCombinationEquipmentMaterial);
+                                }
+                            }
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug(
+                                "Stored CombinationEquipment action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
+                            start = DateTimeOffset.UtcNow;
+
+                            var slotState = ev.OutputState.GetCombinationSlotState(
+                                combinationEquipment.avatarAddress,
+                                combinationEquipment.slotIndex);
+
+                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
+                            {
+                                _eqList.Add(EquipmentData.GetEquipmentInfo(
+                                    ev.Signer,
+                                    combinationEquipment.avatarAddress,
+                                    (Equipment)slotState.Result.itemUsable));
+                            }
+
+                            end = DateTimeOffset.UtcNow;
+                            Log.Debug(
+                                "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
+                                combinationEquipment.avatarAddress,
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<ItemEnhancement>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } itemEnhancement)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
+                                    ev.PreviousState,
+                                    ev.OutputState,
+                                    ev.Signer,
+                                    itemEnhancement.avatarAddress,
+                                    Guid.Empty,
+                                    itemEnhancement.materialIds,
+                                    itemEnhancement.itemId,
+                                    itemEnhancement.Id,
+                                    ev.BlockIndex,
+                                    _blockTimeOffset) is { } itemEnhancementFailModel)
+                            {
+                                _itemEnhancementFailList.Add(itemEnhancementFailModel);
+                            }
+
+                            _ieList.Add(ItemEnhancementData.GetItemEnhancementInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                itemEnhancement.avatarAddress,
+                                itemEnhancement.slotIndex,
+                                Guid.Empty,
+                                itemEnhancement.materialIds,
+                                itemEnhancement.itemId,
+                                itemEnhancement.Id,
+                                ev.BlockIndex));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            start = DateTimeOffset.UtcNow;
+
+                            var slotState = ev.OutputState.GetCombinationSlotState(
+                                itemEnhancement.avatarAddress,
+                                itemEnhancement.slotIndex);
+
+                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
+                            {
+                                _eqList.Add(EquipmentData.GetEquipmentInfo(
+                                    ev.Signer,
+                                    itemEnhancement.avatarAddress,
+                                    (Equipment)slotState.Result.itemUsable));
+                            }
+
+                            end = DateTimeOffset.UtcNow;
+                            Log.Debug(
+                                "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
+                                itemEnhancement.avatarAddress,
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<Buy>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } buy)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            AvatarState avatarState = ev.OutputState.GetAvatarStateV2(buy.buyerAvatarAddress);
+                            var buyerInventory = avatarState.inventory;
+                            foreach (var purchaseInfo in buy.purchaseInfos)
+                            {
+                                var state = ev.OutputState.GetState(
+                                Addresses.GetItemAddress(purchaseInfo.TradableId));
+                                ITradableItem orderItem =
+                                    (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
+                                Order order =
+                                    OrderFactory.Deserialize(
+                                        (Dictionary)ev.OutputState.GetState(
+                                            Order.DeriveAddress(purchaseInfo.OrderId))!);
+                                int itemCount = order is FungibleOrder fungibleOrder
+                                    ? fungibleOrder.ItemCount
+                                    : 1;
+                                AddShopHistoryItem(orderItem, buy.buyerAvatarAddress, purchaseInfo, itemCount, ev.BlockIndex);
+
+                                if (purchaseInfo.ItemSubType == ItemSubType.Armor
+                                    || purchaseInfo.ItemSubType == ItemSubType.Belt
+                                    || purchaseInfo.ItemSubType == ItemSubType.Necklace
+                                    || purchaseInfo.ItemSubType == ItemSubType.Ring
+                                    || purchaseInfo.ItemSubType == ItemSubType.Weapon)
+                                {
+                                    var sellerState = ev.OutputState.GetAvatarStateV2(purchaseInfo.SellerAvatarAddress);
+                                    var sellerInventory = sellerState.inventory;
+
+                                    if (buyerInventory.Equipments == null || sellerInventory.Equipments == null)
+                                    {
+                                        continue;
+                                    }
+
+                                    Equipment? equipment = buyerInventory.Equipments.SingleOrDefault(i =>
+                                        i.ItemId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
+                                        i.ItemId == purchaseInfo.TradableId);
+
+                                    if (equipment is { } equipmentNotNull)
+                                    {
+                                        _eqList.Add(EquipmentData.GetEquipmentInfo(
+                                            ev.Signer,
+                                            buy.buyerAvatarAddress,
+                                            equipmentNotNull));
+                                    }
+                                }
+                            }
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug(
+                                "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
+                                buy.buyerAvatarAddress,
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<BuyProduct>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } buy)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            foreach (var productInfo in buy.ProductInfos)
+                            {
+                                switch (productInfo)
+                                {
+                                    case FavProductInfo _:
+                                        // Check previous product state. because Set Bencodex.Types.Null in BuyProduct.
+                                        if (ev.PreviousState.TryGetState(Product.DeriveAddress(productInfo.ProductId), out List productState))
+                                        {
+                                            var favProduct = (FavProduct)ProductFactory.DeserializeProduct(productState);
+                                            _buyShopFavList.Add(new ShopHistoryFungibleAssetValueModel
+                                            {
+                                                OrderId = productInfo.ProductId.ToString(),
+                                                TxId = ev.TxId.ToString(),
+                                                BlockIndex = ev.BlockIndex,
+                                                BlockHash = _blockHash,
+                                                SellerAvatarAddress = productInfo.AvatarAddress.ToString(),
+                                                BuyerAvatarAddress = buy.AvatarAddress.ToString(),
+                                                Price = decimal.Parse(productInfo.Price.GetQuantityString()),
+                                                Quantity = decimal.Parse(favProduct.Asset.GetQuantityString()),
+                                                Ticker = favProduct.Asset.Currency.Ticker,
+                                                TimeStamp = _blockTimeOffset,
+                                            });
+                                        }
+
+                                        break;
+                                    case ItemProductInfo itemProductInfo:
+                                    {
+                                        ITradableItem orderItem;
+                                        int itemCount = 1;
+
+                                        // backward compatibility for order.
+                                        if (itemProductInfo.Legacy)
+                                        {
+                                            var state = ev.OutputState.GetState(
+                                                Addresses.GetItemAddress(itemProductInfo.TradableId));
+                                            orderItem =
+                                                (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
+                                            Order order =
+                                                OrderFactory.Deserialize(
+                                                    (Dictionary)ev.OutputState.GetState(
+                                                        Order.DeriveAddress(itemProductInfo.ProductId))!);
+                                            itemCount = order is FungibleOrder fungibleOrder
+                                                ? fungibleOrder.ItemCount
+                                                : 1;
+                                        }
+                                        else
+                                        {
+                                            // Check previous product state. because Set Bencodex.Types.Null in BuyProduct.
+                                            if (ev.PreviousState.TryGetState(Product.DeriveAddress(productInfo.ProductId), out List state))
+                                            {
+                                                var product = (ItemProduct)ProductFactory.DeserializeProduct(state);
+                                                orderItem = product.TradableItem;
+                                                itemCount = product.ItemCount;
+                                            }
+                                            else
+                                            {
+                                                continue;
+                                            }
+                                        }
+
+                                        var purchaseInfo = new PurchaseInfo(
+                                            productInfo.ProductId,
+                                            itemProductInfo.TradableId,
+                                            productInfo.AgentAddress,
+                                            productInfo.AvatarAddress,
+                                            itemProductInfo.ItemSubType,
+                                            productInfo.Price
+                                        );
+                                        AddShopHistoryItem(orderItem, buy.AvatarAddress, purchaseInfo, itemCount, ev.BlockIndex);
+                                        if (orderItem.ItemType == ItemType.Equipment)
+                                        {
+                                            var equipment = (Equipment)orderItem;
+                                            _eqList.Add(EquipmentData.GetEquipmentInfo(
+                                                ev.Signer,
+                                                buy.AvatarAddress,
+                                                equipment));
+                                        }
+
+                                        break;
+                                    }
+                                }
+                            }
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug(
+                                "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
+                                buy.AvatarAddress,
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<Stake>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } stake)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _stakeList.Add(StakeData.GetStakeInfo(ev.PreviousState, ev.OutputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored Stake action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<MigrateMonsterCollection>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } mc)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _mmcList.Add(MigrateMonsterCollectionData.GetMigrateMonsterCollectionInfo(ev.PreviousState, ev.OutputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<Grinding>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Action is { } grinding)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+
+                            var grindList = GrindingData.GetGrindingInfo(ev.PreviousState, ev.OutputState, ev.Signer, grinding.AvatarAddress, grinding.EquipmentIds, grinding.Id, ev.BlockIndex, _blockTimeOffset);
+
+                            foreach (var grind in grindList)
+                            {
+                                _grindList.Add(grind);
+                            }
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored Grinding action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<UnlockEquipmentRecipe>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } unlockEquipmentRecipe)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            var unlockEquipmentRecipeList = UnlockEquipmentRecipeData.GetUnlockEquipmentRecipeInfo(ev.PreviousState, ev.OutputState, ev.Signer, unlockEquipmentRecipe.AvatarAddress, unlockEquipmentRecipe.RecipeIds, unlockEquipmentRecipe.Id, ev.BlockIndex, _blockTimeOffset);
+                            foreach (var unlockEquipmentRecipeData in unlockEquipmentRecipeList)
+                            {
+                                _unlockEquipmentRecipeList.Add(unlockEquipmentRecipeData);
+                            }
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored UnlockEquipmentRecipe action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<UnlockWorld>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } unlockWorld)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            var unlockWorldList = UnlockWorldData.GetUnlockWorldInfo(ev.PreviousState, ev.OutputState, ev.Signer, unlockWorld.AvatarAddress, unlockWorld.WorldIds, unlockWorld.Id, ev.BlockIndex, _blockTimeOffset);
+                            foreach (var unlockWorldData in unlockWorldList)
+                            {
+                                _unlockWorldList.Add(unlockWorldData);
+                            }
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored UnlockWorld action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<HackAndSlashRandomBuff>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } hasRandomBuff)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _hasRandomBuffList.Add(HackAndSlashRandomBuffData.GetHasRandomBuffInfo(ev.PreviousState, ev.OutputState, ev.Signer, hasRandomBuff.AvatarAddress, hasRandomBuff.AdvancedGacha, hasRandomBuff.Id, ev.BlockIndex, _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored HasRandomBuff action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<JoinArena>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } joinArena)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _joinArenaList.Add(JoinArenaData.GetJoinArenaInfo(ev.PreviousState, ev.OutputState, ev.Signer, joinArena.avatarAddress, joinArena.round, joinArena.championshipId, joinArena.Id, ev.BlockIndex, _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored JoinArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<BattleArena>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } battleArena)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _avatarList.Add(AvatarData.GetAvatarInfo(ev.OutputState, ev.Signer, battleArena.myAvatarAddress, battleArena.runeInfos, _blockTimeOffset));
+                            _battleArenaList.Add(BattleArenaData.GetBattleArenaInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                battleArena.myAvatarAddress,
+                                battleArena.enemyAvatarAddress,
+                                battleArena.round,
+                                battleArena.championshipId,
+                                battleArena.ticket,
+                                battleArena.Id,
+                                ev.BlockIndex,
+                                _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored BattleArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<BattleGrandFinale>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } battleGrandFinale)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _battleGrandFinaleList.Add(BattleGrandFinaleData.GetBattleGrandFinaleInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                battleGrandFinale.myAvatarAddress,
+                                battleGrandFinale.enemyAvatarAddress,
+                                battleGrandFinale.grandFinaleId,
+                                battleGrandFinale.Id,
+                                ev.BlockIndex,
+                                _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored BattleGrandFinale action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<EventMaterialItemCrafts>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } eventMaterialItemCrafts)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _eventMaterialItemCraftsList.Add(EventMaterialItemCraftsData.GetEventMaterialItemCraftsInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                eventMaterialItemCrafts.AvatarAddress,
+                                eventMaterialItemCrafts.MaterialsToUse,
+                                eventMaterialItemCrafts.EventScheduleId,
+                                eventMaterialItemCrafts.EventMaterialItemRecipeId,
+                                eventMaterialItemCrafts.Id,
+                                ev.BlockIndex,
+                                _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored EventMaterialItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<RuneEnhancement>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } runeEnhancement)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _runeEnhancementList.Add(RuneEnhancementData.GetRuneEnhancementInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                runeEnhancement.AvatarAddress,
+                                runeEnhancement.RuneId,
+                                runeEnhancement.TryCount,
+                                runeEnhancement.Id,
+                                ev.BlockIndex,
+                                _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored RuneEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<TransferAssets>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } transferAssets)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            int count = 0;
+                            foreach (var recipient in transferAssets.Recipients)
+                            {
+                                var actionString = count + ev.TxId.ToString();
+                                var actionByteArray = Encoding.UTF8.GetBytes(actionString).Take(16).ToArray();
+                                var id = new Guid(actionByteArray);
+                                var avatarAddress = recipient.recipient;
+                                var actionType = transferAssets.ToString()!.Split('.').LastOrDefault()
+                                    ?.Replace(">", string.Empty);
+                                _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
+                                    id,
+                                    (TxId)ev.TxId!,
+                                    ev.BlockIndex,
+                                    _blockHash!,
+                                    transferAssets.Sender,
+                                    recipient.recipient,
+                                    recipient.amount.Currency.Ticker,
+                                    recipient.amount,
+                                    _blockTimeOffset));
+                                _runesAcquiredList.Add(RunesAcquiredData.GetRunesAcquiredInfo(
+                                    id,
+                                    ev.Signer,
+                                    avatarAddress,
+                                    ev.BlockIndex,
+                                    actionType!,
+                                    recipient.amount.Currency.Ticker,
+                                    recipient.amount,
+                                    _blockTimeOffset));
+                                count++;
+                            }
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored TransferAssets action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<DailyReward>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } dailyReward)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+#pragma warning disable CS0618
+                            var runeCurrency = RuneHelper.DailyRewardRune;
+#pragma warning restore CS0618
+                            var prevRuneBalance = ev.PreviousState.GetBalance(
+                                dailyReward.avatarAddress,
+                                runeCurrency);
+                            var outputRuneBalance = ev.OutputState.GetBalance(
+                                dailyReward.avatarAddress,
+                                runeCurrency);
+                            var acquiredRune = outputRuneBalance - prevRuneBalance;
+                            var actionType = dailyReward.ToString()!.Split('.').LastOrDefault()
+                                ?.Replace(">", string.Empty);
+                            _runesAcquiredList.Add(RunesAcquiredData.GetRunesAcquiredInfo(
+                                dailyReward.Id,
+                                ev.Signer,
+                                dailyReward.avatarAddress,
+                                ev.BlockIndex,
+                                actionType!,
+                                runeCurrency.Ticker,
+                                acquiredRune,
+                                _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored DailyReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<ClaimRaidReward>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } claimRaidReward)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            var sheets = ev.OutputState.GetSheets(
+                                sheetTypes: new[]
+                                {
+                                    typeof(RuneSheet),
+                                });
+                            var runeSheet = sheets.GetSheet<RuneSheet>();
+                            foreach (var runeType in runeSheet.Values)
+                            {
+#pragma warning disable CS0618
+                                var runeCurrency = RuneHelper.ToCurrency(runeType);
+#pragma warning restore CS0618
+                                var prevRuneBalance = ev.PreviousState.GetBalance(
+                                    claimRaidReward.AvatarAddress,
+                                    runeCurrency);
+                                var outputRuneBalance = ev.OutputState.GetBalance(
+                                    claimRaidReward.AvatarAddress,
+                                    runeCurrency);
+                                var acquiredRune = outputRuneBalance - prevRuneBalance;
+                                var actionType = claimRaidReward.ToString()!.Split('.').LastOrDefault()
+                                    ?.Replace(">", string.Empty);
+                                if (Convert.ToDecimal(acquiredRune.GetQuantityString()) > 0)
+                                {
+                                    _runesAcquiredList.Add(RunesAcquiredData.GetRunesAcquiredInfo(
+                                        claimRaidReward.Id,
+                                        ev.Signer,
+                                        claimRaidReward.AvatarAddress,
+                                        ev.BlockIndex,
+                                        actionType!,
+                                        runeCurrency.Ticker,
+                                        acquiredRune,
+                                        _blockTimeOffset));
+                                }
+                            }
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored ClaimRaidReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<UnlockRuneSlot>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } unlockRuneSlot)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _unlockRuneSlotList.Add(UnlockRuneSlotData.GetUnlockRuneSlotInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                unlockRuneSlot.AvatarAddress,
+                                unlockRuneSlot.SlotIndex,
+                                unlockRuneSlot.Id,
+                                ev.BlockIndex,
+                                _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored UnlockRuneSlot action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<RapidCombination>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } rapidCombination)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                rapidCombination.avatarAddress,
+                                rapidCombination.slotIndex,
+                                rapidCombination.Id,
+                                ev.BlockIndex,
+                                _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored RapidCombination action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<Raid>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception is null)
+                        {
+                            var sheets = ev.OutputState.GetSheets(
+                                sheetTypes: new[]
+                                {
+                                    typeof(CharacterSheet),
+                                    typeof(CostumeStatSheet),
+                                    typeof(RuneSheet),
+                                    typeof(RuneListSheet),
+                                    typeof(RuneOptionSheet),
+                                });
+
+                            var runeSheet = sheets.GetSheet<RuneSheet>();
+                            foreach (var runeType in runeSheet.Values)
+                            {
+#pragma warning disable CS0618
+                                var runeCurrency = RuneHelper.ToCurrency(runeType);
+#pragma warning restore CS0618
+                                var prevRuneBalance = ev.PreviousState.GetBalance(
+                                    ev.Action.AvatarAddress,
+                                    runeCurrency);
+                                var outputRuneBalance = ev.OutputState.GetBalance(
+                                    ev.Action.AvatarAddress,
+                                    runeCurrency);
+                                var acquiredRune = outputRuneBalance - prevRuneBalance;
+                                var actionType = ev.Action.ToString()!.Split('.').LastOrDefault()
+                                    ?.Replace(">", string.Empty);
+                                if (Convert.ToDecimal(acquiredRune.GetQuantityString()) > 0)
+                                {
+                                    _runesAcquiredList.Add(RunesAcquiredData.GetRunesAcquiredInfo(
+                                        ev.Action.Id,
+                                        ev.Signer,
+                                        ev.Action.AvatarAddress,
+                                        ev.BlockIndex,
+                                        actionType!,
+                                        runeCurrency.Ticker,
+                                        acquiredRune,
+                                        _blockTimeOffset));
+                                }
+                            }
+
+                            _avatarList.Add(AvatarData.GetAvatarInfo(ev.OutputState, ev.Signer, ev.Action.AvatarAddress, ev.Action.RuneInfos, _blockTimeOffset));
+
+                            int raidId = 0;
+                            bool found = false;
+                            for (int i = 0; i < 99; i++)
+                            {
+                                if (ev.OutputState.Delta.UpdatedAddresses.Contains(
+                                        Addresses.GetRaiderAddress(ev.Action.AvatarAddress, i)))
+                                {
+                                    raidId = i;
+                                    found = true;
+                                    break;
+                                }
+                            }
+
+                            if (found)
+                            {
+                                RaiderState raiderState =
+                                    ev.OutputState.GetRaiderState(ev.Action.AvatarAddress, raidId);
+                                var model = new RaiderModel(
+                                    raidId,
+                                    raiderState.AvatarName,
+                                    raiderState.HighScore,
+                                    raiderState.TotalScore,
+                                    raiderState.Cp,
+                                    raiderState.IconId,
+                                    raiderState.Level,
+                                    raiderState.AvatarAddress.ToHex(),
+                                    raiderState.PurchaseCount);
+                                _raiderList.Add(RaidData.GetRaidInfo(raidId, raiderState));
+                                MySqlStore.StoreRaider(model);
+                            }
+                            else
+                            {
+                                Log.Error("can't find raidId.");
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                });
+
+            _actionRenderer.EveryRender<PetEnhancement>().Subscribe(ev =>
+            {
+                try
+                {
+                    if (ev.Exception == null && ev.Action is { } petEnhancement)
+                    {
+                        var start = DateTimeOffset.UtcNow;
+                        _petEnhancementList.Add(PetEnhancementData.GetPetEnhancementInfo(
+                            ev.PreviousState,
+                            ev.OutputState,
+                            ev.Signer,
+                            petEnhancement.AvatarAddress,
+                            petEnhancement.PetId,
+                            petEnhancement.TargetLevel,
+                            petEnhancement.Id,
+                            ev.BlockIndex,
+                            _blockTimeOffset
+                        ));
+                        var end = DateTimeOffset.UtcNow;
+                        Log.Debug("Stored PetEnhancement action in block #{BlockIndex}. Time taken: {Time} ms", ev.BlockIndex, end - start);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Error("PetEnhancement RenderSubscriber: {Message}", e.Message);
+                }
+            });
+
+            _actionRenderer.EveryRender<AuraSummon>().Subscribe(ev =>
+            {
+                try
+                {
+                    if (ev.Action is { } auraSummon)
+                    {
+                        if (ev.Exception is null)
+                        {
+                            _auraSummonList.Add(AuraSummonData.GetAuraSummonInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                auraSummon.AvatarAddress,
+                                auraSummon.GroupId,
+                                auraSummon.SummonCount,
+                                auraSummon.Id,
+                                ev.BlockIndex
+                                ));
+                        }
+                        else
+                        {
+                            _auraSummonFailList.Add(AuraSummonData.GetAuraSummonFailInfo(
+                                ev.PreviousState,
+                                ev.OutputState,
+                                ev.Signer,
+                                auraSummon.AvatarAddress,
+                                auraSummon.GroupId,
+                                auraSummon.SummonCount,
+                                auraSummon.Id,
+                                ev.BlockIndex,
+                                ev.Exception
+                            ));
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"AuraSummon RenderSubscriber: {e.Message}");
+                }
+            });
+
+            return Task.CompletedTask;
+        }
+
+        private void AddShopHistoryItem(ITradableItem orderItem, Address buyerAvatarAddress, PurchaseInfo purchaseInfo, int itemCount, long blockIndex)
+        {
+            if (orderItem.ItemType == ItemType.Equipment)
+            {
+                Equipment equipment = (Equipment)orderItem;
+                _buyShopEquipmentsList.Add(ShopHistoryEquipmentData.GetShopHistoryEquipmentInfo(
+                    buyerAvatarAddress,
+                    purchaseInfo,
+                    equipment,
+                    itemCount,
+                    blockIndex,
+                    _blockTimeOffset));
+            }
+
+            if (orderItem.ItemType == ItemType.Costume)
+            {
+                Costume costume = (Costume)orderItem;
+                _buyShopCostumesList.Add(ShopHistoryCostumeData.GetShopHistoryCostumeInfo(
+                    buyerAvatarAddress,
+                    purchaseInfo,
+                    costume,
+                    itemCount,
+                    blockIndex,
+                    _blockTimeOffset));
+            }
+
+            if (orderItem.ItemType == ItemType.Material)
+            {
+                Material material = (Material)orderItem;
+                _buyShopMaterialsList.Add(ShopHistoryMaterialData.GetShopHistoryMaterialInfo(
+                    buyerAvatarAddress,
+                    purchaseInfo,
+                    material,
+                    itemCount,
+                    blockIndex,
+                    _blockTimeOffset));
+            }
+
+            if (orderItem.ItemType == ItemType.Consumable)
+            {
+                Consumable consumable = (Consumable)orderItem;
+                _buyShopConsumablesList.Add(ShopHistoryConsumableData.GetShopHistoryConsumableInfo(
+                    buyerAvatarAddress,
+                    purchaseInfo,
+                    consumable,
+                    itemCount,
+                    blockIndex,
+                    _blockTimeOffset));
+            }
+        }
+
+        private void ProcessAgentAvatarData(ActionEvaluation<ActionBase> ev)
+        {
+            if (!_agents.Contains(ev.Signer.ToString()))
+            {
+                _agents.Add(ev.Signer.ToString());
+                _agentList.Add(AgentData.GetAgentInfo(ev.Signer));
+
+                if (ev.Signer != _miner)
+                {
+                    var agentState = ev.OutputState.GetAgentState(ev.Signer);
+                    if (agentState is { } ag)
+                    {
+                        var avatarAddresses = ag.avatarAddresses;
+                        foreach (var avatarAddress in avatarAddresses.Select(avatarAddress => avatarAddress.Value))
+                        {
+                            try
+                            {
+                                AvatarState avatarState;
+                                try
+                                {
+                                    avatarState = ev.OutputState.GetAvatarStateV2(avatarAddress);
+                                }
+                                catch (Exception)
+                                {
+                                    avatarState = ev.OutputState.GetAvatarState(address: avatarAddress);
+                                }
+
+                                if (avatarState == null)
+                                {
+                                    continue;
+                                }
+
+                                var runeSlotStateAddress = RuneSlotState.DeriveAddress(avatarAddress, BattleType.Adventure);
+                                var runeSlotState = ev.OutputState.TryGetState(runeSlotStateAddress, out List rawRuneSlotState)
+                                    ? new RuneSlotState(rawRuneSlotState)
+                                    : new RuneSlotState(BattleType.Adventure);
+                                var runeSlotInfos = runeSlotState.GetEquippedRuneSlotInfos();
+
+                                _avatarList.Add(AvatarData.GetAvatarInfo(ev.OutputState, ev.Signer, avatarAddress, runeSlotInfos, _blockTimeOffset));
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(ex.Message);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void StoreRenderedData((Block OldTip, Block NewTip) b)
+        {
+            var start = DateTimeOffset.Now;
+            Log.Debug("Storing Data...");
+            var tasks = new List<Task>
+            {
+                Task.Run(() =>
+                {
+                    MySqlStore.StoreAgentList(_agentList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault())
+                        .ToList());
+                    MySqlStore.StoreAvatarList(_avatarList.GroupBy(i => i.Address).Select(i => i.FirstOrDefault())
+                        .ToList());
+                    MySqlStore.StoreHackAndSlashList(_hasList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault())
+                        .ToList());
+                    MySqlStore.StoreCombinationConsumableList(_ccList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault())
+                        .ToList());
+                    MySqlStore.StoreCombinationEquipmentList(_ceList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault())
+                        .ToList());
+                    MySqlStore.StoreItemEnhancementList(_ieList.GroupBy(i => i.Id).Select(i => i.FirstOrDefault())
+                        .ToList());
+                    MySqlStore.StoreShopHistoryEquipmentList(_buyShopEquipmentsList.GroupBy(i => i.OrderId)
+                        .Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreShopHistoryCostumeList(_buyShopCostumesList.GroupBy(i => i.OrderId)
+                        .Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreShopHistoryMaterialList(_buyShopMaterialsList.GroupBy(i => i.OrderId)
+                        .Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreShopHistoryConsumableList(_buyShopConsumablesList.GroupBy(i => i.OrderId)
+                        .Select(i => i.FirstOrDefault()).ToList());
+                    MySqlStore.StoreShopHistoryFungibleAssetValues(_buyShopFavList);
+                    MySqlStore.ProcessEquipmentList(_eqList.GroupBy(i => i.ItemId).Select(i => i.FirstOrDefault())
+                        .ToList());
                     MySqlStore.StoreStakingList(_stakeList);
                     MySqlStore.StoreClaimStakeRewardList(_claimStakeList);
                     MySqlStore.StoreMigrateMonsterCollectionList(_mmcList);
@@ -190,1391 +1475,73 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreHackAndSlashSweepList(_hasSweepList);
                     MySqlStore.StoreEventDungeonBattleList(_eventDungeonBattleList);
                     MySqlStore.StoreEventConsumableItemCraftsList(_eventConsumableItemCraftsList);
-                    _renderedBlockCount = 0;
-                    _agents.Clear();
-                    _agentList.Clear();
-                    _avatarList.Clear();
-                    _hasList.Clear();
-                    _ccList.Clear();
-                    _ceList.Clear();
-                    _ieList.Clear();
-                    _buyShopEquipmentsList.Clear();
-                    _buyShopCostumesList.Clear();
-                    _buyShopMaterialsList.Clear();
-                    _buyShopConsumablesList.Clear();
-                    _eqList.Clear();
-                    _stakeList.Clear();
-                    _claimStakeList.Clear();
-                    _mmcList.Clear();
-                    _grindList.Clear();
-                    _itemEnhancementFailList.Clear();
-                    _unlockEquipmentRecipeList.Clear();
-                    _unlockWorldList.Clear();
-                    _replaceCombinationEquipmentMaterialList.Clear();
-                    _hasRandomBuffList.Clear();
-                    _hasWithRandomBuffList.Clear();
-                    _joinArenaList.Clear();
-                    _battleArenaList.Clear();
-                    _blockList.Clear();
-                    _transactionList.Clear();
-                    _hasSweepList.Clear();
-                    _eventDungeonBattleList.Clear();
-                    _eventConsumableItemCraftsList.Clear();
-                    var end = DateTimeOffset.Now;
-                    long blockIndex = b.OldTip.Index;
-                    StreamWriter blockIndexFile = new StreamWriter(_blockIndexFilePath);
-                    blockIndexFile.Write(blockIndex);
-                    blockIndexFile.Flush();
-                    blockIndexFile.Close();
-                    Log.Debug($"Storing Data Complete. Time Taken: {(end - start).Milliseconds} ms.");
-                }
-            });
-
-            _actionRenderer.EveryRender<ActionBase>()
-                .Subscribe(
-                    ev =>
-                    {
-                        try
-                        {
-                            if (ev.Exception != null)
-                            {
-                                return;
-                            }
-
-                            ProcessAgentAvatarData(ev);
-
-                            if (ev.Action is EventDungeonBattle eventDungeonBattle)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var previousStates = ev.PreviousStates;
-                                var outputStates = ev.OutputStates;
-                                AvatarState prevAvatarState = previousStates.GetAvatarStateV2(eventDungeonBattle.AvatarAddress);
-                                AvatarState outputAvatarState = outputStates.GetAvatarStateV2(eventDungeonBattle.AvatarAddress);
-                                var prevAvatarItems = prevAvatarState.inventory.Items;
-                                var outputAvatarItems = outputAvatarState.inventory.Items;
-                                var addressesHex = GetSignerAndOtherAddressesHex(ev.Signer, eventDungeonBattle.AvatarAddress);
-                                var scheduleSheet = previousStates.GetSheet<EventScheduleSheet>();
-                                var scheduleRow = scheduleSheet.ValidateFromActionForDungeon(
-                                    ev.BlockIndex,
-                                    eventDungeonBattle.EventScheduleId,
-                                    eventDungeonBattle.EventDungeonId,
-                                    "event_dungeon_battle",
-                                    addressesHex);
-                                var eventDungeonInfoAddr = EventDungeonInfo.DeriveAddress(
-                                    eventDungeonBattle.AvatarAddress,
-                                    eventDungeonBattle.EventDungeonId);
-                                var eventDungeonInfo = ev.OutputStates.GetState(eventDungeonInfoAddr)
-                                    is Bencodex.Types.List serializedEventDungeonInfoList
-                                    ? new EventDungeonInfo(serializedEventDungeonInfoList)
-                                    : new EventDungeonInfo(remainingTickets: scheduleRow.DungeonTicketsMax);
-                                bool isClear = eventDungeonInfo.IsCleared(eventDungeonBattle.EventDungeonStageId);
-                                Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
-                                var prevNCGBalance = previousStates.GetBalance(
-                                    ev.Signer,
-                                    ncgCurrency);
-                                var outputNCGBalance = ev.OutputStates.GetBalance(
-                                    ev.Signer,
-                                    ncgCurrency);
-                                var burntNCG = prevNCGBalance - outputNCGBalance;
-                                var newItems = outputAvatarItems.Except(prevAvatarItems);
-                                Dictionary<string, int> rewardItemData = new Dictionary<string, int>();
-                                for (var i = 1; i < 11; i++)
-                                {
-                                    rewardItemData.Add($"rewardItem{i}Id", 0);
-                                    rewardItemData.Add($"rewardItem{i}Count", 0);
-                                }
-
-                                int itemNumber = 1;
-                                foreach (var newItem in newItems)
-                                {
-                                    rewardItemData[$"rewardItem{itemNumber}Id"] = newItem.item.Id;
-                                    if (prevAvatarItems.Any(x => x.item.Equals(newItem.item)))
-                                    {
-                                        var prevItemCount = prevAvatarItems.Single(x => x.item.Equals(newItem.item)).count;
-                                        var rewardCount = newItem.count - prevItemCount;
-                                        rewardItemData[$"rewardItem{itemNumber}Count"] = rewardCount;
-                                    }
-                                    else
-                                    {
-                                        rewardItemData[$"rewardItem{itemNumber}Count"] = newItem.count;
-                                    }
-
-                                    itemNumber++;
-                                }
-
-                                _eventDungeonBattleList.Add(new EventDungeonBattleModel()
-                                {
-                                    Id = eventDungeonBattle.Id.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    AvatarAddress = eventDungeonBattle.AvatarAddress.ToString(),
-                                    EventDungeonId = eventDungeonBattle.EventDungeonId,
-                                    EventScheduleId = eventDungeonBattle.EventScheduleId,
-                                    EventDungeonStageId = eventDungeonBattle.EventDungeonStageId,
-                                    RemainingTickets = eventDungeonInfo.RemainingTickets,
-                                    BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
-                                    Cleared = isClear,
-                                    FoodsCount = eventDungeonBattle.Foods.Count,
-                                    CostumesCount = eventDungeonBattle.Costumes.Count,
-                                    EquipmentsCount = eventDungeonBattle.Equipments.Count,
-                                    RewardItem1Id = rewardItemData["rewardItem1Id"],
-                                    RewardItem1Count = rewardItemData["rewardItem1Count"],
-                                    RewardItem2Id = rewardItemData["rewardItem2Id"],
-                                    RewardItem2Count = rewardItemData["rewardItem2Count"],
-                                    RewardItem3Id = rewardItemData["rewardItem3Id"],
-                                    RewardItem3Count = rewardItemData["rewardItem3Count"],
-                                    RewardItem4Id = rewardItemData["rewardItem4Id"],
-                                    RewardItem4Count = rewardItemData["rewardItem4Count"],
-                                    RewardItem5Id = rewardItemData["rewardItem5Id"],
-                                    RewardItem5Count = rewardItemData["rewardItem5Count"],
-                                    RewardItem6Id = rewardItemData["rewardItem6Id"],
-                                    RewardItem6Count = rewardItemData["rewardItem6Count"],
-                                    RewardItem7Id = rewardItemData["rewardItem7Id"],
-                                    RewardItem7Count = rewardItemData["rewardItem7Count"],
-                                    RewardItem8Id = rewardItemData["rewardItem8Id"],
-                                    RewardItem8Count = rewardItemData["rewardItem8Count"],
-                                    RewardItem9Id = rewardItemData["rewardItem9Id"],
-                                    RewardItem9Count = rewardItemData["rewardItem9Count"],
-                                    RewardItem10Id = rewardItemData["rewardItem10Id"],
-                                    RewardItem10Count = rewardItemData["rewardItem10Count"],
-                                    BlockIndex = ev.BlockIndex,
-                                    Timestamp = _blockTimeOffset,
-                                });
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored EventDungeonBattle action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is EventConsumableItemCrafts eventConsumableItemCrafts)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var previousStates = ev.PreviousStates;
-                                var addressesHex = GetSignerAndOtherAddressesHex(ev.Signer, eventConsumableItemCrafts.AvatarAddress);
-                                var requiredFungibleItems = new Dictionary<int, int>();
-                                Dictionary<string, int> requiredItemData = new Dictionary<string, int>();
-                                for (var i = 1; i < 11; i++)
-                                {
-                                    requiredItemData.Add($"requiredItem{i}Id", 0);
-                                    requiredItemData.Add($"requiredItem{i}Count", 0);
-                                }
-
-                                int itemNumber = 1;
-                                var sheets = previousStates.GetSheets(
-                                    sheetTypes: new[]
-                                    {
-                                        typeof(EventScheduleSheet),
-                                        typeof(EventConsumableItemRecipeSheet),
-                                    });
-                                var scheduleSheet = sheets.GetSheet<EventScheduleSheet>();
-                                scheduleSheet.ValidateFromActionForRecipe(
-                                    ev.BlockIndex,
-                                    eventConsumableItemCrafts.EventScheduleId,
-                                    eventConsumableItemCrafts.EventConsumableItemRecipeId,
-                                    "event_consumable_item_crafts",
-                                    addressesHex);
-                                var recipeSheet = sheets.GetSheet<EventConsumableItemRecipeSheet>();
-                                var recipeRow = recipeSheet.ValidateFromAction(
-                                    eventConsumableItemCrafts.EventConsumableItemRecipeId,
-                                    "event_consumable_item_crafts",
-                                    addressesHex);
-                                var materialItemSheet = previousStates.GetSheet<MaterialItemSheet>();
-                                materialItemSheet.ValidateFromAction(
-                                    recipeRow.Materials,
-                                    requiredFungibleItems,
-                                    addressesHex);
-                                foreach (var pair in requiredFungibleItems)
-                                {
-                                    if (materialItemSheet.TryGetValue(pair.Key, out var materialRow))
-                                    {
-                                        requiredItemData[$"requiredItem{itemNumber}Id"] = materialRow.Id;
-                                        requiredItemData[$"requiredItem{itemNumber}Count"] = pair.Value;
-                                    }
-
-                                    itemNumber++;
-                                }
-
-                                _eventConsumableItemCraftsList.Add(new EventConsumableItemCraftsModel()
-                                {
-                                    Id = eventConsumableItemCrafts.Id.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    AvatarAddress = eventConsumableItemCrafts.AvatarAddress.ToString(),
-                                    SlotIndex = eventConsumableItemCrafts.SlotIndex,
-                                    EventScheduleId = eventConsumableItemCrafts.EventScheduleId,
-                                    EventConsumableItemRecipeId = eventConsumableItemCrafts.EventConsumableItemRecipeId,
-                                    RequiredItem1Id = requiredItemData["requiredItem1Id"],
-                                    RequiredItem1Count = requiredItemData["requiredItem1Count"],
-                                    RequiredItem2Id = requiredItemData["requiredItem2Id"],
-                                    RequiredItem2Count = requiredItemData["requiredItem2Count"],
-                                    RequiredItem3Id = requiredItemData["requiredItem3Id"],
-                                    RequiredItem3Count = requiredItemData["requiredItem3Count"],
-                                    RequiredItem4Id = requiredItemData["requiredItem4Id"],
-                                    RequiredItem4Count = requiredItemData["requiredItem4Count"],
-                                    RequiredItem5Id = requiredItemData["requiredItem5Id"],
-                                    RequiredItem5Count = requiredItemData["requiredItem5Count"],
-                                    RequiredItem6Id = requiredItemData["requiredItem6Id"],
-                                    RequiredItem6Count = requiredItemData["requiredItem6Count"],
-                                    BlockIndex = ev.BlockIndex,
-                                    Timestamp = _blockTimeOffset,
-                                });
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored EventConsumableItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is HackAndSlash has)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(has.AvatarAddress);
-                                bool isClear = avatarState.stageMap.ContainsKey(has.StageId);
-                                _hasList.Add(new HackAndSlashModel()
-                                {
-                                    Id = has.Id.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    AvatarAddress = has.AvatarAddress.ToString(),
-                                    StageId = has.StageId,
-                                    Cleared = isClear,
-                                    Mimisbrunnr = has.StageId > 10000000,
-                                    BlockIndex = ev.BlockIndex,
-                                });
-                                if (has.StageBuffId.HasValue)
-                                {
-                                    _hasWithRandomBuffList.Add(new HasWithRandomBuffModel()
-                                    {
-                                        Id = has.Id.ToString(),
-                                        BlockIndex = ev.BlockIndex,
-                                        AgentAddress = ev.Signer.ToString(),
-                                        AvatarAddress = has.AvatarAddress.ToString(),
-                                        StageId = has.StageId,
-                                        BuffId = (int)has.StageBuffId,
-                                        Cleared = isClear,
-                                        TimeStamp = _blockTimeOffset,
-                                    });
-                                }
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is HackAndSlashSweep hasSweep)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(hasSweep.avatarAddress);
-                                bool isClear = avatarState.stageMap.ContainsKey(hasSweep.stageId);
-                                _hasSweepList.Add(new HackAndSlashSweepModel()
-                                {
-                                    Id = hasSweep.Id.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    AvatarAddress = hasSweep.avatarAddress.ToString(),
-                                    WorldId = hasSweep.worldId,
-                                    StageId = hasSweep.stageId,
-                                    ApStoneCount = hasSweep.apStoneCount,
-                                    ActionPoint = hasSweep.actionPoint,
-                                    CostumesCount = hasSweep.costumes.Count,
-                                    EquipmentsCount = hasSweep.equipments.Count,
-                                    Cleared = isClear,
-                                    Mimisbrunnr = hasSweep.stageId > 10000000,
-                                    BlockIndex = ev.BlockIndex,
-                                    Timestamp = _blockTimeOffset,
-                                });
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored HackAndSlashSweep action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is CombinationConsumable combinationConsumable)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _ccList.Add(new CombinationConsumableModel()
-                                {
-                                    Id = combinationConsumable.Id.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    AvatarAddress = combinationConsumable.avatarAddress.ToString(),
-                                    RecipeId = combinationConsumable.recipeId,
-                                    SlotIndex = combinationConsumable.slotIndex,
-                                    BlockIndex = ev.BlockIndex,
-                                });
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored CombinationConsumable action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is CombinationEquipment combinationEquipment)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var previousStates = ev.PreviousStates;
-                                _ceList.Add(new CombinationEquipmentModel()
-                                {
-                                    Id = combinationEquipment.Id.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    AvatarAddress = combinationEquipment.avatarAddress.ToString(),
-                                    RecipeId = combinationEquipment.recipeId,
-                                    SlotIndex = combinationEquipment.slotIndex,
-                                    SubRecipeId = combinationEquipment.subRecipeId ?? 0,
-                                    BlockIndex = ev.BlockIndex,
-                                });
-                                if (combinationEquipment.payByCrystal)
-                                {
-                                    Currency crystalCurrency = CrystalCalculator.CRYSTAL;
-                                    var prevCrystalBalance = previousStates.GetBalance(
-                                        ev.Signer,
-                                        crystalCurrency);
-                                    var outputCrystalBalance = ev.OutputStates.GetBalance(
-                                        ev.Signer,
-                                        crystalCurrency);
-                                    var burntCrystal = prevCrystalBalance - outputCrystalBalance;
-                                    var requiredFungibleItems = new Dictionary<int, int>();
-                                    Dictionary<Type, (Address, ISheet)> sheets = previousStates.GetSheets(
-                                        sheetTypes: new[]
-                                        {
-                                            typeof(EquipmentItemRecipeSheet),
-                                            typeof(EquipmentItemSheet),
-                                            typeof(MaterialItemSheet),
-                                            typeof(EquipmentItemSubRecipeSheetV2),
-                                            typeof(EquipmentItemOptionSheet),
-                                            typeof(SkillSheet),
-                                            typeof(CrystalMaterialCostSheet),
-                                            typeof(CrystalFluctuationSheet),
-                                        });
-                                    var materialItemSheet = sheets.GetSheet<MaterialItemSheet>();
-                                    var equipmentItemRecipeSheet = sheets.GetSheet<EquipmentItemRecipeSheet>();
-                                    equipmentItemRecipeSheet.TryGetValue(
-                                        combinationEquipment.recipeId,
-                                        out var recipeRow);
-                                    materialItemSheet.TryGetValue(recipeRow!.MaterialId, out var materialRow);
-                                    if (requiredFungibleItems.ContainsKey(materialRow!.Id))
-                                    {
-                                        requiredFungibleItems[materialRow.Id] += recipeRow.MaterialCount;
-                                    }
-                                    else
-                                    {
-                                        requiredFungibleItems[materialRow.Id] = recipeRow.MaterialCount;
-                                    }
-
-                                    if (combinationEquipment.subRecipeId.HasValue)
-                                    {
-                                        var equipmentItemSubRecipeSheetV2 = sheets.GetSheet<EquipmentItemSubRecipeSheetV2>();
-                                        equipmentItemSubRecipeSheetV2.TryGetValue(combinationEquipment.subRecipeId.Value, out var subRecipeRow);
-
-                                        // Validate SubRecipe Material
-                                        for (var i = subRecipeRow!.Materials.Count; i > 0; i--)
-                                        {
-                                            var materialInfo = subRecipeRow.Materials[i - 1];
-                                            materialItemSheet.TryGetValue(materialInfo.Id, out materialRow);
-
-                                            if (requiredFungibleItems.ContainsKey(materialRow!.Id))
-                                            {
-                                                requiredFungibleItems[materialRow.Id] += materialInfo.Count;
-                                            }
-                                            else
-                                            {
-                                                requiredFungibleItems[materialRow.Id] = materialInfo.Count;
-                                            }
-                                        }
-                                    }
-
-                                    var inventory = ev.PreviousStates
-                                        .GetAvatarStateV2(combinationEquipment.avatarAddress).inventory;
-                                    foreach (var pair in requiredFungibleItems.OrderBy(pair => pair.Key))
-                                    {
-                                        var itemId = pair.Key;
-                                        var requiredCount = pair.Value;
-                                        if (materialItemSheet.TryGetValue(itemId, out materialRow))
-                                        {
-                                            int itemCount = inventory.TryGetItem(itemId, out Inventory.Item item)
-                                                ? item.count
-                                                : 0;
-                                            if (itemCount < requiredCount && combinationEquipment.payByCrystal)
-                                            {
-                                                _replaceCombinationEquipmentMaterialList.Add(
-                                                    new ReplaceCombinationEquipmentMaterialModel()
-                                                    {
-                                                        Id = combinationEquipment.Id.ToString(),
-                                                        BlockIndex = ev.BlockIndex,
-                                                        AgentAddress = ev.Signer.ToString(),
-                                                        AvatarAddress =
-                                                            combinationEquipment.avatarAddress.ToString(),
-                                                        ReplacedMaterialId = itemId,
-                                                        ReplacedMaterialCount = requiredCount - itemCount,
-                                                        BurntCrystal =
-                                                            Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                                        TimeStamp = _blockTimeOffset,
-                                                    });
-                                            }
-                                        }
-                                    }
-                                }
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug(
-                                    "Stored CombinationEquipment action in block #{index}. Time Taken: {time} ms.",
-                                    ev.BlockIndex,
-                                    (end - start).Milliseconds);
-                                start = DateTimeOffset.UtcNow;
-
-                                var slotState = ev.OutputStates.GetCombinationSlotState(
-                                    combinationEquipment.avatarAddress,
-                                    combinationEquipment.slotIndex);
-
-                                if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
-                                {
-                                    ProcessEquipmentData(
-                                        ev.Signer,
-                                        combinationEquipment.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable);
-                                }
-
-                                end = DateTimeOffset.UtcNow;
-                                Log.Debug(
-                                    "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
-                                    combinationEquipment.avatarAddress,
-                                    ev.BlockIndex,
-                                    (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is ItemEnhancement itemEnhancement)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
-                                var previousStates = ev.PreviousStates;
-                                AvatarState prevAvatarState = previousStates.GetAvatarStateV2(itemEnhancement.avatarAddress);
-
-                                int prevEquipmentLevel = 0;
-                                if (prevAvatarState.inventory.TryGetNonFungibleItem(itemEnhancement.itemId, out ItemUsable prevEnhancementItem)
-                                    && prevEnhancementItem is Equipment prevEnhancementEquipment)
-                                {
-                                       prevEquipmentLevel = prevEnhancementEquipment.level;
-                                }
-
-                                int outputEquipmentLevel = 0;
-                                if (avatarState.inventory.TryGetNonFungibleItem(itemEnhancement.itemId, out ItemUsable outputEnhancementItem)
-                                    && outputEnhancementItem is Equipment outputEnhancementEquipment)
-                                {
-                                    outputEquipmentLevel = outputEnhancementEquipment.level;
-                                }
-
-                                if (prevEquipmentLevel == outputEquipmentLevel)
-                                {
-                                    Currency crystalCurrency = CrystalCalculator.CRYSTAL;
-                                    Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
-                                    var prevCrystalBalance = previousStates.GetBalance(
-                                        ev.Signer,
-                                        crystalCurrency);
-                                    var outputCrystalBalance = ev.OutputStates.GetBalance(
-                                        ev.Signer,
-                                        crystalCurrency);
-                                    var prevNCGBalance = previousStates.GetBalance(
-                                        ev.Signer,
-                                        ncgCurrency);
-                                    var outputNCGBalance = ev.OutputStates.GetBalance(
-                                        ev.Signer,
-                                        ncgCurrency);
-                                    var gainedCrystal = outputCrystalBalance - prevCrystalBalance;
-                                    var burntNCG = prevNCGBalance - outputNCGBalance;
-                                    _itemEnhancementFailList.Add(new ItemEnhancementFailModel()
-                                    {
-                                        Id = itemEnhancement.Id.ToString(),
-                                        BlockIndex = ev.BlockIndex,
-                                        AgentAddress = ev.Signer.ToString(),
-                                        AvatarAddress = itemEnhancement.avatarAddress.ToString(),
-                                        EquipmentItemId = itemEnhancement.itemId.ToString(),
-                                        MaterialItemId = itemEnhancement.materialId.ToString(),
-                                        EquipmentLevel = outputEquipmentLevel,
-                                        GainedCrystal = Convert.ToDecimal(gainedCrystal.GetQuantityString()),
-                                        BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
-                                        TimeStamp = _blockTimeOffset,
-                                    });
-                                }
-
-                                _ieList.Add(new ItemEnhancementModel()
-                                {
-                                    Id = itemEnhancement.Id.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    AvatarAddress = itemEnhancement.avatarAddress.ToString(),
-                                    ItemId = itemEnhancement.itemId.ToString(),
-                                    MaterialId = itemEnhancement.materialId.ToString(),
-                                    SlotIndex = itemEnhancement.slotIndex,
-                                    BlockIndex = ev.BlockIndex,
-                                });
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                                start = DateTimeOffset.UtcNow;
-
-                                var slotState = ev.OutputStates.GetCombinationSlotState(
-                                    itemEnhancement.avatarAddress,
-                                    itemEnhancement.slotIndex);
-
-                                if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
-                                {
-                                    ProcessEquipmentData(
-                                        ev.Signer,
-                                        itemEnhancement.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable);
-                                }
-
-                                end = DateTimeOffset.UtcNow;
-                                Log.Debug(
-                                    "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
-                                    itemEnhancement.avatarAddress,
-                                    ev.BlockIndex,
-                                    (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is Buy buy)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress);
-                                var buyerInventory = avatarState.inventory;
-                                foreach (var purchaseInfo in buy.purchaseInfos)
-                                {
-                                    var state = ev.OutputStates.GetState(
-                                    Addresses.GetItemAddress(purchaseInfo.TradableId));
-                                    ITradableItem orderItem =
-                                        (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
-                                    Order order =
-                                        OrderFactory.Deserialize(
-                                            (Dictionary)ev.OutputStates.GetState(
-                                                Order.DeriveAddress(purchaseInfo.OrderId))!);
-                                    int itemCount = order is FungibleOrder fungibleOrder
-                                        ? fungibleOrder.ItemCount
-                                        : 1;
-                                    if (orderItem.ItemType == ItemType.Equipment)
-                                    {
-                                        Equipment equipment = (Equipment)orderItem;
-                                        _buyShopEquipmentsList.Add(new ShopHistoryEquipmentModel()
-                                        {
-                                            OrderId = purchaseInfo.OrderId.ToString(),
-                                            TxId = string.Empty,
-                                            BlockIndex = ev.BlockIndex,
-                                            BlockHash = string.Empty,
-                                            ItemId = equipment.ItemId.ToString(),
-                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
-                                            BuyerAvatarAddress = buy.buyerAvatarAddress.ToString(),
-                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
-                                            ItemType = equipment.ItemType.ToString(),
-                                            ItemSubType = equipment.ItemSubType.ToString(),
-                                            Id = equipment.Id,
-                                            BuffSkillCount = equipment.BuffSkills.Count,
-                                            ElementalType = equipment.ElementalType.ToString(),
-                                            Grade = equipment.Grade,
-                                            SetId = equipment.SetId,
-                                            SkillsCount = equipment.Skills.Count,
-                                            SpineResourcePath = equipment.SpineResourcePath,
-                                            RequiredBlockIndex = equipment.RequiredBlockIndex,
-                                            NonFungibleId = equipment.NonFungibleId.ToString(),
-                                            TradableId = equipment.TradableId.ToString(),
-                                            UniqueStatType = equipment.UniqueStatType.ToString(),
-                                            ItemCount = itemCount,
-                                            TimeStamp = _blockTimeOffset,
-                                        });
-                                    }
-
-                                    if (orderItem.ItemType == ItemType.Costume)
-                                    {
-                                        Costume costume = (Costume)orderItem;
-                                        _buyShopCostumesList.Add(new ShopHistoryCostumeModel()
-                                        {
-                                            OrderId = purchaseInfo.OrderId.ToString(),
-                                            TxId = string.Empty,
-                                            BlockIndex = ev.BlockIndex,
-                                            BlockHash = string.Empty,
-                                            ItemId = costume.ItemId.ToString(),
-                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
-                                            BuyerAvatarAddress = buy.buyerAvatarAddress.ToString(),
-                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
-                                            ItemType = costume.ItemType.ToString(),
-                                            ItemSubType = costume.ItemSubType.ToString(),
-                                            Id = costume.Id,
-                                            ElementalType = costume.ElementalType.ToString(),
-                                            Grade = costume.Grade,
-                                            Equipped = costume.Equipped,
-                                            SpineResourcePath = costume.SpineResourcePath,
-                                            RequiredBlockIndex = costume.RequiredBlockIndex,
-                                            NonFungibleId = costume.NonFungibleId.ToString(),
-                                            TradableId = costume.TradableId.ToString(),
-                                            ItemCount = itemCount,
-                                            TimeStamp = _blockTimeOffset,
-                                        });
-                                    }
-
-                                    if (orderItem.ItemType == ItemType.Material)
-                                    {
-                                        Material material = (Material)orderItem;
-                                        _buyShopMaterialsList.Add(new ShopHistoryMaterialModel()
-                                        {
-                                            OrderId = purchaseInfo.OrderId.ToString(),
-                                            TxId = string.Empty,
-                                            BlockIndex = ev.BlockIndex,
-                                            BlockHash = string.Empty,
-                                            ItemId = material.ItemId.ToString(),
-                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
-                                            BuyerAvatarAddress = buy.buyerAvatarAddress.ToString(),
-                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
-                                            ItemType = material.ItemType.ToString(),
-                                            ItemSubType = material.ItemSubType.ToString(),
-                                            Id = material.Id,
-                                            ElementalType = material.ElementalType.ToString(),
-                                            Grade = material.Grade,
-                                            ItemCount = itemCount,
-                                            TimeStamp = _blockTimeOffset,
-                                        });
-                                    }
-
-                                    if (orderItem.ItemType == ItemType.Consumable)
-                                    {
-                                        Consumable consumable = (Consumable)orderItem;
-                                        _buyShopConsumablesList.Add(new ShopHistoryConsumableModel()
-                                        {
-                                            OrderId = purchaseInfo.OrderId.ToString(),
-                                            TxId = string.Empty,
-                                            BlockIndex = ev.BlockIndex,
-                                            BlockHash = string.Empty,
-                                            ItemId = consumable.ItemId.ToString(),
-                                            SellerAvatarAddress = purchaseInfo.SellerAvatarAddress.ToString(),
-                                            BuyerAvatarAddress = buy.buyerAvatarAddress.ToString(),
-                                            Price = decimal.Parse(purchaseInfo.Price.ToString().Split(" ").FirstOrDefault()!),
-                                            ItemType = consumable.ItemType.ToString(),
-                                            ItemSubType = consumable.ItemSubType.ToString(),
-                                            Id = consumable.Id,
-                                            BuffSkillCount = consumable.BuffSkills.Count,
-                                            ElementalType = consumable.ElementalType.ToString(),
-                                            Grade = consumable.Grade,
-                                            SkillsCount = consumable.Skills.Count,
-                                            RequiredBlockIndex = consumable.RequiredBlockIndex,
-                                            NonFungibleId = consumable.NonFungibleId.ToString(),
-                                            TradableId = consumable.TradableId.ToString(),
-                                            MainStat = consumable.MainStat.ToString(),
-                                            ItemCount = itemCount,
-                                            TimeStamp = _blockTimeOffset,
-                                        });
-                                    }
-
-                                    if (purchaseInfo.ItemSubType == ItemSubType.Armor
-                                        || purchaseInfo.ItemSubType == ItemSubType.Belt
-                                        || purchaseInfo.ItemSubType == ItemSubType.Necklace
-                                        || purchaseInfo.ItemSubType == ItemSubType.Ring
-                                        || purchaseInfo.ItemSubType == ItemSubType.Weapon)
-                                    {
-                                        var sellerState = ev.OutputStates.GetAvatarStateV2(purchaseInfo.SellerAvatarAddress);
-                                        var sellerInventory = sellerState.inventory;
-
-                                        if (buyerInventory.Equipments == null || sellerInventory.Equipments == null)
-                                        {
-                                            continue;
-                                        }
-
-                                        Equipment? equipment = buyerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.TradableId);
-
-                                        if (equipment is { } equipmentNotNull)
-                                        {
-                                            ProcessEquipmentData(
-                                                ev.Signer,
-                                                buy.buyerAvatarAddress,
-                                                equipmentNotNull);
-                                        }
-                                    }
-                                }
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug(
-                                    "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
-                                    buy.buyerAvatarAddress,
-                                    ev.BlockIndex,
-                                    (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is Stake stake)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                ev.OutputStates.TryGetStakeState(ev.Signer, out StakeState stakeState);
-                                var prevStakeStartBlockIndex =
-                                    !ev.PreviousStates.TryGetStakeState(ev.Signer, out StakeState prevStakeState)
-                                        ? 0 : prevStakeState.StartedBlockIndex;
-                                var newStakeStartBlockIndex = stakeState.StartedBlockIndex;
-                                var currency = ev.OutputStates.GetGoldCurrency();
-                                var balance = ev.OutputStates.GetBalance(ev.Signer, currency);
-                                var stakeStateAddress = StakeState.DeriveAddress(ev.Signer);
-                                var previousAmount = ev.PreviousStates.GetBalance(stakeStateAddress, currency);
-                                var newAmount = ev.OutputStates.GetBalance(stakeStateAddress, currency);
-                                _stakeList.Add(new StakeModel()
-                                {
-                                    BlockIndex = ev.BlockIndex,
-                                    AgentAddress = ev.Signer.ToString(),
-                                    PreviousAmount = Convert.ToDecimal(previousAmount.GetQuantityString()),
-                                    NewAmount = Convert.ToDecimal(newAmount.GetQuantityString()),
-                                    RemainingNCG = Convert.ToDecimal(balance.GetQuantityString()),
-                                    PrevStakeStartBlockIndex = prevStakeStartBlockIndex,
-                                    NewStakeStartBlockIndex = newStakeStartBlockIndex,
-                                    TimeStamp = _blockTimeOffset,
-                                });
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored Stake action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is ClaimStakeReward claimStakeReward)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
-                                var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
-                                var id = claimStakeReward.Id;
-                                ev.PreviousStates.TryGetStakeState(ev.Signer, out StakeState prevStakeState);
-
-                                var claimStakeStartBlockIndex = prevStakeState.StartedBlockIndex;
-                                var claimStakeEndBlockIndex = prevStakeState.ReceivedBlockIndex;
-                                var currency = ev.OutputStates.GetGoldCurrency();
-                                var stakeStateAddress = StakeState.DeriveAddress(ev.Signer);
-                                var stakedAmount = ev.OutputStates.GetBalance(stakeStateAddress, currency);
-
-                                var sheets = ev.PreviousStates.GetSheets(new[]
-                                {
-                                    typeof(StakeRegularRewardSheet),
-                                    typeof(ConsumableItemSheet),
-                                    typeof(CostumeItemSheet),
-                                    typeof(EquipmentItemSheet),
-                                    typeof(MaterialItemSheet),
-                                });
-                                StakeRegularRewardSheet stakeRegularRewardSheet = sheets.GetSheet<StakeRegularRewardSheet>();
-                                int level = stakeRegularRewardSheet.FindLevelByStakedAmount(ev.Signer, stakedAmount);
-                                var rewards = stakeRegularRewardSheet[level].Rewards;
-                                var accumulatedRewards = prevStakeState.CalculateAccumulatedRewards(ev.BlockIndex);
-                                int hourGlassCount = 0;
-                                int apPotionCount = 0;
-                                foreach (var reward in rewards)
-                                {
-                                    var (quantity, _) = stakedAmount.DivRem(currency * reward.Rate);
-                                    if (quantity < 1)
-                                    {
-                                        // If the quantity is zero, it doesn't add the item into inventory.
-                                        continue;
-                                    }
-
-                                    if (reward.ItemId == 400000)
-                                    {
-                                        hourGlassCount += (int)quantity * accumulatedRewards;
-                                    }
-
-                                    if (reward.ItemId == 500000)
-                                    {
-                                        apPotionCount += (int)quantity * accumulatedRewards;
-                                    }
-                                }
-
-                                if (ev.PreviousStates.TryGetSheet<StakeRegularFixedRewardSheet>(
-                                        out var stakeRegularFixedRewardSheet))
-                                {
-                                    var fixedRewards = stakeRegularFixedRewardSheet[level].Rewards;
-                                    foreach (var reward in fixedRewards)
-                                    {
-                                        if (reward.ItemId == 400000)
-                                        {
-                                            hourGlassCount += reward.Count * accumulatedRewards;
-                                        }
-
-                                        if (reward.ItemId == 500000)
-                                        {
-                                            apPotionCount += reward.Count * accumulatedRewards;
-                                        }
-                                    }
-                                }
-
-                                _claimStakeList.Add(new ClaimStakeRewardModel()
-                                {
-                                    Id = id.ToString(),
-                                    BlockIndex = ev.BlockIndex,
-                                    AgentAddress = ev.Signer.ToString(),
-                                    ClaimRewardAvatarAddress = avatarAddress.ToString(),
-                                    HourGlassCount = hourGlassCount,
-                                    ApPotionCount = apPotionCount,
-                                    ClaimStakeStartBlockIndex = claimStakeStartBlockIndex,
-                                    ClaimStakeEndBlockIndex = claimStakeEndBlockIndex,
-                                    TimeStamp = _blockTimeOffset,
-                                });
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored ClaimStakeReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is MigrateMonsterCollection mc)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                ev.OutputStates.TryGetStakeState(ev.Signer, out StakeState stakeState);
-                                var agentState = ev.PreviousStates.GetAgentState(ev.Signer);
-                                Address collectionAddress = MonsterCollectionState.DeriveAddress(ev.Signer, agentState.MonsterCollectionRound);
-                                ev.PreviousStates.TryGetState(collectionAddress, out Dictionary stateDict);
-                                var monsterCollectionState = new MonsterCollectionState(stateDict);
-                                var currency = ev.OutputStates.GetGoldCurrency();
-                                var migrationAmount = ev.PreviousStates.GetBalance(monsterCollectionState.address, currency);
-                                var migrationStartBlockIndex = ev.BlockIndex;
-                                var stakeStartBlockIndex = stakeState.StartedBlockIndex;
-                                _mmcList.Add(new MigrateMonsterCollectionModel()
-                                {
-                                    BlockIndex = ev.BlockIndex,
-                                    AgentAddress = ev.Signer.ToString(),
-                                    MigrationAmount = Convert.ToDecimal(migrationAmount.GetQuantityString()),
-                                    MigrationStartBlockIndex = migrationStartBlockIndex,
-                                    StakeStartBlockIndex = stakeStartBlockIndex,
-                                    TimeStamp = _blockTimeOffset,
-                                });
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is Grinding grind)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-
-                                AvatarState prevAvatarState = ev.PreviousStates.GetAvatarStateV2(grind.AvatarAddress);
-                                AgentState agentState = ev.PreviousStates.GetAgentState(ev.Signer);
-                                var previousStates = ev.PreviousStates;
-                                Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
-                                    ev.Signer,
-                                    agentState.MonsterCollectionRound
-                                );
-                                Dictionary<Type, (Address, ISheet)> sheets = previousStates.GetSheets(sheetTypes: new[]
-                                {
-                                    typeof(CrystalEquipmentGrindingSheet),
-                                    typeof(CrystalMonsterCollectionMultiplierSheet),
-                                    typeof(MaterialItemSheet),
-                                    typeof(StakeRegularRewardSheet),
-                                });
-
-                                List<Equipment> equipmentList = new List<Equipment>();
-                                foreach (var equipmentId in grind.EquipmentIds)
-                                {
-                                    if (prevAvatarState.inventory.TryGetNonFungibleItem(equipmentId, out Equipment equipment))
-                                    {
-                                        equipmentList.Add(equipment);
-                                    }
-                                }
-
-                                Currency currency = previousStates.GetGoldCurrency();
-                                FungibleAssetValue stakedAmount = 0 * currency;
-                                if (previousStates.TryGetStakeState(ev.Signer, out StakeState stakeState))
-                                {
-                                    stakedAmount = previousStates.GetBalance(stakeState.address, currency);
-                                }
-                                else
-                                {
-                                    if (previousStates.TryGetState(monsterCollectionAddress, out Dictionary _))
-                                    {
-                                        stakedAmount = previousStates.GetBalance(monsterCollectionAddress, currency);
-                                    }
-                                }
-
-                                FungibleAssetValue crystal = CrystalCalculator.CalculateCrystal(
-                                    ev.Signer,
-                                    equipmentList,
-                                    stakedAmount,
-                                    false,
-                                    sheets.GetSheet<CrystalEquipmentGrindingSheet>(),
-                                    sheets.GetSheet<CrystalMonsterCollectionMultiplierSheet>(),
-                                    sheets.GetSheet<StakeRegularRewardSheet>()
-                                );
-
-                                foreach (var equipment in equipmentList)
-                                {
-                                    _grindList.Add(new GrindingModel()
-                                    {
-                                        Id = grind.Id.ToString(),
-                                        AgentAddress = ev.Signer.ToString(),
-                                        AvatarAddress = grind.AvatarAddress.ToString(),
-                                        EquipmentItemId = equipment.ItemId.ToString(),
-                                        EquipmentId = equipment.Id,
-                                        EquipmentLevel = equipment.level,
-                                        Crystal = Convert.ToDecimal(crystal.GetQuantityString()),
-                                        BlockIndex = ev.BlockIndex,
-                                        TimeStamp = _blockTimeOffset,
-                                    });
-                                }
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored Grinding action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is UnlockEquipmentRecipe unlockEquipmentRecipe)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var previousStates = ev.PreviousStates;
-                                Currency crystalCurrency = CrystalCalculator.CRYSTAL;
-                                var prevCrystalBalance = previousStates.GetBalance(
-                                    ev.Signer,
-                                    crystalCurrency);
-                                var outputCrystalBalance = ev.OutputStates.GetBalance(
-                                    ev.Signer,
-                                    crystalCurrency);
-                                var burntCrystal = prevCrystalBalance - outputCrystalBalance;
-                                foreach (var recipeId in unlockEquipmentRecipe.RecipeIds)
-                                {
-                                    _unlockEquipmentRecipeList.Add(new UnlockEquipmentRecipeModel()
-                                    {
-                                        Id = unlockEquipmentRecipe.Id.ToString(),
-                                        BlockIndex = ev.BlockIndex,
-                                        AgentAddress = ev.Signer.ToString(),
-                                        AvatarAddress = unlockEquipmentRecipe.AvatarAddress.ToString(),
-                                        UnlockEquipmentRecipeId = recipeId,
-                                        BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                        TimeStamp = _blockTimeOffset,
-                                    });
-                                }
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored UnlockEquipmentRecipe action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is UnlockWorld unlockWorld)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var previousStates = ev.PreviousStates;
-                                Currency crystalCurrency = CrystalCalculator.CRYSTAL;
-                                var prevCrystalBalance = previousStates.GetBalance(
-                                    ev.Signer,
-                                    crystalCurrency);
-                                var outputCrystalBalance = ev.OutputStates.GetBalance(
-                                    ev.Signer,
-                                    crystalCurrency);
-                                var burntCrystal = prevCrystalBalance - outputCrystalBalance;
-                                foreach (var worldId in unlockWorld.WorldIds)
-                                {
-                                    _unlockWorldList.Add(new UnlockWorldModel()
-                                    {
-                                        Id = unlockWorld.Id.ToString(),
-                                        BlockIndex = ev.BlockIndex,
-                                        AgentAddress = ev.Signer.ToString(),
-                                        AvatarAddress = unlockWorld.AvatarAddress.ToString(),
-                                        UnlockWorldId = worldId,
-                                        BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                        TimeStamp = _blockTimeOffset,
-                                    });
-                                }
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored UnlockWorld action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is HackAndSlashRandomBuff hasRandomBuff)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var previousStates = ev.PreviousStates;
-                                AvatarState prevAvatarState = previousStates.GetAvatarStateV2(hasRandomBuff.AvatarAddress);
-                                prevAvatarState.worldInformation.TryGetLastClearedStageId(out var currentStageId);
-                                Currency crystalCurrency = CrystalCalculator.CRYSTAL;
-                                var prevCrystalBalance = previousStates.GetBalance(
-                                    ev.Signer,
-                                    crystalCurrency);
-                                var outputCrystalBalance = ev.OutputStates.GetBalance(
-                                    ev.Signer,
-                                    crystalCurrency);
-                                var burntCrystal = prevCrystalBalance - outputCrystalBalance;
-                                _hasRandomBuffList.Add(new HasRandomBuffModel()
-                                {
-                                    Id = hasRandomBuff.Id.ToString(),
-                                    BlockIndex = ev.BlockIndex,
-                                    AgentAddress = ev.Signer.ToString(),
-                                    AvatarAddress = hasRandomBuff.AvatarAddress.ToString(),
-                                    HasStageId = currentStageId,
-                                    GachaCount = !hasRandomBuff.AdvancedGacha ? 5 : 10,
-                                    BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                    TimeStamp = _blockTimeOffset,
-                                });
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored HasRandomBuff action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is JoinArena joinArena)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(joinArena.avatarAddress);
-                                var previousStates = ev.PreviousStates;
-                                Currency crystalCurrency = CrystalCalculator.CRYSTAL;
-                                var prevCrystalBalance = previousStates.GetBalance(
-                                    ev.Signer,
-                                    crystalCurrency);
-                                var outputCrystalBalance = ev.OutputStates.GetBalance(
-                                    ev.Signer,
-                                    crystalCurrency);
-                                var burntCrystal = prevCrystalBalance - outputCrystalBalance;
-                                _joinArenaList.Add(new JoinArenaModel()
-                                {
-                                    Id = joinArena.Id.ToString(),
-                                    BlockIndex = ev.BlockIndex,
-                                    AgentAddress = ev.Signer.ToString(),
-                                    AvatarAddress = joinArena.avatarAddress.ToString(),
-                                    AvatarLevel = avatarState.level,
-                                    ArenaRound = joinArena.round,
-                                    ChampionshipId = joinArena.championshipId,
-                                    BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
-                                    TimeStamp = _blockTimeOffset,
-                                });
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored JoinArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (ev.Action is BattleArena battleArena)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = ev.OutputStates.GetAvatarStateV2(battleArena.myAvatarAddress);
-                                var previousStates = ev.PreviousStates;
-                                var myArenaScoreAdr =
-                                    ArenaScore.DeriveAddress(battleArena.myAvatarAddress, battleArena.championshipId, battleArena.round);
-                                previousStates.TryGetArenaScore(myArenaScoreAdr, out var previousArenaScore);
-                                ev.OutputStates.TryGetArenaScore(myArenaScoreAdr, out var currentArenaScore);
-                                Currency ncgCurrency = ev.OutputStates.GetGoldCurrency();
-                                var prevNCGBalance = previousStates.GetBalance(
-                                    ev.Signer,
-                                    ncgCurrency);
-                                var outputNCGBalance = ev.OutputStates.GetBalance(
-                                    ev.Signer,
-                                    ncgCurrency);
-                                var burntNCG = prevNCGBalance - outputNCGBalance;
-                                int ticketCount = battleArena.ticket;
-                                var sheets = previousStates.GetSheets(
-                                    containArenaSimulatorSheets: true,
-                                    sheetTypes: new[] { typeof(ArenaSheet), typeof(ItemRequirementSheet), typeof(EquipmentItemRecipeSheet), typeof(EquipmentItemSubRecipeSheetV2), typeof(EquipmentItemOptionSheet), typeof(MaterialItemSheet), }
-                                );
-                                var arenaSheet = ev.OutputStates.GetSheet<ArenaSheet>();
-                                var arenaData = arenaSheet.GetRoundByBlockIndex(ev.BlockIndex);
-                                var arenaInformationAdr =
-                                    ArenaInformation.DeriveAddress(battleArena.myAvatarAddress, battleArena.championshipId, battleArena.round);
-                                previousStates.TryGetArenaInformation(arenaInformationAdr, out var previousArenaInformation);
-                                ev.OutputStates.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
-                                var winCount = currentArenaInformation.Win - previousArenaInformation.Win;
-                                var medalCount = 0;
-                                if (arenaData.ArenaType != ArenaType.OffSeason &&
-                                    winCount > 0)
-                                {
-                                    var materialSheet = sheets.GetSheet<MaterialItemSheet>();
-                                    var medal = ArenaHelper.GetMedal(battleArena.championshipId, battleArena.round, materialSheet);
-                                    if (medal != null)
-                                    {
-                                        medalCount += winCount;
-                                    }
-                                }
-
-                                _battleArenaList.Add(new BattleArenaModel()
-                                {
-                                    Id = battleArena.Id.ToString(),
-                                    BlockIndex = ev.BlockIndex,
-                                    AgentAddress = ev.Signer.ToString(),
-                                    AvatarAddress = battleArena.myAvatarAddress.ToString(),
-                                    AvatarLevel = avatarState.level,
-                                    EnemyAvatarAddress = battleArena.enemyAvatarAddress.ToString(),
-                                    ChampionshipId = battleArena.championshipId,
-                                    Round = battleArena.round,
-                                    TicketCount = ticketCount,
-                                    BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
-                                    Victory = currentArenaScore.Score > previousArenaScore.Score,
-                                    MedalCount = medalCount,
-                                    TimeStamp = _blockTimeOffset,
-                                });
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored BattleArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Error("RenderSubscriber: {message}", ex.Message);
-                        }
-                    });
-
-            _actionRenderer.EveryUnrender<ActionBase>()
-                .Subscribe(
-                    ev =>
-                    {
-                        try
-                        {
-                            if (ev.Exception != null)
-                            {
-                                return;
-                            }
-
-                            if (ev.Action is HackAndSlash has)
-                            {
-                                MySqlStore.DeleteHackAndSlash(has.Id);
-                                Log.Debug("Deleted HackAndSlash action in block #{index}", ev.BlockIndex);
-                            }
-
-                            if (ev.Action is CombinationConsumable combinationConsumable)
-                            {
-                                MySqlStore.DeleteCombinationConsumable(combinationConsumable.Id);
-                                Log.Debug("Deleted CombinationConsumable action in block #{index}", ev.BlockIndex);
-                            }
-
-                            if (ev.Action is CombinationEquipment combinationEquipment)
-                            {
-                                MySqlStore.DeleteCombinationEquipment(combinationEquipment.Id);
-                                Log.Debug("Deleted CombinationEquipment action in block #{index}", ev.BlockIndex);
-                                var slotState = ev.OutputStates.GetCombinationSlotState(
-                                    combinationEquipment.avatarAddress,
-                                    combinationEquipment.slotIndex);
-
-                                if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
-                                {
-                                    ProcessEquipmentData(
-                                        ev.Signer,
-                                        combinationEquipment.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable);
-                                }
-
-                                Log.Debug(
-                                    "Reverted avatar {address}'s equipments in block #{index}",
-                                    combinationEquipment.avatarAddress,
-                                    ev.BlockIndex);
-                            }
-
-                            if (ev.Action is ItemEnhancement itemEnhancement)
-                            {
-                                MySqlStore.DeleteItemEnhancement(itemEnhancement.Id);
-                                Log.Debug("Deleted ItemEnhancement action in block #{index}", ev.BlockIndex);
-                                var slotState = ev.OutputStates.GetCombinationSlotState(
-                                    itemEnhancement.avatarAddress,
-                                    itemEnhancement.slotIndex);
-
-                                if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
-                                {
-                                    ProcessEquipmentData(
-                                        ev.Signer,
-                                        itemEnhancement.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable);
-                                }
-
-                                Log.Debug(
-                                    "Reverted avatar {address}'s equipments in block #{index}",
-                                    itemEnhancement.avatarAddress,
-                                    ev.BlockIndex);
-                            }
-
-                            if (ev.Action is Buy buy)
-                            {
-                                var buyerInventory = ev.OutputStates.GetAvatarStateV2(buy.buyerAvatarAddress).inventory;
-
-                                foreach (var purchaseInfo in buy.purchaseInfos)
-                                {
-                                    if (purchaseInfo.ItemSubType == ItemSubType.Armor
-                                        || purchaseInfo.ItemSubType == ItemSubType.Belt
-                                        || purchaseInfo.ItemSubType == ItemSubType.Necklace
-                                        || purchaseInfo.ItemSubType == ItemSubType.Ring
-                                        || purchaseInfo.ItemSubType == ItemSubType.Weapon)
-                                    {
-                                        AvatarState sellerState = ev.OutputStates.GetAvatarStateV2(purchaseInfo.SellerAvatarAddress);
-                                        var sellerInventory = sellerState.inventory;
-                                        var previousStates = ev.PreviousStates;
-                                        var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                        var avatarLevel = sellerState.level;
-                                        var avatarArmorId = sellerState.GetArmorId();
-                                        var avatarTitleCostume = sellerState.inventory.Costumes.FirstOrDefault(costume => costume.ItemSubType == ItemSubType.Title && costume.equipped);
-                                        int? avatarTitleId = null;
-                                        if (avatarTitleCostume != null)
-                                        {
-                                            avatarTitleId = avatarTitleCostume.Id;
-                                        }
-
-                                        var avatarCp = CPHelper.GetCP(sellerState, characterSheet);
-                                        string avatarName = sellerState.name;
-
-                                        if (buyerInventory.Equipments == null || sellerInventory.Equipments == null)
-                                        {
-                                            continue;
-                                        }
-
-                                        MySqlStore.StoreAgent(ev.Signer);
-                                        MySqlStore.StoreAvatar(
-                                            purchaseInfo.SellerAvatarAddress,
-                                            purchaseInfo.SellerAgentAddress,
-                                            avatarName,
-                                            avatarLevel,
-                                            avatarTitleId,
-                                            avatarArmorId,
-                                            avatarCp);
-                                        Equipment? equipment = buyerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
-                                            i.TradableId == purchaseInfo.TradableId);
-
-                                        if (equipment is { } equipmentNotNull)
-                                        {
-                                            ProcessEquipmentData(
-                                                purchaseInfo.SellerAvatarAddress,
-                                                purchaseInfo.SellerAgentAddress,
-                                                equipmentNotNull);
-                                        }
-                                    }
-                                }
-
-                                Log.Debug(
-                                    "Reverted avatar {address}'s equipment in block #{index}",
-                                    buy.buyerAvatarAddress,
-                                    ev.BlockIndex);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Error("RenderSubscriber: {message}", ex.Message);
-                        }
-                    });
-
-            _actionRenderer.EveryRender<Raid>()
-                .Subscribe(ev =>
-                {
-                    try
-                    {
-                        if (ev.Exception is null)
-                        {
-                            int raidId = 0;
-                            bool found = false;
-                            for (int i = 0; i < 99; i++)
-                            {
-                                if (ev.OutputStates.UpdatedAddresses.Contains(
-                                        Addresses.GetRaiderAddress(ev.Action.AvatarAddress, i)))
-                                {
-                                    raidId = i;
-                                    found = true;
-                                    break;
-                                }
-                            }
-
-                            if (found)
-                            {
-                                RaiderState raiderState =
-                                    ev.OutputStates.GetRaiderState(ev.Action.AvatarAddress, raidId);
-                                var model = new RaiderModel(raidId, raiderState.AvatarName, raiderState.HighScore, raiderState.TotalScore, raiderState.Cp, raiderState.IconId, raiderState.Level, raiderState.AvatarAddress.ToHex());
-                                MySqlStore.StoreRaider(model);
-                            }
-                            else
-                            {
-                                Log.Error("can't find raidId.");
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
-                });
-
-            return Task.CompletedTask;
-        }
-
-        private void ProcessEquipmentData(
-            Address agentAddress,
-            Address avatarAddress,
-            Equipment equipment)
-        {
-            var cp = CPHelper.GetCP(equipment);
-            _eqList.Add(new EquipmentModel()
-            {
-                ItemId = equipment.ItemId.ToString(),
-                AgentAddress = agentAddress.ToString(),
-                AvatarAddress = avatarAddress.ToString(),
-                EquipmentId = equipment.Id,
-                Cp = cp,
-                Level = equipment.level,
-                ItemSubType = equipment.ItemSubType.ToString(),
-            });
-        }
-
-        private void ProcessAgentAvatarData(ActionBase.ActionEvaluation<ActionBase> ev)
-        {
-            if (!_agents.Contains(ev.Signer.ToString()))
-            {
-                _agents.Add(ev.Signer.ToString());
-                _agentList.Add(new AgentModel()
-                {
-                    Address = ev.Signer.ToString(),
-                });
-
-                if (ev.Signer != _miner)
-                {
-                    var agentState = ev.OutputStates.GetAgentState(ev.Signer);
-                    if (agentState is { } ag)
-                    {
-                        var avatarAddresses = ag.avatarAddresses;
-                        foreach (var avatarAddress in avatarAddresses)
-                        {
-                            try
-                            {
-                                AvatarState avatarState;
-                                try
-                                {
-                                    avatarState = ev.OutputStates.GetAvatarStateV2(avatarAddress.Value);
-                                }
-                                catch (Exception)
-                                {
-                                    avatarState = ev.OutputStates.GetAvatarState(avatarAddress.Value);
-                                }
-
-                                if (avatarState == null)
-                                {
-                                    continue;
-                                }
-
-                                var previousStates = ev.PreviousStates;
-                                var characterSheet = previousStates.GetSheet<CharacterSheet>();
-                                var avatarLevel = avatarState.level;
-                                var avatarArmorId = avatarState.GetArmorId();
-                                Costume? avatarTitleCostume;
-                                try
-                                {
-                                    avatarTitleCostume =
-                                        avatarState.inventory.Costumes.FirstOrDefault(costume =>
-                                            costume.ItemSubType == ItemSubType.Title &&
-                                            costume.equipped);
-                                }
-                                catch (Exception)
-                                {
-                                    avatarTitleCostume = null;
-                                }
-
-                                int? avatarTitleId = null;
-                                if (avatarTitleCostume != null)
-                                {
-                                    avatarTitleId = avatarTitleCostume.Id;
-                                }
-
-                                var avatarCp = CPHelper.GetCP(avatarState, characterSheet);
-                                string avatarName = avatarState.name;
-
-                                Log.Debug(
-                                    "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
-                                    avatarName,
-                                    avatarLevel,
-                                    avatarArmorId,
-                                    avatarTitleId,
-                                    avatarCp);
-                                _avatarList.Add(new AvatarModel()
-                                {
-                                    Address = avatarAddress.Value.ToString(),
-                                    AgentAddress = ev.Signer.ToString(),
-                                    Name = avatarName,
-                                    AvatarLevel = avatarLevel,
-                                    TitleId = avatarTitleId,
-                                    ArmorId = avatarArmorId,
-                                    Cp = avatarCp,
-                                    Timestamp = _blockTimeOffset,
-                                });
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine(ex.Message);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private string GetSignerAndOtherAddressesHex(Address signer, params Address[] addresses)
-        {
-            StringBuilder sb = new StringBuilder($"[{signer.ToHex()}");
-
-            foreach (Address address in addresses)
-            {
-                sb.Append($", {address.ToHex()}");
-            }
-
-            sb.Append("]");
-            return sb.ToString();
+                    MySqlStore.StoreRaiderList(_raiderList);
+                    MySqlStore.StoreBattleGrandFinaleList(_battleGrandFinaleList);
+                    MySqlStore.StoreEventMaterialItemCraftsList(_eventMaterialItemCraftsList);
+                    MySqlStore.StoreRuneEnhancementList(_runeEnhancementList);
+                    MySqlStore.StoreRunesAcquiredList(_runesAcquiredList);
+                    MySqlStore.StoreUnlockRuneSlotList(_unlockRuneSlotList);
+                    MySqlStore.StoreRapidCombinationList(_rapidCombinationList);
+                    MySqlStore.StorePetEnhancementList(_petEnhancementList);
+                    MySqlStore.StoreTransferAssetList(_transferAssetList);
+                    MySqlStore.StoreRequestPledgeList(_requestPledgeList);
+                    MySqlStore.StoreAuraSummonList(_auraSummonList);
+                    MySqlStore.StoreAuraSummonFailList(_auraSummonFailList);
+                }),
+            };
+
+            Task.WaitAll(tasks.ToArray());
+            _renderedBlockCount = 0;
+            _agents.Clear();
+            _agentList.Clear();
+            _avatarList.Clear();
+            _hasList.Clear();
+            _ccList.Clear();
+            _ceList.Clear();
+            _ieList.Clear();
+            _buyShopEquipmentsList.Clear();
+            _buyShopCostumesList.Clear();
+            _buyShopMaterialsList.Clear();
+            _buyShopConsumablesList.Clear();
+            _buyShopFavList.Clear();
+            _eqList.Clear();
+            _stakeList.Clear();
+            _claimStakeList.Clear();
+            _mmcList.Clear();
+            _grindList.Clear();
+            _itemEnhancementFailList.Clear();
+            _unlockEquipmentRecipeList.Clear();
+            _unlockWorldList.Clear();
+            _replaceCombinationEquipmentMaterialList.Clear();
+            _hasRandomBuffList.Clear();
+            _hasWithRandomBuffList.Clear();
+            _joinArenaList.Clear();
+            _battleArenaList.Clear();
+            _blockList.Clear();
+            _transactionList.Clear();
+            _hasSweepList.Clear();
+            _eventDungeonBattleList.Clear();
+            _eventConsumableItemCraftsList.Clear();
+            _raiderList.Clear();
+            _battleGrandFinaleList.Clear();
+            _eventMaterialItemCraftsList.Clear();
+            _runeEnhancementList.Clear();
+            _runesAcquiredList.Clear();
+            _unlockRuneSlotList.Clear();
+            _rapidCombinationList.Clear();
+            _petEnhancementList.Clear();
+            _transferAssetList.Clear();
+            _requestPledgeList.Clear();
+            _auraSummonList.Clear();
+            _auraSummonFailList.Clear();
+
+            var end = DateTimeOffset.Now;
+            long blockIndex = b.OldTip.Index;
+            StreamWriter blockIndexFile = new StreamWriter(_blockIndexFilePath);
+            blockIndexFile.Write(blockIndex);
+            blockIndexFile.Flush();
+            blockIndexFile.Close();
+            Log.Debug($"Storing Data Complete. Time Taken: {(end - start).Milliseconds} ms.");
         }
     }
 }

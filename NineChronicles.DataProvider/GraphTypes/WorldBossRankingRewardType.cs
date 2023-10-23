@@ -2,18 +2,19 @@ namespace NineChronicles.DataProvider.GraphTypes
 {
     using System.Collections.Generic;
     using GraphQL.Types;
-    using Libplanet.Assets;
+    using Libplanet.Types.Assets;
+    using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless.GraphTypes;
 
-    public class WorldBossRankingRewardType : ObjectGraphType<(int, List<FungibleAssetValue>)>
+    public class WorldBossRankingRewardType : ObjectGraphType<(WorldBossRankingModel, List<FungibleAssetValue>)>
     {
         public WorldBossRankingRewardType()
         {
-            Field<NonNullGraphType<IntGraphType>>(
-                "ranking",
+            Field<NonNullGraphType<WorldBossRankingType>>(
+                "raider",
                 resolve: context => context.Source.Item1
             );
-            Field<ListGraphType<FungibleAssetValueWithCurrencyType>>(
+            Field<NonNullGraphType<ListGraphType<FungibleAssetValueWithCurrencyType>>>(
                 "rewards",
                 resolve: context => context.Source.Item2
             );

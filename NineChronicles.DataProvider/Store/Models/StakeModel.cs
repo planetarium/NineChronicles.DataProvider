@@ -21,7 +21,6 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public long NewStakeStartBlockIndex { get; set; }
 
-        [Key]
         public DateTimeOffset TimeStamp { get; set; }
     }
 }

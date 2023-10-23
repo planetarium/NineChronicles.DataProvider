@@ -1,6 +1,7 @@
 ﻿namespace NineChronicles.DataProvider
 {
     using System;
+    using System.Collections.Concurrent;
     using GraphQL.Server;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -10,7 +11,7 @@
     using NineChronicles.DataProvider.GraphTypes;
     using NineChronicles.Headless;
     using NineChronicles.Headless.GraphTypes;
-    using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
+    using Sentry;
 
     public class GraphQLStartup
     {
@@ -41,11 +42,12 @@
                 .AddDataLoader()
                 .AddGraphTypes(typeof(NineChroniclesSummarySchema))
                 .AddGraphTypes(typeof(StandaloneSchema))
-                .AddLibplanetExplorer<NCAction>()
+                .AddLibplanetExplorer()
                 .AddUserContextBuilder<UserContextBuilder>();
             services.AddGraphTypes();
             services.AddSingleton<NineChroniclesSummarySchema>();
             services.AddSingleton<StandaloneSchema>();
+            services.AddSingleton<ConcurrentDictionary<string, ITransaction>>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -64,7 +66,7 @@
                 endpoints.MapHealthChecks("/health-check");
             });
 
-            app.UseGraphQL<NineChroniclesSummarySchema>("/graphql");
+            app.UseGraphQL<NineChroniclesSummarySchema>();
             app.UseGraphQL<StandaloneSchema>("/graphql_headless");
             app.UseGraphQLPlayground();
         }

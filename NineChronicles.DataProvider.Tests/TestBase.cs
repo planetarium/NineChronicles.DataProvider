@@ -1,18 +1,13 @@
-using System.Collections.Generic;
+using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using Bencodex.Types;
 using GraphQL;
 using GraphQL.Server;
 using GraphQL.Types;
-using Libplanet;
-using Libplanet.Action;
-using Libplanet.Assets;
+using Libplanet.Action.State;
 using Libplanet.KeyStore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Nekoyume.Action;
 using NineChronicles.DataProvider.GraphTypes;
 using NineChronicles.DataProvider.Store;
 using NineChronicles.Headless;
@@ -28,6 +23,7 @@ public abstract class TestBase
     protected DocumentExecuter DocumentExecuter;
     protected Schema Schema;
     protected NineChroniclesContext Context;
+    protected ServiceCollection Services;
 
     protected TestBase()
     {
@@ -55,21 +51,19 @@ public abstract class TestBase
         {
             KeyStore = keyStore,
         };
-        var stateContext = new StateContext(
-            GetStatesMock,
-            GetBalanceMock,
-            0L);
+        var stateContext = new StateContext(GetMockState(), 0L);
         services
             .AddSingleton(standaloneContext)
             .AddSingleton(stateContext)
             .AddGraphQL()
             .AddGraphTypes(typeof(NineChroniclesSummarySchema))
             .AddGraphTypes(typeof(StandaloneSchema))
-            .AddLibplanetExplorer<PolymorphicAction<ActionBase>>();
+            .AddLibplanetExplorer();
         services.AddSingleton<NineChroniclesSummarySchema>();
         var serviceProvider = services.BuildServiceProvider();
         Schema = new NineChroniclesSummarySchema(serviceProvider);
         DocumentExecuter = new DocumentExecuter();
+        Services = services;
     }
 
     private NineChroniclesContext CreateContext(string connectionString)
@@ -91,11 +85,5 @@ public abstract class TestBase
         });
     }
 
-
-    protected abstract IValue? GetStateMock(Address address);
-
-    private IReadOnlyList<IValue?> GetStatesMock(IReadOnlyList<Address> addresses) =>
-        addresses.Select(GetStateMock).ToArray();
-
-    protected abstract FungibleAssetValue GetBalanceMock(Address address, Currency currency);
+    protected abstract IAccountState GetMockState();
 }

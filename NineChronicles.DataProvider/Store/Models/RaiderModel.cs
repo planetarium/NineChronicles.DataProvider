@@ -5,10 +5,19 @@ namespace NineChronicles.DataProvider.Store.Models
     using System.ComponentModel.DataAnnotations.Schema;
     using Microsoft.EntityFrameworkCore;
 
-    [Index(nameof(RaidId), nameof(AvatarName), IsUnique = true)]
+    [Index(nameof(RaidId), nameof(Address), IsUnique = true)]
     public class RaiderModel
     {
-        public RaiderModel(int raidId, string avatarName, int highScore, int totalScore, int cp, int iconId, int level, string address)
+        public RaiderModel(
+            int raidId,
+            string avatarName,
+            int highScore,
+            int totalScore,
+            int cp,
+            int iconId,
+            int level,
+            string address,
+            int purchaseCount)
         {
             RaidId = raidId;
             AvatarName = avatarName;
@@ -18,6 +27,7 @@ namespace NineChronicles.DataProvider.Store.Models
             IconId = iconId;
             Level = level;
             Address = address;
+            PurchaseCount = purchaseCount;
         }
 
         [Key]
@@ -46,6 +56,9 @@ namespace NineChronicles.DataProvider.Store.Models
 
         [Required]
         public int IconId { get; set; }
+
+        [Required]
+        public int PurchaseCount { get; set; }
 
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTimeOffset CreatedAt { get; set; }

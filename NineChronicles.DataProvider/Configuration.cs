@@ -47,8 +47,6 @@ namespace NineChronicles.DataProvider
 
         public bool NoCors { get; set; }
 
-        public int Workers { get; set; }
-
         public int Confirmations { get; set; }
 
         public bool StrictRendering { get; set; }
@@ -88,6 +86,10 @@ namespace NineChronicles.DataProvider
         public int BucketSize { get; set; }
 
         public string[]? StaticPeerStrings { get; set; }
+
+        public bool NoReduceStore { get; set; }
+
+        public StateServiceManagerServiceOptions? StateServiceManagerService { get; set; }
 
 #pragma warning restore SA1011 // Closing square brackets should be spaced correctly
 #nullable disable

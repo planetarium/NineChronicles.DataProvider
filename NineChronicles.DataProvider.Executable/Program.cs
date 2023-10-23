@@ -1,32 +1,78 @@
-using System.IO;
-using Lib9c.DevExtensions;
-using Libplanet;
-using Libplanet.Action;
-using Libplanet.Blockchain;
-using Libplanet.Crypto;
-using Libplanet.Headless.Hosting;
-using Nekoyume.Action;
-using NineChronicles.Headless.GraphTypes.States;
+using System.Collections.Concurrent;
+using Nekoyume.Action.Loader;
+using IPAddress = System.Net.IPAddress;
 
 namespace NineChronicles.DataProvider.Executable
 {
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Cocona;
+    using Libplanet.Action.Loader;
+    using Libplanet.Crypto;
     using Libplanet.KeyStore;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using NineChronicles.DataProvider.Executable.Commands;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.Headless;
+    using NineChronicles.Headless.GraphTypes.States;
     using NineChronicles.Headless.Properties;
     using Serilog;
 
-    public static class Program
+    [HasSubCommands(typeof(MySqlMigration), "mysql-migration")]
+    [HasSubCommands(typeof(BattleArenaRankingMigration), "battle-arena-ranking-migration")]
+    [HasSubCommands(typeof(UserStakingMigration), "user-staking-migration")]
+    public class Program : CoconaLiteConsoleAppBase
     {
-        public static async Task Main()
+        public static async Task Main(string[] args)
+        {
+            await CoconaLiteApp.CreateHostBuilder()
+                .RunAsync<Program>(args);
+        }
+
+        // EF Core uses this method at design time to access the DbContext
+        public static IHostBuilder CreateHostBuilder(string[] args)
+            => Host.CreateDefaultBuilder(args)
+                .ConfigureServices(services =>
+                {
+                    services.AddDbContextFactory<NineChroniclesContext>(options =>
+                    {
+                        // Get configuration from appsettings or env
+                        var configurationBuilder = new ConfigurationBuilder()
+                            .AddJsonFile("appsettings.json")
+                            .AddEnvironmentVariables("NC_");
+                        IConfiguration config = configurationBuilder.Build();
+                        var headlessConfig = new Configuration();
+                        config.Bind(headlessConfig);
+                        if (headlessConfig.MySqlConnectionString != string.Empty)
+                        {
+                            args = new[] { headlessConfig.MySqlConnectionString };
+                        }
+
+                        if (args.Length == 1)
+                        {
+                            options.UseMySql(
+                                args[0],
+                                ServerVersion.AutoDetect(
+                                    args[0]),
+                                b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable"));
+                        }
+                        else
+                        {
+                            options.UseSqlite(
+                                @"Data Source=9c.gg.db",
+                                b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable")
+                            );
+                        }
+                    });
+                });
+
+        [PrimaryCommand]
+        public async Task Run()
         {
             // Get configuration
             var configurationBuilder = new ConfigurationBuilder()
@@ -72,24 +118,25 @@ namespace NineChronicles.DataProvider.Executable
                     headlessConfig.SwarmPrivateKeyString,
                     headlessConfig.StoreType,
                     headlessConfig.StorePath,
-                    noReduceStore: true,
+                    headlessConfig.NoReduceStore,
                     100,
                     headlessConfig.IceServerStrings,
                     headlessConfig.PeerStrings,
                     headlessConfig.TrustedAppProtocolVersionSigners,
                     noMiner: headlessConfig.NoMiner,
-                    workers: headlessConfig.Workers,
                     confirmations: headlessConfig.Confirmations,
                     messageTimeout: headlessConfig.MessageTimeout,
                     tipTimeout: headlessConfig.TipTimeout,
                     demandBuffer: headlessConfig.DemandBuffer,
                     minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget,
                     bucketSize: headlessConfig.BucketSize,
-                    staticPeerStrings: headlessConfig.StaticPeerStrings,
                     render: headlessConfig.Render,
                     preload: headlessConfig.Preload);
 
-            var nineChroniclesProperties = new NineChroniclesNodeServiceProperties()
+            IActionLoader actionLoader = new NCActionLoader();
+
+            var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(
+                actionLoader, headlessConfig.StateServiceManagerService)
             {
                 MinerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
                     ? null
@@ -104,6 +151,21 @@ namespace NineChronicles.DataProvider.Executable
                 MinerCount = headlessConfig.NoMiner ? 0 : 1,
                 NetworkType = headlessConfig.NetworkType,
             };
+            NineChroniclesNodeService service =
+                NineChroniclesNodeService.Create(nineChroniclesProperties, context);
+            ActionEvaluationPublisher publisher = new ActionEvaluationPublisher(
+                context.NineChroniclesNodeService!.BlockRenderer,
+                context.NineChroniclesNodeService!.ActionRenderer,
+                context.NineChroniclesNodeService!.ExceptionRenderer,
+                context.NineChroniclesNodeService!.NodeStatusRenderer,
+                IPAddress.Loopback.ToString(),
+                0,
+                new RpcContext
+                {
+                    RpcRemoteSever = false
+                },
+                new ConcurrentDictionary<string, Sentry.ITransaction>()
+            );
 
             if (headlessConfig.LogActionRenders)
             {
@@ -115,11 +177,10 @@ namespace NineChronicles.DataProvider.Executable
                 services.AddSingleton(_ => context);
             });
 
-            hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, context);
+            hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, context, publisher, service);
 
             var stateContext = new StateContext(
-                context.BlockChain!.ToAccountStateGetter(),
-                context.BlockChain!.ToAccountBalanceGetter(),
+                context.BlockChain!.GetAccountState(context.BlockChain!.Tip.Hash),
                 context.BlockChain!.Tip.Index
             );
 
@@ -135,7 +196,7 @@ namespace NineChronicles.DataProvider.Executable
                             {
                                 mySqlOptions
                                     .EnableRetryOnFailure(
-                                        maxRetryCount: 3,
+                                        maxRetryCount: 10,
                                         maxRetryDelay: TimeSpan.FromSeconds(10),
                                         errorNumbersToAdd: null);
                             }
@@ -145,46 +206,10 @@ namespace NineChronicles.DataProvider.Executable
                     services.AddSingleton<MySqlStore>();
                     services.Configure<Configuration>(config);
                     services.AddSingleton(stateContext);
+                    services.AddHostedService<RaiderWorker>();
                 });
 
             await hostBuilder.RunConsoleAsync(token);
         }
-
-        // EF Core uses this method at design time to access the DbContext
-        public static IHostBuilder CreateHostBuilder(string[] args)
-            => Host.CreateDefaultBuilder(args)
-                .ConfigureServices(services =>
-                {
-                    services.AddDbContextFactory<NineChroniclesContext>(options =>
-                    {
-                        // Get configuration from appsettings or env
-                        var configurationBuilder = new ConfigurationBuilder()
-                            .AddJsonFile("appsettings.json")
-                            .AddEnvironmentVariables("NC_");
-                        IConfiguration config = configurationBuilder.Build();
-                        var headlessConfig = new Configuration();
-                        config.Bind(headlessConfig);
-                        if (headlessConfig.MySqlConnectionString != string.Empty)
-                        {
-                            args = new[] { headlessConfig.MySqlConnectionString };
-                        }
-
-                        if (args.Length == 1)
-                        {
-                            options.UseMySql(
-                                args[0],
-                                ServerVersion.AutoDetect(
-                                    args[0]),
-                                b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable"));
-                        }
-                        else
-                        {
-                            options.UseSqlite(
-                                @"Data Source=9c.gg.db",
-                                b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable")
-                            );
-                        }
-                    });
-                });
     }
 }
