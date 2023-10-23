@@ -11,17 +11,26 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
     using Libplanet.Action;
     using Libplanet.Blockchain;
     using Libplanet.Blockchain.Policies;
-    using Libplanet.Blocks;
+    using Libplanet.Crypto;
     using Libplanet.RocksDBStore;
     using Libplanet.Store;
+    using Libplanet.Types.Assets;
+    using Libplanet.Types.Blocks;
     using MySqlConnector;
     using Nekoyume;
     using Nekoyume.Action;
-    using Nekoyume.BlockChain.Policy;
+    using Nekoyume.Action.Loader;
+    using Nekoyume.Battle;
+    using Nekoyume.Blockchain.Policy;
+    using Nekoyume.Extensions;
+    using Nekoyume.Helper;
+    using Nekoyume.Model.Arena;
     using Nekoyume.Model.Item;
+    using Nekoyume.Model.State;
+    using Nekoyume.TableData;
+    using NineChronicles.Headless;
     using Serilog;
     using Serilog.Events;
-    using NCAction = Libplanet.Action.PolymorphicAction<Nekoyume.Action.ActionBase>;
 
     public class MySqlMigration
     {
@@ -29,7 +38,7 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
         private const string TxDbName = "Transactions";
         private string _connectionString;
         private IStore _baseStore;
-        private BlockChain<NCAction> _baseChain;
+        private BlockChain _baseChain;
         private StreamWriter _blockBulkFile;
         private StreamWriter _txBulkFile;
         private List<string> _blockFiles;
@@ -125,14 +134,19 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 new TrieStateStore(baseStateKeyValueStore);
 
             // Setup block policy
-            IStagePolicy<NCAction> stagePolicy = new VolatileStagePolicy<NCAction>();
+            IStagePolicy stagePolicy = new VolatileStagePolicy();
             LogEventLevel logLevel = LogEventLevel.Debug;
-            var blockPolicySource = new BlockPolicySource(Log.Logger, logLevel);
-            IBlockPolicy<NCAction> blockPolicy = blockPolicySource.GetPolicy();
+            var blockPolicySource = new BlockPolicySource();
+            IBlockPolicy blockPolicy = blockPolicySource.GetPolicy();
 
             // Setup base chain & new chain
-            Block<NCAction> genesis = _baseStore.GetBlock<NCAction>(gHash);
-            _baseChain = new BlockChain<NCAction>(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis);
+            Block genesis = _baseStore.GetBlock(gHash);
+            var blockChainStates = new BlockChainStates(_baseStore, baseStateStore);
+            var actionEvaluator = new ActionEvaluator(
+                _ => blockPolicy.BlockAction,
+                blockChainStates,
+                new NCActionLoader());
+            _baseChain = new BlockChain(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, actionEvaluator);
 
             // Prepare block hashes to append to new chain
             long height = _baseChain.Tip.Index;
@@ -177,32 +191,33 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             _baseStore.IterateIndexes(_baseChain.Id, offset + idx ?? 0 + idx, limitInterval)
                                 .Select((value, i) => new { i, value }))
                     {
-                        var block = _baseStore.GetBlock<NCAction>(item.value);
+                        var block = _baseStore.GetBlock(item.value);
                         Console.WriteLine("Migrating {0}/{1} #{2}", item.i, count, block.Index);
                         _blockBulkFile.WriteLine(
                             $"{block.Index};" +
                             $"{block.Hash.ToString()};" +
                             $"{block.Miner.ToString()};" +
-                            $"{block.Difficulty};" +
-                            $"{block.Nonce.ToString()};" +
+                            $"{0};" +
+                            "Empty;" +
                             $"{block.PreviousHash.ToString()};" +
                             $"{block.ProtocolVersion};" +
                             $"{block.PublicKey!};" +
                             $"{block.StateRootHash.ToString()};" +
-                            $"{block.TotalDifficulty};" +
+                            $"{0};" +
                             $"{block.Transactions.Count};" +
                             $"{block.TxHash.ToString()};" +
                             $"{block.Timestamp.UtcDateTime:o}");
                         foreach (var tx in block.Transactions)
                         {
                             string actionType = null;
-                            if (tx.CustomActions!.Count == 0)
+                            if (tx.Actions.Actions.Count == 0)
                             {
                                 actionType = string.Empty;
                             }
                             else
                             {
-                                actionType = tx.CustomActions[0].InnerAction.ToString()!.Split(".").Last();
+                                actionType = NCActionUtils.ToAction(tx.Actions.FirstOrDefault()!)
+                                    .ToString()!.Split('.').LastOrDefault()!.Replace(">", string.Empty);
                             }
 
                             _txBulkFile.WriteLine(
