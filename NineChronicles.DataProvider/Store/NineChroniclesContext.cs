@@ -43,19 +43,19 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<EquipmentRankingModel>? EquipmentRanking { get; set; }
 
         // Table for ranking avatars' armor combat points
-        public DbSet<EquipmentRankingModel>? EquipmentRankingArmor { get; set; }
+        public DbSet<EquipmentRankingArmorModel>? EquipmentRankingArmor { get; set; }
 
         // Table for ranking avatars' belt combat points
-        public DbSet<EquipmentRankingModel>? EquipmentRankingBelt { get; set; }
+        public DbSet<EquipmentRankingBeltModel>? EquipmentRankingBelt { get; set; }
 
         // Table for ranking avatars' necklace combat points
-        public DbSet<EquipmentRankingModel>? EquipmentRankingNecklace { get; set; }
+        public DbSet<EquipmentRankingNecklaceModel>? EquipmentRankingNecklace { get; set; }
 
         // Table for ranking avatars' ring combat points
-        public DbSet<EquipmentRankingModel>? EquipmentRankingRing { get; set; }
+        public DbSet<EquipmentRankingRingModel>? EquipmentRankingRing { get; set; }
 
         // Table for ranking avatars' weapon combat points
-        public DbSet<EquipmentRankingModel>? EquipmentRankingWeapon { get; set; }
+        public DbSet<EquipmentRankingWeaponModel>? EquipmentRankingWeapon { get; set; }
 
         // Table for ranking avatars' total combat points
         public DbSet<AbilityRankingModel>? AbilityRanking { get; set; }
@@ -190,6 +190,11 @@ namespace NineChronicles.DataProvider.Store
             modelBuilder.Entity<StageRankingModel>().HasNoKey();
             modelBuilder.Entity<CraftRankingOutputModel>().HasNoKey();
             modelBuilder.Entity<EquipmentRankingModel>().HasNoKey();
+            modelBuilder.Entity<EquipmentRankingArmorModel>().HasNoKey();
+            modelBuilder.Entity<EquipmentRankingBeltModel>().HasNoKey();
+            modelBuilder.Entity<EquipmentRankingNecklaceModel>().HasNoKey();
+            modelBuilder.Entity<EquipmentRankingRingModel>().HasNoKey();
+            modelBuilder.Entity<EquipmentRankingWeaponModel>().HasNoKey();
             modelBuilder.Entity<AbilityRankingModel>().HasNoKey();
             modelBuilder.Entity<BattleArenaRankingModel>().HasNoKey();
             modelBuilder.Entity<ShopMaterialModel>().HasNoKey();
