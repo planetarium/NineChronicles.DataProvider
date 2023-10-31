@@ -196,7 +196,7 @@ namespace NineChronicles.DataProvider.Executable
                             {
                                 mySqlOptions
                                     .EnableRetryOnFailure(
-                                        maxRetryCount: 10,
+                                        maxRetryCount: 50,
                                         maxRetryDelay: TimeSpan.FromSeconds(10),
                                         errorNumbersToAdd: null);
                             }
