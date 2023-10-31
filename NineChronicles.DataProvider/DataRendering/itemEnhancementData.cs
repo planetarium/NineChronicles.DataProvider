@@ -33,7 +33,7 @@
                 ncgCurrency);
             var burntNCG = prevNCGBalance - outputNCGBalance;
 
-            var equipment = outputStates.GetAvatarState(avatarAddress).inventory.Equipments
+            var equipment = outputStates.GetAvatarStateV2(avatarAddress).inventory.Equipments
                 .First(e => e.ItemId == itemId);
 
             var itemEnhancementModel = new ItemEnhancementModel()
