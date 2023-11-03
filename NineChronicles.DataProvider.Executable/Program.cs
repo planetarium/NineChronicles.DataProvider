@@ -1,4 +1,11 @@
+#nullable enable
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using Libplanet.Headless.Hosting;
 using Nekoyume.Action.Loader;
 using IPAddress = System.Net.IPAddress;
 
@@ -73,12 +80,35 @@ namespace NineChronicles.DataProvider.Executable
                 });
 
         [PrimaryCommand]
-        public async Task Run()
+        public async Task Run(
+            [Option(Description = "The path of the appsettings JSON file.")] string? configPath = null)
         {
             // Get configuration
-            var configurationBuilder = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json")
-                .AddEnvironmentVariables("NC_");
+            var configurationBuilder = new ConfigurationBuilder();
+            if (configPath != null)
+            {
+                if (Uri.IsWellFormedUriString(configPath, UriKind.Absolute))
+                {
+                    HttpClient client = new HttpClient();
+                    HttpResponseMessage resp = await client.GetAsync(configPath);
+                    resp.EnsureSuccessStatusCode();
+                    Stream body = await resp.Content.ReadAsStreamAsync();
+                    configurationBuilder.AddJsonStream(body)
+                        .AddEnvironmentVariables("NC_");
+                }
+                else
+                {
+                    configurationBuilder.AddJsonFile(configPath!)
+                        .AddEnvironmentVariables("NC_");
+                }
+            }
+            else
+            {
+                configurationBuilder
+                    .AddJsonFile("appsettings.json")
+                    .AddEnvironmentVariables("NC_");
+            }
+
             IConfiguration config = configurationBuilder.Build();
             var headlessConfig = new Configuration();
             config.Bind(headlessConfig);
