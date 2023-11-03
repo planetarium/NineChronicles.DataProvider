@@ -140,6 +140,40 @@ namespace NineChronicles.DataProvider.Executable
                 builder.UseUrls($"http://{headlessConfig.GraphQLHost}:{headlessConfig.GraphQLPort}/");
             });
 
+            IActionEvaluatorConfiguration GetActionEvaluatorConfiguration(IConfiguration configuration)
+            {
+                if (!(configuration.GetValue<ActionEvaluatorType>("Type") is { } actionEvaluatorType))
+                {
+                    return null;
+                }
+
+                return actionEvaluatorType switch
+                {
+                    ActionEvaluatorType.Default => new DefaultActionEvaluatorConfiguration(),
+                    ActionEvaluatorType.RemoteActionEvaluator => new RemoteActionEvaluatorConfiguration
+                    {
+                        StateServiceEndpoint = configuration.GetValue<string>("StateServiceEndpoint"),
+                    },
+                    ActionEvaluatorType.ForkableActionEvaluator => new ForkableActionEvaluatorConfiguration
+                    {
+                        Pairs = (configuration.GetSection("Pairs") ??
+                            throw new KeyNotFoundException()).GetChildren().Select(pair =>
+                        {
+                            var range = new ForkableActionEvaluatorRange();
+                            pair.Bind("Range", range);
+                            var actionEvaluatorConfiguration =
+                                GetActionEvaluatorConfiguration(pair.GetSection("ActionEvaluator")) ??
+                                throw new KeyNotFoundException();
+                            return (range, actionEvaluatorConfiguration);
+                        }).ToImmutableArray()
+                    },
+                    _ => throw new InvalidOperationException("Unexpected type."),
+                };
+            }
+
+            var actionEvaluatorConfiguration =
+                GetActionEvaluatorConfiguration(config.GetSection("Headless").GetSection("ActionEvaluator"));
+
             var properties = NineChroniclesNodeServiceProperties
                 .GenerateLibplanetNodeServiceProperties(
                     headlessConfig.AppProtocolVersionToken,
@@ -162,7 +196,8 @@ namespace NineChronicles.DataProvider.Executable
                     minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget,
                     bucketSize: headlessConfig.BucketSize,
                     render: headlessConfig.Render,
-                    preload: headlessConfig.Preload);
+                    preload: headlessConfig.Preload,
+                    actionEvaluatorConfiguration: actionEvaluatorConfiguration);
 
             IActionLoader actionLoader = new NCActionLoader();
 
