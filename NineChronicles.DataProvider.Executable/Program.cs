@@ -26,6 +26,7 @@ namespace NineChronicles.DataProvider.Executable
     [HasSubCommands(typeof(MySqlMigration), "mysql-migration")]
     [HasSubCommands(typeof(BattleArenaRankingMigration), "battle-arena-ranking-migration")]
     [HasSubCommands(typeof(UserStakingMigration), "user-staking-migration")]
+    [HasSubCommands(typeof(ItemEnhancementMigration), "item-enhancement-migration")]
     public class Program : CoconaLiteConsoleAppBase
     {
         public static async Task Main(string[] args)
