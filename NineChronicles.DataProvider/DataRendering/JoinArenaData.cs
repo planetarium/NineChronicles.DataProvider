@@ -44,6 +44,7 @@
                 ArenaRound = round,
                 ChampionshipId = championshipId,
                 BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 

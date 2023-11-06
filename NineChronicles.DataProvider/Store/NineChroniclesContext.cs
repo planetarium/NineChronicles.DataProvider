@@ -26,9 +26,7 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<ItemEnhancementModel>? ItemEnhancements { get; set; }
 
         // Table for ranking avatars' total craft counts
-        public DbSet<CraftRankingInputModel>? CraftRankings { get; set; }
-
-        public DbSet<CraftRankingOutputModel>? CraftRankingsOutput { get; set; }
+        public DbSet<CraftRankingModel>? CraftRankings { get; set; }
 
         // Table for storing avatar information
         public DbSet<AvatarModel>? Avatars { get; set; }
@@ -180,6 +178,24 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<AuraSummonFailModel> AuraSummonFails => Set<AuraSummonFailModel>();
 
+        public DbSet<UserConsumablesModel> UserConsumables => Set<UserConsumablesModel>();
+
+        public DbSet<UserCostumesModel> UserCostumes => Set<UserCostumesModel>();
+
+        public DbSet<UserCrystalsModel> UserCrystals => Set<UserCrystalsModel>();
+
+        public DbSet<UserEquipmentsModel> UserEquipments => Set<UserEquipmentsModel>();
+
+        public DbSet<UserMaterialsModel> UserMaterials => Set<UserMaterialsModel>();
+
+        public DbSet<UserMonsterCollectionsModel> UserMonsterCollections => Set<UserMonsterCollectionsModel>();
+
+        public DbSet<UserNCGsModel> UserNCGs => Set<UserNCGsModel>();
+
+        public DbSet<UserRunesModel> UserRunes => Set<UserRunesModel>();
+
+        public DbSet<UserStakingsModel> UserStakings => Set<UserStakingsModel>();
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.
@@ -188,7 +204,7 @@ namespace NineChronicles.DataProvider.Store
         {
             modelBuilder.Entity<StakeModel>().HasNoKey();
             modelBuilder.Entity<StageRankingModel>().HasNoKey();
-            modelBuilder.Entity<CraftRankingOutputModel>().HasNoKey();
+            modelBuilder.Entity<CraftRankingModel>().HasNoKey();
             modelBuilder.Entity<EquipmentRankingModel>().HasNoKey();
             modelBuilder.Entity<EquipmentRankingArmorModel>().HasNoKey();
             modelBuilder.Entity<EquipmentRankingBeltModel>().HasNoKey();
@@ -206,6 +222,15 @@ namespace NineChronicles.DataProvider.Store
             modelBuilder.Entity<WorldBossRankingModel>()
                 .HasNoKey()
                 .ToTable("WorldBossRankings", t => t.ExcludeFromMigrations());
+            modelBuilder.Entity<UserConsumablesModel>().HasNoKey();
+            modelBuilder.Entity<UserCostumesModel>().HasNoKey();
+            modelBuilder.Entity<UserCrystalsModel>().HasNoKey();
+            modelBuilder.Entity<UserEquipmentsModel>().HasNoKey();
+            modelBuilder.Entity<UserMaterialsModel>().HasNoKey();
+            modelBuilder.Entity<UserMonsterCollectionsModel>().HasNoKey();
+            modelBuilder.Entity<UserNCGsModel>().HasNoKey();
+            modelBuilder.Entity<UserRunesModel>().HasNoKey();
+            modelBuilder.Entity<UserStakingsModel>().HasNoKey();
         }
     }
 }

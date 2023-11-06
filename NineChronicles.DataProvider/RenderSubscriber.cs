@@ -401,7 +401,8 @@ namespace NineChronicles.DataProvider
                                 combinationConsumable.recipeId,
                                 combinationConsumable.slotIndex,
                                 combinationConsumable.Id,
-                                ev.BlockIndex));
+                                ev.BlockIndex,
+                                _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("Stored CombinationConsumable action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
@@ -431,7 +432,8 @@ namespace NineChronicles.DataProvider
                                 combinationEquipment.slotIndex,
                                 combinationEquipment.subRecipeId,
                                 combinationEquipment.Id,
-                                ev.BlockIndex));
+                                ev.BlockIndex,
+                                _blockTimeOffset));
                             if (combinationEquipment.payByCrystal)
                             {
                                 var replaceCombinationEquipmentMaterialList = ReplaceCombinationEquipmentMaterialData
@@ -468,7 +470,8 @@ namespace NineChronicles.DataProvider
                                 _eqList.Add(EquipmentData.GetEquipmentInfo(
                                     ev.Signer,
                                     combinationEquipment.avatarAddress,
-                                    (Equipment)slotState.Result.itemUsable));
+                                    (Equipment)slotState.Result.itemUsable,
+                                    _blockTimeOffset));
                             }
 
                             end = DateTimeOffset.UtcNow;
@@ -520,7 +523,8 @@ namespace NineChronicles.DataProvider
                                 itemEnhancement.materialIds,
                                 itemEnhancement.itemId,
                                 itemEnhancement.Id,
-                                ev.BlockIndex));
+                                ev.BlockIndex,
+                                _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             start = DateTimeOffset.UtcNow;
@@ -534,7 +538,8 @@ namespace NineChronicles.DataProvider
                                 _eqList.Add(EquipmentData.GetEquipmentInfo(
                                     ev.Signer,
                                     itemEnhancement.avatarAddress,
-                                    (Equipment)slotState.Result.itemUsable));
+                                    (Equipment)slotState.Result.itemUsable,
+                                    _blockTimeOffset));
                             }
 
                             end = DateTimeOffset.UtcNow;
@@ -600,7 +605,8 @@ namespace NineChronicles.DataProvider
                                         _eqList.Add(EquipmentData.GetEquipmentInfo(
                                             ev.Signer,
                                             buy.buyerAvatarAddress,
-                                            equipmentNotNull));
+                                            equipmentNotNull,
+                                            _blockTimeOffset));
                                     }
                                 }
                             }
@@ -704,7 +710,8 @@ namespace NineChronicles.DataProvider
                                             _eqList.Add(EquipmentData.GetEquipmentInfo(
                                                 ev.Signer,
                                                 buy.AvatarAddress,
-                                                equipment));
+                                                equipment,
+                                                _blockTimeOffset));
                                         }
 
                                         break;

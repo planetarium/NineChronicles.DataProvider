@@ -1,5 +1,6 @@
 namespace NineChronicles.DataProvider.Store.Models
 {
+    using System;
     using System.ComponentModel.DataAnnotations;
 
     public class ItemEnhancementModel
@@ -7,13 +8,13 @@ namespace NineChronicles.DataProvider.Store.Models
         [Key]
         public string? Id { get; set; }
 
-        public string? AgentAddress { get; set; }
-
-        public AgentModel? Agent { get; set; }
-
         public string? AvatarAddress { get; set; }
 
         public AvatarModel? Avatar { get; set; }
+
+        public string? AgentAddress { get; set; }
+
+        public AgentModel? Agent { get; set; }
 
         public string? ItemId { get; set; }
 
@@ -32,5 +33,9 @@ namespace NineChronicles.DataProvider.Store.Models
         public int? Level { get; set; }
 
         public long? Exp { get; set; }
+
+        public DateOnly Date { get; set; }
+
+        public DateTimeOffset TimeStamp { get; set; }
     }
 }

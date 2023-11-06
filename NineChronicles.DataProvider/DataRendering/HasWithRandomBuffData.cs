@@ -35,6 +35,7 @@
                 StageId = stageId,
                 BuffId = (int)stageBuffId!,
                 Cleared = isClear,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 

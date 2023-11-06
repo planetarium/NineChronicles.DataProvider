@@ -21,7 +21,8 @@
             List<Guid> materialIds,
             Guid itemId,
             Guid actionId,
-            long blockIndex
+            long blockIndex,
+            DateTimeOffset blockTime
         )
         {
             Currency ncgCurrency = outputStates.GetGoldCurrency();
@@ -50,6 +51,8 @@
                 SheetId = equipment.Id,
                 Level = equipment.level,
                 Exp = equipment.Exp,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
+                TimeStamp = blockTime,
             };
 
             return itemEnhancementModel;

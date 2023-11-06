@@ -92,6 +92,7 @@
                 BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
                 Victory = currentArenaScore.Score > previousArenaScore.Score,
                 MedalCount = medalCount,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 
