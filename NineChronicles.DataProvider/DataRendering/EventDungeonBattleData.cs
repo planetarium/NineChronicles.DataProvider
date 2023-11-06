@@ -124,6 +124,7 @@
                 RewardItem10Id = rewardItemData["rewardItem10Id"],
                 RewardItem10Count = rewardItemData["rewardItem10Count"],
                 BlockIndex = blockIndex,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 Timestamp = blockTime,
             };
 

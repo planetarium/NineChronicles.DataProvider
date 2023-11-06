@@ -24,6 +24,8 @@
 
         public decimal BurntCrystal { get; set; }
 
+        public DateOnly Date { get; set; }
+
         public DateTimeOffset TimeStamp { get; set; }
     }
 }

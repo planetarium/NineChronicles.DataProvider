@@ -56,6 +56,7 @@
                 RemainingNCG = Convert.ToDecimal(balance.GetQuantityString()),
                 PrevStakeStartBlockIndex = prevStakeStartBlockIndex,
                 NewStakeStartBlockIndex = newStakeStartBlockIndex,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 

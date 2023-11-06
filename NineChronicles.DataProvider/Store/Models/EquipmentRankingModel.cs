@@ -7,9 +7,9 @@
         [Key]
         public string? ItemId { get; set; }
 
-        public string? AgentAddress { get; set; }
-
         public string? AvatarAddress { get; set; }
+
+        public string? AgentAddress { get; set; }
 
         public int EquipmentId { get; set; }
 

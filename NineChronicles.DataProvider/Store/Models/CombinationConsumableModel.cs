@@ -1,5 +1,6 @@
 namespace NineChronicles.DataProvider.Store.Models
 {
+    using System;
     using System.ComponentModel.DataAnnotations;
 
     public class CombinationConsumableModel
@@ -20,5 +21,9 @@ namespace NineChronicles.DataProvider.Store.Models
         public int SlotIndex { get; set; }
 
         public long BlockIndex { get; set; }
+
+        public DateOnly Date { get; set; }
+
+        public DateTimeOffset TimeStamp { get; set; }
     }
 }

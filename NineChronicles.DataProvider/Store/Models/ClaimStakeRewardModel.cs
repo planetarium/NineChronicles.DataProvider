@@ -24,6 +24,8 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public long ClaimStakeEndBlockIndex { get; set; }
 
+        public DateOnly Date { get; set; }
+
         public DateTimeOffset TimeStamp { get; set; }
     }
 }
