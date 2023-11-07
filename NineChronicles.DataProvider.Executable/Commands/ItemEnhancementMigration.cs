@@ -259,10 +259,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         _blockHash = block.Hash;
                         _blockIndex = block.Index;
                         _blockTimeOffset = block.Timestamp;
-                        _baseStore.PutBlock(block);
-                        var blockCommit = _baseStore.GetBlockCommit(block.Hash) ?? _baseChain.GetBlockCommit(block.Hash);
-                        Console.WriteLine($"Evaluating Block: #{block.Index} Hash: {block.Hash} BlockCommit: {blockCommit} Transaction Count: {block.Transactions.Count} {item.i}/{remainingCount}");
-                        _baseChain.Append(block, blockCommit);
+                        Console.WriteLine($"Evaluating Block: #{block.Index} Hash: {block.Hash} Transaction Count: {block.Transactions.Count} {item.i}/{remainingCount}");
 
                         List<IActionEvaluation> actionEvaluations = _baseChain.EvaluateBlock(block).ToList();
                         foreach (var ae in actionEvaluations)
