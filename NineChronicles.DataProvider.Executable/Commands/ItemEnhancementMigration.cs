@@ -335,23 +335,31 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 {
                     foreach (var ae in data)
                     {
-                        var actionLoader = new NCActionLoader();
-                        if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase action && action is ItemEnhancement itemEnhancement)
+                        try
                         {
-                            var start = DateTimeOffset.UtcNow;
-                            _itemEnhancementList.Add(ItemEnhancementData.GetItemEnhancementInfo(
-                                ae.InputContext.PreviousState,
-                                ae.OutputState,
-                                ae.InputContext.Signer,
-                                itemEnhancement.avatarAddress,
-                                itemEnhancement.slotIndex,
-                                Guid.Empty,
-                                itemEnhancement.materialIds,
-                                itemEnhancement.itemId,
-                                itemEnhancement.Id,
-                                ae.InputContext.BlockIndex));
-                            var end = DateTimeOffset.UtcNow;
-                            Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                            var actionLoader = new NCActionLoader();
+                            if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase action && action is ItemEnhancement itemEnhancement)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                _itemEnhancementList.Add(ItemEnhancementData.GetItemEnhancementInfo(
+                                    ae.InputContext.PreviousState,
+                                    ae.OutputState,
+                                    ae.InputContext.Signer,
+                                    itemEnhancement.avatarAddress,
+                                    itemEnhancement.slotIndex,
+                                    Guid.Empty,
+                                    itemEnhancement.materialIds,
+                                    itemEnhancement.itemId,
+                                    itemEnhancement.Id,
+                                    ae.InputContext.BlockIndex));
+                                var end = DateTimeOffset.UtcNow;
+                                Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                            Console.WriteLine(e.StackTrace);
                         }
                     }
                 }
