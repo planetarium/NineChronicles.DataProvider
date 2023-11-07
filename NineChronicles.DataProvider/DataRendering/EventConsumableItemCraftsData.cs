@@ -89,6 +89,7 @@
                 RequiredItem6Id = requiredItemData["requiredItem6Id"],
                 RequiredItem6Count = requiredItemData["requiredItem6Count"],
                 BlockIndex = blockIndex,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 Timestamp = blockTime,
             };
 

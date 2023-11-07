@@ -21,7 +21,8 @@
             List<Guid> materialIds,
             Guid itemId,
             Guid actionId,
-            long blockIndex
+            long blockIndex,
+            DateTimeOffset blockTime
         )
         {
             Currency ncgCurrency = outputStates.GetGoldCurrency();
@@ -33,7 +34,10 @@
                 ncgCurrency);
             var burntNCG = prevNCGBalance - outputNCGBalance;
 
-            var itemenhancementModel = new ItemEnhancementModel()
+            var equipment = outputStates.GetAvatarStateV2(avatarAddress).inventory.Equipments
+                .First(e => e.ItemId == itemId);
+
+            var itemEnhancementModel = new ItemEnhancementModel()
             {
                 Id = actionId.ToString(),
                 AgentAddress = signer.ToString(),
@@ -44,9 +48,14 @@
                 SlotIndex = slotIndex,
                 BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
                 BlockIndex = blockIndex,
+                SheetId = equipment.Id,
+                Level = equipment.level,
+                Exp = equipment.Exp,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
+                TimeStamp = blockTime,
             };
 
-            return itemenhancementModel;
+            return itemEnhancementModel;
         }
     }
 }

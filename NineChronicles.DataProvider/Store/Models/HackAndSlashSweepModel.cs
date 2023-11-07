@@ -34,6 +34,8 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public long BlockIndex { get; set; }
 
+        public DateOnly Date { get; set; }
+
         public DateTimeOffset Timestamp { get; set; }
     }
 }

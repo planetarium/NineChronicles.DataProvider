@@ -17,7 +17,8 @@
             int recipeId,
             int slotIndex,
             Guid actionId,
-            long blockIndex
+            long blockIndex,
+            DateTimeOffset blockTime
         )
         {
             var combinationConsumableModel = new CombinationConsumableModel()
@@ -28,6 +29,8 @@
                 RecipeId = recipeId,
                 SlotIndex = slotIndex,
                 BlockIndex = blockIndex,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
+                TimeStamp = blockTime.UtcDateTime,
             };
 
             return combinationConsumableModel;

@@ -1045,7 +1045,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationConsumable.recipeId,
                                     combinationConsumable.slotIndex,
                                     combinationConsumable.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
@@ -1061,7 +1062,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationConsumable7.recipeId,
                                     combinationConsumable7.slotIndex,
                                     combinationConsumable7.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
@@ -1077,7 +1079,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationConsumable6.recipeId,
                                     combinationConsumable6.slotIndex,
                                     combinationConsumable6.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
@@ -1093,7 +1096,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationConsumable5.recipeId,
                                     combinationConsumable5.slotIndex,
                                     combinationConsumable5.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
@@ -1109,7 +1113,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationConsumable4.recipeId,
                                     combinationConsumable4.slotIndex,
                                     combinationConsumable4.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
@@ -1125,7 +1130,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationConsumable3.recipeId,
                                     combinationConsumable3.slotIndex,
                                     combinationConsumable3.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
@@ -1141,7 +1147,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationConsumable2.recipeId,
                                     combinationConsumable2.slotIndex,
                                     combinationConsumable2.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
@@ -1157,7 +1164,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationConsumable0.recipeId,
                                     combinationConsumable0.slotIndex,
                                     combinationConsumable0.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
@@ -1174,7 +1182,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment.slotIndex,
                                     combinationEquipment.subRecipeId,
                                     combinationEquipment.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 if (combinationEquipment.payByCrystal)
                                 {
                                     var replaceCombinationEquipmentMaterialList = ReplaceCombinationEquipmentMaterialData
@@ -1211,7 +1220,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1234,7 +1244,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment15.slotIndex,
                                     combinationEquipment15.subRecipeId,
                                     combinationEquipment15.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 if (combinationEquipment15.payByCrystal)
                                 {
                                     var replaceCombinationEquipmentMaterialList = ReplaceCombinationEquipmentMaterialData
@@ -1271,7 +1282,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment15.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1294,7 +1306,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment14.slotIndex,
                                     combinationEquipment14.subRecipeId,
                                     combinationEquipment14.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 if (combinationEquipment14.payByCrystal)
                                 {
                                     var replaceCombinationEquipmentMaterialList = ReplaceCombinationEquipmentMaterialData
@@ -1331,7 +1344,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment14.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1354,7 +1368,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment13.slotIndex,
                                     combinationEquipment13.subRecipeId,
                                     combinationEquipment13.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 if (combinationEquipment13.payByCrystal)
                                 {
                                     var replaceCombinationEquipmentMaterialList = ReplaceCombinationEquipmentMaterialData
@@ -1391,7 +1406,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment13.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1414,7 +1430,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment12.slotIndex,
                                     combinationEquipment12.subRecipeId,
                                     combinationEquipment12.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 if (combinationEquipment12.payByCrystal)
                                 {
                                     var replaceCombinationEquipmentMaterialList = ReplaceCombinationEquipmentMaterialData
@@ -1451,7 +1468,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment12.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1474,7 +1492,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment11.slotIndex,
                                     combinationEquipment11.subRecipeId,
                                     combinationEquipment11.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine(
@@ -1492,7 +1511,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment11.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1515,7 +1535,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment10.slotIndex,
                                     combinationEquipment10.subRecipeId,
                                     combinationEquipment10.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine(
@@ -1533,7 +1554,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment10.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1556,7 +1578,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment9.slotIndex,
                                     combinationEquipment9.subRecipeId,
                                     combinationEquipment9.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine(
@@ -1574,7 +1597,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment9.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1597,7 +1621,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment8.slotIndex,
                                     combinationEquipment8.subRecipeId,
                                     combinationEquipment8.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine(
@@ -1615,7 +1640,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment8.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1638,7 +1664,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment7.SlotIndex,
                                     combinationEquipment7.SubRecipeId,
                                     combinationEquipment7.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine(
@@ -1656,7 +1683,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment7.AvatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1679,7 +1707,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment6.SlotIndex,
                                     combinationEquipment6.SubRecipeId,
                                     combinationEquipment6.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine(
@@ -1697,7 +1726,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment6.AvatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1720,7 +1750,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment5.SlotIndex,
                                     combinationEquipment5.SubRecipeId,
                                     combinationEquipment5.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine(
@@ -1738,7 +1769,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment5.AvatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1761,7 +1793,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment4.SlotIndex,
                                     combinationEquipment4.SubRecipeId,
                                     combinationEquipment4.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine(
@@ -1779,7 +1812,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment4.AvatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1802,7 +1836,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment3.SlotIndex,
                                     combinationEquipment3.SubRecipeId,
                                     combinationEquipment3.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine(
@@ -1820,7 +1855,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment3.AvatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1843,7 +1879,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment2.SlotIndex,
                                     combinationEquipment2.SubRecipeId,
                                     combinationEquipment2.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine(
@@ -1861,7 +1898,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment2.AvatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1884,7 +1922,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment0.SlotIndex,
                                     combinationEquipment0.SubRecipeId,
                                     combinationEquipment0.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine(
@@ -1902,7 +1941,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment0.AvatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1941,7 +1981,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     itemEnhancement.materialIds,
                                     itemEnhancement.itemId,
                                     itemEnhancement.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
@@ -1955,7 +1996,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         itemEnhancement.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -1994,7 +2036,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     new List<Guid>(),
                                     itemEnhancement10.itemId,
                                     itemEnhancement10.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
@@ -2008,7 +2051,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         itemEnhancement10.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -2047,7 +2091,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     new List<Guid>(),
                                     itemEnhancement9.itemId,
                                     itemEnhancement9.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
@@ -2061,7 +2106,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         itemEnhancement9.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -2100,7 +2146,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     new List<Guid>(),
                                     itemEnhancement8.itemId,
                                     itemEnhancement8.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
@@ -2114,7 +2161,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         itemEnhancement8.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -2153,7 +2201,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     new List<Guid>(),
                                     itemEnhancement7.itemId,
                                     itemEnhancement7.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
@@ -2167,7 +2216,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         itemEnhancement7.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -2206,7 +2256,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     new List<Guid>(),
                                     itemEnhancement6.itemId,
                                     itemEnhancement6.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
@@ -2220,7 +2271,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         itemEnhancement6.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -2259,7 +2311,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     new List<Guid>(),
                                     itemEnhancement5.itemId,
                                     itemEnhancement5.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
@@ -2273,7 +2326,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         itemEnhancement5.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -2312,7 +2366,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     new List<Guid>(),
                                     itemEnhancement4.itemId,
                                     itemEnhancement4.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
@@ -2326,7 +2381,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         itemEnhancement4.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -2365,7 +2421,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     new List<Guid>(),
                                     itemEnhancement3.itemId,
                                     itemEnhancement3.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
@@ -2379,7 +2436,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         itemEnhancement3.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -2418,7 +2476,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     new List<Guid>(),
                                     itemEnhancement2.itemId,
                                     itemEnhancement2.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
@@ -2432,7 +2491,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         itemEnhancement2.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -2471,7 +2531,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     new List<Guid>(),
                                     itemEnhancement0.itemId,
                                     itemEnhancement0.Id,
-                                    ae.InputContext.BlockIndex));
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
@@ -2485,7 +2546,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         itemEnhancement0.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable));
+                                        (Equipment)slotState.Result.itemUsable,
+                                        _blockTimeOffset));
                                 }
 
                                 end = DateTimeOffset.UtcNow;
@@ -2585,7 +2647,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                                 ae.InputContext.Signer,
                                                 buy.buyerAvatarAddress,
-                                                equipmentNotNull));
+                                                equipmentNotNull,
+                                                _blockTimeOffset));
                                         }
                                     }
                                 }
@@ -2687,7 +2750,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                                 ae.InputContext.Signer,
                                                 buy11.buyerAvatarAddress,
-                                                equipmentNotNull));
+                                                equipmentNotNull,
+                                                _blockTimeOffset));
                                         }
                                     }
                                 }
@@ -2789,7 +2853,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                                 ae.InputContext.Signer,
                                                 buy10.buyerAvatarAddress,
-                                                equipmentNotNull));
+                                                equipmentNotNull,
+                                                _blockTimeOffset));
                                         }
                                     }
                                 }
@@ -2891,7 +2956,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                                 ae.InputContext.Signer,
                                                 buy9.buyerAvatarAddress,
-                                                equipmentNotNull));
+                                                equipmentNotNull,
+                                                _blockTimeOffset));
                                         }
                                     }
                                 }
@@ -2993,7 +3059,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                                 ae.InputContext.Signer,
                                                 buy8.buyerAvatarAddress,
-                                                equipmentNotNull));
+                                                equipmentNotNull,
+                                                _blockTimeOffset));
                                         }
                                     }
                                 }
@@ -3095,7 +3162,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                                 ae.InputContext.Signer,
                                                 buy7.buyerAvatarAddress,
-                                                equipmentNotNull));
+                                                equipmentNotNull,
+                                                _blockTimeOffset));
                                         }
                                     }
                                 }
@@ -3197,7 +3265,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                                 ae.InputContext.Signer,
                                                 buy6.buyerAvatarAddress,
-                                                equipmentNotNull));
+                                                equipmentNotNull,
+                                                _blockTimeOffset));
                                         }
                                     }
                                 }
@@ -3299,7 +3368,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                                 ae.InputContext.Signer,
                                                 buy5.buyerAvatarAddress,
-                                                equipmentNotNull));
+                                                equipmentNotNull,
+                                                _blockTimeOffset));
                                         }
                                     }
                                 }
@@ -3333,7 +3403,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         buy4.buyerAvatarAddress,
-                                        equipment));
+                                        equipment,
+                                        _blockTimeOffset));
                                 }
 
                                 if (shopItem.ItemUsable.ItemType == ItemType.Costume)
@@ -3407,7 +3478,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         buy3.buyerAvatarAddress,
-                                        equipment));
+                                        equipment,
+                                        _blockTimeOffset));
                                 }
 
                                 if (shopItem.ItemUsable.ItemType == ItemType.Costume)
@@ -3481,7 +3553,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         buy2.buyerAvatarAddress,
-                                        equipment));
+                                        equipment,
+                                        _blockTimeOffset));
                                 }
 
                                 if (shopItem.ItemUsable.ItemType == ItemType.Costume)
@@ -3555,7 +3628,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         buy0.buyerAvatarAddress,
-                                        equipment));
+                                        equipment,
+                                        _blockTimeOffset));
                                 }
 
                                 if (shopItem.ItemUsable.ItemType == ItemType.Costume)

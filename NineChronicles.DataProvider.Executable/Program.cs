@@ -1,4 +1,11 @@
+#nullable enable
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using Libplanet.Headless.Hosting;
 using Nekoyume.Action.Loader;
 using IPAddress = System.Net.IPAddress;
 
@@ -73,12 +80,35 @@ namespace NineChronicles.DataProvider.Executable
                 });
 
         [PrimaryCommand]
-        public async Task Run()
+        public async Task Run(
+            [Option(Description = "The path of the appsettings JSON file.")] string? configPath = null)
         {
             // Get configuration
-            var configurationBuilder = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json")
-                .AddEnvironmentVariables("NC_");
+            var configurationBuilder = new ConfigurationBuilder();
+            if (configPath != null)
+            {
+                if (Uri.IsWellFormedUriString(configPath, UriKind.Absolute))
+                {
+                    HttpClient client = new HttpClient();
+                    HttpResponseMessage resp = await client.GetAsync(configPath);
+                    resp.EnsureSuccessStatusCode();
+                    Stream body = await resp.Content.ReadAsStreamAsync();
+                    configurationBuilder.AddJsonStream(body)
+                        .AddEnvironmentVariables("NC_");
+                }
+                else
+                {
+                    configurationBuilder.AddJsonFile(configPath!)
+                        .AddEnvironmentVariables("NC_");
+                }
+            }
+            else
+            {
+                configurationBuilder
+                    .AddJsonFile("appsettings.json")
+                    .AddEnvironmentVariables("NC_");
+            }
+
             IConfiguration config = configurationBuilder.Build();
             var headlessConfig = new Configuration();
             config.Bind(headlessConfig);
@@ -110,6 +140,40 @@ namespace NineChronicles.DataProvider.Executable
                 builder.UseUrls($"http://{headlessConfig.GraphQLHost}:{headlessConfig.GraphQLPort}/");
             });
 
+            IActionEvaluatorConfiguration GetActionEvaluatorConfiguration(IConfiguration configuration)
+            {
+                if (!(configuration.GetValue<ActionEvaluatorType>("Type") is { } actionEvaluatorType))
+                {
+                    return null;
+                }
+
+                return actionEvaluatorType switch
+                {
+                    ActionEvaluatorType.Default => new DefaultActionEvaluatorConfiguration(),
+                    ActionEvaluatorType.RemoteActionEvaluator => new RemoteActionEvaluatorConfiguration
+                    {
+                        StateServiceEndpoint = configuration.GetValue<string>("StateServiceEndpoint"),
+                    },
+                    ActionEvaluatorType.ForkableActionEvaluator => new ForkableActionEvaluatorConfiguration
+                    {
+                        Pairs = (configuration.GetSection("Pairs") ??
+                            throw new KeyNotFoundException()).GetChildren().Select(pair =>
+                        {
+                            var range = new ForkableActionEvaluatorRange();
+                            pair.Bind("Range", range);
+                            var actionEvaluatorConfiguration =
+                                GetActionEvaluatorConfiguration(pair.GetSection("ActionEvaluator")) ??
+                                throw new KeyNotFoundException();
+                            return (range, actionEvaluatorConfiguration);
+                        }).ToImmutableArray()
+                    },
+                    _ => throw new InvalidOperationException("Unexpected type."),
+                };
+            }
+
+            var actionEvaluatorConfiguration =
+                GetActionEvaluatorConfiguration(config.GetSection("Headless").GetSection("ActionEvaluator"));
+
             var properties = NineChroniclesNodeServiceProperties
                 .GenerateLibplanetNodeServiceProperties(
                     headlessConfig.AppProtocolVersionToken,
@@ -132,7 +196,8 @@ namespace NineChronicles.DataProvider.Executable
                     minimumBroadcastTarget: headlessConfig.MinimumBroadcastTarget,
                     bucketSize: headlessConfig.BucketSize,
                     render: headlessConfig.Render,
-                    preload: headlessConfig.Preload);
+                    preload: headlessConfig.Preload,
+                    actionEvaluatorConfiguration: actionEvaluatorConfiguration);
 
             IActionLoader actionLoader = new NCActionLoader();
 
@@ -198,7 +263,7 @@ namespace NineChronicles.DataProvider.Executable
                             {
                                 mySqlOptions
                                     .EnableRetryOnFailure(
-                                        maxRetryCount: 10,
+                                        maxRetryCount: 20,
                                         maxRetryDelay: TimeSpan.FromSeconds(10),
                                         errorNumbersToAdd: null);
                             }
