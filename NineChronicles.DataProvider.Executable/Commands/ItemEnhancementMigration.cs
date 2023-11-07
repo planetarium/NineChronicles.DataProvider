@@ -292,6 +292,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         offsetIdx += interval;
                         _mySqlStore.StoreItemEnhancementList(_itemEnhancementList);
                         _itemEnhancementList.Clear();
+                        GC.Collect();
+                        GC.WaitForPendingFinalizers();
                     }
                     else
                     {
