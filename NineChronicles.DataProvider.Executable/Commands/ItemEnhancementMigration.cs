@@ -338,8 +338,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         try
                         {
                             var actionLoader = new NCActionLoader();
-                            if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase action && action is ItemEnhancement itemEnhancement)
+                            var action = actionLoader.LoadAction(_blockIndex, ae.Action);
+                            if (action is ItemEnhancement itemEnhancement)
                             {
+                                Console.WriteLine("ItemEnhancement action found");
                                 var start = DateTimeOffset.UtcNow;
                                 _itemEnhancementList.Add(ItemEnhancementData.GetItemEnhancementInfo(
                                     ae.InputContext.PreviousState,
