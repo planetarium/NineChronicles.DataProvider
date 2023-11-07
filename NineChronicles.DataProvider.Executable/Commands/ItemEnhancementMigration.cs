@@ -256,7 +256,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                 while (remainingCount > 0)
                 {
-                    int interval = 100;
+                    int interval = 10;
                     int limitInterval;
                     Task<List<IActionEvaluation>>[] taskArray;
                     if (interval < remainingCount)
@@ -274,7 +274,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
                     {
                         var block = _baseStore.GetBlock(item.value);
-                        _blockList.Add(BlockData.GetBlockInfo(block));
                         _blockHash = block.Hash;
                         _blockIndex = block.Index;
                         _blockTimeOffset = block.Timestamp;
