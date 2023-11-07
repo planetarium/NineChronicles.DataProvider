@@ -278,17 +278,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         _blockHash = block.Hash;
                         _blockIndex = block.Index;
                         _blockTimeOffset = block.Timestamp;
-                        foreach (var tx in block.Transactions)
-                        {
-                            _txList.Add(TransactionData.GetTransactionInfo(block, tx));
-
-                            // check if address is already in _agentCheck
-                            if (!_agentCheck.Contains(tx.Signer.ToString()))
-                            {
-                                _agentList.Add(AgentData.GetAgentInfo(tx.Signer));
-                                _agentCheck.Add(tx.Signer.ToString());
-                            }
-                        }
 
                         taskArray[item.i] = Task.Factory.StartNew(() =>
                         {
@@ -302,6 +291,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     {
                         remainingCount -= interval;
                         offsetIdx += interval;
+                        _mySqlStore.StoreItemEnhancementList(_itemEnhancementList);
+                        _itemEnhancementList.Clear();
                     }
                     else
                     {
@@ -317,6 +308,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
                 Console.WriteLine("Start Data Migration...");
                 _mySqlStore.StoreItemEnhancementList(_itemEnhancementList);
+                _itemEnhancementList.Clear();
             }
             catch (Exception e)
             {
@@ -324,6 +316,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
             }
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
+            _mySqlStore.StoreItemEnhancementList(_itemEnhancementList);
+            _itemEnhancementList.Clear();
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
         }
 
