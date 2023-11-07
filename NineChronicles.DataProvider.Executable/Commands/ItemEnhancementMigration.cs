@@ -252,49 +252,66 @@ namespace NineChronicles.DataProvider.Executable.Commands
             {
                 int totalCount = limit ?? (int)_baseStore.CountBlocks();
                 int remainingCount = totalCount;
-                foreach (var item in
-                        _baseStore.IterateIndexes(_baseChain.Id, offset ?? 0, limit).Select((value, i) => new { i, value }))
+                int offsetIdx = 0;
+
+                while (remainingCount > 0)
+                {
+                    int interval = 100;
+                    int limitInterval;
+                    Task<List<IActionEvaluation>>[] taskArray;
+                    if (interval < remainingCount)
+                    {
+                        taskArray = new Task<List<IActionEvaluation>>[interval];
+                        limitInterval = interval;
+                    }
+                    else
+                    {
+                        taskArray = new Task<List<IActionEvaluation>>[remainingCount];
+                        limitInterval = remainingCount;
+                    }
+
+                    foreach (var item in
+                        _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
                     {
                         var block = _baseStore.GetBlock(item.value);
+                        _blockList.Add(BlockData.GetBlockInfo(block));
                         _blockHash = block.Hash;
                         _blockIndex = block.Index;
                         _blockTimeOffset = block.Timestamp;
-                        Console.WriteLine($"Evaluating Block: #{block.Index} Hash: {block.Hash} Transaction Count: {block.Transactions.Count} {item.i}/{remainingCount}");
-
-                        List<IActionEvaluation> actionEvaluations = _baseChain.EvaluateBlock(block).ToList();
-                        foreach (var ae in actionEvaluations)
+                        foreach (var tx in block.Transactions)
                         {
-                            try
+                            _txList.Add(TransactionData.GetTransactionInfo(block, tx));
+
+                            // check if address is already in _agentCheck
+                            if (!_agentCheck.Contains(tx.Signer.ToString()))
                             {
-                                var actionLoader = new NCActionLoader();
-                                var action = actionLoader.LoadAction(_blockIndex, ae.Action);
-                                if (action is ItemEnhancement itemEnhancement)
-                                {
-                                    var aeStart = DateTimeOffset.UtcNow;
-                                    _itemEnhancementList.Add(ItemEnhancementData.GetItemEnhancementInfo(
-                                        ae.InputContext.PreviousState,
-                                        ae.OutputState,
-                                        ae.InputContext.Signer,
-                                        itemEnhancement.avatarAddress,
-                                        itemEnhancement.slotIndex,
-                                        Guid.Empty,
-                                        itemEnhancement.materialIds,
-                                        itemEnhancement.itemId,
-                                        itemEnhancement.Id,
-                                        ae.InputContext.BlockIndex));
-                                    var aeEnd = DateTimeOffset.UtcNow;
-                                    Console.WriteLine("Writing ItemEnhancement13 action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (aeEnd - aeStart).Milliseconds);
-                                    _mySqlStore.StoreItemEnhancementList(_itemEnhancementList);
-                                    _itemEnhancementList.Clear();
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine(e.Message);
-                                Console.WriteLine(e.StackTrace);
+                                _agentList.Add(AgentData.GetAgentInfo(tx.Signer));
+                                _agentCheck.Add(tx.Signer.ToString());
                             }
                         }
+
+                        taskArray[item.i] = Task.Factory.StartNew(() =>
+                        {
+                            List<IActionEvaluation> actionEvaluations = EvaluateBlock(block);
+                            Console.WriteLine($"Block progress: #{block.Index}/{remainingCount}");
+                            return actionEvaluations;
+                        });
                     }
+
+                    if (interval < remainingCount)
+                    {
+                        remainingCount -= interval;
+                        offsetIdx += interval;
+                    }
+                    else
+                    {
+                        remainingCount = 0;
+                        offsetIdx += remainingCount;
+                    }
+
+                    Task.WaitAll(taskArray);
+                    ProcessTasks(taskArray);
+                }
 
                 DateTimeOffset postDataPrep = _blockTimeOffset;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
@@ -308,6 +325,70 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
+        }
+
+        private void ProcessTasks(Task<List<IActionEvaluation>>[] taskArray)
+        {
+            foreach (var task in taskArray)
+            {
+                if (task.Result is { } data)
+                {
+                    foreach (var ae in data)
+                    {
+                        try
+                        {
+                            var actionLoader = new NCActionLoader();
+                            var action = actionLoader.LoadAction(_blockIndex, ae.Action);
+                            if (action is ItemEnhancement itemEnhancement)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                _itemEnhancementList.Add(ItemEnhancementData.GetItemEnhancementInfo(
+                                    ae.InputContext.PreviousState,
+                                    ae.OutputState,
+                                    ae.InputContext.Signer,
+                                    itemEnhancement.avatarAddress,
+                                    itemEnhancement.slotIndex,
+                                    Guid.Empty,
+                                    itemEnhancement.materialIds,
+                                    itemEnhancement.itemId,
+                                    itemEnhancement.Id,
+                                    ae.InputContext.BlockIndex));
+                                var end = DateTimeOffset.UtcNow;
+                                Console.WriteLine("Writing ItemEnhancement14 action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            if (action is ItemEnhancement13 itemEnhancement13)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                _itemEnhancementList.Add(ItemEnhancementData.GetItemEnhancementInfo(
+                                    ae.InputContext.PreviousState,
+                                    ae.OutputState,
+                                    ae.InputContext.Signer,
+                                    itemEnhancement13.avatarAddress,
+                                    itemEnhancement13.slotIndex,
+                                    Guid.Empty,
+                                    itemEnhancement13.materialIds,
+                                    itemEnhancement13.itemId,
+                                    itemEnhancement13.Id,
+                                    ae.InputContext.BlockIndex));
+                                var end = DateTimeOffset.UtcNow;
+                                Console.WriteLine("Writing ItemEnhancement13 action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                            Console.WriteLine(e.StackTrace);
+                        }
+                    }
+                }
+            }
+        }
+
+        private List<IActionEvaluation> EvaluateBlock(Block block)
+        {
+            var evList = _baseChain.EvaluateBlock(block).ToList();
+            return evList;
         }
     }
 }
