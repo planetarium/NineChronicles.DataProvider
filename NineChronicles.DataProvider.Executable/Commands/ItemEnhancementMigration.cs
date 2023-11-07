@@ -252,66 +252,52 @@ namespace NineChronicles.DataProvider.Executable.Commands
             {
                 int totalCount = limit ?? (int)_baseStore.CountBlocks();
                 int remainingCount = totalCount;
-                int offsetIdx = 0;
-
-                while (remainingCount > 0)
-                {
-                    int interval = 100;
-                    int limitInterval;
-                    Task<List<IActionEvaluation>>[] taskArray;
-                    if (interval < remainingCount)
-                    {
-                        taskArray = new Task<List<IActionEvaluation>>[interval];
-                        limitInterval = interval;
-                    }
-                    else
-                    {
-                        taskArray = new Task<List<IActionEvaluation>>[remainingCount];
-                        limitInterval = remainingCount;
-                    }
-
-                    foreach (var item in
-                        _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
+                foreach (var item in
+                        _baseStore.IterateIndexes(_baseChain.Id, offset ?? 0, limit).Select((value, i) => new { i, value }))
                     {
                         var block = _baseStore.GetBlock(item.value);
-                        _blockList.Add(BlockData.GetBlockInfo(block));
                         _blockHash = block.Hash;
                         _blockIndex = block.Index;
                         _blockTimeOffset = block.Timestamp;
-                        foreach (var tx in block.Transactions)
-                        {
-                            _txList.Add(TransactionData.GetTransactionInfo(block, tx));
+                        _baseStore.PutBlock(block);
+                        var blockCommit = _baseStore.GetBlockCommit(block.Hash) ?? _baseChain.GetBlockCommit(block.Hash);
+                        Console.WriteLine($"Evaluating Block: #{block.Index} Hash: {block.Hash} BlockCommit: {blockCommit} Transaction Count: {block.Transactions.Count} {item.i}/{remainingCount}");
+                        _baseChain.Append(block, blockCommit);
 
-                            // check if address is already in _agentCheck
-                            if (!_agentCheck.Contains(tx.Signer.ToString()))
+                        List<IActionEvaluation> actionEvaluations = _baseChain.EvaluateBlock(block).ToList();
+                        foreach (var ae in actionEvaluations)
+                        {
+                            try
                             {
-                                _agentList.Add(AgentData.GetAgentInfo(tx.Signer));
-                                _agentCheck.Add(tx.Signer.ToString());
+                                var actionLoader = new NCActionLoader();
+                                var action = actionLoader.LoadAction(_blockIndex, ae.Action);
+                                if (action is ItemEnhancement itemEnhancement)
+                                {
+                                    var aeStart = DateTimeOffset.UtcNow;
+                                    _itemEnhancementList.Add(ItemEnhancementData.GetItemEnhancementInfo(
+                                        ae.InputContext.PreviousState,
+                                        ae.OutputState,
+                                        ae.InputContext.Signer,
+                                        itemEnhancement.avatarAddress,
+                                        itemEnhancement.slotIndex,
+                                        Guid.Empty,
+                                        itemEnhancement.materialIds,
+                                        itemEnhancement.itemId,
+                                        itemEnhancement.Id,
+                                        ae.InputContext.BlockIndex));
+                                    var aeEnd = DateTimeOffset.UtcNow;
+                                    Console.WriteLine("Writing ItemEnhancement13 action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (aeEnd - aeStart).Milliseconds);
+                                    _mySqlStore.StoreItemEnhancementList(_itemEnhancementList);
+                                    _itemEnhancementList.Clear();
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e.Message);
+                                Console.WriteLine(e.StackTrace);
                             }
                         }
-
-                        taskArray[item.i] = Task.Factory.StartNew(() =>
-                        {
-                            List<IActionEvaluation> actionEvaluations = EvaluateBlock(block);
-                            Console.WriteLine($"Block progress: #{block.Index}/{remainingCount}");
-                            return actionEvaluations;
-                        });
                     }
-
-                    if (interval < remainingCount)
-                    {
-                        remainingCount -= interval;
-                        offsetIdx += interval;
-                    }
-                    else
-                    {
-                        remainingCount = 0;
-                        offsetIdx += remainingCount;
-                    }
-
-                    Task.WaitAll(taskArray);
-                    ProcessTasks(taskArray);
-                }
 
                 DateTimeOffset postDataPrep = _blockTimeOffset;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
@@ -325,53 +311,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
-        }
-
-        private void ProcessTasks(Task<List<IActionEvaluation>>[] taskArray)
-        {
-            foreach (var task in taskArray)
-            {
-                if (task.Result is { } data)
-                {
-                    foreach (var ae in data)
-                    {
-                        try
-                        {
-                            var actionLoader = new NCActionLoader();
-                            var action = actionLoader.LoadAction(_blockIndex, ae.Action);
-                            if (action is ItemEnhancement itemEnhancement)
-                            {
-                                Console.WriteLine("ItemEnhancement action found");
-                                var start = DateTimeOffset.UtcNow;
-                                _itemEnhancementList.Add(ItemEnhancementData.GetItemEnhancementInfo(
-                                    ae.InputContext.PreviousState,
-                                    ae.OutputState,
-                                    ae.InputContext.Signer,
-                                    itemEnhancement.avatarAddress,
-                                    itemEnhancement.slotIndex,
-                                    Guid.Empty,
-                                    itemEnhancement.materialIds,
-                                    itemEnhancement.itemId,
-                                    itemEnhancement.Id,
-                                    ae.InputContext.BlockIndex));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e.Message);
-                            Console.WriteLine(e.StackTrace);
-                        }
-                    }
-                }
-            }
-        }
-
-        private List<IActionEvaluation> EvaluateBlock(Block block)
-        {
-            var evList = _baseChain.EvaluateBlock(block).ToList();
-            return evList;
         }
     }
 }
