@@ -1,5 +1,6 @@
 ﻿namespace NineChronicles.DataProvider.Store.Models
 {
+    using System;
     using System.ComponentModel.DataAnnotations;
 
     public class EquipmentModel
@@ -18,5 +19,7 @@
         public int Level { get; set; }
 
         public string? ItemSubType { get; set; }
+
+        public DateTimeOffset TimeStamp { get; set; }
     }
 }

@@ -92,6 +92,7 @@
                     EquipmentLevel = equipment.level,
                     Crystal = Convert.ToDecimal(crystal.GetQuantityString()),
                     BlockIndex = blockIndex,
+                    Date = DateOnly.FromDateTime(blockTime.DateTime),
                     TimeStamp = blockTime,
                 });
             }

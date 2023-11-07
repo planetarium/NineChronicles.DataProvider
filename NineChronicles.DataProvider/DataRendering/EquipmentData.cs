@@ -1,5 +1,6 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
+    using System;
     using Libplanet;
     using Libplanet.Crypto;
     using Nekoyume.Battle;
@@ -11,7 +12,8 @@
         public static EquipmentModel GetEquipmentInfo(
             Address agentAddress,
             Address avatarAddress,
-            Equipment equipment
+            Equipment equipment,
+            DateTimeOffset blockTime
         )
         {
             var cp = CPHelper.GetCP(equipment);
@@ -24,6 +26,7 @@
                 Cp = cp,
                 Level = equipment.level,
                 ItemSubType = equipment.ItemSubType.ToString(),
+                TimeStamp = blockTime.UtcDateTime,
             };
 
             return equipmentModel;

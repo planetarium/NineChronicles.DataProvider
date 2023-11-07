@@ -1,5 +1,6 @@
 ﻿namespace NineChronicles.DataProvider.DataRendering
 {
+    using System;
     using System.Linq;
     using Libplanet.Action;
     using Libplanet.Types.Blocks;
@@ -25,6 +26,7 @@
                 TotalDifficulty = 0,
                 TxCount = block.Transactions.Count(),
                 TxHash = block.TxHash.ToString(),
+                Date = DateOnly.FromDateTime(block.Timestamp.DateTime),
                 TimeStamp = block.Timestamp.UtcDateTime,
             };
 

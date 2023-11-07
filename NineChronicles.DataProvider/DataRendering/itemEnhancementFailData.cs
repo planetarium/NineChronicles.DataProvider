@@ -76,6 +76,7 @@
                     EquipmentLevel = outputEquipmentLevel,
                     GainedCrystal = Convert.ToDecimal(gainedCrystal.GetQuantityString()),
                     BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
+                    Date = DateOnly.FromDateTime(blockTime.DateTime),
                     TimeStamp = blockTime,
                 };
             }
