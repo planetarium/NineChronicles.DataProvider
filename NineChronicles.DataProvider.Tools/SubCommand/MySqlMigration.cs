@@ -302,42 +302,6 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                 var arenaSheet = outputState.GetSheet<ArenaSheet>();
                 var arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
 
-                BARDbName = $"{BARDbName}_{arenaData.ChampionshipId}_{arenaData.Round}";
-                Console.WriteLine("1");
-                connection.Open();
-                var stm33 =
-                    $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{BARDbName}` (
-                        `BlockIndex` bigint NOT NULL,
-                        `AgentAddress` varchar(100) NOT NULL,
-                        `AvatarAddress` varchar(100) NOT NULL,
-                        `AvatarLevel` int NOT NULL,
-                        `ChampionshipId` int NOT NULL,
-                        `Round` int NOT NULL,
-                        `ArenaType` varchar(100) NOT NULL,
-                        `Score` int NOT NULL,
-                        `WinCount` int NOT NULL,
-                        `MedalCount` int NOT NULL,
-                        `LossCount` int NOT NULL,
-                        `Ticket` int NOT NULL,
-                        `PurchasedTicketCount` int NOT NULL,
-                        `TicketResetCount` int NOT NULL,
-                        `EntranceFee` bigint NOT NULL,
-                        `TicketPrice` bigint NOT NULL,
-                        `AdditionalTicketPrice` bigint NOT NULL,
-                        `RequiredMedalCount` int NOT NULL,
-                        `StartBlockIndex` bigint NOT NULL,
-                        `EndBlockIndex` bigint NOT NULL,
-                        `Ranking` int NOT NULL,
-                        `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        KEY `fk_BattleArenaRanking_Agent1_idx` (`AgentAddress`),
-                        KEY `fk_BattleArenaRanking_AvatarAddress1_idx` (`AvatarAddress`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
-
-                var cmd33 = new MySqlCommand(stm33, connection);
-                cmd33.CommandTimeout = 300;
-                cmd33.ExecuteScalar();
-                connection.Close();
-
                 Console.WriteLine("2");
                 var prevArenaEndIndex = arenaData.StartBlockIndex - 1;
                 var prevArenaData = arenaSheet.GetRoundByBlockIndex(prevArenaEndIndex);
@@ -559,6 +523,42 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                     Console.WriteLine($"Delete {fbBARDbName}_Dump Complete!");
                     Console.WriteLine($"Finalize {fbBARDbName} & {fbUSDbName} Tables Complete!");
                 }
+
+                BARDbName = $"{BARDbName}_{arenaData.ChampionshipId}_{arenaData.Round}";
+                Console.WriteLine("1");
+                connection.Open();
+                var stm33 =
+                    $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{BARDbName}` (
+                        `BlockIndex` bigint NOT NULL,
+                        `AgentAddress` varchar(100) NOT NULL,
+                        `AvatarAddress` varchar(100) NOT NULL,
+                        `AvatarLevel` int NOT NULL,
+                        `ChampionshipId` int NOT NULL,
+                        `Round` int NOT NULL,
+                        `ArenaType` varchar(100) NOT NULL,
+                        `Score` int NOT NULL,
+                        `WinCount` int NOT NULL,
+                        `MedalCount` int NOT NULL,
+                        `LossCount` int NOT NULL,
+                        `Ticket` int NOT NULL,
+                        `PurchasedTicketCount` int NOT NULL,
+                        `TicketResetCount` int NOT NULL,
+                        `EntranceFee` bigint NOT NULL,
+                        `TicketPrice` bigint NOT NULL,
+                        `AdditionalTicketPrice` bigint NOT NULL,
+                        `RequiredMedalCount` int NOT NULL,
+                        `StartBlockIndex` bigint NOT NULL,
+                        `EndBlockIndex` bigint NOT NULL,
+                        `Ranking` int NOT NULL,
+                        `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        KEY `fk_BattleArenaRanking_Agent1_idx` (`AgentAddress`),
+                        KEY `fk_BattleArenaRanking_AvatarAddress1_idx` (`AvatarAddress`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+
+                var cmd33 = new MySqlCommand(stm33, connection);
+                cmd33.CommandTimeout = 300;
+                cmd33.ExecuteScalar();
+                connection.Close();
 
                 foreach (var avatar in avatars)
                 {
