@@ -64,6 +64,7 @@
                 ApPotionCount = outputApPotionCount - previousApPotionCount,
                 ClaimStakeStartBlockIndex = claimStakeStartBlockIndex,
                 ClaimStakeEndBlockIndex = claimStakeEndBlockIndex,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 

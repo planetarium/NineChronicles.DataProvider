@@ -44,6 +44,7 @@
                 Cleared = isClear,
                 Mimisbrunnr = stageId > 10000000,
                 BlockIndex = blockIndex,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 Timestamp = blockTime,
             };
 

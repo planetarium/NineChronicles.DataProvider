@@ -7,6 +7,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using Cocona;
     using Libplanet;
     using Libplanet.Action;
+    using Libplanet.Action.State;
     using Libplanet.Blockchain;
     using Libplanet.Blockchain.Policies;
     using Libplanet.Crypto;
@@ -116,7 +117,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             var blockChainStates = new BlockChainStates(_baseStore, baseStateStore);
             var actionEvaluator = new ActionEvaluator(
                 _ => blockPolicy.BlockAction,
-                blockChainStates,
+                baseStateStore,
                 new NCActionLoader());
             _baseChain = new BlockChain(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, actionEvaluator);
 
@@ -161,6 +162,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var tip = _baseStore.GetBlock((BlockHash)tipHash!);
                 var blockEvaluation = _baseChain.EvaluateBlock(tip);
                 var evaluation = blockEvaluation.Last();
+                var outputState = new Account(_baseChain.GetAccountState(evaluation.OutputState));
+
                 var avatarCount = 0;
                 AvatarState avatarState;
                 bool checkBattleArenaRankingTable = false;
@@ -174,17 +177,17 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         var avatarAddress = new Address(avatar);
                         try
                         {
-                            avatarState = evaluation.OutputState.GetAvatarStateV2(avatarAddress);
+                            avatarState = outputState.GetAvatarStateV2(avatarAddress);
                         }
                         catch (Exception)
                         {
-                            avatarState = evaluation.OutputState.GetAvatarState(avatarAddress);
+                            avatarState = outputState.GetAvatarState(avatarAddress);
                         }
 
                         if (avatarState != null)
                         {
                             var avatarLevel = avatarState.level;
-                            var arenaSheet = evaluation.OutputState.GetSheet<ArenaSheet>();
+                            var arenaSheet = outputState.GetSheet<ArenaSheet>();
                             var arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
 
                             if (!checkBattleArenaRankingTable)
@@ -229,8 +232,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 ArenaScore.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
                             var arenaInformationAdr =
                                 ArenaInformation.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
-                            evaluation.OutputState.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
-                            evaluation.OutputState.TryGetArenaScore(arenaScoreAdr, out var outputArenaScore);
+                            outputState.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
+                            outputState.TryGetArenaScore(arenaScoreAdr, out var outputArenaScore);
                             if (currentArenaInformation != null && outputArenaScore != null)
                             {
                                 _barBulkFile.WriteLine(

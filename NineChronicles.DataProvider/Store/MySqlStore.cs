@@ -593,7 +593,7 @@ namespace NineChronicles.DataProvider.Store
             else
             {
                 ctx.CraftRankings!.Add(
-                    new CraftRankingInputModel()
+                    new CraftRankingModel()
                     {
                         AgentAddress = agentAddress.ToString(),
                         AvatarAddress = avatarAddress.ToString(),
@@ -697,7 +697,7 @@ namespace NineChronicles.DataProvider.Store
             else
             {
                 ctx.CraftRankings!.Add(
-                    new CraftRankingInputModel()
+                    new CraftRankingModel()
                     {
                         AgentAddress = agentAddress.ToString(),
                         AvatarAddress = avatarAddress.ToString(),
@@ -979,7 +979,7 @@ namespace NineChronicles.DataProvider.Store
             else
             {
                 ctx.CraftRankings!.Add(
-                    new CraftRankingInputModel()
+                    new CraftRankingModel()
                     {
                         AgentAddress = agentAddress.ToString(),
                         AvatarAddress = avatarAddress.ToString(),
@@ -1950,12 +1950,12 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
-        public IEnumerable<CraftRankingOutputModel> GetCraftRanking(
+        public IEnumerable<CraftRankingModel> GetCraftRanking(
             Address? avatarAddress = null,
             int? limit = null)
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-            var query = ctx.Set<CraftRankingOutputModel>()
+            var query = ctx.Set<CraftRankingModel>()
                 .FromSqlRaw("SELECT * FROM CraftRankings ORDER BY Ranking ");
 
             if (avatarAddress is { } avatarAddressNotNull)

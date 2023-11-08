@@ -37,6 +37,7 @@
                 MigrationAmount = Convert.ToDecimal(migrationAmount.GetQuantityString()),
                 MigrationStartBlockIndex = migrationStartBlockIndex,
                 StakeStartBlockIndex = stakeStartBlockIndex,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 

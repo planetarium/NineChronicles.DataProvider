@@ -114,6 +114,7 @@
                                 ReplacedMaterialCount = requiredCount - itemCount,
                                 BurntCrystal =
                                     Convert.ToDecimal(burntCrystal.GetQuantityString()),
+                                Date = DateOnly.FromDateTime(blockTime.DateTime),
                                 TimeStamp = blockTime,
                             });
                     }

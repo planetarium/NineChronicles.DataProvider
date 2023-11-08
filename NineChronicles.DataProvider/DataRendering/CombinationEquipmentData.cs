@@ -18,7 +18,8 @@
             int slotIndex,
             int? subRecipeId,
             Guid actionId,
-            long blockIndex
+            long blockIndex,
+            DateTimeOffset blockTime
         )
         {
             var combinationEquipmentModel = new CombinationEquipmentModel()
@@ -30,6 +31,8 @@
                 SlotIndex = slotIndex,
                 SubRecipeId = subRecipeId ?? 0,
                 BlockIndex = blockIndex,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
+                TimeStamp = blockTime.UtcDateTime,
             };
 
             return combinationEquipmentModel;

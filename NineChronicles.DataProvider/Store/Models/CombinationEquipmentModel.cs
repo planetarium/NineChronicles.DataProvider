@@ -1,5 +1,6 @@
 namespace NineChronicles.DataProvider.Store.Models
 {
+    using System;
     using System.ComponentModel.DataAnnotations;
 
     public class CombinationEquipmentModel
@@ -22,5 +23,9 @@ namespace NineChronicles.DataProvider.Store.Models
         public int? SubRecipeId { get; set; }
 
         public long BlockIndex { get; set; }
+
+        public DateOnly Date { get; set; }
+
+        public DateTimeOffset TimeStamp { get; set; }
     }
 }
