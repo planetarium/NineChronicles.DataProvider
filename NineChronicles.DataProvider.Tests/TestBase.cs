@@ -51,7 +51,7 @@ public abstract class TestBase
         {
             KeyStore = keyStore,
         };
-        var stateContext = new StateContext(GetMockState(), 0L);
+        var stateContext = new StateContext(GetMockState(), 0L, new ArenaMemoryCache());
         services
             .AddSingleton(standaloneContext)
             .AddSingleton(stateContext)
