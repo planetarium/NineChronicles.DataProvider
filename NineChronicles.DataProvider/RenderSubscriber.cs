@@ -348,6 +348,33 @@ namespace NineChronicles.DataProvider
                     }
                 });
 
+            _actionRenderer.EveryRender<HackAndSlash21>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } has)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            var inputState = new Account(_blockChainStates.GetAccountState(ev.PreviousState));
+                            var outputState = new Account(_blockChainStates.GetAccountState(ev.OutputState));
+                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, has.AvatarAddress, has.RuneInfos, _blockTimeOffset));
+                            _hasList.Add(HackAndSlashData.GetHackAndSlashInfo(inputState, outputState, ev.Signer, has.AvatarAddress, has.StageId, has.Id, ev.BlockIndex, _blockTimeOffset));
+                            if (has.StageBuffId.HasValue)
+                            {
+                                _hasWithRandomBuffList.Add(HasWithRandomBuffData.GetHasWithRandomBuffInfo(inputState, outputState, ev.Signer, has.AvatarAddress, has.StageId, has.StageBuffId, has.Id, ev.BlockIndex, _blockTimeOffset));
+                            }
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
             _actionRenderer.EveryRender<HackAndSlashSweep>()
                 .Subscribe(ev =>
                 {
@@ -383,7 +410,72 @@ namespace NineChronicles.DataProvider
                     }
                 });
 
+            _actionRenderer.EveryRender<HackAndSlashSweep9>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } hasSweep)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            var inputState = new Account(_blockChainStates.GetAccountState(ev.PreviousState));
+                            var outputState = new Account(_blockChainStates.GetAccountState(ev.OutputState));
+                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, hasSweep.avatarAddress, hasSweep.runeInfos, _blockTimeOffset));
+                            _hasSweepList.Add(HackAndSlashSweepData.GetHackAndSlashSweepInfo(
+                                inputState,
+                                outputState,
+                                ev.Signer,
+                                hasSweep.avatarAddress,
+                                hasSweep.stageId,
+                                hasSweep.worldId,
+                                hasSweep.apStoneCount,
+                                hasSweep.actionPoint,
+                                hasSweep.costumes.Count,
+                                hasSweep.equipments.Count,
+                                hasSweep.Id,
+                                ev.BlockIndex,
+                                _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored HackAndSlashSweep action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
             _actionRenderer.EveryRender<CombinationConsumable>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } combinationConsumable)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            var inputState = new Account(_blockChainStates.GetAccountState(ev.PreviousState));
+                            var outputState = new Account(_blockChainStates.GetAccountState(ev.OutputState));
+                            _ccList.Add(CombinationConsumableData.GetCombinationConsumableInfo(
+                                inputState,
+                                outputState,
+                                ev.Signer,
+                                combinationConsumable.avatarAddress,
+                                combinationConsumable.recipeId,
+                                combinationConsumable.slotIndex,
+                                combinationConsumable.Id,
+                                ev.BlockIndex,
+                                _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored CombinationConsumable action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<CombinationConsumable8>()
                 .Subscribe(ev =>
                 {
                     try
@@ -488,7 +580,150 @@ namespace NineChronicles.DataProvider
                     }
                 });
 
+            _actionRenderer.EveryRender<CombinationEquipment16>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } combinationEquipment)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            var inputState = new Account(_blockChainStates.GetAccountState(ev.PreviousState));
+                            var outputState = new Account(_blockChainStates.GetAccountState(ev.OutputState));
+                            _ceList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
+                                inputState,
+                                outputState,
+                                ev.Signer,
+                                combinationEquipment.avatarAddress,
+                                combinationEquipment.recipeId,
+                                combinationEquipment.slotIndex,
+                                combinationEquipment.subRecipeId,
+                                combinationEquipment.Id,
+                                ev.BlockIndex,
+                                _blockTimeOffset));
+                            if (combinationEquipment.payByCrystal)
+                            {
+                                var replaceCombinationEquipmentMaterialList = ReplaceCombinationEquipmentMaterialData
+                                    .GetReplaceCombinationEquipmentMaterialInfo(
+                                        inputState,
+                                        outputState,
+                                        ev.Signer,
+                                        combinationEquipment.avatarAddress,
+                                        combinationEquipment.recipeId,
+                                        combinationEquipment.subRecipeId,
+                                        combinationEquipment.payByCrystal,
+                                        combinationEquipment.Id,
+                                        ev.BlockIndex,
+                                        _blockTimeOffset);
+                                foreach (var replaceCombinationEquipmentMaterial in replaceCombinationEquipmentMaterialList)
+                                {
+                                    _replaceCombinationEquipmentMaterialList.Add(replaceCombinationEquipmentMaterial);
+                                }
+                            }
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug(
+                                "Stored CombinationEquipment action in block #{index}. Time Taken: {time} ms.",
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
+                            start = DateTimeOffset.UtcNow;
+
+                            var slotState = outputState.GetCombinationSlotState(
+                                combinationEquipment.avatarAddress,
+                                combinationEquipment.slotIndex);
+
+                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
+                            {
+                                _eqList.Add(EquipmentData.GetEquipmentInfo(
+                                    ev.Signer,
+                                    combinationEquipment.avatarAddress,
+                                    (Equipment)slotState.Result.itemUsable,
+                                    _blockTimeOffset));
+                            }
+
+                            end = DateTimeOffset.UtcNow;
+                            Log.Debug(
+                                "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
+                                combinationEquipment.avatarAddress,
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
             _actionRenderer.EveryRender<ItemEnhancement>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } itemEnhancement)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            var inputState = new Account(_blockChainStates.GetAccountState(ev.PreviousState));
+                            var outputState = new Account(_blockChainStates.GetAccountState(ev.OutputState));
+                            if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
+                                    inputState,
+                                    outputState,
+                                    ev.Signer,
+                                    itemEnhancement.avatarAddress,
+                                    Guid.Empty,
+                                    itemEnhancement.materialIds,
+                                    itemEnhancement.itemId,
+                                    itemEnhancement.Id,
+                                    ev.BlockIndex,
+                                    _blockTimeOffset) is { } itemEnhancementFailModel)
+                            {
+                                _itemEnhancementFailList.Add(itemEnhancementFailModel);
+                            }
+
+                            _ieList.Add(ItemEnhancementData.GetItemEnhancementInfo(
+                                inputState,
+                                outputState,
+                                ev.Signer,
+                                itemEnhancement.avatarAddress,
+                                itemEnhancement.slotIndex,
+                                Guid.Empty,
+                                itemEnhancement.materialIds,
+                                itemEnhancement.itemId,
+                                itemEnhancement.Id,
+                                ev.BlockIndex,
+                                _blockTimeOffset));
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            start = DateTimeOffset.UtcNow;
+
+                            var slotState = outputState.GetCombinationSlotState(
+                                itemEnhancement.avatarAddress,
+                                itemEnhancement.slotIndex);
+
+                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
+                            {
+                                _eqList.Add(EquipmentData.GetEquipmentInfo(
+                                    ev.Signer,
+                                    itemEnhancement.avatarAddress,
+                                    (Equipment)slotState.Result.itemUsable,
+                                    _blockTimeOffset));
+                            }
+
+                            end = DateTimeOffset.UtcNow;
+                            Log.Debug(
+                                "Stored avatar {address}'s equipment in block #{index}. Time Taken: {time} ms.",
+                                itemEnhancement.avatarAddress,
+                                ev.BlockIndex,
+                                (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<ItemEnhancement13>()
                 .Subscribe(ev =>
                 {
                     try
