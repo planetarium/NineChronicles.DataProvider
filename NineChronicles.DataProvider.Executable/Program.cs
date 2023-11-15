@@ -248,8 +248,7 @@ namespace NineChronicles.DataProvider.Executable
 
             var stateContext = new StateContext(
                 context.BlockChain!.GetAccountState(context.BlockChain!.Tip.Hash),
-                context.BlockChain!.Tip.Index,
-                new ArenaMemoryCache()
+                context.BlockChain!.Tip.Index
             );
 
             // ConfigureServices must come before Configure for now
