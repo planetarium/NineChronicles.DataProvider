@@ -37,7 +37,7 @@ RUN dotnet publish NineChronicles.Headless/NineChronicles.Headless.Executable/Ni
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/sdk:6.0
 WORKDIR /app
-RUN dotnet tool install --global dotnet-ef
+RUN dotnet tool install --global dotnet-ef --version 7.0.14
 ENV PATH="${PATH}:/${HOME}/.dotnet/tools"
 COPY --from=build-env /app/out .
 COPY --from=build-env /app/out2 NineChronicles.Headless.Executable
