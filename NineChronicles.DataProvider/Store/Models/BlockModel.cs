@@ -5,6 +5,7 @@
     using Microsoft.EntityFrameworkCore;
 
     [Index(nameof(Date))]
+    [Index(nameof(Index))]
 
     public class BlockModel
     {
