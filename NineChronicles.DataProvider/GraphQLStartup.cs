@@ -67,6 +67,7 @@
             });
 
             app.UseGraphQL<NineChroniclesSummarySchema>();
+            app.UseGraphQLWebSockets<StandaloneSchema>("/graphql_headless");
             app.UseGraphQL<StandaloneSchema>("/graphql_headless");
             app.UseGraphQLPlayground();
         }
