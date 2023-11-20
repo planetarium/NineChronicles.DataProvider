@@ -44,6 +44,7 @@
                 .AddGraphTypes(typeof(StandaloneSchema))
                 .AddLibplanetExplorer()
                 .AddUserContextBuilder<UserContextBuilder>();
+            services.AddSingleton<ArenaMemoryCache>();
             services.AddGraphTypes();
             services.AddSingleton<NineChroniclesSummarySchema>();
             services.AddSingleton<StandaloneSchema>();
