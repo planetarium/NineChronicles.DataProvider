@@ -4,6 +4,7 @@
     using System.ComponentModel.DataAnnotations;
     using Microsoft.EntityFrameworkCore;
 
+    [Index(nameof(Date))]
     [Index(nameof(Id), nameof(ActionType), nameof(TickerType), IsUnique = true)]
     public class RunesAcquiredModel
     {

@@ -231,7 +231,8 @@ namespace NineChronicles.DataProvider.Executable
                 {
                     RpcRemoteSever = false
                 },
-                new ConcurrentDictionary<string, Sentry.ITransaction>()
+                new ConcurrentDictionary<string, Sentry.ITransaction>(),
+                new StateMemoryCache()
             );
 
             if (headlessConfig.LogActionRenders)
@@ -248,7 +249,8 @@ namespace NineChronicles.DataProvider.Executable
 
             var stateContext = new StateContext(
                 context.BlockChain!.GetAccountState(context.BlockChain!.Tip.Hash),
-                context.BlockChain!.Tip.Index
+                context.BlockChain!.Tip.Index,
+                new StateMemoryCache()
             );
 
             // ConfigureServices must come before Configure for now
