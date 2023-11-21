@@ -2,6 +2,9 @@
 {
     using System;
     using System.ComponentModel.DataAnnotations;
+    using Microsoft.EntityFrameworkCore;
+
+    [Index(nameof(Date))]
 
     public class UnlockEquipmentRecipeModel
     {
