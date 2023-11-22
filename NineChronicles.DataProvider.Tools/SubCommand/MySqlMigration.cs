@@ -593,8 +593,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             {
                                 _urBulkFile.WriteLine(
                                     $"{tip.Index};" +
-                                    $"{avatarAddress.ToString()};" +
                                     $"{avatarState.agentAddress.ToString()};" +
+                                    $"{avatarAddress.ToString()};" +
                                     $"{runeType.Ticker};" +
                                     $"{Convert.ToDecimal(outputRuneBalance.GetQuantityString())};" +
                                     $"{tip.Timestamp.UtcDateTime:yyyy-MM-dd}"
