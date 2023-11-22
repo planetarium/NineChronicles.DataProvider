@@ -593,8 +593,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                             {
                                 _urBulkFile.WriteLine(
                                     $"{tip.Index};" +
-                                    $"{avatarAddress.ToString()};" +
                                     $"{avatarState.agentAddress.ToString()};" +
+                                    $"{avatarAddress.ToString()};" +
                                     $"{runeType.Ticker};" +
                                     $"{Convert.ToDecimal(outputRuneBalance.GetQuantityString())};" +
                                     $"{tip.Timestamp.UtcDateTime:yyyy-MM-dd}"
@@ -653,8 +653,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                     var equipment = (Equipment)orderItem;
                                     Console.WriteLine(equipment.ItemId);
                                     _seBulkFile.WriteLine(
-                                        $"{tip.Index};" +
                                         $"{equipment.ItemId.ToString()};" +
+                                        $"{tip.Index};" +
                                         $"{orderReceipt.SellerAgentAddress.ToString()};" +
                                         $"{avatarAddress.ToString()};" +
                                         $"{equipment.ItemType.ToString()};" +
@@ -686,8 +686,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                     var costume = (Costume)orderItem;
                                     Console.WriteLine(costume.ItemId);
                                     _sctBulkFile.WriteLine(
-                                        $"{tip.Index};" +
                                         $"{costume.ItemId.ToString()};" +
+                                        $"{tip.Index};" +
                                         $"{orderReceipt.SellerAgentAddress.ToString()};" +
                                         $"{avatarAddress.ToString()};" +
                                         $"{costume.ItemType.ToString()};" +
@@ -715,8 +715,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                     var material = (Material)orderItem;
                                     Console.WriteLine(material.ItemId);
                                     _smBulkFile.WriteLine(
-                                        $"{tip.Index};" +
                                         $"{material.ItemId.ToString()};" +
+                                        $"{tip.Index};" +
                                         $"{orderReceipt.SellerAgentAddress.ToString()};" +
                                         $"{avatarAddress.ToString()};" +
                                         $"{material.ItemType.ToString()};" +
@@ -740,8 +740,8 @@ namespace NineChronicles.DataProvider.Tools.SubCommand
                                     var consumable = (Consumable)orderItem;
                                     Console.WriteLine(consumable.ItemId);
                                     _scBulkFile.WriteLine(
-                                        $"{tip.Index};" +
                                         $"{consumable.ItemId.ToString()};" +
+                                        $"{tip.Index};" +
                                         $"{orderReceipt.SellerAgentAddress.ToString()};" +
                                         $"{avatarAddress.ToString()};" +
                                         $"{consumable.ItemType.ToString()};" +
