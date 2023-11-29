@@ -196,6 +196,10 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<UserStakingsModel> UserStakings => Set<UserStakingsModel>();
 
+        public DbSet<RuneSummonModel> RuneSummons => Set<RuneSummonModel>();
+
+        public DbSet<RuneSummonFailModel> RuneSummonFails => Set<RuneSummonFailModel>();
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.
