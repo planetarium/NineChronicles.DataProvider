@@ -19,7 +19,7 @@ namespace NineChronicles.DataProvider.Tests;
 
 public class RaiderWorkerTest : TestBase
 {
-    private static readonly Address AvatarAddress = new PrivateKey().ToAddress();
+    private static readonly Address AvatarAddress = new PrivateKey().Address;
     private static readonly Address RaiderAddress = Addresses.GetRaiderAddress(AvatarAddress, 1);
     private static readonly Address RaiderListAddress = Addresses.GetRaiderListAddress(1);
     private static readonly RaiderState RaiderState = new()

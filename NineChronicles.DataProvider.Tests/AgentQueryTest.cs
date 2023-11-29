@@ -26,7 +26,7 @@ public class AgentQueryTest : TestBase, IDisposable
         {
             var model = new AgentModel
             {
-                Address = new PrivateKey().ToAddress().ToHex(),
+                Address = new PrivateKey().Address.ToHex(),
             };
             Context.Agents.Add(model);
         }

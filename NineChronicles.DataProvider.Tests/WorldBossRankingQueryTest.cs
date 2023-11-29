@@ -23,7 +23,7 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
     [InlineData(true)]
     public async Task WorldBossRanking(bool hex)
     {
-        var targetAvatarAddress = new PrivateKey().ToAddress();
+        var targetAvatarAddress = new PrivateKey().Address;
         var queryAddress = hex ? targetAvatarAddress.ToHex() : targetAvatarAddress.ToString();
         var query = $@"query {{
         worldBossRanking(raidId: 1, avatarAddress: ""{queryAddress}"") {{
@@ -39,7 +39,7 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
         {
             for (int i = 0; i < 200; i++)
             {
-                var avatarAddress = idx == 0 && i == 0 ? targetAvatarAddress : new PrivateKey().ToAddress();
+                var avatarAddress = idx == 0 && i == 0 ? targetAvatarAddress : new PrivateKey().Address;
                 var model = new RaiderModel(
                     idx + 1,
                     i.ToString(),
@@ -99,7 +99,7 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
                 i + 2,
                 GameConfig.DefaultAvatarArmorId,
                 i,
-                new PrivateKey().ToAddress().ToHex(),
+                new PrivateKey().Address.ToHex(),
                 0
             );
             Context.Raiders.Add(model);
