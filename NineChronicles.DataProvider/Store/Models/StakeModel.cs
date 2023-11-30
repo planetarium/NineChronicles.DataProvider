@@ -8,6 +8,9 @@ namespace NineChronicles.DataProvider.Store.Models
 
     public class StakeModel
     {
+        [Key]
+        public string? Id { get; set; }
+
         public long BlockIndex { get; set; }
 
         public string? AgentAddress { get; set; }

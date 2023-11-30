@@ -202,7 +202,6 @@ namespace NineChronicles.DataProvider.Store
          */
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<StakeModel>().HasNoKey();
             modelBuilder.Entity<StageRankingModel>().HasNoKey();
             modelBuilder.Entity<CraftRankingModel>().HasNoKey();
             modelBuilder.Entity<EquipmentRankingModel>().HasNoKey();
