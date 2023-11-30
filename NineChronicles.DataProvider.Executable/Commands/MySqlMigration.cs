@@ -3685,7 +3685,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             if (action is Stake stake)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                _stakeList.Add(StakeData.GetStakeInfo(inputState, outputState, ae.InputContext.Signer, ae.InputContext.BlockIndex, _blockTimeOffset));
+                                _stakeList.Add(StakeData.GetStakeInfo(inputState, outputState, ae.InputContext.Signer, ae.InputContext.BlockIndex, _blockTimeOffset, stake.Id));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing Stake action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
@@ -3693,7 +3693,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             if (action is Stake0 stake0)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                _stakeList.Add(StakeData.GetStakeInfo(inputState, outputState, ae.InputContext.Signer, ae.InputContext.BlockIndex, _blockTimeOffset));
+                                _stakeList.Add(StakeData.GetStakeInfo(inputState, outputState, ae.InputContext.Signer, ae.InputContext.BlockIndex, _blockTimeOffset, Guid.Empty));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing Stake action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
