@@ -743,7 +743,7 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new Account(_blockChainStates.GetAccountState(ev.PreviousState));
                             var outputState = new Account(_blockChainStates.GetAccountState(ev.OutputState));
-                            _stakeList.Add(StakeData.GetStakeInfo(inputState, outputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
+                            _stakeList.Add(StakeData.GetStakeInfo(inputState, outputState, ev.Signer, ev.BlockIndex, _blockTimeOffset, stake.Id));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("Stored Stake action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
@@ -1240,6 +1240,7 @@ namespace NineChronicles.DataProvider
                                     typeof(RuneSheet),
                                     typeof(RuneListSheet),
                                     typeof(RuneOptionSheet),
+                                    typeof(WorldBossListSheet),
                                 });
 
                             var runeSheet = sheets.GetSheet<RuneSheet>();
@@ -1273,40 +1274,22 @@ namespace NineChronicles.DataProvider
 
                             _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, ev.Action.AvatarAddress, ev.Action.RuneInfos, _blockTimeOffset));
 
-                            int raidId = 0;
-                            bool found = false;
-                            for (int i = 0; i < 99; i++)
-                            {
-                                if (outputState.Delta.UpdatedAddresses.Contains(
-                                        Addresses.GetRaiderAddress(ev.Action.AvatarAddress, i)))
-                                {
-                                    raidId = i;
-                                    found = true;
-                                    break;
-                                }
-                            }
-
-                            if (found)
-                            {
-                                RaiderState raiderState =
-                                    outputState.GetRaiderState(ev.Action.AvatarAddress, raidId);
-                                var model = new RaiderModel(
-                                    raidId,
-                                    raiderState.AvatarName,
-                                    raiderState.HighScore,
-                                    raiderState.TotalScore,
-                                    raiderState.Cp,
-                                    raiderState.IconId,
-                                    raiderState.Level,
-                                    raiderState.AvatarAddress.ToHex(),
-                                    raiderState.PurchaseCount);
-                                _raiderList.Add(RaidData.GetRaidInfo(raidId, raiderState));
-                                MySqlStore.StoreRaider(model);
-                            }
-                            else
-                            {
-                                Log.Error("can't find raidId.");
-                            }
+                            var worldBossListSheet = sheets.GetSheet<WorldBossListSheet>();
+                            int raidId = worldBossListSheet.FindRaidIdByBlockIndex(ev.BlockIndex);
+                            RaiderState raiderState =
+                                outputState.GetRaiderState(ev.Action.AvatarAddress, raidId);
+                            var model = new RaiderModel(
+                                raidId,
+                                raiderState.AvatarName,
+                                raiderState.HighScore,
+                                raiderState.TotalScore,
+                                raiderState.Cp,
+                                raiderState.IconId,
+                                raiderState.Level,
+                                raiderState.AvatarAddress.ToHex(),
+                                raiderState.PurchaseCount);
+                            _raiderList.Add(RaidData.GetRaidInfo(raidId, raiderState));
+                            MySqlStore.StoreRaider(model);
                         }
                     }
                     catch (Exception e)
