@@ -24,6 +24,7 @@ namespace NineChronicles.DataProvider
     using Nekoyume.Model.Market;
     using Nekoyume.Model.State;
     using Nekoyume.TableData;
+    using Nekoyume.TableData.Summon;
     using NineChronicles.DataProvider.DataRendering;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
@@ -82,6 +83,8 @@ namespace NineChronicles.DataProvider
         private readonly List<RequestPledgeModel> _requestPledgeList = new List<RequestPledgeModel>();
         private readonly List<AuraSummonModel> _auraSummonList = new List<AuraSummonModel>();
         private readonly List<AuraSummonFailModel> _auraSummonFailList = new List<AuraSummonFailModel>();
+        private readonly List<RuneSummonModel> _runeSummonList = new List<RuneSummonModel>();
+        private readonly List<RuneSummonFailModel> _runeSummonFailList = new List<RuneSummonFailModel>();
         private readonly List<string> _agents;
         private readonly bool _render;
         private int _renderedBlockCount;
@@ -1371,6 +1374,55 @@ namespace NineChronicles.DataProvider
                 }
             });
 
+            _actionRenderer.EveryRender<RuneSummon>().Subscribe(ev =>
+            {
+                try
+                {
+                    if (ev.Action is { } runeSummon)
+                    {
+                        var outputState = new Account(_blockChainStates.GetAccountState(ev.OutputState));
+                        if (ev.Exception is null)
+                        {
+                            var sheets = outputState.GetSheets(
+                                sheetTypes: new[]
+                                {
+                                    typeof(RuneSheet),
+                                    typeof(SummonSheet),
+                                });
+                            var runeSheet = sheets.GetSheet<RuneSheet>();
+                            var summonSheet = sheets.GetSheet<SummonSheet>();
+                            _runeSummonList.Add(RuneSummonData.GetRuneSummonInfo(
+                                ev.Signer,
+                                runeSummon.AvatarAddress,
+                                runeSummon.GroupId,
+                                runeSummon.SummonCount,
+                                runeSummon.Id,
+                                ev.BlockIndex,
+                                runeSheet,
+                                summonSheet,
+                                new ReplayRandom(ev.RandomSeed)
+                            ));
+                        }
+                        else
+                        {
+                            _runeSummonFailList.Add(RuneSummonData.GetRuneSummonFailInfo(
+                                ev.Signer,
+                                runeSummon.AvatarAddress,
+                                runeSummon.GroupId,
+                                runeSummon.SummonCount,
+                                runeSummon.Id,
+                                ev.BlockIndex,
+                                ev.Exception
+                            ));
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"RuneSummon RenderSubscriber: {e.Message}");
+                }
+            });
+
             return Task.CompletedTask;
         }
 
@@ -1536,6 +1588,8 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreRequestPledgeList(_requestPledgeList);
                     MySqlStore.StoreAuraSummonList(_auraSummonList);
                     MySqlStore.StoreAuraSummonFailList(_auraSummonFailList);
+                    MySqlStore.StoreRuneSummonList(_runeSummonList);
+                    MySqlStore.StoreRuneSummonFailList(_runeSummonFailList);
                 }),
             };
 

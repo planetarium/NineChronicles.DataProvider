@@ -47,7 +47,7 @@ public class WorldBossRankingRewardQueryTest : TestBase
         string queryAddress = null;
         for (int i = 0; i < 200; i++)
         {
-            var avatarAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
             if (i + 1 == rank)
             {
                 queryAddress = hex ? avatarAddress.ToHex() : avatarAddress.ToString();
@@ -135,7 +135,7 @@ public class WorldBossRankingRewardQueryTest : TestBase
 
         for (int i = 0; i < 200; i++)
         {
-            var avatarAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
             var model = new RaiderModel(
                 1,
                 i.ToString(),
@@ -212,7 +212,7 @@ public class WorldBossRankingRewardQueryTest : TestBase
 
         for (int i = 0; i < 200; i++)
         {
-            var avatarAddress = new PrivateKey().ToAddress();
+            var avatarAddress = new PrivateKey().Address;
             var model = new RaiderModel(
                 raidId,
                 i.ToString(),
