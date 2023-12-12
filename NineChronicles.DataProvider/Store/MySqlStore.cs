@@ -1837,6 +1837,76 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreRuneSummonList(List<RuneSummonModel> runeSummonList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var runeSummon in runeSummonList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.AuraSummons.FindAsync(runeSummon.Id).Result is null)
+                        {
+                            await ctx.RuneSummons.AddRangeAsync(runeSummon);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.RuneSummons.UpdateRange(runeSummon);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
+        public void StoreRuneSummonFailList(List<RuneSummonFailModel> runeSummonFailList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var runeSummonFail in runeSummonFailList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.RuneSummonFails.FindAsync(runeSummonFail.Id).Result is null)
+                        {
+                            await ctx.RuneSummonFails.AddRangeAsync(runeSummonFail);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.RuneSummonFails.UpdateRange(runeSummonFail);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public List<RaiderModel> GetRaiderList()
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
