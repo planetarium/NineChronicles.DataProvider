@@ -15,7 +15,8 @@
             IAccount outputStates,
             Address signer,
             long blockIndex,
-            DateTimeOffset blockTime
+            DateTimeOffset blockTime,
+            Guid actionId
         )
         {
             var currency = outputStates.GetGoldCurrency();
@@ -49,6 +50,7 @@
             var balance = outputStates.GetBalance(signer, currency);
             var stakeModel = new StakeModel
             {
+                Id = actionId.ToString(),
                 BlockIndex = blockIndex,
                 AgentAddress = signer.ToString(),
                 PreviousAmount = Convert.ToDecimal(previousAmount.GetQuantityString()),

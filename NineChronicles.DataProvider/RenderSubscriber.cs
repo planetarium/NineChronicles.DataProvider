@@ -24,6 +24,7 @@ namespace NineChronicles.DataProvider
     using Nekoyume.Model.Market;
     using Nekoyume.Model.State;
     using Nekoyume.TableData;
+    using Nekoyume.TableData.Summon;
     using NineChronicles.DataProvider.DataRendering;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
@@ -82,6 +83,8 @@ namespace NineChronicles.DataProvider
         private readonly List<RequestPledgeModel> _requestPledgeList = new List<RequestPledgeModel>();
         private readonly List<AuraSummonModel> _auraSummonList = new List<AuraSummonModel>();
         private readonly List<AuraSummonFailModel> _auraSummonFailList = new List<AuraSummonFailModel>();
+        private readonly List<RuneSummonModel> _runeSummonList = new List<RuneSummonModel>();
+        private readonly List<RuneSummonFailModel> _runeSummonFailList = new List<RuneSummonFailModel>();
         private readonly List<string> _agents;
         private readonly bool _render;
         private int _renderedBlockCount;
@@ -743,7 +746,7 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new Account(_blockChainStates.GetAccountState(ev.PreviousState));
                             var outputState = new Account(_blockChainStates.GetAccountState(ev.OutputState));
-                            _stakeList.Add(StakeData.GetStakeInfo(inputState, outputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
+                            _stakeList.Add(StakeData.GetStakeInfo(inputState, outputState, ev.Signer, ev.BlockIndex, _blockTimeOffset, stake.Id));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("Stored Stake action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
@@ -1240,6 +1243,7 @@ namespace NineChronicles.DataProvider
                                     typeof(RuneSheet),
                                     typeof(RuneListSheet),
                                     typeof(RuneOptionSheet),
+                                    typeof(WorldBossListSheet),
                                 });
 
                             var runeSheet = sheets.GetSheet<RuneSheet>();
@@ -1273,40 +1277,22 @@ namespace NineChronicles.DataProvider
 
                             _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, ev.Action.AvatarAddress, ev.Action.RuneInfos, _blockTimeOffset));
 
-                            int raidId = 0;
-                            bool found = false;
-                            for (int i = 0; i < 99; i++)
-                            {
-                                if (outputState.Delta.UpdatedAddresses.Contains(
-                                        Addresses.GetRaiderAddress(ev.Action.AvatarAddress, i)))
-                                {
-                                    raidId = i;
-                                    found = true;
-                                    break;
-                                }
-                            }
-
-                            if (found)
-                            {
-                                RaiderState raiderState =
-                                    outputState.GetRaiderState(ev.Action.AvatarAddress, raidId);
-                                var model = new RaiderModel(
-                                    raidId,
-                                    raiderState.AvatarName,
-                                    raiderState.HighScore,
-                                    raiderState.TotalScore,
-                                    raiderState.Cp,
-                                    raiderState.IconId,
-                                    raiderState.Level,
-                                    raiderState.AvatarAddress.ToHex(),
-                                    raiderState.PurchaseCount);
-                                _raiderList.Add(RaidData.GetRaidInfo(raidId, raiderState));
-                                MySqlStore.StoreRaider(model);
-                            }
-                            else
-                            {
-                                Log.Error("can't find raidId.");
-                            }
+                            var worldBossListSheet = sheets.GetSheet<WorldBossListSheet>();
+                            int raidId = worldBossListSheet.FindRaidIdByBlockIndex(ev.BlockIndex);
+                            RaiderState raiderState =
+                                outputState.GetRaiderState(ev.Action.AvatarAddress, raidId);
+                            var model = new RaiderModel(
+                                raidId,
+                                raiderState.AvatarName,
+                                raiderState.HighScore,
+                                raiderState.TotalScore,
+                                raiderState.Cp,
+                                raiderState.IconId,
+                                raiderState.Level,
+                                raiderState.AvatarAddress.ToHex(),
+                                raiderState.PurchaseCount);
+                            _raiderList.Add(RaidData.GetRaidInfo(raidId, raiderState));
+                            MySqlStore.StoreRaider(model);
                         }
                     }
                     catch (Exception e)
@@ -1385,6 +1371,55 @@ namespace NineChronicles.DataProvider
                 catch (Exception e)
                 {
                     Log.Error($"AuraSummon RenderSubscriber: {e.Message}");
+                }
+            });
+
+            _actionRenderer.EveryRender<RuneSummon>().Subscribe(ev =>
+            {
+                try
+                {
+                    if (ev.Action is { } runeSummon)
+                    {
+                        var outputState = new Account(_blockChainStates.GetAccountState(ev.OutputState));
+                        if (ev.Exception is null)
+                        {
+                            var sheets = outputState.GetSheets(
+                                sheetTypes: new[]
+                                {
+                                    typeof(RuneSheet),
+                                    typeof(SummonSheet),
+                                });
+                            var runeSheet = sheets.GetSheet<RuneSheet>();
+                            var summonSheet = sheets.GetSheet<SummonSheet>();
+                            _runeSummonList.Add(RuneSummonData.GetRuneSummonInfo(
+                                ev.Signer,
+                                runeSummon.AvatarAddress,
+                                runeSummon.GroupId,
+                                runeSummon.SummonCount,
+                                runeSummon.Id,
+                                ev.BlockIndex,
+                                runeSheet,
+                                summonSheet,
+                                new ReplayRandom(ev.RandomSeed)
+                            ));
+                        }
+                        else
+                        {
+                            _runeSummonFailList.Add(RuneSummonData.GetRuneSummonFailInfo(
+                                ev.Signer,
+                                runeSummon.AvatarAddress,
+                                runeSummon.GroupId,
+                                runeSummon.SummonCount,
+                                runeSummon.Id,
+                                ev.BlockIndex,
+                                ev.Exception
+                            ));
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"RuneSummon RenderSubscriber: {e.Message}");
                 }
             });
 
@@ -1553,6 +1588,8 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreRequestPledgeList(_requestPledgeList);
                     MySqlStore.StoreAuraSummonList(_auraSummonList);
                     MySqlStore.StoreAuraSummonFailList(_auraSummonFailList);
+                    MySqlStore.StoreRuneSummonList(_runeSummonList);
+                    MySqlStore.StoreRuneSummonFailList(_runeSummonFailList);
                 }),
             };
 

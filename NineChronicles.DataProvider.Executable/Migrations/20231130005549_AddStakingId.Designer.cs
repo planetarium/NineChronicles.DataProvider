@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
@@ -10,9 +11,10 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20231130005549_AddStakingId")]
+    partial class AddStakingId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1831,70 +1833,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.ToTable("RunesAcquired");
                 });
 
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.RuneSummonFailModel", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("AgentAddress")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("AvatarAddress")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<long>("BlockIndex")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Exception")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("GroupId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SummonCount")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgentAddress");
-
-                    b.HasIndex("AvatarAddress");
-
-                    b.ToTable("RuneSummonFails");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.RuneSummonModel", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("AgentAddress")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("AvatarAddress")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<long>("BlockIndex")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("GroupId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SummonCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("SummonResult")
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgentAddress");
-
-                    b.HasIndex("AvatarAddress");
-
-                    b.ToTable("RuneSummons");
-                });
-
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.ShopConsumableModel", b =>
                 {
                     b.Property<string>("ItemId")
@@ -3483,36 +3421,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                 });
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.RunesAcquiredModel", b =>
-                {
-                    b.HasOne("NineChronicles.DataProvider.Store.Models.AgentModel", "Agent")
-                        .WithMany()
-                        .HasForeignKey("AgentAddress");
-
-                    b.HasOne("NineChronicles.DataProvider.Store.Models.AvatarModel", "Avatar")
-                        .WithMany()
-                        .HasForeignKey("AvatarAddress");
-
-                    b.Navigation("Agent");
-
-                    b.Navigation("Avatar");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.RuneSummonFailModel", b =>
-                {
-                    b.HasOne("NineChronicles.DataProvider.Store.Models.AgentModel", "Agent")
-                        .WithMany()
-                        .HasForeignKey("AgentAddress");
-
-                    b.HasOne("NineChronicles.DataProvider.Store.Models.AvatarModel", "Avatar")
-                        .WithMany()
-                        .HasForeignKey("AvatarAddress");
-
-                    b.Navigation("Agent");
-
-                    b.Navigation("Avatar");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.RuneSummonModel", b =>
                 {
                     b.HasOne("NineChronicles.DataProvider.Store.Models.AgentModel", "Agent")
                         .WithMany()
