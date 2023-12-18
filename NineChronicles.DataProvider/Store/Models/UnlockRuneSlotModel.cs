@@ -28,5 +28,7 @@
         public DateOnly Date { get; set; }
 
         public DateTimeOffset TimeStamp { get; set; }
+
+        public decimal BurntCRYSTAL { get; set; }
     }
 }
