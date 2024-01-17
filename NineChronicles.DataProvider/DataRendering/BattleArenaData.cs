@@ -1,25 +1,23 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
-    using Libplanet;
-    using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Libplanet.Types.Assets;
-    using Nekoyume.Action;
     using Nekoyume.Arena;
     using Nekoyume.Extensions;
     using Nekoyume.Model.Arena;
     using Nekoyume.Model.EnumType;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class BattleArenaData
     {
         public static BattleArenaModel GetBattleArenaInfo(
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             Address myAvatarAddress,
             Address enemyAvatarAddress,
@@ -31,7 +29,7 @@
             DateTimeOffset blockTime
         )
         {
-            AvatarState avatarState = outputStates.GetAvatarStateV2(myAvatarAddress);
+            AvatarState avatarState = outputStates.GetAvatarState(myAvatarAddress);
             var myArenaScoreAdr =
                 ArenaScore.DeriveAddress(myAvatarAddress, championshipId, round);
             previousStates.TryGetArenaScore(myArenaScoreAdr, out var previousArenaScore);

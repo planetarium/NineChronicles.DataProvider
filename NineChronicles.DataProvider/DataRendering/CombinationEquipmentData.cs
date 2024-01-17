@@ -1,4 +1,4 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
     using Libplanet;
@@ -10,8 +10,8 @@
     public static class CombinationEquipmentData
     {
         public static CombinationEquipmentModel GetCombinationEquipmentInfo(
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             Address avatarAddress,
             int recipeId,

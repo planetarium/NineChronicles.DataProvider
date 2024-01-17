@@ -5,7 +5,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using System.IO;
     using System.Linq;
     using Cocona;
-    using Libplanet;
     using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Blockchain;
@@ -15,14 +14,13 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using Libplanet.Store;
     using Libplanet.Types.Blocks;
     using MySqlConnector;
-    using Nekoyume.Action;
     using Nekoyume.Action.Loader;
     using Nekoyume.Blockchain.Policy;
     using Nekoyume.Model.Arena;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using Serilog;
-    using Serilog.Events;
 
     public class BattleArenaRankingMigration
     {
@@ -162,7 +160,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var tip = _baseStore.GetBlock((BlockHash)tipHash!);
                 var blockEvaluation = _baseChain.EvaluateBlock(tip);
                 var evaluation = blockEvaluation.Last();
-                var outputState = new Account(_baseChain.GetAccountState(evaluation.OutputState));
+                var outputState = new World(_baseChain.GetWorldState(evaluation.OutputState));
 
                 var avatarCount = 0;
                 AvatarState avatarState;
@@ -175,14 +173,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         avatarCount++;
                         Log.Debug("Migrating {0}/{1}", avatarCount, avatars.Count);
                         var avatarAddress = new Address(avatar);
-                        try
-                        {
-                            avatarState = outputState.GetAvatarStateV2(avatarAddress);
-                        }
-                        catch (Exception)
-                        {
-                            avatarState = outputState.GetAvatarState(avatarAddress);
-                        }
+                        avatarState = outputState.GetAvatarState(avatarAddress);
 
                         if (avatarState != null)
                         {

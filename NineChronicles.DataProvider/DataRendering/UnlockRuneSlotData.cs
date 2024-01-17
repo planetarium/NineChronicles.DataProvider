@@ -1,20 +1,18 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
     using Lib9c;
-    using Libplanet;
-    using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Libplanet.Types.Assets;
-    using Nekoyume.Action;
+    using Nekoyume.Module;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class UnlockRuneSlotData
     {
         public static UnlockRuneSlotModel GetUnlockRuneSlotInfo(
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             Address avatarAddress,
             int slotIndex,

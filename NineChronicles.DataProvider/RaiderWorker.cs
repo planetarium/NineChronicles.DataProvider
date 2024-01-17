@@ -6,12 +6,12 @@ namespace NineChronicles.DataProvider
     using System.Threading;
     using System.Threading.Tasks;
     using Bencodex.Types;
-    using Libplanet;
     using Libplanet.Crypto;
     using Microsoft.Extensions.Hosting;
     using Nekoyume;
     using Nekoyume.Extensions;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
@@ -38,7 +38,7 @@ namespace NineChronicles.DataProvider
                 {
                     var blockIndex = _mySqlStore.GetTip();
                     var worldBossListSheetAddress = Addresses.GetSheetAddress<WorldBossListSheet>();
-                    var value = _stateContext.GetState(worldBossListSheetAddress);
+                    var value = _stateContext.WorldState.GetLegacyState(worldBossListSheetAddress);
                     if (value is Text wbs)
                     {
                         var sheet = new WorldBossListSheet();
@@ -49,7 +49,7 @@ namespace NineChronicles.DataProvider
                         if (bossRow.EndedBlockIndex < blockIndex && !exist)
                         {
                             var raiderListAddress = Addresses.GetRaiderListAddress(raidId);
-                            if (_stateContext.GetState(raiderListAddress) is List raiderList)
+                            if (_stateContext.WorldState.GetLegacyState(raiderListAddress) is List raiderList)
                             {
                                 var raiderAddresses = raiderList.ToList(StateExtensions.ToAddress);
                                 bool success = UpdateRaider(_stateContext, raiderAddresses, raidId);
@@ -76,7 +76,7 @@ namespace NineChronicles.DataProvider
             try
             {
                 var raiderList = new List<RaiderModel>();
-                var result = stateContext.GetStates(raiderAddresses);
+                var result = stateContext.WorldState.GetLegacyStates(raiderAddresses);
                 foreach (var value in result)
                 {
                     if (value is List list)
