@@ -1,4 +1,4 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
     using System.Linq;
@@ -8,6 +8,7 @@
     using Nekoyume.Action;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using NineChronicles.DataProvider.Store.Models;
     using static Lib9c.SerializeKeys;
 
@@ -15,8 +16,8 @@
     {
         public static ClaimStakeRewardModel GetClaimStakeRewardInfo(
             IClaimStakeReward claimStakeReward,
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             long blockIndex,
             DateTimeOffset blockTime
@@ -38,7 +39,7 @@
             var plainValue = (Dictionary)claimStakeReward.PlainValue;
             var avatarAddress = ((Dictionary)plainValue["values"])[AvatarAddressKey].ToAddress();
 
-            var previousAvatarState = previousStates.GetAvatarStateV2(avatarAddress);
+            var previousAvatarState = previousStates.GetAvatarState(avatarAddress);
             var previousApPotionCount = previousAvatarState.inventory.Items
                 .Where(x => x.item.ItemSubType == ItemSubType.ApStone)
                 .Sum(potion => potion.count);
@@ -46,7 +47,7 @@
                 .Where(x => x.item.ItemSubType == ItemSubType.Hourglass)
                 .Sum(hourGlass => hourGlass.count);
 
-            var outputAvatarState = outputStates.GetAvatarStateV2(avatarAddress);
+            var outputAvatarState = outputStates.GetAvatarState(avatarAddress);
             var outputApPotionCount = outputAvatarState.inventory.Items
                 .Where(x => x.item.ItemSubType == ItemSubType.ApStone)
                 .Sum(potion => potion.count);

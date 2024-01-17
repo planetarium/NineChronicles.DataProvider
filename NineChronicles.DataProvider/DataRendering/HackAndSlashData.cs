@@ -1,19 +1,17 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
-    using Libplanet;
-    using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Nekoyume.Action;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class HackAndSlashData
     {
         public static HackAndSlashModel GetHackAndSlashInfo(
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             Address avatarAddress,
             int stageId,
@@ -22,7 +20,7 @@
             DateTimeOffset blockTime
         )
         {
-            AvatarState avatarState = outputStates.GetAvatarStateV2(avatarAddress);
+            AvatarState avatarState = outputStates.GetAvatarState(avatarAddress);
             bool isClear = avatarState.stageMap.ContainsKey(stageId);
 
             var hasModel = new HackAndSlashModel()

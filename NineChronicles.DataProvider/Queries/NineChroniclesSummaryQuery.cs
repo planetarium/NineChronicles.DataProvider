@@ -1,4 +1,4 @@
-﻿namespace NineChronicles.DataProvider.Queries
+namespace NineChronicles.DataProvider.Queries
 {
     using System;
     using System.Collections.Generic;
@@ -6,11 +6,11 @@
     using Bencodex.Types;
     using GraphQL;
     using GraphQL.Types;
-    using Libplanet;
     using Libplanet.Crypto;
     using Libplanet.Explorer.GraphTypes;
     using Libplanet.Types.Assets;
     using Nekoyume;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.GraphTypes;
     using NineChronicles.DataProvider.Store;
@@ -37,7 +37,7 @@
                 {
                     long index = context.GetArgument<long>("index", StandaloneContext.BlockChain!.Tip.Index);
                     var arenaSheetAddress = Addresses.GetSheetAddress<ArenaSheet>();
-                    IValue state = StateContext.GetState(arenaSheetAddress)!;
+                    IValue state = StateContext.WorldState.GetLegacyState(arenaSheetAddress)!;
                     ArenaSheet arenaSheet = new ArenaSheet();
                     arenaSheet.Set((Bencodex.Types.Text)state);
                     var arenaData = arenaSheet!.GetRoundByBlockIndex(index);
@@ -381,7 +381,7 @@
                 var worldBossListSheetAddress = Addresses.GetSheetAddress<WorldBossListSheet>();
                 var runeSheetAddress = Addresses.GetSheetAddress<RuneSheet>();
                 var rewardSheetAddress = Addresses.GetSheetAddress<WorldBossRankingRewardSheet>();
-                var values = stateContext.GetStates(new[] { worldBossListSheetAddress, runeSheetAddress, rewardSheetAddress });
+                var values = stateContext.WorldState.GetLegacyStates(new[] { worldBossListSheetAddress, runeSheetAddress, rewardSheetAddress });
                 if (values[0] is Text wbs && values[1] is Text rs && values[2] is Text wrs)
                 {
                     var sheet = new WorldBossListSheet();
