@@ -12,7 +12,6 @@ using Nekoyume.Model.State;
 using Nekoyume.TableData;
 using NineChronicles.DataProvider.Store;
 using NineChronicles.DataProvider.Store.Models;
-using NineChronicles.Headless.GraphTypes.States;
 using Xunit;
 
 namespace NineChronicles.DataProvider.Tests;
@@ -87,13 +86,15 @@ public class RaiderWorkerTest : TestBase
         }
     }
 
-    protected override IAccountState GetMockState()
+    protected override IWorldState GetMockState()
     {
-        return MockState.Empty
-            .SetState(RaiderAddress, RaiderState.Serialize())
-            .SetState(RaiderListAddress, List.Empty.Add(RaiderAddress.Serialize()))
-            .SetState(Addresses.GetSheetAddress<WorldBossListSheet>(),
+        return new MockWorldState()
+            .SetState(ReservedAddresses.LegacyAccount, RaiderAddress, RaiderState.Serialize())
+            .SetState(ReservedAddresses.LegacyAccount, RaiderListAddress, List.Empty.Add(RaiderAddress.Serialize()))
+            .SetState(
+                ReservedAddresses.LegacyAccount,
+                Addresses.GetSheetAddress<WorldBossListSheet>(),
                 @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
-1,900001,0,10,300,200,100,10".Serialize());
+                1,900001,0,10,300,200,100,10".Serialize());
     }
 }

@@ -293,28 +293,36 @@ public class WorldBossRankingRewardQueryTest : TestBase
         await Context.SaveChangesAsync();        
     }
     
-    protected override IAccountState GetMockState()
+    protected override IWorldState GetMockState()
     {
-        return MockState.Empty
-            .SetState(Addresses.GetSheetAddress<WorldBossListSheet>(), @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
-1,900001,0,10,300,200,100,10
-2,900001,0,10,300,200,100,10
-3,900001,0,10,300,200,100,10".Serialize())
-            .SetState(Addresses.GetSheetAddress<RuneSheet>(), @"id,ticker
-1001,RUNE_FENRIR1
-1002,RUNE_FENRIR2
-1003,RUNE_FENRIR3
-".Serialize())
-            .SetState(Addresses.GetSheetAddress<WorldBossRankingRewardSheet>(),
+        return new MockWorldState()
+            .SetState(
+                ReservedAddresses.LegacyAccount,
+                Addresses.GetSheetAddress<WorldBossListSheet>(),
+                @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
+                1,900001,0,10,300,200,100,10
+                2,900001,0,10,300,200,100,10
+                3,900001,0,10,300,200,100,10".Serialize())
+            .SetState(
+                ReservedAddresses.LegacyAccount,
+                Addresses.GetSheetAddress<RuneSheet>(),
+                @"id,ticker
+                1001,RUNE_FENRIR1
+                1002,RUNE_FENRIR2
+                1003,RUNE_FENRIR3
+                ".Serialize())
+            .SetState(
+                ReservedAddresses.LegacyAccount,
+                Addresses.GetSheetAddress<WorldBossRankingRewardSheet>(),
                 @"id,boss_id,ranking_min,ranking_max,rate_min,rate_max,rune_1_id,rune_1_qty,rune_2_id,rune_2_qty,rune_3_id,rune_3_qty,crystal
-1,900001,1,1,0,0,1001,3500,1002,1200,1003,300,900000
-2,900001,2,2,0,0,1001,2200,1002,650,1003,150,625000
-3,900001,3,3,0,0,1001,1450,1002,450,1003,100,400000
-4,900001,4,10,0,0,1001,1000,1002,330,1003,70,250000
-5,900001,11,100,0,0,1001,560,1002,150,1003,40,150000
-6,900001,0,0,1,30,1001,370,1002,105,1003,25,100000
-7,900001,0,0,31,50,1001,230,1002,60,1003,10,50000
-8,900001,0,0,51,70,1001,75,1002,20,1003,5,25000
-9,900001,0,0,71,100,1001,40,1002,10,0,0,15000".Serialize());
+                1,900001,1,1,0,0,1001,3500,1002,1200,1003,300,900000
+                2,900001,2,2,0,0,1001,2200,1002,650,1003,150,625000
+                3,900001,3,3,0,0,1001,1450,1002,450,1003,100,400000
+                4,900001,4,10,0,0,1001,1000,1002,330,1003,70,250000
+                5,900001,11,100,0,0,1001,560,1002,150,1003,40,150000
+                6,900001,0,0,1,30,1001,370,1002,105,1003,25,100000
+                7,900001,0,0,31,50,1001,230,1002,60,1003,10,50000
+                8,900001,0,0,51,70,1001,75,1002,20,1003,5,25000
+                9,900001,0,0,71,100,1001,40,1002,10,0,0,15000".Serialize());
     }
 }

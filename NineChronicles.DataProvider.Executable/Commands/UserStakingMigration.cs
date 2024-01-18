@@ -24,6 +24,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using Nekoyume.Blockchain.Policy;
     using Nekoyume.Model.Stake;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Serilog;
     using Serilog.Events;
 
@@ -183,7 +184,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var tip = _baseStore.GetBlock((BlockHash)tipHash!);
                 var blockEvaluation = _baseChain.EvaluateBlock(tip);
                 var evaluation = blockEvaluation.Last();
-                var outputState = new Account(_baseChain.GetAccountState(evaluation.OutputState));
+                var outputState = new World(_baseChain.GetWorldState(evaluation.OutputState));
 
                 var avatarCount = 0;
                 AvatarState avatarState;
@@ -199,14 +200,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         Log.Debug("Interval Count {0}", intervalCount);
                         Log.Debug("Migrating {0}/{1}", avatarCount, avatars.Count);
                         var avatarAddress = new Address(avatar);
-                        try
-                        {
-                            avatarState = outputState.GetAvatarStateV2(avatarAddress);
-                        }
-                        catch (Exception)
-                        {
-                            avatarState = outputState.GetAvatarState(avatarAddress);
-                        }
+                        avatarState = outputState.GetAvatarState(avatarAddress);
 
                         if (!checkUserStakingTable)
                         {
@@ -256,7 +250,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 avatarState.agentAddress,
                                 agentState.MonsterCollectionRound
                             );
-                            if (outputState.TryGetState(monsterCollectionAddress, out Dictionary stateDict))
+                            if (outputState.TryGetLegacyState(monsterCollectionAddress, out Dictionary stateDict))
                             {
                                 var monsterCollectionStates = new MonsterCollectionState(stateDict);
                                 var currency = outputState.GetGoldCurrency();
