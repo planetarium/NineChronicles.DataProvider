@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Bencodex.Types;
 using GraphQL.Execution;
-using Libplanet;
 using Libplanet.Action.State;
-using Libplanet.Types.Assets;
 using Libplanet.Crypto;
 using NineChronicles.DataProvider.Store.Models;
 using Xunit;
@@ -43,8 +40,8 @@ public class AgentQueryTest : TestBase, IDisposable
         CleanUp();
     }
 
-    protected override IAccountState GetMockState()
+    protected override IWorldState GetMockState()
     {
-        return MockState.Empty;
+        return new MockWorldState();
     }
 }

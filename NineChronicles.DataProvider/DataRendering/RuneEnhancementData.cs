@@ -1,24 +1,22 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
     using Bencodex.Types;
-    using Libplanet;
-    using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Libplanet.Types.Assets;
-    using Nekoyume.Action;
     using Nekoyume.Extensions;
     using Nekoyume.Helper;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class RuneEnhancementData
     {
         public static RuneEnhancementModel GetRuneEnhancementInfo(
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             Address avatarAddress,
             int runeId,
@@ -46,7 +44,7 @@
             var burntCrystal = prevCrystalBalance - outputCrystalBalance;
             var runeStateAddress = RuneState.DeriveAddress(avatarAddress, runeId);
             RuneState runeState;
-            if (outputStates.TryGetState(runeStateAddress, out List rawState))
+            if (outputStates.TryGetLegacyState(runeStateAddress, out List rawState))
             {
                 runeState = new RuneState(rawState);
             }
@@ -56,7 +54,7 @@
             }
 
             RuneState previousRuneState;
-            if (previousStates.TryGetState(runeStateAddress, out List prevRawState))
+            if (previousStates.TryGetLegacyState(runeStateAddress, out List prevRawState))
             {
                 previousRuneState = new RuneState(prevRawState);
             }

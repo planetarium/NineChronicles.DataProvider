@@ -1,13 +1,12 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
     using System.Collections.Generic;
-    using Libplanet;
-    using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Nekoyume.Action;
     using Nekoyume.Extensions;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using Nekoyume.TableData.Event;
     using NineChronicles.DataProvider.Store.Models;
@@ -16,8 +15,8 @@
     {
         public static EventConsumableItemCraftsModel GetEventConsumableItemCraftsInfo(
             EventConsumableItemCrafts eventConsumableItemCrafts,
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             long blockIndex,
             DateTimeOffset blockTime

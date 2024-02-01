@@ -1,4 +1,4 @@
-﻿namespace NineChronicles.DataProvider.Executable.Commands
+namespace NineChronicles.DataProvider.Executable.Commands
 {
     using System;
     using System.Collections.Generic;
@@ -18,7 +18,6 @@
     using Libplanet.Types.Blocks;
     using MySqlConnector;
     using Nekoyume;
-    using Nekoyume.Action;
     using Nekoyume.Action.Loader;
     using Nekoyume.Battle;
     using Nekoyume.Blockchain.Policy;
@@ -28,6 +27,7 @@
     using Nekoyume.Model.Item;
     using Nekoyume.Model.Stake;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
 
     public class UserDataMigration
@@ -238,7 +238,7 @@
                 var tip = _baseStore.GetBlock((BlockHash)tipHash);
                 var exec = _baseChain.EvaluateBlock(tip);
                 var ev = exec.Last();
-                var outputState = new Account(blockChainStates.GetAccountState(ev.OutputState));
+                var outputState = new World(blockChainStates.GetWorldState(ev.OutputState));
                 var avatarCount = 0;
                 AvatarState avatarState;
                 int interval = 10000000;
@@ -322,7 +322,7 @@
                         var fbTip = _baseStore.GetBlock((BlockHash)fbTipHash!);
                         var fbExec = _baseChain.EvaluateBlock(fbTip);
                         var fbEv = fbExec.Last();
-                        var fbOutputState = new Account(blockChainStates.GetAccountState(fbEv.OutputState));
+                        var fbOutputState = new World(blockChainStates.GetWorldState(fbEv.OutputState));
                         var fbArenaSheet = fbOutputState.GetSheet<ArenaSheet>();
                         var fbArenaData = fbArenaSheet.GetRoundByBlockIndex(fbTip.Index);
                         List<string> fbAgents = new List<string>();
@@ -341,7 +341,7 @@
                                 var fbAvatarAddress = new Address(fbAvatar);
                                 try
                                 {
-                                    fbAvatarState = fbOutputState.GetAvatarStateV2(fbAvatarAddress);
+                                    fbAvatarState = fbOutputState.GetAvatarState(fbAvatarAddress);
                                 }
                                 catch (Exception ex)
                                 {
@@ -427,7 +427,7 @@
                                         fbAvatarState.agentAddress,
                                         fbAgentState.MonsterCollectionRound
                                     );
-                                    if (fbOutputState.TryGetState(fbMonsterCollectionAddress, out Dictionary fbStateDict))
+                                    if (fbOutputState.TryGetLegacyState(fbMonsterCollectionAddress, out Dictionary fbStateDict))
                                     {
                                         var fbMonsterCollectionStates = new MonsterCollectionState(fbStateDict);
                                         var fbCurrency = fbOutputState.GetGoldCurrency();
@@ -522,7 +522,7 @@
                         var avatarAddress = new Address(avatar);
                         try
                         {
-                            avatarState = outputState.GetAvatarStateV2(avatarAddress);
+                            avatarState = outputState.GetAvatarState(avatarAddress);
                         }
                         catch (Exception ex)
                         {
@@ -590,14 +590,14 @@
                         }
 
                         Address orderReceiptAddress = OrderDigestListState.DeriveAddress(avatarAddress);
-                        var orderReceiptList = outputState.TryGetState(orderReceiptAddress, out Dictionary receiptDict)
+                        var orderReceiptList = outputState.TryGetLegacyState(orderReceiptAddress, out Dictionary receiptDict)
                             ? new OrderDigestListState(receiptDict)
                             : new OrderDigestListState(orderReceiptAddress);
                         foreach (var orderReceipt in orderReceiptList.OrderDigestList)
                         {
                             if (orderReceipt.ExpiredBlockIndex >= tip.Index)
                             {
-                                var state = outputState.GetState(
+                                var state = outputState.GetLegacyState(
                                     Addresses.GetItemAddress(orderReceipt.TradableId));
                                 ITradableItem orderItem =
                                     (ITradableItem)ItemFactory.Deserialize((Dictionary)state);
@@ -811,7 +811,7 @@
                                 avatarState.agentAddress,
                                 agentState.MonsterCollectionRound
                             );
-                            if (outputState.TryGetState(monsterCollectionAddress, out Dictionary stateDict))
+                            if (outputState.TryGetLegacyState(monsterCollectionAddress, out Dictionary stateDict))
                             {
                                 var mcStates = new MonsterCollectionState(stateDict);
                                 var currency = outputState.GetGoldCurrency();

@@ -4,15 +4,15 @@ namespace NineChronicles.DataProvider.DataRendering
     using System.Linq;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Nekoyume.Action;
     using Nekoyume.Model.Item;
+    using Nekoyume.Module;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class AuraSummonData
     {
         public static AuraSummonModel GetAuraSummonInfo(
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             Address avatarAddress,
             int groupId,
@@ -21,9 +21,9 @@ namespace NineChronicles.DataProvider.DataRendering
             long blockIndex
         )
         {
-            var prevAura = previousStates.GetAvatarStateV2(avatarAddress).inventory.Equipments
+            var prevAura = previousStates.GetAvatarState(avatarAddress).inventory.Equipments
                 .Where(e => e.ItemSubType == ItemSubType.Aura).Select(e => e.ItemId);
-            var gainedAura = string.Join(",", outputStates.GetAvatarStateV2(avatarAddress).inventory.Equipments
+            var gainedAura = string.Join(",", outputStates.GetAvatarState(avatarAddress).inventory.Equipments
                 .Where(e => e.ItemSubType == ItemSubType.Aura && !prevAura.Contains(e.ItemId)).Select(e => e.Id));
 
             return new AuraSummonModel
@@ -39,8 +39,8 @@ namespace NineChronicles.DataProvider.DataRendering
         }
 
         public static AuraSummonFailModel GetAuraSummonFailInfo(
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             Address avatarAddress,
             int groupId,

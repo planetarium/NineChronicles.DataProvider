@@ -1,11 +1,9 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using Bencodex.Types;
-    using Libplanet;
-    using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Nekoyume.Action;
@@ -14,6 +12,7 @@
     using Nekoyume.Model.EnumType;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.Store.Models;
     using Serilog;
@@ -21,13 +20,13 @@
     public static class AvatarData
     {
         public static AvatarModel GetAvatarInfo(
-            IAccount outputStates,
+            IWorld outputStates,
             Address signer,
             Address avatarAddress,
             List<RuneSlotInfo> runeInfos,
             DateTimeOffset blockTime)
         {
-            AvatarState avatarState = outputStates.GetAvatarStateV2(avatarAddress);
+            AvatarState avatarState = outputStates.GetAvatarState(avatarAddress);
             var sheets = outputStates.GetSheets(
                 sheetTypes: new[]
                 {
@@ -38,7 +37,7 @@
                 });
 
             var itemSlotStateAddress = ItemSlotState.DeriveAddress(avatarAddress, BattleType.Adventure);
-            var itemSlotState = outputStates.TryGetState(itemSlotStateAddress, out List rawItemSlotState)
+            var itemSlotState = outputStates.TryGetLegacyState(itemSlotStateAddress, out List rawItemSlotState)
                 ? new ItemSlotState(rawItemSlotState)
                 : new ItemSlotState(BattleType.Adventure);
             var equipmentInventory = avatarState.inventory.Equipments;
@@ -55,7 +54,7 @@
             var runeStates = new List<RuneState>();
             foreach (var address in runeInfos.Select(info => RuneState.DeriveAddress(avatarAddress, info.RuneId)))
             {
-                if (outputStates.TryGetState(address, out List rawRuneState))
+                if (outputStates.TryGetLegacyState(address, out List rawRuneState))
                 {
                     runeStates.Add(new RuneState(rawRuneState));
                 }
@@ -130,29 +129,6 @@
                 TitleId = avatarTitleId,
                 ArmorId = avatarArmorId,
                 Cp = avatarCp,
-                Timestamp = blockTime,
-            };
-
-            return avatarModel;
-        }
-
-        public static AvatarModel GetAvatarInfoV1(
-            IAccount outputStates,
-            Address signer,
-            Address avatarAddress,
-            DateTimeOffset blockTime)
-        {
-            AvatarState avatarState = outputStates.GetAvatarStateV2(avatarAddress);
-            string avatarName = avatarState.name;
-            var avatarModel = new AvatarModel()
-            {
-                Address = avatarAddress.ToString(),
-                AgentAddress = signer.ToString(),
-                Name = avatarName,
-                AvatarLevel = 0,
-                TitleId = 0,
-                ArmorId = 0,
-                Cp = 0,
                 Timestamp = blockTime,
             };
 

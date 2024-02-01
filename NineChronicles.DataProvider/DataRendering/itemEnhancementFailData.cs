@@ -1,22 +1,21 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Libplanet.Types.Assets;
-    using Nekoyume.Action;
     using Nekoyume.Helper;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class ItemEnhancementFailData
     {
         public static ItemEnhancementFailModel? GetItemEnhancementFailInfo(
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             Address avatarAddress,
             Guid materialId,
@@ -27,8 +26,8 @@
             DateTimeOffset blockTime
         )
         {
-            AvatarState avatarState = outputStates.GetAvatarStateV2(avatarAddress);
-            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(avatarAddress);
+            AvatarState avatarState = outputStates.GetAvatarState(avatarAddress);
+            AvatarState prevAvatarState = previousStates.GetAvatarState(avatarAddress);
 
             int prevEquipmentLevel = 0;
             if (prevAvatarState.inventory.TryGetNonFungibleItem(itemId, out ItemUsable prevEnhancementItem)
