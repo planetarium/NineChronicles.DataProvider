@@ -1,6 +1,7 @@
 namespace NineChronicles.DataProvider.GraphTypes
 {
     using GraphQL.Types;
+    using Libplanet.Crypto;
     using Libplanet.Explorer.GraphTypes;
     using NineChronicles.DataProvider.Store.Models;
 
@@ -16,7 +17,7 @@ namespace NineChronicles.DataProvider.GraphTypes
             Field<NonNullGraphType<AddressType>>(
                 nameof(WorldBossRankingModel.Address),
                 description: "Address of avatar.",
-                resolve: context => context.Source.Address
+                resolve: context => new Address(context.Source.Address!)
             );
             Field<NonNullGraphType<StringGraphType>>(
                 nameof(WorldBossRankingModel.AvatarName),

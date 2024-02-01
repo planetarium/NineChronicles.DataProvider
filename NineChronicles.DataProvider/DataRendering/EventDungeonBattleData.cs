@@ -1,25 +1,23 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Libplanet;
-    using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Libplanet.Types.Assets;
-    using Nekoyume.Action;
     using Nekoyume.Extensions;
     using Nekoyume.Model.Event;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData.Event;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class EventDungeonBattleData
     {
         public static EventDungeonBattleModel GetEventDungeonBattleInfo(
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             Address avatarAddress,
             int eventScheduleId,
@@ -34,8 +32,8 @@
             DateTimeOffset blockTime
         )
         {
-            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(avatarAddress);
-            AvatarState outputAvatarState = outputStates.GetAvatarStateV2(avatarAddress);
+            AvatarState prevAvatarState = previousStates.GetAvatarState(avatarAddress);
+            AvatarState outputAvatarState = outputStates.GetAvatarState(avatarAddress);
             var prevAvatarItems = prevAvatarState.inventory.Items;
             var outputAvatarItems = outputAvatarState.inventory.Items;
             var addressesHex =
@@ -50,7 +48,7 @@
             var eventDungeonInfoAddr = EventDungeonInfo.DeriveAddress(
                 avatarAddress,
                 eventDungeonId);
-            var eventDungeonInfo = outputStates.GetState(eventDungeonInfoAddr)
+            var eventDungeonInfo = outputStates.GetLegacyState(eventDungeonInfoAddr)
                 is Bencodex.Types.List serializedEventDungeonInfoList
                 ? new EventDungeonInfo(serializedEventDungeonInfoList)
                 : new EventDungeonInfo(remainingTickets: scheduleRow.DungeonTicketsMax);

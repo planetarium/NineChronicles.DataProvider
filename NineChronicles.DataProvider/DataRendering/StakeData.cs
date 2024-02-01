@@ -1,18 +1,18 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Libplanet.Types.Assets;
-    using Nekoyume.Action;
     using Nekoyume.Model.Stake;
+    using Nekoyume.Module;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class StakeData
     {
         public static StakeModel GetStakeInfo(
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             long blockIndex,
             DateTimeOffset blockTime,

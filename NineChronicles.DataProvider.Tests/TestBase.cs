@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Threading.Tasks;
 using GraphQL;
@@ -85,5 +84,5 @@ public abstract class TestBase
         });
     }
 
-    protected abstract IAccountState GetMockState();
+    protected abstract IWorldState GetMockState();
 }

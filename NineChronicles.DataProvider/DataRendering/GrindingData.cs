@@ -1,10 +1,8 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
     using System.Collections.Generic;
     using Bencodex.Types;
-    using Libplanet;
-    using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Libplanet.Types.Assets;
@@ -14,6 +12,7 @@
     using Nekoyume.Model.Item;
     using Nekoyume.Model.Stake;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using Nekoyume.TableData.Crystal;
     using NineChronicles.DataProvider.Store.Models;
@@ -21,8 +20,8 @@
     public static class GrindingData
     {
         public static List<GrindingModel> GetGrindingInfo(
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             Address avatarAddress,
             List<Guid> equipmentIds,
@@ -31,8 +30,13 @@
             DateTimeOffset blockTime
         )
         {
-            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(avatarAddress);
-            AgentState agentState = previousStates.GetAgentState(signer);
+            AvatarState prevAvatarState = previousStates.GetAvatarState(avatarAddress);
+            AgentState? agentState = previousStates.GetAgentState(signer);
+            if (agentState is null)
+            {
+                throw new FailedLoadStateException("Aborted as the agent state failed to load.");
+            }
+
             Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
                 signer,
                 agentState.MonsterCollectionRound
@@ -63,7 +67,7 @@
             }
             else
             {
-                if (previousStates.TryGetState(monsterCollectionAddress, out Dictionary _))
+                if (previousStates.TryGetLegacyState(monsterCollectionAddress, out Dictionary _))
                 {
                     stakedAmount = previousStates.GetBalance(monsterCollectionAddress, currency);
                 }

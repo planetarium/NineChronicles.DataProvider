@@ -1,20 +1,19 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
     using Bencodex.Types;
-    using Libplanet;
-    using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Nekoyume.Action;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class MigrateMonsterCollectionData
     {
         public static MigrateMonsterCollectionModel GetMigrateMonsterCollectionInfo(
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             long blockIndex,
             DateTimeOffset blockTime
@@ -22,8 +21,13 @@
         {
             outputStates.TryGetStakeState(signer, out StakeState stakeState);
             var agentState = previousStates.GetAgentState(signer);
+            if (agentState is null)
+            {
+                throw new FailedLoadStateException("Aborted as the agent state failed to load.");
+            }
+
             Address collectionAddress = MonsterCollectionState.DeriveAddress(signer, agentState.MonsterCollectionRound);
-            previousStates.TryGetState(collectionAddress, out Dictionary stateDict);
+            previousStates.TryGetLegacyState(collectionAddress, out Dictionary stateDict);
             var monsterCollectionState = new MonsterCollectionState(stateDict);
             var currency = outputStates.GetGoldCurrency();
             var migrationAmount = previousStates.GetBalance(monsterCollectionState.address, currency);
