@@ -11,8 +11,8 @@ namespace NineChronicles.DataProvider.Store.Models
         public RaiderModel(
             int raidId,
             string avatarName,
-            int highScore,
-            int totalScore,
+            long highScore,
+            long totalScore,
             int cp,
             int iconId,
             int level,
@@ -40,10 +40,10 @@ namespace NineChronicles.DataProvider.Store.Models
         public string AvatarName { get; set; }
 
         [Required]
-        public int HighScore { get; set; }
+        public long HighScore { get; set; }
 
         [Required]
-        public int TotalScore { get; set; }
+        public long TotalScore { get; set; }
 
         [Required]
         public int Cp { get; set; }
