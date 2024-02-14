@@ -11,6 +11,7 @@ namespace NineChronicles.DataProvider.DataRendering
     using Nekoyume.Extensions;
     using Nekoyume.Model.EnumType;
     using Nekoyume.Model.Item;
+    using Nekoyume.Model.Stat;
     using Nekoyume.Model.State;
     using Nekoyume.Module;
     using Nekoyume.TableData;
@@ -27,14 +28,22 @@ namespace NineChronicles.DataProvider.DataRendering
             DateTimeOffset blockTime)
         {
             AvatarState avatarState = outputStates.GetAvatarState(avatarAddress);
+            var collectionExist = outputStates.TryGetCollectionState(avatarAddress, out var collectionState);
+            var sheetTypes = new List<Type>
+            {
+                typeof(CharacterSheet),
+                typeof(CostumeStatSheet),
+                typeof(RuneListSheet),
+                typeof(RuneOptionSheet),
+                typeof(CollectionSheet),
+            };
+            if (collectionExist)
+            {
+                sheetTypes.Add(typeof(CollectionSheet));
+            }
+
             var sheets = outputStates.GetSheets(
-                sheetTypes: new[]
-                {
-                    typeof(CharacterSheet),
-                    typeof(CostumeStatSheet),
-                    typeof(RuneListSheet),
-                    typeof(RuneOptionSheet),
-                });
+                sheetTypes: sheetTypes);
 
             var itemSlotStateAddress = ItemSlotState.DeriveAddress(avatarAddress, BattleType.Adventure);
             var itemSlotState = outputStates.TryGetLegacyState(itemSlotStateAddress, out List rawItemSlotState)
@@ -103,13 +112,25 @@ namespace NineChronicles.DataProvider.DataRendering
                 avatarTitleId = avatarTitleCostume.Id;
             }
 
+            var collectionModifiers = new List<StatModifier>();
+            if (collectionExist)
+            {
+                var collectionSheet = sheets.GetSheet<CollectionSheet>();
+                foreach (var id in collectionState.Ids)
+                {
+                    var row = collectionSheet[id];
+                    collectionModifiers.AddRange(row.StatModifiers);
+                }
+            }
+
             var avatarCp = CPHelper.TotalCP(
                 equipmentList,
                 costumeList,
                 runeOptions,
                 avatarState.level,
                 characterRow,
-                costumeStatSheet);
+                costumeStatSheet,
+                collectionModifiers);
             string avatarName = avatarState.name;
 
             Log.Debug(
