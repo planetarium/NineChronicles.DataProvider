@@ -2319,5 +2319,12 @@ namespace NineChronicles.DataProvider.Store
 
             ctx.SaveChanges();
         }
+
+        public void StoreActivateCollections(List<ActivateCollectionModel> activateCollectionModels)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            ctx.ActivateCollections.AddRange(activateCollectionModels);
+            ctx.SaveChanges();
+        }
     }
 }
