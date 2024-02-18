@@ -2,22 +2,20 @@ namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
     using Bencodex.Types;
-    using Libplanet;
-    using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Libplanet.Types.Assets;
-    using Nekoyume.Action;
     using Nekoyume.Extensions;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class PetEnhancementData
     {
         public static PetEnhancementModel GetPetEnhancementInfo(
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             Address avatarAddress,
             int petId,
@@ -33,10 +31,10 @@ namespace NineChronicles.DataProvider.DataRendering
             var burntNcg = prevNcgBalance - outputNcgBalance;
 
             var petStateAddress = PetState.DeriveAddress(avatarAddress, petId);
-            PetState petState = outputStates.TryGetState(petStateAddress, out List rawState)
+            PetState petState = outputStates.TryGetLegacyState(petStateAddress, out List rawState)
                 ? new PetState(rawState)
                 : new PetState(petId);
-            PetState prevPetState = previousStates.TryGetState(petStateAddress, out List prevRawState)
+            PetState prevPetState = previousStates.TryGetLegacyState(petStateAddress, out List prevRawState)
                 ? new PetState(prevRawState)
                 : new PetState(petId);
 

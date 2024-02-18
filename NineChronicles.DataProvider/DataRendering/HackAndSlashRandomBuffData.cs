@@ -1,19 +1,19 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Libplanet.Types.Assets;
-    using Nekoyume.Action;
     using Nekoyume.Helper;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class HackAndSlashRandomBuffData
     {
         public static HasRandomBuffModel GetHasRandomBuffInfo(
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             Address avatarAddress,
             bool advancedGacha,
@@ -22,7 +22,7 @@
             DateTimeOffset blockTime
         )
         {
-            AvatarState prevAvatarState = previousStates.GetAvatarStateV2(avatarAddress);
+            AvatarState prevAvatarState = previousStates.GetAvatarState(avatarAddress);
             prevAvatarState.worldInformation.TryGetLastClearedStageId(out var currentStageId);
             Currency crystalCurrency = CrystalCalculator.CRYSTAL;
             var prevCrystalBalance = previousStates.GetBalance(

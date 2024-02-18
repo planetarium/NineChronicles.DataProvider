@@ -1,17 +1,15 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Libplanet;
-    using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Libplanet.Types.Assets;
-    using Nekoyume.Action;
     using Nekoyume.Extensions;
     using Nekoyume.Helper;
     using Nekoyume.Model.Item;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using Nekoyume.TableData.Crystal;
     using NineChronicles.DataProvider.Store.Models;
@@ -19,8 +17,8 @@
     public static class ReplaceCombinationEquipmentMaterialData
     {
         public static List<ReplaceCombinationEquipmentMaterialModel> GetReplaceCombinationEquipmentMaterialInfo(
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             Address avatarAddress,
             int recipeId,
@@ -90,7 +88,7 @@
             }
 
             var inventory = previousStates
-                .GetAvatarStateV2(avatarAddress).inventory;
+                .GetAvatarState(avatarAddress).inventory;
             foreach (var pair in requiredFungibleItems.OrderBy(pair => pair.Key))
             {
                 var itemId = pair.Key;

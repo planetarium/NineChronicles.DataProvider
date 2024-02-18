@@ -1,14 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Bencodex.Types;
 using GraphQL.Execution;
-using Libplanet;
 using Libplanet.Action.State;
 using Libplanet.Common;
-using Libplanet.Types.Assets;
 using Libplanet.Crypto;
 using Nekoyume;
 using NineChronicles.DataProvider.Store.Models;
@@ -26,15 +22,15 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
         var targetAvatarAddress = new PrivateKey().Address;
         var queryAddress = hex ? targetAvatarAddress.ToHex() : targetAvatarAddress.ToString();
         var query = $@"query {{
-        worldBossRanking(raidId: 1, avatarAddress: ""{queryAddress}"") {{
-            blockIndex
-            rankingInfo {{
-                ranking
-                avatarName
-                address
+            worldBossRanking(raidId: 1, avatarAddress: ""{queryAddress}"") {{
+                blockIndex
+                rankingInfo {{
+                    ranking
+                    avatarName
+                    address
+                }}
             }}
-        }}
-    }}";
+        }}";
         for (int idx = 0; idx < 2; idx++)
         {
             for (int i = 0; i < 200; i++)
@@ -75,12 +71,12 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
 
         await Context.SaveChangesAsync();
         var result = await ExecuteAsync(query);
-        var data = (Dictionary<string, object>)((Dictionary<string, object>) ((ExecutionNode) result.Data).ToValue())["worldBossRanking"];
+        var data = (Dictionary<string, object>)((Dictionary<string, object>)((ExecutionNode)result.Data).ToValue())["worldBossRanking"];
         Assert.Equal(1L, data["blockIndex"]);
         var models = (object[]) data["rankingInfo"];
         Assert.Equal(101, models.Length);
         var raider = (Dictionary<string, object>)models.Last();
-        Assert.Equal(targetAvatarAddress.ToHex(), raider["address"]);
+        Assert.Equal(targetAvatarAddress.ToString(), raider["address"]);
     }
 
     [Fact]
@@ -118,8 +114,8 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
 
     }
 
-    protected override IAccountState GetMockState()
+    protected override IWorldState GetMockState()
     {
-        return MockState.Empty;
+        return new MockWorldState();
     }
 }

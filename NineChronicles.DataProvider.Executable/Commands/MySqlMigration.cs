@@ -10,11 +10,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using Cocona;
     using Lib9c.Model.Order;
     using Libplanet.Action;
-    using Libplanet.Action.Loader;
     using Libplanet.Action.State;
     using Libplanet.Blockchain;
     using Libplanet.Blockchain.Policies;
-    using Libplanet.Crypto;
     using Libplanet.RocksDBStore;
     using Libplanet.Store;
     using Libplanet.Types.Assets;
@@ -32,12 +30,12 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using Nekoyume.Helper;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
+    using Nekoyume.Module;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.DataRendering;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
     using Serilog;
-    using Serilog.Events;
     using static Lib9c.SerializeKeys;
 
     public class MySqlMigration
@@ -381,8 +379,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                     foreach (var ae in data)
                     {
-                        var inputState = new Account(blockChainStates.GetAccountState(ae.InputContext.PreviousState));
-                        var outputState = new Account(blockChainStates.GetAccountState(ae.OutputState));
+                        var inputState = new World(blockChainStates.GetWorldState(ae.InputContext.PreviousState));
+                        var outputState = new World(blockChainStates.GetWorldState(ae.OutputState));
 
                         if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase action)
                         {
@@ -853,17 +851,17 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             if (action is Buy buy)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = outputState.GetAvatarStateV2(buy.buyerAvatarAddress);
+                                AvatarState avatarState = outputState.GetAvatarState(buy.buyerAvatarAddress);
                                 var buyerInventory = avatarState.inventory;
                                 foreach (var purchaseInfo in buy.purchaseInfos)
                                 {
-                                    var state = outputState.GetState(
+                                    var state = outputState.GetLegacyState(
                                     Addresses.GetItemAddress(purchaseInfo.TradableId));
                                     ITradableItem orderItem =
                                         (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
                                     Order order =
                                         OrderFactory.Deserialize(
-                                            (Dictionary)outputState.GetState(
+                                            (Dictionary)outputState.GetLegacyState(
                                                 Order.DeriveAddress(purchaseInfo.OrderId))!);
                                     int itemCount = order is FungibleOrder fungibleOrder
                                         ? fungibleOrder.ItemCount
@@ -922,7 +920,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         || purchaseInfo.ItemSubType == ItemSubType.Ring
                                         || purchaseInfo.ItemSubType == ItemSubType.Weapon)
                                     {
-                                        var sellerState = outputState.GetAvatarStateV2(purchaseInfo.SellerAvatarAddress);
+                                        var sellerState = outputState.GetAvatarState(purchaseInfo.SellerAvatarAddress);
                                         var sellerInventory = sellerState.inventory;
 
                                         if (buyerInventory.Equipments == null || sellerInventory.Equipments == null)
@@ -956,17 +954,17 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             if (action is Buy7 buy7)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = outputState.GetAvatarStateV2(buy7.buyerAvatarAddress);
+                                AvatarState avatarState = outputState.GetAvatarState(buy7.buyerAvatarAddress);
                                 var buyerInventory = avatarState.inventory;
                                 foreach (var purchaseInfo in buy7.purchaseInfos)
                                 {
-                                    var state = outputState.GetState(
+                                    var state = outputState.GetLegacyState(
                                     Addresses.GetItemAddress(purchaseInfo.productId));
                                     ITradableItem orderItem =
                                         (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
                                     Order order =
                                         OrderFactory.Deserialize(
-                                            (Dictionary)outputState.GetState(
+                                            (Dictionary)outputState.GetLegacyState(
                                                 Order.DeriveAddress(purchaseInfo.productId))!);
                                     int itemCount = order is FungibleOrder fungibleOrder
                                         ? fungibleOrder.ItemCount
@@ -1025,7 +1023,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         || purchaseInfo.itemSubType == ItemSubType.Ring
                                         || purchaseInfo.itemSubType == ItemSubType.Weapon)
                                     {
-                                        var sellerState = outputState.GetAvatarStateV2(purchaseInfo.sellerAvatarAddress);
+                                        var sellerState = outputState.GetAvatarState(purchaseInfo.sellerAvatarAddress);
                                         var sellerInventory = sellerState.inventory;
 
                                         if (buyerInventory.Equipments == null || sellerInventory.Equipments == null)
@@ -1189,23 +1187,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing BattleArena action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is BattleGrandFinale battleGrandFinale)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _battleGrandFinaleList.Add(BattleGrandFinaleData.GetBattleGrandFinaleInfo(
-                                    inputState,
-                                    outputState,
-                                    ae.InputContext.Signer,
-                                    battleGrandFinale.myAvatarAddress,
-                                    battleGrandFinale.enemyAvatarAddress,
-                                    battleGrandFinale.grandFinaleId,
-                                    battleGrandFinale.Id,
-                                    ae.InputContext.BlockIndex,
-                                    _blockTimeOffset));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing BattleGrandFinale action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (action is EventMaterialItemCrafts eventMaterialItemCrafts)
@@ -1504,9 +1485,11 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 int raidId = 0;
                                 bool found = false;
-                                var accountDiff = AccountDiff.Create(inputState, outputState);
-                                var updatedAddresses = accountDiff.StateDiffs.Keys
-                                    .Union(accountDiff.FungibleAssetValueDiffs.Select(kv => kv.Key.Item1))
+                                var legacyAccountDiff = AccountDiff.Create(
+                                    inputState.GetAccount(ReservedAddresses.LegacyAccount),
+                                    outputState.GetAccount(ReservedAddresses.LegacyAccount));
+                                var updatedAddresses = legacyAccountDiff.StateDiffs.Keys
+                                    .Union(legacyAccountDiff.FungibleAssetValueDiffs.Select(kv => kv.Key.Item1))
                                     .ToHashSet();
                                 for (int i = 0; i < 99; i++)
                                 {
@@ -1563,27 +1546,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     transferAsset.Recipient,
                                     transferAsset.Amount.Currency.Ticker,
                                     transferAsset.Amount,
-                                    _blockTimeOffset));
-
-                                var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is TransferAsset2 transferAsset2)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var actionString = ae.InputContext.TxId.ToString();
-                                var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
-                                var id = new Guid(actionByteArray);
-                                _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
-                                    id,
-                                    (TxId)ae.InputContext.TxId!,
-                                    ae.InputContext.BlockIndex,
-                                    _blockHash!.ToString(),
-                                    transferAsset2.Sender,
-                                    transferAsset2.Recipient,
-                                    transferAsset2.Amount.Currency.Ticker,
-                                    transferAsset2.Amount,
                                     _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
