@@ -14,10 +14,12 @@ namespace NineChronicles.DataProvider.GraphTypes
                 description: "Season ranking.",
                 resolve: context => context.Source.Ranking
             );
-            Field<NonNullGraphType<AddressType>>(
+
+            // FIXME should be use AddressType
+            Field<NonNullGraphType<StringGraphType>>(
                 nameof(WorldBossRankingModel.Address),
                 description: "Address of avatar.",
-                resolve: context => new Address(context.Source.Address!)
+                resolve: context => context.Source.Address
             );
             Field<NonNullGraphType<StringGraphType>>(
                 nameof(WorldBossRankingModel.AvatarName),
