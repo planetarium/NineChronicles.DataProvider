@@ -1,6 +1,7 @@
 namespace NineChronicles.DataProvider.Store.Models
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
 
     public class AvatarModel
@@ -23,5 +24,8 @@ namespace NineChronicles.DataProvider.Store.Models
         public int? Cp { get; set; }
 
         public DateTimeOffset? Timestamp { get; set; }
+
+        public ICollection<ActivateCollectionModel> ActivateCollections { get; set; } =
+            new List<ActivateCollectionModel>();
     }
 }

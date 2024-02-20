@@ -1,7 +1,8 @@
-#nullable enable
-
 namespace NineChronicles.DataProvider
 {
+#nullable enable
+
+    using Nekoyume;
     using NineChronicles.Headless.Properties;
 
     public class Configuration
@@ -95,6 +96,6 @@ namespace NineChronicles.DataProvider
 #nullable disable
         public string MySqlConnectionString { get; set; }
 
-        public NetworkType NetworkType { get; set; } = NetworkType.Main;
+        public Planet Planet { get; set; } = Planet.Odin;
     }
 }
