@@ -1,20 +1,19 @@
-﻿namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
     using System.Collections.Generic;
-    using Libplanet;
-    using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Libplanet.Types.Assets;
     using Nekoyume.Helper;
+    using Nekoyume.Module;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class UnlockEquipmentRecipeData
     {
         public static List<UnlockEquipmentRecipeModel> GetUnlockEquipmentRecipeInfo(
-            IAccount previousStates,
-            IAccount outputStates,
+            IWorld previousStates,
+            IWorld outputStates,
             Address signer,
             Address avatarAddress,
             List<int> recipeIds,

@@ -1,6 +1,7 @@
 namespace NineChronicles.DataProvider.GraphTypes
 {
     using GraphQL.Types;
+    using Libplanet.Crypto;
     using Libplanet.Explorer.GraphTypes;
     using NineChronicles.DataProvider.Store.Models;
 
@@ -13,7 +14,9 @@ namespace NineChronicles.DataProvider.GraphTypes
                 description: "Season ranking.",
                 resolve: context => context.Source.Ranking
             );
-            Field<NonNullGraphType<AddressType>>(
+
+            // FIXME should be use AddressType
+            Field<NonNullGraphType<StringGraphType>>(
                 nameof(WorldBossRankingModel.Address),
                 description: "Address of avatar.",
                 resolve: context => context.Source.Address

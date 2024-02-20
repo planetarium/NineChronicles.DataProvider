@@ -244,7 +244,7 @@ namespace NineChronicles.DataProvider.Executable
             hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, context, publisher, service);
 
             var stateContext = new StateContext(
-                context.BlockChain!.GetAccountState(context.BlockChain!.Tip.Hash),
+                context.BlockChain!.GetWorldState(context.BlockChain!.Tip.Hash),
                 context.BlockChain!.Tip.Index,
                 new StateMemoryCache()
             );
