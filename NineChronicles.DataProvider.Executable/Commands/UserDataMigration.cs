@@ -47,7 +47,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private const string SEDbName = "ShopEquipments";
         private const string SCTDbName = "ShopCostumes";
         private const string SMDbName = "ShopMaterials";
-        private const string URDbName = "UserRunes";
+        private readonly string uRDbName = "UserRunes";
         private string bARDbName = "BattleArenaRanking";
         private string fbBARDbName = "BattleArenaRanking";
         private string fbUSDbName = "UserStakings";
@@ -937,7 +937,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                         foreach (var path in _urFiles)
                         {
-                            BulkInsert(URDbName, path);
+                            BulkInsert(uRDbName, path);
                         }
 
                         _agentFiles.RemoveAt(0);
@@ -965,7 +965,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
-
                 var stm6 = $"RENAME TABLE {EDbName} TO {EDbName}_Dump; CREATE TABLE {EDbName} LIKE {EDbName}_Dump;";
                 var stm23 = $"RENAME TABLE {bARDbName} TO {bARDbName}_Dump; CREATE TABLE {bARDbName} LIKE {bARDbName}_Dump;";
                 var cmd6 = new MySqlCommand(stm6, connection);
@@ -1068,7 +1067,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                 foreach (var path in _urFiles)
                 {
-                    BulkInsert(URDbName, path);
+                    BulkInsert(uRDbName, path);
                 }
             }
             catch (Exception)
@@ -1099,12 +1098,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
             var stm34 = $"DROP TABLE {bARDbName}_Dump;";
             var cmd11 = new MySqlCommand(stm11, connection);
             var cmd34 = new MySqlCommand(stm34, connection);
-            var startDelete = DateTimeOffset.Now;
+            DateTimeOffset startDelete;
+            DateTimeOffset endDelete;
+            startDelete = DateTimeOffset.Now;
             connection.Open();
             cmd11.CommandTimeout = 300;
             cmd11.ExecuteScalar();
             connection.Close();
-            var endDelete = DateTimeOffset.Now;
+            endDelete = DateTimeOffset.Now;
             Console.WriteLine("Delete Equipments_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
             startDelete = DateTimeOffset.Now;
             connection.Open();
