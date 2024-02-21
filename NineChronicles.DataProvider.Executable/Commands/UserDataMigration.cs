@@ -32,28 +32,34 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
     public class UserDataMigration
     {
-        private const string UeDbName = "UserEquipments";
-        private const string UctDbName = "UserCostumes";
-        private const string UmDbName = "UserMaterials";
-        private const string UcDbName = "UserConsumables";
-        private const string UsDbName = "UserStakings";
-        private const string UmcDbName = "UserMonsterCollections";
-        private const string UncgDbName = "UserNCGs";
-        private const string UcyDbName = "UserCrystals";
+        private const string AgentDbName = "Agents";
+        private const string AvatarDbName = "Avatars";
+        private const string UEDbName = "UserEquipments";
+        private const string UCTDbName = "UserCostumes";
+        private const string UMDbName = "UserMaterials";
+        private const string UCDbName = "UserConsumables";
+        private const string USDbName = "UserStakings";
+        private const string UMCDbName = "UserMonsterCollections";
+        private const string UNCGDbName = "UserNCGs";
+        private const string UCYDbName = "UserCrystals";
         private const string EDbName = "Equipments";
-        private const string ScDbName = "ShopConsumables";
-        private const string SeDbName = "ShopEquipments";
-        private const string SctDbName = "ShopCostumes";
-        private const string SmDbName = "ShopMaterials";
-        private const string UrDbName = "UserRunes";
-        private string _barDbName = "BattleArenaRanking";
-        private string _fbBarDbName = "BattleArenaRanking";
-        private string _fbUsDbName = "UserStakings";
+        private const string SCDbName = "ShopConsumables";
+        private const string SEDbName = "ShopEquipments";
+        private const string SCTDbName = "ShopCostumes";
+        private const string SMDbName = "ShopMaterials";
+        private const string URDbName = "UserRunes";
+        private string bARDbName = "BattleArenaRanking";
+        private string fbBARDbName = "BattleArenaRanking";
+        private string fbUSDbName = "UserStakings";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain _baseChain;
+        private StreamWriter _ccBulkFile;
+        private StreamWriter _ceBulkFile;
+        private StreamWriter _ieBulkFile;
         private StreamWriter _ueBulkFile;
         private StreamWriter _uctBulkFile;
+        private StreamWriter _uiBulkFile;
         private StreamWriter _umBulkFile;
         private StreamWriter _ucBulkFile;
         private StreamWriter _usBulkFile;
@@ -69,10 +75,16 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private StreamWriter _barBulkFile;
         private StreamWriter _fbBarBulkFile;
         private StreamWriter _urBulkFile;
+        private StreamWriter _agentBulkFile;
+        private StreamWriter _avatarBulkFile;
         private List<string> _hourGlassAgentList;
         private List<string> _apStoneAgentList;
+        private List<string> _ccFiles;
+        private List<string> _ceFiles;
+        private List<string> _ieFiles;
         private List<string> _ueFiles;
         private List<string> _uctFiles;
+        private List<string> _uiFiles;
         private List<string> _umFiles;
         private List<string> _ucFiles;
         private List<string> _usFiles;
@@ -88,6 +100,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private List<string> _barFiles;
         private List<string> _fbBarFiles;
         private List<string> _urFiles;
+        private List<string> _agentFiles;
+        private List<string> _avatarFiles;
 
         [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
         public void Migration(
@@ -184,12 +198,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 new NCActionLoader());
             _baseChain = new BlockChain(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, actionEvaluator);
 
-            // Prepare block hashes to append to new chain
             Console.WriteLine("Start migration.");
 
             // files to store bulk file paths (new file created every 10000 blocks for bulk load performance)
+            _ccFiles = new List<string>();
+            _ceFiles = new List<string>();
+            _ieFiles = new List<string>();
             _ueFiles = new List<string>();
             _uctFiles = new List<string>();
+            _uiFiles = new List<string>();
             _umFiles = new List<string>();
             _ucFiles = new List<string>();
             _usFiles = new List<string>();
@@ -205,6 +222,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
             _barFiles = new List<string>();
             _fbBarFiles = new List<string>();
             _urFiles = new List<string>();
+            _agentFiles = new List<string>();
+            _avatarFiles = new List<string>();
 
             // lists to keep track of inserted addresses to minimize duplicates
             _hourGlassAgentList = new List<string>();
@@ -251,50 +270,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var arenaSheet = outputState.GetSheet<ArenaSheet>();
                 var arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
 
-                _barDbName = $"{_barDbName}_{arenaData.ChampionshipId}_{arenaData.Round}";
-                Console.WriteLine("1");
-                connection.Open();
-                var stm33 =
-                    $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{_barDbName}` (
-                        `BlockIndex` bigint NOT NULL,
-                        `AgentAddress` varchar(100) NOT NULL,
-                        `AvatarAddress` varchar(100) NOT NULL,
-                        `AvatarLevel` int NOT NULL,
-                        `ChampionshipId` int NOT NULL,
-                        `Round` int NOT NULL,
-                        `ArenaType` varchar(100) NOT NULL,
-                        `Score` int NOT NULL,
-                        `WinCount` int NOT NULL,
-                        `MedalCount` int NOT NULL,
-                        `LossCount` int NOT NULL,
-                        `Ticket` int NOT NULL,
-                        `PurchasedTicketCount` int NOT NULL,
-                        `TicketResetCount` int NOT NULL,
-                        `EntranceFee` bigint NOT NULL,
-                        `TicketPrice` bigint NOT NULL,
-                        `AdditionalTicketPrice` bigint NOT NULL,
-                        `RequiredMedalCount` int NOT NULL,
-                        `StartBlockIndex` bigint NOT NULL,
-                        `EndBlockIndex` bigint NOT NULL,
-                        `Ranking` int NOT NULL,
-                        `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        KEY `fk_BattleArenaRanking_Agent1_idx` (`AgentAddress`),
-                        KEY `fk_BattleArenaRanking_AvatarAddress1_idx` (`AvatarAddress`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
-
-                var cmd33 = new MySqlCommand(stm33, connection);
-                cmd33.CommandTimeout = 300;
-                cmd33.ExecuteScalar();
-                connection.Close();
-
                 Console.WriteLine("2");
                 var prevArenaEndIndex = arenaData.StartBlockIndex - 1;
                 var prevArenaData = arenaSheet.GetRoundByBlockIndex(prevArenaEndIndex);
                 var finalizeBarankingTip = prevArenaEndIndex;
-                _fbBarDbName = $"{_fbBarDbName}_{prevArenaData.ChampionshipId}_{prevArenaData.Round}";
+                fbBARDbName = $"{fbBARDbName}_{prevArenaData.ChampionshipId}_{prevArenaData.Round}";
 
                 connection.Open();
-                var preBarQuery = $"SELECT `BlockIndex` FROM data_provider.{_fbBarDbName} limit 1";
+                var preBarQuery = $"SELECT `BlockIndex` FROM data_provider.{fbBARDbName} limit 1";
                 var preBarCmd = new MySqlCommand(preBarQuery, connection);
 
                 var dataReader = preBarCmd.ExecuteReader();
@@ -317,18 +300,16 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 {
                     try
                     {
-                        Console.WriteLine($"Finalize {_fbBarDbName} Table!");
+                        Console.WriteLine($"Finalize {fbBARDbName} Table!");
                         var fbTipHash = _baseStore.IndexBlockHash(_baseChain.Id, finalizeBarankingTip);
                         var fbTip = _baseStore.GetBlock((BlockHash)fbTipHash!);
-                        var fbExec = _baseChain.EvaluateBlock(fbTip);
-                        var fbEv = fbExec.Last();
-                        var fbOutputState = new World(blockChainStates.GetWorldState(fbEv.OutputState));
+                        var fbOutputState = new World(blockChainStates.GetWorldState(ev.OutputState));
                         var fbArenaSheet = fbOutputState.GetSheet<ArenaSheet>();
                         var fbArenaData = fbArenaSheet.GetRoundByBlockIndex(fbTip.Index);
                         List<string> fbAgents = new List<string>();
                         var fbavatarCount = 0;
 
-                        _fbUsDbName = $"{_fbUsDbName}_{fbTip.Index}";
+                        fbUSDbName = $"{fbUSDbName}_{fbTip.Index}";
                         Console.WriteLine("5");
 
                         foreach (var fbAvatar in avatars)
@@ -339,16 +320,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Migrating {0}/{1}", fbavatarCount, avatars.Count);
                                 AvatarState fbAvatarState;
                                 var fbAvatarAddress = new Address(fbAvatar);
-                                try
-                                {
-                                    fbAvatarState = fbOutputState.GetAvatarState(fbAvatarAddress);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine(ex.Message);
-                                    Console.WriteLine(ex.StackTrace);
-                                    fbAvatarState = fbOutputState.GetAvatarState(fbAvatarAddress);
-                                }
+                                fbAvatarState = fbOutputState.GetAvatarState(fbAvatarAddress);
 
                                 var fbAvatarLevel = fbAvatarState.level;
 
@@ -406,22 +378,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         );
                                     }
 
-                                    if (fbOutputState.TryGetStakeState(fbAvatarState.agentAddress, out StakeState fbStakeState))
-                                    {
-                                        var fbStakeStateAddress = StakeState.DeriveAddress(fbAvatarState.agentAddress);
-                                        var fbCurrency = fbOutputState.GetGoldCurrency();
-                                        var fbStakedBalance = fbOutputState.GetBalance(fbStakeStateAddress, fbCurrency);
-                                        _fbUsBulkFile.WriteLine(
-                                            $"{fbTip.Index};" +
-                                            "V2;" +
-                                            $"{fbAvatarState.agentAddress.ToString()};" +
-                                            $"{Convert.ToDecimal(fbStakedBalance.GetQuantityString())};" +
-                                            $"{fbStakeState.StartedBlockIndex};" +
-                                            $"{fbStakeState.ReceivedBlockIndex};" +
-                                            $"{fbStakeState.CancellableBlockIndex}"
-                                        );
-                                    }
-
                                     var fbAgentState = fbOutputState.GetAgentState(fbAvatarState.agentAddress);
                                     Address fbMonsterCollectionAddress = MonsterCollectionState.DeriveAddress(
                                         fbAvatarState.agentAddress,
@@ -466,7 +422,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                     connection.Open();
                     var s =
-                        $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{_fbUsDbName}` (
+                        $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{fbUSDbName}` (
                                   `BlockIndex` bigint NOT NULL,
                                   `StakeVersion` varchar(100) NOT NULL,
                                   `AgentAddress` varchar(100) NOT NULL,
@@ -483,33 +439,69 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                     Console.WriteLine("6");
 
-                    var fbstm23 = $"RENAME TABLE {_fbBarDbName} TO {_fbBarDbName}_Dump; CREATE TABLE {_fbBarDbName} LIKE {_fbBarDbName}_Dump;";
+                    var fbstm23 = $"RENAME TABLE {fbBARDbName} TO {fbBARDbName}_Dump; CREATE TABLE {fbBARDbName} LIKE {fbBARDbName}_Dump;";
                     var fbcmd23 = new MySqlCommand(fbstm23, connection);
                     connection.Open();
                     fbcmd23.CommandTimeout = 300;
                     fbcmd23.ExecuteScalar();
                     connection.Close();
-                    Console.WriteLine($"Move {_fbBarDbName} Complete!");
+                    Console.WriteLine($"Move {fbBARDbName} Complete!");
 
                     foreach (var path in _fbUsFiles)
                     {
-                        BulkInsert(_fbUsDbName, path);
+                        BulkInsert(fbUSDbName, path);
                     }
 
                     foreach (var path in _fbBarFiles)
                     {
-                        BulkInsert(_fbBarDbName, path);
+                        BulkInsert(fbBARDbName, path);
                     }
 
-                    var fbstm34 = $"DROP TABLE {_fbBarDbName}_Dump;";
+                    var fbstm34 = $"DROP TABLE {fbBARDbName}_Dump;";
                     var fbcmd34 = new MySqlCommand(fbstm34, connection);
                     connection.Open();
                     fbcmd34.CommandTimeout = 300;
                     fbcmd34.ExecuteScalar();
                     connection.Close();
-                    Console.WriteLine($"Delete {_fbBarDbName}_Dump Complete!");
-                    Console.WriteLine($"Finalize {_fbBarDbName} & {_fbUsDbName} Tables Complete!");
+                    Console.WriteLine($"Delete {fbBARDbName}_Dump Complete!");
+                    Console.WriteLine($"Finalize {fbBARDbName} & {fbUSDbName} Tables Complete!");
                 }
+
+                bARDbName = $"{bARDbName}_{arenaData.ChampionshipId}_{arenaData.Round}";
+                Console.WriteLine("1");
+                connection.Open();
+                var stm33 =
+                    $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{bARDbName}` (
+                        `BlockIndex` bigint NOT NULL,
+                        `AgentAddress` varchar(100) NOT NULL,
+                        `AvatarAddress` varchar(100) NOT NULL,
+                        `AvatarLevel` int NOT NULL,
+                        `ChampionshipId` int NOT NULL,
+                        `Round` int NOT NULL,
+                        `ArenaType` varchar(100) NOT NULL,
+                        `Score` int NOT NULL,
+                        `WinCount` int NOT NULL,
+                        `MedalCount` int NOT NULL,
+                        `LossCount` int NOT NULL,
+                        `Ticket` int NOT NULL,
+                        `PurchasedTicketCount` int NOT NULL,
+                        `TicketResetCount` int NOT NULL,
+                        `EntranceFee` bigint NOT NULL,
+                        `TicketPrice` bigint NOT NULL,
+                        `AdditionalTicketPrice` bigint NOT NULL,
+                        `RequiredMedalCount` int NOT NULL,
+                        `StartBlockIndex` bigint NOT NULL,
+                        `EndBlockIndex` bigint NOT NULL,
+                        `Ranking` int NOT NULL,
+                        `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        KEY `fk_BattleArenaRanking_Agent1_idx` (`AgentAddress`),
+                        KEY `fk_BattleArenaRanking_AvatarAddress1_idx` (`AvatarAddress`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+
+                var cmd33 = new MySqlCommand(stm33, connection);
+                cmd33.CommandTimeout = 300;
+                cmd33.ExecuteScalar();
+                connection.Close();
 
                 foreach (var avatar in avatars)
                 {
@@ -520,24 +512,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         Console.WriteLine("Interval Count {0}", intervalCount);
                         Console.WriteLine("Migrating {0}/{1}", avatarCount, avatars.Count);
                         var avatarAddress = new Address(avatar);
-                        try
-                        {
-                            avatarState = outputState.GetAvatarState(avatarAddress);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine(ex.Message);
-                            Console.WriteLine(ex.StackTrace);
-                            avatarState = outputState.GetAvatarState(avatarAddress);
-                        }
+                        avatarState = outputState.GetAvatarState(avatarAddress);
 
                         var avatarLevel = avatarState.level;
 
                         var runeSheet = sheets.GetSheet<RuneSheet>();
-                        foreach (var runeType in runeSheet.Values)
+                        foreach (var ticker in runeSheet.Values.Select(x => x.Ticker))
                         {
 #pragma warning disable CS0618
-                            var runeCurrency = Currency.Legacy(runeType.Ticker, 0, minters: null);
+                            var runeCurrency = Currency.Legacy(ticker, 0, minters: null);
 #pragma warning restore CS0618
                             var outputRuneBalance = outputState.GetBalance(
                                 avatarAddress,
@@ -546,9 +529,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             {
                                 _urBulkFile.WriteLine(
                                     $"{tip.Index};" +
-                                    $"{avatarAddress.ToString()};" +
                                     $"{avatarState.agentAddress.ToString()};" +
-                                    $"{runeType.Ticker};" +
+                                    $"{avatarAddress.ToString()};" +
+                                    $"{ticker};" +
                                     $"{Convert.ToDecimal(outputRuneBalance.GetQuantityString())};" +
                                     $"{tip.Timestamp.UtcDateTime:yyyy-MM-dd}"
                                 );
@@ -606,8 +589,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     var equipment = (Equipment)orderItem;
                                     Console.WriteLine(equipment.ItemId);
                                     _seBulkFile.WriteLine(
-                                        $"{tip.Index};" +
                                         $"{equipment.ItemId.ToString()};" +
+                                        $"{tip.Index};" +
                                         $"{orderReceipt.SellerAgentAddress.ToString()};" +
                                         $"{avatarAddress.ToString()};" +
                                         $"{equipment.ItemType.ToString()};" +
@@ -639,8 +622,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     var costume = (Costume)orderItem;
                                     Console.WriteLine(costume.ItemId);
                                     _sctBulkFile.WriteLine(
-                                        $"{tip.Index};" +
                                         $"{costume.ItemId.ToString()};" +
+                                        $"{tip.Index};" +
                                         $"{orderReceipt.SellerAgentAddress.ToString()};" +
                                         $"{avatarAddress.ToString()};" +
                                         $"{costume.ItemType.ToString()};" +
@@ -668,8 +651,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     var material = (Material)orderItem;
                                     Console.WriteLine(material.ItemId);
                                     _smBulkFile.WriteLine(
-                                        $"{tip.Index};" +
                                         $"{material.ItemId.ToString()};" +
+                                        $"{tip.Index};" +
                                         $"{orderReceipt.SellerAgentAddress.ToString()};" +
                                         $"{avatarAddress.ToString()};" +
                                         $"{material.ItemType.ToString()};" +
@@ -693,8 +676,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     var consumable = (Consumable)orderItem;
                                     Console.WriteLine(consumable.ItemId);
                                     _scBulkFile.WriteLine(
-                                        $"{tip.Index};" +
                                         $"{consumable.ItemId.ToString()};" +
+                                        $"{tip.Index};" +
                                         $"{orderReceipt.SellerAgentAddress.ToString()};" +
                                         $"{avatarAddress.ToString()};" +
                                         $"{consumable.ItemType.ToString()};" +
@@ -872,25 +855,34 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     if (intervalCount == interval)
                     {
                         FlushBulkFiles();
+                        foreach (var path in _agentFiles)
+                        {
+                            BulkInsert(AgentDbName, path);
+                        }
+
+                        foreach (var path in _avatarFiles)
+                        {
+                            BulkInsert(AvatarDbName, path);
+                        }
 
                         foreach (var path in _ueFiles)
                         {
-                            BulkInsert(UeDbName, path);
+                            BulkInsert(UEDbName, path);
                         }
 
                         foreach (var path in _uctFiles)
                         {
-                            BulkInsert(UctDbName, path);
+                            BulkInsert(UCTDbName, path);
                         }
 
                         foreach (var path in _umFiles)
                         {
-                            BulkInsert(UmDbName, path);
+                            BulkInsert(UMDbName, path);
                         }
 
                         foreach (var path in _ucFiles)
                         {
-                            BulkInsert(UcDbName, path);
+                            BulkInsert(UCDbName, path);
                         }
 
                         foreach (var path in _eFiles)
@@ -900,54 +892,56 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                         foreach (var path in _usFiles)
                         {
-                            BulkInsert(UsDbName, path);
+                            BulkInsert(USDbName, path);
                         }
 
                         foreach (var path in _umcFiles)
                         {
-                            BulkInsert(UmcDbName, path);
+                            BulkInsert(UMCDbName, path);
                         }
 
                         foreach (var path in _uncgFiles)
                         {
-                            BulkInsert(UncgDbName, path);
+                            BulkInsert(UNCGDbName, path);
                         }
 
                         foreach (var path in _ucyFiles)
                         {
-                            BulkInsert(UcyDbName, path);
+                            BulkInsert(UCYDbName, path);
                         }
 
                         foreach (var path in _scFiles)
                         {
-                            BulkInsert(ScDbName, path);
+                            BulkInsert(SCDbName, path);
                         }
 
                         foreach (var path in _seFiles)
                         {
-                            BulkInsert(SeDbName, path);
+                            BulkInsert(SEDbName, path);
                         }
 
                         foreach (var path in _sctFiles)
                         {
-                            BulkInsert(SctDbName, path);
+                            BulkInsert(SCTDbName, path);
                         }
 
                         foreach (var path in _smFiles)
                         {
-                            BulkInsert(SmDbName, path);
+                            BulkInsert(SMDbName, path);
                         }
 
                         foreach (var path in _barFiles)
                         {
-                            BulkInsert(_barDbName, path);
+                            BulkInsert(bARDbName, path);
                         }
 
                         foreach (var path in _urFiles)
                         {
-                            BulkInsert(UrDbName, path);
+                            BulkInsert(URDbName, path);
                         }
 
+                        _agentFiles.RemoveAt(0);
+                        _avatarFiles.RemoveAt(0);
                         _ueFiles.RemoveAt(0);
                         _uctFiles.RemoveAt(0);
                         _umFiles.RemoveAt(0);
@@ -971,31 +965,41 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
+
                 var stm6 = $"RENAME TABLE {EDbName} TO {EDbName}_Dump; CREATE TABLE {EDbName} LIKE {EDbName}_Dump;";
-                var stm23 = $"RENAME TABLE {_barDbName} TO {_barDbName}_Dump; CREATE TABLE {_barDbName} LIKE {_barDbName}_Dump;";
+                var stm23 = $"RENAME TABLE {bARDbName} TO {bARDbName}_Dump; CREATE TABLE {bARDbName} LIKE {bARDbName}_Dump;";
                 var cmd6 = new MySqlCommand(stm6, connection);
                 var cmd23 = new MySqlCommand(stm23, connection);
+                foreach (var path in _agentFiles)
+                {
+                    BulkInsert(AgentDbName, path);
+                }
 
-                var startMove = DateTimeOffset.Now;
-                var endMove = DateTimeOffset.Now;
+                foreach (var path in _avatarFiles)
+                {
+                    BulkInsert(AvatarDbName, path);
+                }
+
+                DateTimeOffset startMove;
+                DateTimeOffset endMove;
                 foreach (var path in _ueFiles)
                 {
-                    BulkInsert(UeDbName, path);
+                    BulkInsert(UEDbName, path);
                 }
 
                 foreach (var path in _uctFiles)
                 {
-                    BulkInsert(UctDbName, path);
+                    BulkInsert(UCTDbName, path);
                 }
 
                 foreach (var path in _umFiles)
                 {
-                    BulkInsert(UmDbName, path);
+                    BulkInsert(UMDbName, path);
                 }
 
                 foreach (var path in _ucFiles)
                 {
-                    BulkInsert(UcDbName, path);
+                    BulkInsert(UCDbName, path);
                 }
 
                 startMove = DateTimeOffset.Now;
@@ -1012,42 +1016,42 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                 foreach (var path in _usFiles)
                 {
-                    BulkInsert(UsDbName, path);
+                    BulkInsert(USDbName, path);
                 }
 
                 foreach (var path in _uncgFiles)
                 {
-                    BulkInsert(UncgDbName, path);
+                    BulkInsert(UNCGDbName, path);
                 }
 
                 foreach (var path in _ucyFiles)
                 {
-                    BulkInsert(UcyDbName, path);
+                    BulkInsert(UCYDbName, path);
                 }
 
                 foreach (var path in _umcFiles)
                 {
-                    BulkInsert(UmcDbName, path);
+                    BulkInsert(UMCDbName, path);
                 }
 
                 foreach (var path in _scFiles)
                 {
-                    BulkInsert(ScDbName, path);
+                    BulkInsert(SCDbName, path);
                 }
 
                 foreach (var path in _seFiles)
                 {
-                    BulkInsert(SeDbName, path);
+                    BulkInsert(SEDbName, path);
                 }
 
                 foreach (var path in _sctFiles)
                 {
-                    BulkInsert(SctDbName, path);
+                    BulkInsert(SCTDbName, path);
                 }
 
                 foreach (var path in _smFiles)
                 {
-                    BulkInsert(SmDbName, path);
+                    BulkInsert(SMDbName, path);
                 }
 
                 startMove = DateTimeOffset.Now;
@@ -1059,28 +1063,28 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 Console.WriteLine("Move BattleArenaRanking Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _barFiles)
                 {
-                    BulkInsert(_barDbName, path);
+                    BulkInsert(bARDbName, path);
                 }
 
                 foreach (var path in _urFiles)
                 {
-                    BulkInsert(UrDbName, path);
+                    BulkInsert(URDbName, path);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.StackTrace);
                 var stm16 = $"DROP TABLE {EDbName}; RENAME TABLE {EDbName}_Dump TO {EDbName};";
-                var stm33 = $"DROP TABLE {_barDbName}; RENAME TABLE {_barDbName}_Dump TO {_barDbName};";
+                var stm33 = $"DROP TABLE {bARDbName}; RENAME TABLE {bARDbName}_Dump TO {bARDbName};";
                 var cmd16 = new MySqlCommand(stm16, connection);
                 var cmd33 = new MySqlCommand(stm33, connection);
-                DateTimeOffset startRestore = DateTimeOffset.Now;
+                DateTimeOffset startRestore;
+                DateTimeOffset endRestore;
+                startRestore = DateTimeOffset.Now;
                 connection.Open();
                 cmd16.CommandTimeout = 300;
                 cmd16.ExecuteScalar();
                 connection.Close();
-                DateTimeOffset endRestore = DateTimeOffset.Now;
+                endRestore = DateTimeOffset.Now;
                 Console.WriteLine("Restore Equipments Complete! Time Elapsed: {0}", endRestore - startRestore);
                 startRestore = DateTimeOffset.Now;
                 connection.Open();
@@ -1092,15 +1096,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
             }
 
             var stm11 = $"DROP TABLE {EDbName}_Dump;";
-            var stm34 = $"DROP TABLE {_barDbName}_Dump;";
+            var stm34 = $"DROP TABLE {bARDbName}_Dump;";
             var cmd11 = new MySqlCommand(stm11, connection);
             var cmd34 = new MySqlCommand(stm34, connection);
-            DateTimeOffset startDelete = DateTimeOffset.Now;
+            var startDelete = DateTimeOffset.Now;
             connection.Open();
             cmd11.CommandTimeout = 300;
             cmd11.ExecuteScalar();
             connection.Close();
-            DateTimeOffset endDelete = DateTimeOffset.Now;
+            var endDelete = DateTimeOffset.Now;
             Console.WriteLine("Delete Equipments_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
             startDelete = DateTimeOffset.Now;
             connection.Open();
@@ -1116,11 +1120,29 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
         private void FlushBulkFiles()
         {
+            _agentBulkFile.Flush();
+            _agentBulkFile.Close();
+
+            _avatarBulkFile.Flush();
+            _avatarBulkFile.Close();
+
+            _ccBulkFile.Flush();
+            _ccBulkFile.Close();
+
+            _ceBulkFile.Flush();
+            _ceBulkFile.Close();
+
+            _ieBulkFile.Flush();
+            _ieBulkFile.Close();
+
             _ueBulkFile.Flush();
             _ueBulkFile.Close();
 
             _uctBulkFile.Flush();
             _uctBulkFile.Close();
+
+            _uiBulkFile.Flush();
+            _uiBulkFile.Close();
 
             _umBulkFile.Flush();
             _umBulkFile.Close();
@@ -1164,59 +1186,83 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
         private void CreateBulkFiles()
         {
-            string ueFilePath = Path.GetTempFileName();
+            string agentFilePath = Path.GetRandomFileName();
+            _agentBulkFile = new StreamWriter(agentFilePath);
+
+            string avatarFilePath = Path.GetRandomFileName();
+            _avatarBulkFile = new StreamWriter(avatarFilePath);
+
+            string ccFilePath = Path.GetRandomFileName();
+            _ccBulkFile = new StreamWriter(ccFilePath);
+
+            string ceFilePath = Path.GetRandomFileName();
+            _ceBulkFile = new StreamWriter(ceFilePath);
+
+            string ieFilePath = Path.GetRandomFileName();
+            _ieBulkFile = new StreamWriter(ieFilePath);
+
+            string ueFilePath = Path.GetRandomFileName();
             _ueBulkFile = new StreamWriter(ueFilePath);
 
-            string uctFilePath = Path.GetTempFileName();
+            string uctFilePath = Path.GetRandomFileName();
             _uctBulkFile = new StreamWriter(uctFilePath);
 
-            string umFilePath = Path.GetTempFileName();
+            string uiFilePath = Path.GetRandomFileName();
+            _uiBulkFile = new StreamWriter(uiFilePath);
+
+            string umFilePath = Path.GetRandomFileName();
             _umBulkFile = new StreamWriter(umFilePath);
 
-            string ucFilePath = Path.GetTempFileName();
+            string ucFilePath = Path.GetRandomFileName();
             _ucBulkFile = new StreamWriter(ucFilePath);
 
-            string eFilePath = Path.GetTempFileName();
+            string eFilePath = Path.GetRandomFileName();
             _eBulkFile = new StreamWriter(eFilePath);
 
-            string usFilePath = Path.GetTempFileName();
+            string usFilePath = Path.GetRandomFileName();
             _usBulkFile = new StreamWriter(usFilePath);
 
-            string umcFilePath = Path.GetTempFileName();
+            string umcFilePath = Path.GetRandomFileName();
             _umcBulkFile = new StreamWriter(umcFilePath);
 
-            string uncgFilePath = Path.GetTempFileName();
+            string uncgFilePath = Path.GetRandomFileName();
             _uncgBulkFile = new StreamWriter(uncgFilePath);
 
-            string ucyFilePath = Path.GetTempFileName();
+            string ucyFilePath = Path.GetRandomFileName();
             _ucyBulkFile = new StreamWriter(ucyFilePath);
 
-            string scFilePath = Path.GetTempFileName();
+            string scFilePath = Path.GetRandomFileName();
             _scBulkFile = new StreamWriter(scFilePath);
 
-            string seFilePath = Path.GetTempFileName();
+            string seFilePath = Path.GetRandomFileName();
             _seBulkFile = new StreamWriter(seFilePath);
 
-            string sctFilePath = Path.GetTempFileName();
+            string sctFilePath = Path.GetRandomFileName();
             _sctBulkFile = new StreamWriter(sctFilePath);
 
-            string smFilePath = Path.GetTempFileName();
+            string smFilePath = Path.GetRandomFileName();
             _smBulkFile = new StreamWriter(smFilePath);
 
-            string barFilePath = Path.GetTempFileName();
+            string barFilePath = Path.GetRandomFileName();
             _barBulkFile = new StreamWriter(barFilePath);
 
-            string urFilePath = Path.GetTempFileName();
+            string urFilePath = Path.GetRandomFileName();
             _urBulkFile = new StreamWriter(urFilePath);
 
-            string fbBarFilePath = Path.GetTempFileName();
+            string fbBarFilePath = Path.GetRandomFileName();
             _fbBarBulkFile = new StreamWriter(fbBarFilePath);
 
-            string fbUsFilePath = Path.GetTempFileName();
+            string fbUsFilePath = Path.GetRandomFileName();
             _fbUsBulkFile = new StreamWriter(fbUsFilePath);
 
+            _agentFiles.Add(agentFilePath);
+            _avatarFiles.Add(avatarFilePath);
+            _ccFiles.Add(ccFilePath);
+            _ceFiles.Add(ceFilePath);
+            _ieFiles.Add(ieFilePath);
             _ueFiles.Add(ueFilePath);
             _uctFiles.Add(uctFilePath);
+            _uiFiles.Add(uiFilePath);
             _umFiles.Add(umFilePath);
             _ucFiles.Add(ucFilePath);
             _eFiles.Add(eFilePath);
