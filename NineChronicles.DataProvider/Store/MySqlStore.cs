@@ -2320,10 +2320,22 @@ namespace NineChronicles.DataProvider.Store
             ctx.SaveChanges();
         }
 
-        public void StoreActivateCollections(List<ActivateCollectionModel> activateCollectionModels)
+        public AvatarModel GetAvatar(Address avatarAddress, bool includeCollection = false)
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-            ctx.ActivateCollections.AddRange(activateCollectionModels);
+            var avatars = ctx.Avatars!;
+            if (includeCollection)
+            {
+                return avatars.Include(a => a.ActivateCollections).Single(a => a.Address == avatarAddress.ToString());
+            }
+
+            return avatars.Single(a => a.Address == avatarAddress.ToString());
+        }
+
+        public void UpdateAvatar(AvatarModel avatar)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            ctx.Avatars!.Update(avatar);
             ctx.SaveChanges();
         }
     }

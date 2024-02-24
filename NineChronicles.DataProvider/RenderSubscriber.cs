@@ -1400,8 +1400,7 @@ namespace NineChronicles.DataProvider
                 {
                     var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                     var collectionSheet = outputState.GetSheet<CollectionSheet>();
-                    var avatar = MySqlStore.GetAvatars(activateCollection.AvatarAddress).Single();
-                    var activateCollectionList = new List<ActivateCollectionModel>();
+                    var avatar = MySqlStore.GetAvatar(activateCollection.AvatarAddress, true);
                     foreach (var (collectionId, materials) in activateCollection.CollectionData)
                     {
                         var row = collectionSheet[collectionId];
@@ -1425,10 +1424,10 @@ namespace NineChronicles.DataProvider
                             CollectionId = collectionId,
                             Options = options,
                         };
-                        activateCollectionList.Add(collectionModel);
+                        avatar.ActivateCollections.Add(collectionModel);
                     }
 
-                    MySqlStore.StoreActivateCollections(activateCollectionList);
+                    MySqlStore.UpdateAvatar(avatar);
                 }
             });
 
