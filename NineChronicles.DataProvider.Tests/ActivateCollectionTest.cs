@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Libplanet.Action.State;
 using Libplanet.Crypto;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Nekoyume.Model.Stat;
+using NineChronicles.DataProvider.Store;
 using NineChronicles.DataProvider.Store.Models;
 using Xunit;
 
@@ -14,29 +18,15 @@ public class ActivateCollectionTest : TestBase
 {
 
     [Fact]
-    public async Task RelationShip()
+    public void RelationShip()
     {
         var avatarAddress = new PrivateKey().Address;
+        var provider = Services.BuildServiceProvider();
+        var store = provider.GetRequiredService<MySqlStore>();
+        store.StoreAgent(avatarAddress);
         var now = DateTimeOffset.UtcNow;
-        var agent = new AgentModel
-        {
-            Address = avatarAddress.ToString()
-        };
-        var avatar = new AvatarModel
-        {
-            Address = avatarAddress.ToString(),
-            AgentAddress = avatarAddress.ToString(),
-            Name = "name",
-            AvatarLevel = 1,
-            TitleId = null,
-            ArmorId = null,
-            Cp = 0,
-            Timestamp = now
-        };
-        await Context.Agents.AddAsync(agent);
-        await Context.Avatars.AddAsync(avatar);
-        await Context.SaveChangesAsync();
-
+        store.StoreAvatar(avatarAddress, avatarAddress, "name", now, 1, null, null, 0);
+        var avatar = store.GetAvatar(avatarAddress, true);
         var actionId = Guid.NewGuid().ToString();
         for (int i = 0; i < 2; i++)
         {
@@ -63,15 +53,19 @@ public class ActivateCollectionTest : TestBase
                     StatType = modifier.StatType.ToString(),
                 });
             }
-
-            await Context.ActivateCollections.AddAsync(collection);
-            Assert.Equal(avatar.Address, collection.AvatarAddress);
-            Assert.Equal(2, collection.Options.Count);
+            avatar.ActivateCollections.Add(collection);
         }
-        await Context.SaveChangesAsync();
-        Assert.Equal(2, avatar.ActivateCollections.Count);
+
+        store.UpdateAvatar(avatar);
+        Assert.Equal(2, Context.Avatars!.Include(avatarModel => avatarModel.ActivateCollections).First().ActivateCollections.Count);
         Assert.Equal(2, Context.ActivateCollections.Count(p => p.ActionId == actionId));
     }
+
+    public void Dispose()
+    {
+        CleanUp();
+    }
+
     protected override IWorldState GetMockState()
     {
         return new MockWorldState();
