@@ -211,7 +211,7 @@ namespace NineChronicles.DataProvider.Executable
                 ReorgInterval = headlessConfig.ReorgInterval,
                 TxLifeTime = TimeSpan.FromMinutes(headlessConfig.TxLifeTime),
                 MinerCount = headlessConfig.NoMiner ? 0 : 1,
-                NetworkType = headlessConfig.NetworkType,
+                Planet = headlessConfig.Planet,
             };
             NineChroniclesNodeService service =
                 NineChroniclesNodeService.Create(nineChroniclesProperties, context);

@@ -1394,6 +1394,43 @@ namespace NineChronicles.DataProvider
                 }
             });
 
+            _actionRenderer.EveryRender<ActivateCollection>().Subscribe(ev =>
+            {
+                if (ev.Exception is null && ev.Action is { } activateCollection)
+                {
+                    var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                    var collectionSheet = outputState.GetSheet<CollectionSheet>();
+                    var avatar = MySqlStore.GetAvatar(activateCollection.AvatarAddress, true);
+                    foreach (var (collectionId, materials) in activateCollection.CollectionData)
+                    {
+                        var row = collectionSheet[collectionId];
+                        var options = new List<CollectionOptionModel>();
+                        foreach (var modifier in row.StatModifiers)
+                        {
+                            var option = new CollectionOptionModel
+                            {
+                                StatType = modifier.StatType.ToString(),
+                                OperationType = modifier.Operation.ToString(),
+                                Value = modifier.Value,
+                            };
+                            options.Add(option);
+                        }
+
+                        var collectionModel = new ActivateCollectionModel
+                        {
+                            ActionId = activateCollection.Id.ToString(),
+                            Avatar = avatar,
+                            BlockIndex = ev.BlockIndex,
+                            CollectionId = collectionId,
+                            Options = options,
+                        };
+                        avatar.ActivateCollections.Add(collectionModel);
+                    }
+
+                    MySqlStore.UpdateAvatar(avatar);
+                }
+            });
+
             return Task.CompletedTask;
         }
 

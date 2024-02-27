@@ -200,6 +200,8 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<RuneSummonFailModel> RuneSummonFails => Set<RuneSummonFailModel>();
 
+        public DbSet<ActivateCollectionModel> ActivateCollections => Set<ActivateCollectionModel>();
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.
@@ -234,6 +236,18 @@ namespace NineChronicles.DataProvider.Store
             modelBuilder.Entity<UserNCGsModel>().HasNoKey();
             modelBuilder.Entity<UserRunesModel>().HasNoKey();
             modelBuilder.Entity<UserStakingsModel>().HasNoKey();
+            modelBuilder.Entity<AvatarModel>()
+                .HasMany(p => p.ActivateCollections)
+                .WithOne(p => p.Avatar)
+                .HasForeignKey(p => p.AvatarAddress)
+                .IsRequired();
+            modelBuilder.Entity<ActivateCollectionModel>()
+                .OwnsMany(p => p.Options, s =>
+                {
+                    s.WithOwner().HasForeignKey("ActivateCollectionId");
+                    s.Property<int>("Id");
+                    s.HasKey("Id");
+                });
         }
     }
 }
