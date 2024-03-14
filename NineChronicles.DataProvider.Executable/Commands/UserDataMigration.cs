@@ -303,7 +303,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         Console.WriteLine($"Finalize {fbBARDbName} Table!");
                         var fbTipHash = _baseStore.IndexBlockHash(_baseChain.Id, finalizeBarankingTip);
                         var fbTip = _baseStore.GetBlock((BlockHash)fbTipHash!);
-                        var fbOutputState = new World(blockChainStates.GetWorldState(ev.OutputState));
+                        var fbExec = _baseChain.EvaluateBlock(fbTip);
+                        var fbEv = fbExec.Last();
+                        var fbOutputState = new World(blockChainStates.GetWorldState(fbEv.OutputState));
                         var fbArenaSheet = fbOutputState.GetSheet<ArenaSheet>();
                         var fbArenaData = fbArenaSheet.GetRoundByBlockIndex(fbTip.Index);
                         List<string> fbAgents = new List<string>();
