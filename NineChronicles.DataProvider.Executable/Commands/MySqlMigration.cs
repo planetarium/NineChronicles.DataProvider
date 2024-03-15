@@ -509,17 +509,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             if (action is CombinationEquipment combinationEquipment)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
-                                    inputState,
-                                    outputState,
-                                    ae.InputContext.Signer,
-                                    combinationEquipment.avatarAddress,
-                                    combinationEquipment.recipeId,
-                                    combinationEquipment.slotIndex,
-                                    combinationEquipment.subRecipeId,
-                                    combinationEquipment.Id,
-                                    ae.InputContext.BlockIndex,
-                                    _blockTimeOffset));
                                 if (combinationEquipment.payByCrystal)
                                 {
                                     var replaceCombinationEquipmentMaterialList = ReplaceCombinationEquipmentMaterialData
@@ -551,14 +540,33 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment.avatarAddress,
                                     combinationEquipment.slotIndex);
 
+                                int optionCount = 0;
+                                bool skillContains = false;
                                 if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                                 {
+                                    var equipment = (Equipment)slotState.Result.itemUsable;
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable,
+                                        equipment,
                                         _blockTimeOffset));
+                                    optionCount = equipment.optionCountFromCombination;
+                                    skillContains = equipment.Skills.Any() || equipment.BuffSkills.Any();
                                 }
+
+                                _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
+                                    inputState,
+                                    outputState,
+                                    ae.InputContext.Signer,
+                                    combinationEquipment.avatarAddress,
+                                    combinationEquipment.recipeId,
+                                    combinationEquipment.slotIndex,
+                                    combinationEquipment.subRecipeId,
+                                    combinationEquipment.Id,
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset,
+                                    optionCount,
+                                    skillContains));
 
                                 end = DateTimeOffset.UtcNow;
                                 Console.WriteLine(
