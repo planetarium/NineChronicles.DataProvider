@@ -2334,9 +2334,16 @@ namespace NineChronicles.DataProvider.Store
 
         public void UpdateAvatar(AvatarModel avatar)
         {
-            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-            ctx.Avatars!.Update(avatar);
-            ctx.SaveChanges();
+            try
+            {
+                using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+                ctx.Avatars!.Update(avatar);
+                ctx.SaveChanges();
+            }
+            catch (Exception e)
+            {
+                Log.Error($"UpdateAvatar Error: {avatar.Address} {e.Message} {e.InnerException} {e.StackTrace}");
+            }
         }
     }
 }
