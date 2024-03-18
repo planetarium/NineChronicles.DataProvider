@@ -1427,6 +1427,7 @@ namespace NineChronicles.DataProvider
                                 Options = options,
                             };
                             avatar.ActivateCollections.Add(collectionModel);
+                            Log.Debug($"ActivateCollection RenderSubscriber: Try logging {avatar.Address}, {collectionId}");
                         }
 
                         MySqlStore.UpdateAvatar(avatar);
