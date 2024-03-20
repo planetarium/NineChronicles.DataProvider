@@ -134,6 +134,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 AllowLoadLocalInfile = true,
             };
 
+            var loggerConf = new LoggerConfiguration();
+            Log.Logger = loggerConf.CreateLogger();
             _connectionString = builder.ConnectionString;
             var dbContextOptions =
                 new DbContextOptionsBuilder<NineChroniclesContext>()
@@ -360,9 +362,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _mySqlStore.StoreTransferAssetList(_transferAssetList);
                 _mySqlStore.StoreRequestPledgeList(_requestPledgeList);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine(e.Message);
+                Console.Error.WriteLine($"{ex.Message}, {ex.StackTrace}");
             }
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
@@ -381,39 +383,48 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     {
                         var outputState = new World(blockChainStates.GetWorldState(ae.OutputState));
 
-                        if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase and ActivateCollection activateCollection)
+                        try
                         {
-                            var collectionSheet = outputState.GetSheet<CollectionSheet>();
-                            var avatar = _mySqlStore.GetAvatar(activateCollection.AvatarAddress, true);
-                            foreach (var (collectionId, materials) in activateCollection.CollectionData)
+                            if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase
+                                and ActivateCollection activateCollection)
                             {
-                                var row = collectionSheet[collectionId];
-                                var options = new List<CollectionOptionModel>();
-                                foreach (var modifier in row.StatModifiers)
+                                var collectionSheet = outputState.GetSheet<CollectionSheet>();
+                                var avatar = _mySqlStore.GetAvatar(activateCollection.AvatarAddress, true);
+                                foreach (var (collectionId, materials) in activateCollection.CollectionData)
                                 {
-                                    var option = new CollectionOptionModel
+                                    var row = collectionSheet[collectionId];
+                                    var options = new List<CollectionOptionModel>();
+                                    foreach (var modifier in row.StatModifiers)
                                     {
-                                        StatType = modifier.StatType.ToString(),
-                                        OperationType = modifier.Operation.ToString(),
-                                        Value = modifier.Value,
+                                        var option = new CollectionOptionModel
+                                        {
+                                            StatType = modifier.StatType.ToString(),
+                                            OperationType = modifier.Operation.ToString(),
+                                            Value = modifier.Value,
+                                        };
+                                        options.Add(option);
+                                    }
+
+                                    var collectionModel = new ActivateCollectionModel
+                                    {
+                                        ActionId = activateCollection.Id.ToString(),
+                                        Avatar = avatar,
+                                        BlockIndex = ae.InputContext.BlockIndex,
+                                        CollectionId = collectionId,
+                                        Options = options,
+                                        CreatedAt = _blockTimeOffset,
                                     };
-                                    options.Add(option);
+                                    avatar.ActivateCollections.Add(collectionModel);
+                                    Console.WriteLine(
+                                        $"ActivateCollection RenderSubscriber: Try logging {avatar.Address}, {collectionId}, #{ae.InputContext.BlockIndex}, {_blockTimeOffset}");
                                 }
 
-                                var collectionModel = new ActivateCollectionModel
-                                {
-                                    ActionId = activateCollection.Id.ToString(),
-                                    Avatar = avatar,
-                                    BlockIndex = ae.InputContext.BlockIndex,
-                                    CollectionId = collectionId,
-                                    Options = options,
-                                    CreatedAt = _blockTimeOffset,
-                                };
-                                avatar.ActivateCollections.Add(collectionModel);
-                                Log.Debug($"ActivateCollection RenderSubscriber: Try logging {avatar.Address}, {collectionId}");
+                                _mySqlStore.UpdateAvatar(avatar);
                             }
-
-                            _mySqlStore.UpdateAvatar(avatar);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Error.WriteLine($"{ex.Message}, {ex.StackTrace}");
                         }
                     }
                 }
