@@ -85,22 +85,15 @@ namespace NineChronicles.DataProvider.Executable
         {
             // Get configuration
             var configurationBuilder = new ConfigurationBuilder();
-            if (configPath != null)
+            if (configPath != null && Uri.IsWellFormedUriString(configPath, UriKind.Absolute))
             {
-                if (Uri.IsWellFormedUriString(configPath, UriKind.Absolute))
-                {
-                    HttpClient client = new HttpClient();
-                    HttpResponseMessage resp = await client.GetAsync(configPath);
-                    resp.EnsureSuccessStatusCode();
-                    Stream body = await resp.Content.ReadAsStreamAsync();
-                    configurationBuilder.AddJsonStream(body)
-                        .AddEnvironmentVariables("NC_");
-                }
-                else
-                {
-                    configurationBuilder.AddJsonFile(configPath!)
-                        .AddEnvironmentVariables("NC_");
-                }
+                HttpClient client = new HttpClient();
+                HttpResponseMessage resp = await client.GetAsync(configPath);
+                resp.EnsureSuccessStatusCode();
+                Stream body = await resp.Content.ReadAsStreamAsync();
+                configurationBuilder.AddJsonStream(body)
+                    .AddJsonFile("appsettings.json")
+                    .AddEnvironmentVariables("NC_");
             }
             else
             {
@@ -162,6 +155,10 @@ namespace NineChronicles.DataProvider.Executable
                                 throw new KeyNotFoundException();
                             return (range, actionEvaluatorConfiguration);
                         }).ToImmutableArray()
+                    },
+                    ActionEvaluatorType.PluggedActionEvaluator => new PluggedActionEvaluatorConfiguration
+                    {
+                        PluginPath = configuration.GetValue<string>("PluginPath"),
                     },
                     _ => throw new InvalidOperationException("Unexpected type."),
                 };
