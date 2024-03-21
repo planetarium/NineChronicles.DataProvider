@@ -74,7 +74,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
             _connectionString = builder.ConnectionString;
 
-            Log.Debug("Setting up RocksDBStore...");
+            Console.WriteLine("Setting up RocksDBStore...");
             _baseStore = new RocksDBStore(
                 storePath,
                 dbConnectionCacheSize: 10000);
@@ -88,14 +88,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
             if (!(_baseStore.GetCanonicalChainId() is { } chainId))
             {
-                Log.Error("There is no canonical chain: {0}", storePath);
+                Console.Error.WriteLine("There is no canonical chain: {0}", storePath);
                 Environment.Exit(1);
                 return;
             }
 
             if (!(_baseStore.IndexBlockHash(chainId, 0) is { } gHash))
             {
-                Log.Error("There is no genesis block: {0}", storePath);
+                Console.Error.WriteLine("There is no genesis block: {0}", storePath);
                 Environment.Exit(1);
                 return;
             }
@@ -123,14 +123,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
             long height = _baseChain.Tip.Index;
             if (migrationBlockIndex > (int)height)
             {
-                Log.Error(
+                Console.Error.WriteLine(
                     "The block index point to migrate is greater than the chain tip index: {0}",
                     height);
                 Environment.Exit(1);
                 return;
             }
 
-            Log.Debug("Start migration.");
+            Console.WriteLine("Start migration.");
 
             // files to store bulk file paths (new file created every 10000 blocks for bulk load performance)
             _barFiles = new List<string>();
@@ -148,7 +148,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
             while (commandReader.Read())
             {
-                Log.Debug("{0}", commandReader.GetString(0));
+                Console.WriteLine("{0}", commandReader.GetString(0));
                 avatars.Add(commandReader.GetString(0).Replace("0x", string.Empty));
             }
 
@@ -171,7 +171,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     try
                     {
                         avatarCount++;
-                        Log.Debug("Migrating {0}/{1}", avatarCount, avatars.Count);
+                        Console.WriteLine("Migrating {0}/{1}", avatarCount, avatars.Count);
                         var avatarAddress = new Address(avatar);
                         avatarState = outputState.GetAvatarState(avatarAddress);
 
@@ -255,20 +255,20 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         }
                         else
                         {
-                            Log.Debug($"No Avatar State: {avatarAddress.ToString()}");
+                            Console.WriteLine($"No Avatar State: {avatarAddress.ToString()}");
                         }
 
-                        Log.Debug("Migrating Complete {0}/{1}", avatarCount, avatars.Count);
+                        Console.WriteLine("Migrating Complete {0}/{1}", avatarCount, avatars.Count);
                     }
                     catch (Exception ex)
                     {
-                        Log.Debug(ex.Message);
+                        Console.WriteLine(ex.Message);
                     }
                 }
 
                 FlushBulkFiles();
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
-                Log.Debug("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
+                Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
 
                 var statement2 = $"RENAME TABLE {_battleArenaRankingTableName} TO {_battleArenaRankingTableName}_Dump; CREATE TABLE {_battleArenaRankingTableName} LIKE {_battleArenaRankingTableName}_Dump;";
                 var command2 = new MySqlCommand(statement2, connection);
@@ -278,7 +278,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 command2.ExecuteScalar();
                 connection.Close();
                 var endMove = DateTimeOffset.Now;
-                Log.Debug("Move BattleArenaRanking Complete! Time Elapsed: {0}", endMove - startMove);
+                Console.WriteLine("Move BattleArenaRanking Complete! Time Elapsed: {0}", endMove - startMove);
                 foreach (var path in _barFiles)
                 {
                     BulkInsert(_battleArenaRankingTableName, path);
@@ -286,8 +286,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
             }
             catch (Exception e)
             {
-                Log.Debug(e.Message);
-                Log.Debug("Restoring previous tables due to error...");
+                Console.WriteLine(e.Message);
+                Console.WriteLine("Restoring previous tables due to error...");
                 var statement1 = $"DROP TABLE {_battleArenaRankingTableName}; RENAME TABLE {_battleArenaRankingTableName}_Dump TO {_battleArenaRankingTableName};";
                 var command1 = new MySqlCommand(statement1, connection);
                 var startRestore = DateTimeOffset.Now;
@@ -296,7 +296,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 command1.ExecuteScalar();
                 connection.Close();
                 var endRestore = DateTimeOffset.Now;
-                Log.Debug("Restore BattleArenaRanking Complete! Time Elapsed: {0}", endRestore - startRestore);
+                Console.WriteLine("Restore BattleArenaRanking Complete! Time Elapsed: {0}", endRestore - startRestore);
             }
 
             var statement3 = $"DROP TABLE {_battleArenaRankingTableName}_Dump;";
@@ -307,10 +307,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
             command3.ExecuteScalar();
             connection.Close();
             var endDelete = DateTimeOffset.Now;
-            Log.Debug("Delete BattleArenaRanking_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
+            Console.WriteLine("Delete BattleArenaRanking_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
-            Log.Debug("Migration Complete! Time Elapsed: {0}", end - start);
+            Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
         }
 
         private void FlushBulkFiles()
@@ -334,7 +334,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             try
             {
                 DateTimeOffset start = DateTimeOffset.Now;
-                Log.Debug($"Start bulk insert to {tableName}.");
+                Console.WriteLine($"Start bulk insert to {tableName}.");
                 MySqlBulkLoader loader = new MySqlBulkLoader(connection)
                 {
                     TableName = tableName,
@@ -347,16 +347,16 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 };
 
                 loader.Load();
-                Log.Debug($"Bulk load to {tableName} complete.");
+                Console.WriteLine($"Bulk load to {tableName} complete.");
                 DateTimeOffset end = DateTimeOffset.Now;
-                Log.Debug("Time elapsed: {0}", end - start);
+                Console.WriteLine("Time elapsed: {0}", end - start);
             }
             catch (Exception e)
             {
-                Log.Debug(e.Message);
-                Log.Debug($"Bulk load to {tableName} failed. Retry bulk insert");
+                Console.WriteLine(e.Message);
+                Console.WriteLine($"Bulk load to {tableName} failed. Retry bulk insert");
                 DateTimeOffset start = DateTimeOffset.Now;
-                Log.Debug($"Start bulk insert to {tableName}.");
+                Console.WriteLine($"Start bulk insert to {tableName}.");
                 MySqlBulkLoader loader = new MySqlBulkLoader(connection)
                 {
                     TableName = tableName,
@@ -369,9 +369,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 };
 
                 loader.Load();
-                Log.Debug($"Bulk load to {tableName} complete.");
+                Console.WriteLine($"Bulk load to {tableName} complete.");
                 DateTimeOffset end = DateTimeOffset.Now;
-                Log.Debug("Time elapsed: {0}", end - start);
+                Console.WriteLine("Time elapsed: {0}", end - start);
             }
         }
     }

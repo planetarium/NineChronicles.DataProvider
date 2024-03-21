@@ -1078,7 +1078,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 }
                                 else
                                 {
-                                    Log.Error("can't find raidId.");
+                                    Console.Error.WriteLine("can't find raidId.");
                                 }
                             }
 
@@ -1097,7 +1097,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _blockTimeOffset
                                 ));
                                 var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored PetEnhancement action in block #{BlockIndex}. Time taken: {Time} ms", ae.InputContext.BlockIndex, end - start);
+                                Console.WriteLine("Stored PetEnhancement action in block #{0}. Time taken: {1} ms", ae.InputContext.BlockIndex, end - start);
                             }
 
                             if (action is TransferAsset transferAsset)
@@ -1118,7 +1118,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                                Console.WriteLine("Stored TransferAsset action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (action is TransferAsset0 transferAsset0)
@@ -1139,7 +1139,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                                Console.WriteLine("Stored TransferAsset action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (action is RequestPledge requestPledge)
@@ -1155,8 +1155,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
-                                Log.Debug(
-                                    "Stored RequestPledge action in block #{index}. Time Taken: {time} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                                Console.WriteLine(
+                                    "Stored RequestPledge action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                     }
