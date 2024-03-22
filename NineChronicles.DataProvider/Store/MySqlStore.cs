@@ -1697,6 +1697,41 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        public void StoreApprovePledgeList(List<ApprovePledgeModel> approvePledgeList)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                foreach (var approvePledge in approvePledgeList)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
+                        if (ctx.ApprovePledges.FindAsync(approvePledge.TxId).Result is null)
+                        {
+                            await ctx.ApprovePledges.AddRangeAsync(approvePledge);
+                            await ctx.SaveChangesAsync();
+                            await ctx.DisposeAsync();
+                        }
+                        else
+                        {
+                            await ctx.DisposeAsync();
+                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
+                            updateCtx.ApprovePledges.UpdateRange(approvePledge);
+                            await updateCtx.SaveChangesAsync();
+                            await updateCtx.DisposeAsync();
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+            }
+        }
+
         public void StoreUnlockRuneSlotList(List<UnlockRuneSlotModel> unlockRuneSlotList)
         {
             try

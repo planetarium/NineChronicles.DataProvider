@@ -82,6 +82,7 @@ namespace NineChronicles.DataProvider
         private readonly List<PetEnhancementModel> _petEnhancementList = new List<PetEnhancementModel>();
         private readonly List<TransferAssetModel> _transferAssetList = new List<TransferAssetModel>();
         private readonly List<RequestPledgeModel> _requestPledgeList = new List<RequestPledgeModel>();
+        private readonly List<ApprovePledgeModel> _approvePledgeList = new List<ApprovePledgeModel>();
         private readonly List<AuraSummonModel> _auraSummonList = new List<AuraSummonModel>();
         private readonly List<AuraSummonFailModel> _auraSummonFailList = new List<AuraSummonFailModel>();
         private readonly List<RuneSummonModel> _runeSummonList = new List<RuneSummonModel>();
@@ -317,6 +318,26 @@ namespace NineChronicles.DataProvider
 
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("Stored RequestPledge action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
+            _actionRenderer.EveryRender<ApprovePledge>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } approvePledge)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _approvePledgeList.Add(ApprovePledgeData.GetApprovePledgeInfo(ev.TxId.ToString()!, ev.BlockIndex, _blockHash!, ev.Signer, approvePledge.PatronAddress, _blockTimeOffset));
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored ApprovePledge action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -1602,6 +1623,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StorePetEnhancementList(_petEnhancementList);
                     MySqlStore.StoreTransferAssetList(_transferAssetList);
                     MySqlStore.StoreRequestPledgeList(_requestPledgeList);
+                    MySqlStore.StoreApprovePledgeList(_approvePledgeList);
                     MySqlStore.StoreAuraSummonList(_auraSummonList);
                     MySqlStore.StoreAuraSummonFailList(_auraSummonFailList);
                     MySqlStore.StoreRuneSummonList(_runeSummonList);
@@ -1651,6 +1673,7 @@ namespace NineChronicles.DataProvider
             _petEnhancementList.Clear();
             _transferAssetList.Clear();
             _requestPledgeList.Clear();
+            _approvePledgeList.Clear();
             _auraSummonList.Clear();
             _auraSummonFailList.Clear();
 
