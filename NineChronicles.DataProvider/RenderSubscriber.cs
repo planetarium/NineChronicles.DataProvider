@@ -82,6 +82,7 @@ namespace NineChronicles.DataProvider
         private readonly List<PetEnhancementModel> _petEnhancementList = new List<PetEnhancementModel>();
         private readonly List<TransferAssetModel> _transferAssetList = new List<TransferAssetModel>();
         private readonly List<RequestPledgeModel> _requestPledgeList = new List<RequestPledgeModel>();
+        private readonly List<ApprovePledgeModel> _approvePledgeList = new List<ApprovePledgeModel>();
         private readonly List<AuraSummonModel> _auraSummonList = new List<AuraSummonModel>();
         private readonly List<AuraSummonFailModel> _auraSummonFailList = new List<AuraSummonFailModel>();
         private readonly List<RuneSummonModel> _runeSummonList = new List<RuneSummonModel>();
@@ -325,6 +326,26 @@ namespace NineChronicles.DataProvider
                     }
                 });
 
+            _actionRenderer.EveryRender<ApprovePledge>()
+                .Subscribe(ev =>
+                {
+                    try
+                    {
+                        if (ev.Exception == null && ev.Action is { } approvePledge)
+                        {
+                            var start = DateTimeOffset.UtcNow;
+                            _approvePledgeList.Add(ApprovePledgeData.GetApprovePledgeInfo(ev.TxId.ToString()!, ev.BlockIndex, _blockHash!, ev.Signer, approvePledge.PatronAddress, _blockTimeOffset));
+
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("Stored ApprovePledge action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                    }
+                });
+
             _actionRenderer.EveryRender<HackAndSlash>()
                 .Subscribe(ev =>
                 {
@@ -427,17 +448,6 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _ceList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
-                                inputState,
-                                outputState,
-                                ev.Signer,
-                                combinationEquipment.avatarAddress,
-                                combinationEquipment.recipeId,
-                                combinationEquipment.slotIndex,
-                                combinationEquipment.subRecipeId,
-                                combinationEquipment.Id,
-                                ev.BlockIndex,
-                                _blockTimeOffset));
                             if (combinationEquipment.payByCrystal)
                             {
                                 var replaceCombinationEquipmentMaterialList = ReplaceCombinationEquipmentMaterialData
@@ -469,14 +479,33 @@ namespace NineChronicles.DataProvider
                                 combinationEquipment.avatarAddress,
                                 combinationEquipment.slotIndex);
 
-                            if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
+                            int optionCount = 0;
+                            bool skillContains = false;
+                            if (slotState.Result.itemUsable.ItemType is ItemType.Equipment)
                             {
+                                var equipment = (Equipment)slotState.Result.itemUsable;
                                 _eqList.Add(EquipmentData.GetEquipmentInfo(
                                     ev.Signer,
                                     combinationEquipment.avatarAddress,
-                                    (Equipment)slotState.Result.itemUsable,
+                                    equipment,
                                     _blockTimeOffset));
+                                optionCount = equipment.optionCountFromCombination;
+                                skillContains = equipment.Skills.Any() || equipment.BuffSkills.Any();
                             }
+
+                            _ceList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
+                                inputState,
+                                outputState,
+                                ev.Signer,
+                                combinationEquipment.avatarAddress,
+                                combinationEquipment.recipeId,
+                                combinationEquipment.slotIndex,
+                                combinationEquipment.subRecipeId,
+                                combinationEquipment.Id,
+                                ev.BlockIndex,
+                                _blockTimeOffset,
+                                optionCount,
+                                skillContains));
 
                             end = DateTimeOffset.UtcNow;
                             Log.Debug(
@@ -1594,6 +1623,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StorePetEnhancementList(_petEnhancementList);
                     MySqlStore.StoreTransferAssetList(_transferAssetList);
                     MySqlStore.StoreRequestPledgeList(_requestPledgeList);
+                    MySqlStore.StoreApprovePledgeList(_approvePledgeList);
                     MySqlStore.StoreAuraSummonList(_auraSummonList);
                     MySqlStore.StoreAuraSummonFailList(_auraSummonFailList);
                     MySqlStore.StoreRuneSummonList(_runeSummonList);
@@ -1643,6 +1673,7 @@ namespace NineChronicles.DataProvider
             _petEnhancementList.Clear();
             _transferAssetList.Clear();
             _requestPledgeList.Clear();
+            _approvePledgeList.Clear();
             _auraSummonList.Clear();
             _auraSummonFailList.Clear();
 

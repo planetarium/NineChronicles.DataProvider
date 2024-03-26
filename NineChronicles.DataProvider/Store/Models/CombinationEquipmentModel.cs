@@ -30,5 +30,9 @@ namespace NineChronicles.DataProvider.Store.Models
         public DateOnly Date { get; set; }
 
         public DateTimeOffset TimeStamp { get; set; }
+
+        public int OptionCount { get; set; }
+
+        public bool SkillContains { get; set; }
     }
 }

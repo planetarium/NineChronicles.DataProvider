@@ -202,6 +202,8 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<ActivateCollectionModel> ActivateCollections => Set<ActivateCollectionModel>();
 
+        public DbSet<ApprovePledgeModel> ApprovePledges => Set<ApprovePledgeModel>();
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.
