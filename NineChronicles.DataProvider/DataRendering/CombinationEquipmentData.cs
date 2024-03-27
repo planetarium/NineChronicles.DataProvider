@@ -1,10 +1,12 @@
 namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
+    using System.Linq;
     using Libplanet;
     using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
+    using Nekoyume.Model.Item;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class CombinationEquipmentData
@@ -19,7 +21,9 @@ namespace NineChronicles.DataProvider.DataRendering
             int? subRecipeId,
             Guid actionId,
             long blockIndex,
-            DateTimeOffset blockTime
+            DateTimeOffset blockTime,
+            int optionCount,
+            bool skillContains
         )
         {
             var combinationEquipmentModel = new CombinationEquipmentModel()
@@ -33,6 +37,8 @@ namespace NineChronicles.DataProvider.DataRendering
                 BlockIndex = blockIndex,
                 Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime.UtcDateTime,
+                OptionCount = optionCount,
+                SkillContains = skillContains,
             };
 
             return combinationEquipmentModel;

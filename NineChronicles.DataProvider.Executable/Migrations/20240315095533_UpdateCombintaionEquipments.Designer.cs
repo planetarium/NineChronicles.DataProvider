@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
@@ -10,9 +11,10 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20240315095533_UpdateCombintaionEquipments")]
+    partial class UpdateCombintaionEquipments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -74,8 +76,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AvatarAddress", "CollectionId")
-                        .IsUnique();
+                    b.HasIndex("AvatarAddress");
 
                     b.ToTable("ActivateCollections");
                 });
@@ -88,36 +89,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.HasKey("Address");
 
                     b.ToTable("Agents");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.ApprovePledgeModel", b =>
-                {
-                    b.Property<string>("TxId")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("BlockHash")
-                        .HasColumnType("longtext");
-
-                    b.Property<long>("BlockIndex")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<string>("PatronAddress")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Signer")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTimeOffset>("TimeStamp")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("TxId");
-
-                    b.HasIndex("Date");
-
-                    b.ToTable("ApprovePledges");
                 });
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.AuraSummonFailModel", b =>
@@ -3217,7 +3188,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                                 .ValueGeneratedOnAdd()
                                 .HasColumnType("int");
 
-                            b1.Property<int?>("ActivateCollectionId")
+                            b1.Property<int>("ActivateCollectionId")
                                 .HasColumnType("int");
 
                             b1.Property<string>("OperationType")

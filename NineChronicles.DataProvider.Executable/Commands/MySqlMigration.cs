@@ -509,17 +509,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             if (action is CombinationEquipment combinationEquipment)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
-                                    inputState,
-                                    outputState,
-                                    ae.InputContext.Signer,
-                                    combinationEquipment.avatarAddress,
-                                    combinationEquipment.recipeId,
-                                    combinationEquipment.slotIndex,
-                                    combinationEquipment.subRecipeId,
-                                    combinationEquipment.Id,
-                                    ae.InputContext.BlockIndex,
-                                    _blockTimeOffset));
                                 if (combinationEquipment.payByCrystal)
                                 {
                                     var replaceCombinationEquipmentMaterialList = ReplaceCombinationEquipmentMaterialData
@@ -551,14 +540,33 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     combinationEquipment.avatarAddress,
                                     combinationEquipment.slotIndex);
 
+                                int optionCount = 0;
+                                bool skillContains = false;
                                 if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                                 {
+                                    var equipment = (Equipment)slotState.Result.itemUsable;
                                     _equipmentList.Add(EquipmentData.GetEquipmentInfo(
                                         ae.InputContext.Signer,
                                         combinationEquipment.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable,
+                                        equipment,
                                         _blockTimeOffset));
+                                    optionCount = equipment.optionCountFromCombination;
+                                    skillContains = equipment.Skills.Any() || equipment.BuffSkills.Any();
                                 }
+
+                                _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
+                                    inputState,
+                                    outputState,
+                                    ae.InputContext.Signer,
+                                    combinationEquipment.avatarAddress,
+                                    combinationEquipment.recipeId,
+                                    combinationEquipment.slotIndex,
+                                    combinationEquipment.subRecipeId,
+                                    combinationEquipment.Id,
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset,
+                                    optionCount,
+                                    skillContains));
 
                                 end = DateTimeOffset.UtcNow;
                                 Console.WriteLine(
@@ -1070,7 +1078,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 }
                                 else
                                 {
-                                    Log.Error("can't find raidId.");
+                                    Console.Error.WriteLine("can't find raidId.");
                                 }
                             }
 
@@ -1089,7 +1097,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _blockTimeOffset
                                 ));
                                 var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored PetEnhancement action in block #{BlockIndex}. Time taken: {Time} ms", ae.InputContext.BlockIndex, end - start);
+                                Console.WriteLine("Stored PetEnhancement action in block #{0}. Time taken: {1} ms", ae.InputContext.BlockIndex, end - start);
                             }
 
                             if (action is TransferAsset transferAsset)
@@ -1110,7 +1118,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                                Console.WriteLine("Stored TransferAsset action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (action is TransferAsset0 transferAsset0)
@@ -1131,7 +1139,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                                Console.WriteLine("Stored TransferAsset action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (action is RequestPledge requestPledge)
@@ -1147,8 +1155,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
-                                Log.Debug(
-                                    "Stored RequestPledge action in block #{index}. Time Taken: {time} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                                Console.WriteLine(
+                                    "Stored RequestPledge action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                     }

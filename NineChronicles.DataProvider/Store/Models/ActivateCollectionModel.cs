@@ -4,7 +4,9 @@ namespace NineChronicles.DataProvider.Store.Models
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
+    using Microsoft.EntityFrameworkCore;
 
+    [Index(nameof(AvatarAddress), nameof(CollectionId), IsUnique = true)]
     public class ActivateCollectionModel
     {
         [Key]
