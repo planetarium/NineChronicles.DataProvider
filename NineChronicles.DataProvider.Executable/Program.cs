@@ -67,7 +67,11 @@ namespace NineChronicles.DataProvider.Executable
                                 args[0],
                                 ServerVersion.AutoDetect(
                                     args[0]),
-                                b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable"));
+                                b =>
+                                {
+                                    b.MigrationsAssembly("NineChronicles.DataProvider.Executable");
+                                    b.CommandTimeout(600000);
+                                });
                         }
                         else
                         {
