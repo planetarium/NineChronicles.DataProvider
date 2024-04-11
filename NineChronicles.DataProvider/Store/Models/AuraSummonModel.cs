@@ -1,6 +1,10 @@
 namespace NineChronicles.DataProvider.Store.Models
 {
+    using System;
     using System.ComponentModel.DataAnnotations;
+    using Microsoft.EntityFrameworkCore;
+
+    [Index(nameof(Date))]
 
     public class AuraSummonModel
     {
@@ -22,5 +26,9 @@ namespace NineChronicles.DataProvider.Store.Models
         public long BlockIndex { get; set; }
 
         public string? SummonResult { get; set; }
+
+        public DateOnly Date { get; set; }
+
+        public DateTimeOffset TimeStamp { get; set; }
     }
 }

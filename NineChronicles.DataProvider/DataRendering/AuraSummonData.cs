@@ -18,7 +18,8 @@ namespace NineChronicles.DataProvider.DataRendering
             int groupId,
             int summonCount,
             Guid actionId,
-            long blockIndex
+            long blockIndex,
+            DateTimeOffset blockTime
         )
         {
             var prevAura = previousStates.GetAvatarState(avatarAddress).inventory.Equipments
@@ -35,6 +36,8 @@ namespace NineChronicles.DataProvider.DataRendering
                 SummonCount = summonCount,
                 SummonResult = gainedAura,
                 BlockIndex = blockIndex,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
+                TimeStamp = blockTime,
             };
         }
 
@@ -47,7 +50,8 @@ namespace NineChronicles.DataProvider.DataRendering
             int summonCount,
             Guid actionId,
             long blockIndex,
-            Exception exc
+            Exception exc,
+            DateTimeOffset blockTime
         )
         {
             return new AuraSummonFailModel
@@ -59,6 +63,8 @@ namespace NineChronicles.DataProvider.DataRendering
                 SummonCount = summonCount,
                 BlockIndex = blockIndex,
                 Exception = exc.ToString(),
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
+                TimeStamp = blockTime,
             };
         }
     }

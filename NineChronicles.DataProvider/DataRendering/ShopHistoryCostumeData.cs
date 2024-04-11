@@ -41,6 +41,7 @@
                 NonFungibleId = costume.NonFungibleId.ToString(),
                 TradableId = costume.TradableId.ToString(),
                 ItemCount = itemCount,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 
@@ -77,6 +78,7 @@
                 NonFungibleId = costume.NonFungibleId.ToString(),
                 TradableId = costume.TradableId.ToString(),
                 ItemCount = itemCount,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 
@@ -115,6 +117,7 @@
                 NonFungibleId = costume.NonFungibleId.ToString(),
                 TradableId = costume.TradableId.ToString(),
                 ItemCount = itemCount,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 
