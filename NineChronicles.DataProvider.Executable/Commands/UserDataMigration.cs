@@ -48,6 +48,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private const string SCTDbName = "ShopCostumes";
         private const string SMDbName = "ShopMaterials";
         private readonly string uRDbName = "UserRunes";
+        private readonly string dailyMetricDbName = "DailyMetrics";
         private string bARDbName = "BattleArenaRanking";
         private string fbBARDbName = "BattleArenaRanking";
         private string fbUSDbName = "UserStakings";
@@ -77,6 +78,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private StreamWriter _urBulkFile;
         private StreamWriter _agentBulkFile;
         private StreamWriter _avatarBulkFile;
+        private StreamWriter _dailyMetricsBulkFile;
         private List<string> _hourGlassAgentList;
         private List<string> _apStoneAgentList;
         private List<string> _ccFiles;
@@ -102,6 +104,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private List<string> _urFiles;
         private List<string> _agentFiles;
         private List<string> _avatarFiles;
+        private List<string> _dailyMetricFiles;
 
         [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
         public void Migration(
@@ -224,6 +227,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             _urFiles = new List<string>();
             _agentFiles = new List<string>();
             _avatarFiles = new List<string>();
+            _dailyMetricFiles = new List<string>();
 
             // lists to keep track of inserted addresses to minimize duplicates
             _hourGlassAgentList = new List<string>();
@@ -248,6 +252,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             }
 
             connection.Close();
+
             int shopOrderCount = 0;
             bool finalizeBaranking = false;
 
@@ -271,6 +276,304 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
 
                 Console.WriteLine("2");
+
+                var date = DateOnly.FromDateTime(tip.Timestamp.Date.AddDays(-1)).ToString("yyyy-MM-dd");
+                Console.WriteLine(date);
+
+                var dau = 0;
+                var dauQuery = $"SELECT COUNT(DISTINCT Signer) as 'Unique Address' FROM data_provider.Transactions WHERE Date = '{date}'";
+                connection.Open();
+                var dauCommand = new MySqlCommand(dauQuery, connection);
+                var dauReader = dauCommand.ExecuteReader();
+                while (dauReader.Read())
+                {
+                    Console.WriteLine("{0}", dauReader.GetInt32(0));
+                    dau = dauReader.GetInt32(0);
+                }
+
+                var txCount = 0;
+                var txCountQuery = $"SELECT COUNT(TxId) as 'Transactions' FROM data_provider.Transactions WHERE Date = '{date}'";
+                connection.Open();
+                var txCountCommand = new MySqlCommand(txCountQuery, connection);
+                var txCountReader = txCountCommand.ExecuteReader();
+                while (txCountReader.Read())
+                {
+                    Console.WriteLine("{0}", txCountReader.GetInt32(0));
+                    txCount = dauReader.GetInt32(0);
+                }
+
+                var newDau = 0;
+                var newDauQuery = $"select count(Signer) from Transactions WHERE ActionType = 'ApprovePledge' AND Date = '{date}'";
+                connection.Open();
+                var newDauCommand = new MySqlCommand(newDauQuery, connection);
+                var newDauReader = newDauCommand.ExecuteReader();
+                while (newDauReader.Read())
+                {
+                    Console.WriteLine("{0}", newDauReader.GetInt32(0));
+                    newDau = dauReader.GetInt32(0);
+                }
+
+                var hasCount = 0;
+                var hasCountQuery = $"select count(Id) as 'Count' from HackAndSlashes where Date = '{date}'";
+                connection.Open();
+                var hasCountCommand = new MySqlCommand(hasCountQuery, connection);
+                var hasCountReader = hasCountCommand.ExecuteReader();
+                while (hasCountReader.Read())
+                {
+                    Console.WriteLine("{0}", hasCountReader.GetInt32(0));
+                    hasCount = dauReader.GetInt32(0);
+                }
+
+                var hasUsers = 0;
+                var hasUsersQuery = $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from HackAndSlashes where Date = '{date}'";
+                connection.Open();
+                var hasUsersCommand = new MySqlCommand(hasUsersQuery, connection);
+                var hasUsersReader = hasUsersCommand.ExecuteReader();
+                while (hasUsersReader.Read())
+                {
+                    Console.WriteLine("{0}", hasUsersReader.GetInt32(0));
+                    hasUsers = dauReader.GetInt32(0);
+                }
+
+                var sweepCount = 0;
+                var sweepCountQuery = $"select count(Id) as 'Count' from HackAndSlashSweeps where Date = '{date}'";
+                connection.Open();
+                var sweepCountCommand = new MySqlCommand(sweepCountQuery, connection);
+                var sweepCountReader = sweepCountCommand.ExecuteReader();
+                while (sweepCountReader.Read())
+                {
+                    Console.WriteLine("{0}", sweepCountReader.GetInt32(0));
+                    sweepCount = dauReader.GetInt32(0);
+                }
+
+                var sweepUsers = 0;
+                var sweepUsersQuery = $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from HackAndSlashSweeps where Date =  '{date}'";
+                connection.Open();
+                var sweepUsersCommand = new MySqlCommand(sweepUsersQuery, connection);
+                var sweepUsersReader = sweepUsersCommand.ExecuteReader();
+                while (sweepUsersReader.Read())
+                {
+                    Console.WriteLine("{0}", sweepUsersReader.GetInt32(0));
+                    sweepUsers = dauReader.GetInt32(0);
+                }
+
+                var combinationEquipmentCount = 0;
+                var combinationEquipmentCountQuery = $"select count(Id) as 'Count' from CombinationEquipments where Date = '{date}'";
+                connection.Open();
+                var combinationEquipmentCountCommand = new MySqlCommand(combinationEquipmentCountQuery, connection);
+                var combinationEquipmentCountReader = combinationEquipmentCountCommand.ExecuteReader();
+                while (combinationEquipmentCountReader.Read())
+                {
+                    Console.WriteLine("{0}", combinationEquipmentCountReader.GetInt32(0));
+                    combinationEquipmentCount = dauReader.GetInt32(0);
+                }
+
+                var combinationEquipmentUsers = 0;
+                var combinationEquipmentUsersQuery = $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from CombinationConsumables where Date = '{date}'";
+                connection.Open();
+                var combinationEquipmentUsersCommand = new MySqlCommand(combinationEquipmentUsersQuery, connection);
+                var combinationEquipmentUsersReader = combinationEquipmentUsersCommand.ExecuteReader();
+                while (combinationEquipmentUsersReader.Read())
+                {
+                    Console.WriteLine("{0}", combinationEquipmentUsersReader.GetInt32(0));
+                    combinationEquipmentUsers = dauReader.GetInt32(0);
+                }
+
+                var combinationConsumableCount = 0;
+                var combinationConsumableCountQuery = $"select count(Id) as 'Count' from CombinationConsumables where Date = '{date}'";
+                connection.Open();
+                var combinationConsumableCountCommand = new MySqlCommand(combinationConsumableCountQuery, connection);
+                var combinationConsumableCountReader = combinationConsumableCountCommand.ExecuteReader();
+                while (combinationConsumableCountReader.Read())
+                {
+                    Console.WriteLine("{0}", combinationConsumableCountReader.GetInt32(0));
+                    combinationConsumableCount = dauReader.GetInt32(0);
+                }
+
+                var combinationConsumableUsers = 0;
+                var combinationConsumableUsersQuery = $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from CombinationEquipments where Date = '{date}'";
+                connection.Open();
+                var combinationConsumableUsersCommand = new MySqlCommand(combinationConsumableUsersQuery, connection);
+                var combinationConsumableUsersReader = combinationConsumableUsersCommand.ExecuteReader();
+                while (combinationConsumableUsersReader.Read())
+                {
+                    Console.WriteLine("{0}", combinationConsumableUsersReader.GetInt32(0));
+                    combinationConsumableUsers = dauReader.GetInt32(0);
+                }
+
+                var itemEnhancementCount = 0;
+                var itemEnhancementCountQuery = $"select count(Id) as 'Count' from ItemEnhancements where Date = '{date}'";
+                connection.Open();
+                var itemEnhancementCountCommand = new MySqlCommand(itemEnhancementCountQuery, connection);
+                var itemEnhancementCountReader = itemEnhancementCountCommand.ExecuteReader();
+                while (itemEnhancementCountReader.Read())
+                {
+                    Console.WriteLine("{0}", itemEnhancementCountReader.GetInt32(0));
+                    itemEnhancementCount = dauReader.GetInt32(0);
+                }
+
+                var itemEnhancementUsers = 0;
+                var itemEnhancementUsersQuery = $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from ItemEnhancements where Date = '{date}'";
+                connection.Open();
+                var itemEnhancementUsersCommand = new MySqlCommand(itemEnhancementUsersQuery, connection);
+                var itemEnhancementUsersReader = itemEnhancementUsersCommand.ExecuteReader();
+                while (itemEnhancementUsersReader.Read())
+                {
+                    Console.WriteLine("{0}", itemEnhancementUsersReader.GetInt32(0));
+                    itemEnhancementUsers = dauReader.GetInt32(0);
+                }
+
+                var auraSummon = 0;
+                var auraSummonQuery = $"select SUM(SummonCount) from AuraSummons where GroupId = '10002' AND Date = '{date}'";
+                connection.Open();
+                var auraSummonCommand = new MySqlCommand(auraSummonQuery, connection);
+                var auraSummonReader = auraSummonCommand.ExecuteReader();
+                while (auraSummonReader.Read())
+                {
+                    Console.WriteLine("{0}", auraSummonReader.GetInt32(0));
+                    auraSummon = dauReader.GetInt32(0);
+                }
+
+                var runeSummon = 0;
+                var runeSummonQuery = $"select SUM(SummonCount) from RuneSummons where Date = '{date}'";
+                connection.Open();
+                var runeSummonCommand = new MySqlCommand(runeSummonQuery, connection);
+                var runeSummonReader = runeSummonCommand.ExecuteReader();
+                while (runeSummonReader.Read())
+                {
+                    Console.WriteLine("{0}", runeSummonReader.GetInt32(0));
+                    runeSummon = dauReader.GetInt32(0);
+                }
+
+                var apUsage = 0;
+                var apUsageQuery = $"select SUM(ApStoneCount) from HackAndSlashSweeps where Date = '{date}'";
+                connection.Open();
+                var apUsageCommand = new MySqlCommand(apUsageQuery, connection);
+                var apUsageReader = apUsageCommand.ExecuteReader();
+                while (apUsageReader.Read())
+                {
+                    Console.WriteLine("{0}", apUsageReader.GetInt32(0));
+                    apUsage = dauReader.GetInt32(0);
+                }
+
+                var hourglassUsage = 0;
+                var hourglassUsageQuery = $"SELECT SUM(HourglassCount) FROM RapidCombinations WHERE Date = '{date}'";
+                connection.Open();
+                var hourglassUsageCommand = new MySqlCommand(hourglassUsageQuery, connection);
+                var hourglassUsageReader = hourglassUsageCommand.ExecuteReader();
+                while (hourglassUsageReader.Read())
+                {
+                    Console.WriteLine("{0}", hourglassUsageReader.GetInt32(0));
+                    hourglassUsage = dauReader.GetInt32(0);
+                }
+
+                var ncgTrade = 0m;
+                var ncgTradeQuery = @$"select (SUM(price)) as 'Trade NCG(Amount)' from 
+                    (
+                        (select Price from ShopHistoryConsumables WHERE Date = '{date}') Union all 
+                        (select Price from ShopHistoryCostumes WHERE Date = '{date}' ) Union all 
+                        (select Price from ShopHistoryEquipments WHERE Date = '{date}' ) Union all 
+                        (select Price from ShopHistoryMaterials WHERE Date = '{date}' )
+                    ) a";
+                connection.Open();
+                var ncgTradeCommand = new MySqlCommand(ncgTradeQuery, connection);
+                var ncgTradeReader = ncgTradeCommand.ExecuteReader();
+                while (ncgTradeReader.Read())
+                {
+                    Console.WriteLine("{0}", ncgTradeReader.GetDecimal(0));
+                    ncgTrade = dauReader.GetDecimal(0);
+                }
+
+                var enhanceNcg = 0m;
+                var enhanceNcgQuery = $"SELECT sum(BurntNCG) as 'Enhance NCG(Amount)' from data_provider.ItemEnhancements  where Date = '{date}'";
+                connection.Open();
+                var enhanceNcgCommand = new MySqlCommand(enhanceNcgQuery, connection);
+                var enhanceNcgReader = enhanceNcgCommand.ExecuteReader();
+                while (enhanceNcgReader.Read())
+                {
+                    Console.WriteLine("{0}", enhanceNcgReader.GetDecimal(0));
+                    enhanceNcg = dauReader.GetDecimal(0);
+                }
+
+                var runeNcg = 0m;
+                var runeNcgQuery = $"SELECT sum(BurntNCG) as 'Rune NCG(Amount)' from data_provider.RuneEnhancements   where Date = '{date}'";
+                connection.Open();
+                var runeNcgCommand = new MySqlCommand(runeNcgQuery, connection);
+                var runeNcgReader = runeNcgCommand.ExecuteReader();
+                while (runeNcgReader.Read())
+                {
+                    Console.WriteLine("{0}", runeNcgReader.GetDecimal(0));
+                    runeNcg = dauReader.GetDecimal(0);
+                }
+
+                var runeSlotNcg = 0m;
+                var runeSlotNcgQuery = $"SELECT sum(BurntNCG) as 'RuneSlot NCG(Amount)' from data_provider.UnlockRuneSlots  where Date = '{date}'";
+                connection.Open();
+                var runeSlotNcgCommand = new MySqlCommand(runeSlotNcgQuery, connection);
+                var runeSlotNcgReader = runeSlotNcgCommand.ExecuteReader();
+                while (runeSlotNcgReader.Read())
+                {
+                    Console.WriteLine("{0}", runeSlotNcgReader.GetDecimal(0));
+                    runeSlotNcg = dauReader.GetDecimal(0);
+                }
+
+                var arenaNcg = 0m;
+                var arenaNcgQuery = $"SELECT sum(BurntNCG) as 'Arena NCG(Amount)' from data_provider.BattleArenas where Date = '{date}'";
+                connection.Open();
+                var arenaNcgCommand = new MySqlCommand(arenaNcgQuery, connection);
+                var arenaNcgReader = arenaNcgCommand.ExecuteReader();
+                while (arenaNcgReader.Read())
+                {
+                    Console.WriteLine("{0}", arenaNcgReader.GetDecimal(0));
+                    arenaNcg = dauReader.GetDecimal(0);
+                }
+
+                var eventTicketNcg = 0m;
+                var eventTicketNcgQuery = $"SELECT sum(BurntNCG) as 'EventTicket NCG' from EventDungeonBattles where Date = '{date}'";
+                connection.Open();
+                var eventTicketNcgCommand = new MySqlCommand(eventTicketNcgQuery, connection);
+                var eventTicketNcgReader = eventTicketNcgCommand.ExecuteReader();
+                while (eventTicketNcgReader.Read())
+                {
+                    Console.WriteLine("{0}", eventTicketNcgReader.GetDecimal(0));
+                    eventTicketNcg = dauReader.GetDecimal(0);
+                }
+
+                _dailyMetricsBulkFile.WriteLine(
+                    $"{date};" +
+                    $"{dau};" +
+                    $"{txCount};" +
+                    $"{newDau};" +
+                    $"{hasCount};" +
+                    $"{hasUsers};" +
+                    $"{sweepCount};" +
+                    $"{sweepUsers};" +
+                    $"{combinationEquipmentCount};" +
+                    $"{combinationEquipmentUsers};" +
+                    $"{combinationConsumableCount};" +
+                    $"{combinationConsumableUsers};" +
+                    $"{itemEnhancementCount};" +
+                    $"{itemEnhancementUsers};" +
+                    $"{auraSummon};" +
+                    $"{runeSummon};" +
+                    $"{apUsage};" +
+                    $"{hourglassUsage};" +
+                    $"{ncgTrade};" +
+                    $"{enhanceNcg};" +
+                    $"{runeNcg};" +
+                    $"{runeSlotNcg};" +
+                    $"{arenaNcg};" +
+                    $"{eventTicketNcg}"
+                );
+
+                _dailyMetricsBulkFile.Flush();
+                _dailyMetricsBulkFile.Close();
+
+                foreach (var path in _dailyMetricFiles)
+                {
+                    BulkInsert(dailyMetricDbName, path);
+                }
+
                 var prevArenaEndIndex = arenaData.StartBlockIndex - 1;
                 var prevArenaData = arenaSheet.GetRoundByBlockIndex(prevArenaEndIndex);
                 var finalizeBarankingTip = prevArenaEndIndex;
@@ -1258,6 +1561,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
             string fbUsFilePath = Path.GetRandomFileName();
             _fbUsBulkFile = new StreamWriter(fbUsFilePath);
 
+            string dailyMetricsFilePath = Path.GetRandomFileName();
+            _dailyMetricsBulkFile = new StreamWriter(dailyMetricsFilePath);
+
             _agentFiles.Add(agentFilePath);
             _avatarFiles.Add(avatarFilePath);
             _ccFiles.Add(ccFilePath);
@@ -1281,6 +1587,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             _urFiles.Add(urFilePath);
             _fbBarFiles.Add(fbBarFilePath);
             _fbUsFiles.Add(fbUsFilePath);
+            _dailyMetricFiles.Add(dailyMetricsFilePath);
         }
 
         private void BulkInsert(
