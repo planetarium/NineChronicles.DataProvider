@@ -1349,7 +1349,8 @@ namespace NineChronicles.DataProvider
                                 auraSummon.GroupId,
                                 auraSummon.SummonCount,
                                 auraSummon.Id,
-                                ev.BlockIndex
+                                ev.BlockIndex,
+                                _blockTimeOffset
                                 ));
                         }
                         else
@@ -1363,7 +1364,8 @@ namespace NineChronicles.DataProvider
                                 auraSummon.SummonCount,
                                 auraSummon.Id,
                                 ev.BlockIndex,
-                                ev.Exception
+                                ev.Exception,
+                                _blockTimeOffset
                             ));
                         }
                     }
@@ -1400,7 +1402,8 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 runeSheet,
                                 summonSheet,
-                                new ReplayRandom(ev.RandomSeed)
+                                new ReplayRandom(ev.RandomSeed),
+                                _blockTimeOffset
                             ));
                         }
                         else
@@ -1412,7 +1415,8 @@ namespace NineChronicles.DataProvider
                                 runeSummon.SummonCount,
                                 runeSummon.Id,
                                 ev.BlockIndex,
-                                ev.Exception
+                                ev.Exception,
+                                _blockTimeOffset
                             ));
                         }
                     }

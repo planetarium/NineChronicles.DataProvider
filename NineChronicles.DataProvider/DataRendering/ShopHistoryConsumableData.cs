@@ -42,6 +42,7 @@
                 TradableId = consumable.TradableId.ToString(),
                 MainStat = consumable.MainStat.ToString(),
                 ItemCount = itemCount,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 
@@ -79,6 +80,7 @@
                 TradableId = consumable.TradableId.ToString(),
                 MainStat = consumable.MainStat.ToString(),
                 ItemCount = itemCount,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 
@@ -118,6 +120,7 @@
                 TradableId = consumable.TradableId.ToString(),
                 MainStat = consumable.MainStat.ToString(),
                 ItemCount = itemCount,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 
