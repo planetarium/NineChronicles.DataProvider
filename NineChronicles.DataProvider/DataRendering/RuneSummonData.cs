@@ -25,7 +25,8 @@ namespace NineChronicles.DataProvider.DataRendering
             long blockIndex,
             RuneSheet runeSheet,
             SummonSheet summonSheet,
-            IRandom random
+            IRandom random,
+            DateTimeOffset blockTime
         )
         {
             var simulateResult = RuneSummon.SimulateSummon(runeSheet, summonSheet[groupId], summonCount, random);
@@ -45,6 +46,8 @@ namespace NineChronicles.DataProvider.DataRendering
                 SummonCount = summonCount,
                 SummonResult = result,
                 BlockIndex = blockIndex,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
+                TimeStamp = blockTime,
             };
         }
 
@@ -55,7 +58,8 @@ namespace NineChronicles.DataProvider.DataRendering
             int summonCount,
             Guid actionId,
             long blockIndex,
-            Exception exc
+            Exception exc,
+            DateTimeOffset blockTime
         )
         {
             return new RuneSummonFailModel
@@ -67,6 +71,8 @@ namespace NineChronicles.DataProvider.DataRendering
                 SummonCount = summonCount,
                 BlockIndex = blockIndex,
                 Exception = exc.ToString(),
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
+                TimeStamp = blockTime,
             };
         }
     }

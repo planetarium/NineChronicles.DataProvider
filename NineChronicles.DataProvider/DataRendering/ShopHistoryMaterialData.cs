@@ -36,6 +36,7 @@
                 ElementalType = material.ElementalType.ToString(),
                 Grade = material.Grade,
                 ItemCount = itemCount,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 
@@ -67,6 +68,7 @@
                 ElementalType = material.ElementalType.ToString(),
                 Grade = material.Grade,
                 ItemCount = itemCount,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 
@@ -100,6 +102,7 @@
                 ElementalType = material.ElementalType.ToString(),
                 Grade = material.Grade,
                 ItemCount = itemCount,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 

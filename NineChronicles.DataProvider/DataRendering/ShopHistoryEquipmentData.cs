@@ -44,6 +44,7 @@
                 TradableId = equipment.ItemId.ToString(),
                 UniqueStatType = equipment.UniqueStatType.ToString(),
                 ItemCount = itemCount,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 
@@ -83,6 +84,7 @@
                 TradableId = equipment.ItemId.ToString(),
                 UniqueStatType = equipment.UniqueStatType.ToString(),
                 ItemCount = itemCount,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 
@@ -124,6 +126,7 @@
                 TradableId = equipment.ItemId.ToString(),
                 UniqueStatType = equipment.UniqueStatType.ToString(),
                 ItemCount = itemCount,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
 

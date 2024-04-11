@@ -2,6 +2,9 @@ namespace NineChronicles.DataProvider.Store.Models
 {
     using System;
     using System.ComponentModel.DataAnnotations;
+    using Microsoft.EntityFrameworkCore;
+
+    [Index(nameof(Date))]
 
     public class ShopHistoryConsumableModel
     {
@@ -45,6 +48,8 @@ namespace NineChronicles.DataProvider.Store.Models
         public string? MainStat { get; set; }
 
         public int ItemCount { get; set; }
+
+        public DateOnly Date { get; set; }
 
         public DateTimeOffset TimeStamp { get; set; }
     }
