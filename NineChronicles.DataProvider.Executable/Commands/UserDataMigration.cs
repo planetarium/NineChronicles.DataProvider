@@ -291,6 +291,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     dau = dauReader.GetInt32(0);
                 }
 
+                connection.Close();
+
                 var txCount = 0;
                 var txCountQuery = $"SELECT COUNT(TxId) as 'Transactions' FROM data_provider.Transactions WHERE Date = '{date}'";
                 connection.Open();
@@ -301,6 +303,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     Console.WriteLine("{0}", txCountReader.GetInt32(0));
                     txCount = dauReader.GetInt32(0);
                 }
+
+                connection.Close();
 
                 var newDau = 0;
                 var newDauQuery = $"select count(Signer) from Transactions WHERE ActionType = 'ApprovePledge' AND Date = '{date}'";
@@ -313,6 +317,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     newDau = dauReader.GetInt32(0);
                 }
 
+                connection.Close();
+
                 var hasCount = 0;
                 var hasCountQuery = $"select count(Id) as 'Count' from HackAndSlashes where Date = '{date}'";
                 connection.Open();
@@ -323,6 +329,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     Console.WriteLine("{0}", hasCountReader.GetInt32(0));
                     hasCount = dauReader.GetInt32(0);
                 }
+
+                connection.Close();
 
                 var hasUsers = 0;
                 var hasUsersQuery = $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from HackAndSlashes where Date = '{date}'";
@@ -335,6 +343,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     hasUsers = dauReader.GetInt32(0);
                 }
 
+                connection.Close();
+
                 var sweepCount = 0;
                 var sweepCountQuery = $"select count(Id) as 'Count' from HackAndSlashSweeps where Date = '{date}'";
                 connection.Open();
@@ -345,6 +355,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     Console.WriteLine("{0}", sweepCountReader.GetInt32(0));
                     sweepCount = dauReader.GetInt32(0);
                 }
+
+                connection.Close();
 
                 var sweepUsers = 0;
                 var sweepUsersQuery = $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from HackAndSlashSweeps where Date =  '{date}'";
@@ -357,6 +369,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     sweepUsers = dauReader.GetInt32(0);
                 }
 
+                connection.Close();
+
                 var combinationEquipmentCount = 0;
                 var combinationEquipmentCountQuery = $"select count(Id) as 'Count' from CombinationEquipments where Date = '{date}'";
                 connection.Open();
@@ -367,6 +381,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     Console.WriteLine("{0}", combinationEquipmentCountReader.GetInt32(0));
                     combinationEquipmentCount = dauReader.GetInt32(0);
                 }
+
+                connection.Close();
 
                 var combinationEquipmentUsers = 0;
                 var combinationEquipmentUsersQuery = $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from CombinationConsumables where Date = '{date}'";
@@ -379,6 +395,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     combinationEquipmentUsers = dauReader.GetInt32(0);
                 }
 
+                connection.Close();
+
                 var combinationConsumableCount = 0;
                 var combinationConsumableCountQuery = $"select count(Id) as 'Count' from CombinationConsumables where Date = '{date}'";
                 connection.Open();
@@ -389,6 +407,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     Console.WriteLine("{0}", combinationConsumableCountReader.GetInt32(0));
                     combinationConsumableCount = dauReader.GetInt32(0);
                 }
+
+                connection.Close();
 
                 var combinationConsumableUsers = 0;
                 var combinationConsumableUsersQuery = $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from CombinationEquipments where Date = '{date}'";
@@ -401,6 +421,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     combinationConsumableUsers = dauReader.GetInt32(0);
                 }
 
+                connection.Close();
+
                 var itemEnhancementCount = 0;
                 var itemEnhancementCountQuery = $"select count(Id) as 'Count' from ItemEnhancements where Date = '{date}'";
                 connection.Open();
@@ -411,6 +433,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     Console.WriteLine("{0}", itemEnhancementCountReader.GetInt32(0));
                     itemEnhancementCount = dauReader.GetInt32(0);
                 }
+
+                connection.Close();
 
                 var itemEnhancementUsers = 0;
                 var itemEnhancementUsersQuery = $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from ItemEnhancements where Date = '{date}'";
@@ -423,6 +447,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     itemEnhancementUsers = dauReader.GetInt32(0);
                 }
 
+                connection.Close();
+
                 var auraSummon = 0;
                 var auraSummonQuery = $"select SUM(SummonCount) from AuraSummons where GroupId = '10002' AND Date = '{date}'";
                 connection.Open();
@@ -433,6 +459,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     Console.WriteLine("{0}", auraSummonReader.GetInt32(0));
                     auraSummon = dauReader.GetInt32(0);
                 }
+
+                connection.Close();
 
                 var runeSummon = 0;
                 var runeSummonQuery = $"select SUM(SummonCount) from RuneSummons where Date = '{date}'";
@@ -445,6 +473,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     runeSummon = dauReader.GetInt32(0);
                 }
 
+                connection.Close();
+
                 var apUsage = 0;
                 var apUsageQuery = $"select SUM(ApStoneCount) from HackAndSlashSweeps where Date = '{date}'";
                 connection.Open();
@@ -456,6 +486,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     apUsage = dauReader.GetInt32(0);
                 }
 
+                connection.Close();
+
                 var hourglassUsage = 0;
                 var hourglassUsageQuery = $"SELECT SUM(HourglassCount) FROM RapidCombinations WHERE Date = '{date}'";
                 connection.Open();
@@ -466,6 +498,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     Console.WriteLine("{0}", hourglassUsageReader.GetInt32(0));
                     hourglassUsage = dauReader.GetInt32(0);
                 }
+
+                connection.Close();
 
                 var ncgTrade = 0m;
                 var ncgTradeQuery = @$"select (SUM(price)) as 'Trade NCG(Amount)' from 
@@ -484,6 +518,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     ncgTrade = dauReader.GetDecimal(0);
                 }
 
+                connection.Close();
+
                 var enhanceNcg = 0m;
                 var enhanceNcgQuery = $"SELECT sum(BurntNCG) as 'Enhance NCG(Amount)' from data_provider.ItemEnhancements  where Date = '{date}'";
                 connection.Open();
@@ -494,6 +530,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     Console.WriteLine("{0}", enhanceNcgReader.GetDecimal(0));
                     enhanceNcg = dauReader.GetDecimal(0);
                 }
+
+                connection.Close();
 
                 var runeNcg = 0m;
                 var runeNcgQuery = $"SELECT sum(BurntNCG) as 'Rune NCG(Amount)' from data_provider.RuneEnhancements   where Date = '{date}'";
@@ -506,6 +544,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     runeNcg = dauReader.GetDecimal(0);
                 }
 
+                connection.Close();
+
                 var runeSlotNcg = 0m;
                 var runeSlotNcgQuery = $"SELECT sum(BurntNCG) as 'RuneSlot NCG(Amount)' from data_provider.UnlockRuneSlots  where Date = '{date}'";
                 connection.Open();
@@ -516,6 +556,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     Console.WriteLine("{0}", runeSlotNcgReader.GetDecimal(0));
                     runeSlotNcg = dauReader.GetDecimal(0);
                 }
+
+                connection.Close();
 
                 var arenaNcg = 0m;
                 var arenaNcgQuery = $"SELECT sum(BurntNCG) as 'Arena NCG(Amount)' from data_provider.BattleArenas where Date = '{date}'";
@@ -528,6 +570,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     arenaNcg = dauReader.GetDecimal(0);
                 }
 
+                connection.Close();
+
                 var eventTicketNcg = 0m;
                 var eventTicketNcgQuery = $"SELECT sum(BurntNCG) as 'EventTicket NCG' from EventDungeonBattles where Date = '{date}'";
                 connection.Open();
@@ -538,6 +582,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     Console.WriteLine("{0}", eventTicketNcgReader.GetDecimal(0));
                     eventTicketNcg = dauReader.GetDecimal(0);
                 }
+
+                connection.Close();
 
                 _dailyMetricsBulkFile.WriteLine(
                     $"{date};" +
