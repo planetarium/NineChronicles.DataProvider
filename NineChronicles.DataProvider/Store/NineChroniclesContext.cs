@@ -241,7 +241,6 @@ namespace NineChronicles.DataProvider.Store
             modelBuilder.Entity<UserNCGsModel>().HasNoKey();
             modelBuilder.Entity<UserRunesModel>().HasNoKey();
             modelBuilder.Entity<UserStakingsModel>().HasNoKey();
-            modelBuilder.Entity<DailyMetricModel>().HasNoKey();
             modelBuilder.Entity<AvatarModel>()
                 .HasMany(p => p.ActivateCollections)
                 .WithOne(p => p.Avatar)

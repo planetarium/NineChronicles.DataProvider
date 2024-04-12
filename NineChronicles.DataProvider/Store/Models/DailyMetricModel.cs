@@ -8,6 +8,7 @@
 
     public class DailyMetricModel
     {
+        [Key]
         public DateOnly Date { get; set; }
 
         public int? Dau { get; set; }
