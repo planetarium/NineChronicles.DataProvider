@@ -287,8 +287,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var dauReader = dauCommand.ExecuteReader();
                 while (dauReader.Read())
                 {
-                    Console.WriteLine("{0}", dauReader.GetInt32(0));
-                    dau = dauReader.GetInt32(0);
+                    if (!dauReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("dau: {0}", dauReader.GetInt32(0));
+                        dau = dauReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("dau is null");
+                    }
                 }
 
                 connection.Close();
@@ -300,8 +307,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var txCountReader = txCountCommand.ExecuteReader();
                 while (txCountReader.Read())
                 {
-                    Console.WriteLine("{0}", txCountReader.GetInt32(0));
-                    txCount = dauReader.GetInt32(0);
+                    if (!txCountReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("txCount: {0}", txCountReader.GetInt32(0));
+                        txCount = txCountReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("txCount is null");
+                    }
                 }
 
                 connection.Close();
@@ -313,8 +327,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var newDauReader = newDauCommand.ExecuteReader();
                 while (newDauReader.Read())
                 {
-                    Console.WriteLine("{0}", newDauReader.GetInt32(0));
-                    newDau = dauReader.GetInt32(0);
+                    if (!newDauReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("newDau: {0}", newDauReader.GetInt32(0));
+                        newDau = newDauReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("newDau is null");
+                    }
                 }
 
                 connection.Close();
@@ -326,8 +347,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var hasCountReader = hasCountCommand.ExecuteReader();
                 while (hasCountReader.Read())
                 {
-                    Console.WriteLine("{0}", hasCountReader.GetInt32(0));
-                    hasCount = dauReader.GetInt32(0);
+                    if (!hasCountReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("hasCount: {0}", hasCountReader.GetInt32(0));
+                        hasCount = hasCountReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("hasCount is null");
+                    }
                 }
 
                 connection.Close();
@@ -339,8 +367,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var hasUsersReader = hasUsersCommand.ExecuteReader();
                 while (hasUsersReader.Read())
                 {
-                    Console.WriteLine("{0}", hasUsersReader.GetInt32(0));
-                    hasUsers = dauReader.GetInt32(0);
+                    if (!hasUsersReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("hasUsers: {0}", hasUsersReader.GetInt32(0));
+                        hasUsers = hasUsersReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("hasUsers is null");
+                    }
                 }
 
                 connection.Close();
@@ -352,8 +387,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var sweepCountReader = sweepCountCommand.ExecuteReader();
                 while (sweepCountReader.Read())
                 {
-                    Console.WriteLine("{0}", sweepCountReader.GetInt32(0));
-                    sweepCount = dauReader.GetInt32(0);
+                    if (!sweepCountReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("sweepCount: {0}", sweepCountReader.GetInt32(0));
+                        sweepCount = sweepCountReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("sweepCount is null");
+                    }
                 }
 
                 connection.Close();
@@ -365,8 +407,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var sweepUsersReader = sweepUsersCommand.ExecuteReader();
                 while (sweepUsersReader.Read())
                 {
-                    Console.WriteLine("{0}", sweepUsersReader.GetInt32(0));
-                    sweepUsers = dauReader.GetInt32(0);
+                    if (!sweepUsersReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("sweepUsers: {0}", sweepUsersReader.GetInt32(0));
+                        sweepUsers = sweepUsersReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("sweepUsers is null");
+                    }
                 }
 
                 connection.Close();
@@ -378,8 +427,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var combinationEquipmentCountReader = combinationEquipmentCountCommand.ExecuteReader();
                 while (combinationEquipmentCountReader.Read())
                 {
-                    Console.WriteLine("{0}", combinationEquipmentCountReader.GetInt32(0));
-                    combinationEquipmentCount = dauReader.GetInt32(0);
+                    if (!combinationEquipmentCountReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("combinationEquipmentCount: {0}", combinationEquipmentCountReader.GetInt32(0));
+                        combinationEquipmentCount = combinationEquipmentCountReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("combinationEquipmentCount is null");
+                    }
                 }
 
                 connection.Close();
@@ -391,8 +447,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var combinationEquipmentUsersReader = combinationEquipmentUsersCommand.ExecuteReader();
                 while (combinationEquipmentUsersReader.Read())
                 {
-                    Console.WriteLine("{0}", combinationEquipmentUsersReader.GetInt32(0));
-                    combinationEquipmentUsers = dauReader.GetInt32(0);
+                    if (!combinationEquipmentUsersReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("combinationEquipmentUsers: {0}", combinationEquipmentUsersReader.GetInt32(0));
+                        combinationEquipmentUsers = combinationEquipmentUsersReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("combinationEquipmentUsers is null");
+                    }
                 }
 
                 connection.Close();
@@ -404,8 +467,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var combinationConsumableCountReader = combinationConsumableCountCommand.ExecuteReader();
                 while (combinationConsumableCountReader.Read())
                 {
-                    Console.WriteLine("{0}", combinationConsumableCountReader.GetInt32(0));
-                    combinationConsumableCount = dauReader.GetInt32(0);
+                    if (!combinationConsumableCountReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("combinationConsumableCount: {0}", combinationConsumableCountReader.GetInt32(0));
+                        combinationConsumableCount = combinationConsumableCountReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("combinationConsumableCount is null");
+                    }
                 }
 
                 connection.Close();
@@ -417,8 +487,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var combinationConsumableUsersReader = combinationConsumableUsersCommand.ExecuteReader();
                 while (combinationConsumableUsersReader.Read())
                 {
-                    Console.WriteLine("{0}", combinationConsumableUsersReader.GetInt32(0));
-                    combinationConsumableUsers = dauReader.GetInt32(0);
+                    if (!combinationConsumableUsersReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("combinationConsumableUsers: {0}", combinationConsumableUsersReader.GetInt32(0));
+                        combinationConsumableUsers = combinationConsumableUsersReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("combinationConsumableUsers is null");
+                    }
                 }
 
                 connection.Close();
@@ -430,8 +507,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var itemEnhancementCountReader = itemEnhancementCountCommand.ExecuteReader();
                 while (itemEnhancementCountReader.Read())
                 {
-                    Console.WriteLine("{0}", itemEnhancementCountReader.GetInt32(0));
-                    itemEnhancementCount = dauReader.GetInt32(0);
+                    if (!itemEnhancementCountReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("itemEnhancementCount: {0}", itemEnhancementCountReader.GetInt32(0));
+                        itemEnhancementCount = itemEnhancementCountReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("itemEnhancementCount is null");
+                    }
                 }
 
                 connection.Close();
@@ -443,21 +527,36 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var itemEnhancementUsersReader = itemEnhancementUsersCommand.ExecuteReader();
                 while (itemEnhancementUsersReader.Read())
                 {
-                    Console.WriteLine("{0}", itemEnhancementUsersReader.GetInt32(0));
-                    itemEnhancementUsers = dauReader.GetInt32(0);
+                    if (!itemEnhancementUsersReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("itemEnhancementUsers: {0}", itemEnhancementUsersReader.GetInt32(0));
+                        itemEnhancementUsers = itemEnhancementUsersReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("itemEnhancementUsers is null");
+                    }
                 }
 
                 connection.Close();
 
                 var auraSummon = 0;
-                var auraSummonQuery = $"select SUM(SummonCount) from AuraSummons where GroupId = '10002' AND Date = '{date}'";
+                var auraSummonQuery =
+                    $"select SUM(SummonCount) from AuraSummons where GroupId = '10002' AND Date = '{date}'";
                 connection.Open();
                 var auraSummonCommand = new MySqlCommand(auraSummonQuery, connection);
                 var auraSummonReader = auraSummonCommand.ExecuteReader();
                 while (auraSummonReader.Read())
                 {
-                    Console.WriteLine("{0}", auraSummonReader.GetInt32(0));
-                    auraSummon = dauReader.GetInt32(0);
+                    if (!auraSummonReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("auraSummon: {0}", auraSummonReader.GetInt32(0));
+                        auraSummon = auraSummonReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("auraSummon is null");
+                    }
                 }
 
                 connection.Close();
@@ -469,8 +568,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var runeSummonReader = runeSummonCommand.ExecuteReader();
                 while (runeSummonReader.Read())
                 {
-                    Console.WriteLine("{0}", runeSummonReader.GetInt32(0));
-                    runeSummon = dauReader.GetInt32(0);
+                    if (!runeSummonReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("runeSummon: {0}", runeSummonReader.GetInt32(0));
+                        runeSummon = runeSummonReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("runeSummon is null");
+                    }
                 }
 
                 connection.Close();
@@ -482,8 +588,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var apUsageReader = apUsageCommand.ExecuteReader();
                 while (apUsageReader.Read())
                 {
-                    Console.WriteLine("{0}", apUsageReader.GetInt32(0));
-                    apUsage = dauReader.GetInt32(0);
+                    if (!apUsageReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("apUsage: {0}", apUsageReader.GetInt32(0));
+                        apUsage = apUsageReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("apUsage is null");
+                    }
                 }
 
                 connection.Close();
@@ -495,8 +608,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var hourglassUsageReader = hourglassUsageCommand.ExecuteReader();
                 while (hourglassUsageReader.Read())
                 {
-                    Console.WriteLine("{0}", hourglassUsageReader.GetInt32(0));
-                    hourglassUsage = dauReader.GetInt32(0);
+                    if (!hourglassUsageReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("hourglassUsage: {0}", hourglassUsageReader.GetInt32(0));
+                        hourglassUsage = hourglassUsageReader.GetInt32(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("hourglassUsage is null");
+                    }
                 }
 
                 connection.Close();
@@ -514,8 +634,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var ncgTradeReader = ncgTradeCommand.ExecuteReader();
                 while (ncgTradeReader.Read())
                 {
-                    Console.WriteLine("{0}", ncgTradeReader.GetDecimal(0));
-                    ncgTrade = dauReader.GetDecimal(0);
+                    if (!ncgTradeReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("ncgTrade: {0}", ncgTradeReader.GetDecimal(0));
+                        ncgTrade = ncgTradeReader.GetDecimal(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("ncgTrade is null");
+                    }
                 }
 
                 connection.Close();
@@ -527,8 +654,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var enhanceNcgReader = enhanceNcgCommand.ExecuteReader();
                 while (enhanceNcgReader.Read())
                 {
-                    Console.WriteLine("{0}", enhanceNcgReader.GetDecimal(0));
-                    enhanceNcg = dauReader.GetDecimal(0);
+                    if (!enhanceNcgReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("enhanceNcg: {0}", enhanceNcgReader.GetDecimal(0));
+                        enhanceNcg = enhanceNcgReader.GetDecimal(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("enhanceNcg is null");
+                    }
                 }
 
                 connection.Close();
@@ -540,8 +674,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var runeNcgReader = runeNcgCommand.ExecuteReader();
                 while (runeNcgReader.Read())
                 {
-                    Console.WriteLine("{0}", runeNcgReader.GetDecimal(0));
-                    runeNcg = dauReader.GetDecimal(0);
+                    if (!runeNcgReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("runeNcg: {0}", runeNcgReader.GetDecimal(0));
+                        runeNcg = runeNcgReader.GetDecimal(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("runeNcg is null");
+                    }
                 }
 
                 connection.Close();
@@ -553,8 +694,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var runeSlotNcgReader = runeSlotNcgCommand.ExecuteReader();
                 while (runeSlotNcgReader.Read())
                 {
-                    Console.WriteLine("{0}", runeSlotNcgReader.GetDecimal(0));
-                    runeSlotNcg = dauReader.GetDecimal(0);
+                    if (!runeSlotNcgReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("runeSlotNcg: {0}", runeSlotNcgReader.GetDecimal(0));
+                        runeSlotNcg = runeSlotNcgReader.GetDecimal(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("runeSlotNcg is null");
+                    }
                 }
 
                 connection.Close();
@@ -566,8 +714,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var arenaNcgReader = arenaNcgCommand.ExecuteReader();
                 while (arenaNcgReader.Read())
                 {
-                    Console.WriteLine("{0}", arenaNcgReader.GetDecimal(0));
-                    arenaNcg = dauReader.GetDecimal(0);
+                    if (!arenaNcgReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("arenaNcg: {0}", arenaNcgReader.GetDecimal(0));
+                        arenaNcg = arenaNcgReader.GetDecimal(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("arenaNcg is null");
+                    }
                 }
 
                 connection.Close();
@@ -579,8 +734,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var eventTicketNcgReader = eventTicketNcgCommand.ExecuteReader();
                 while (eventTicketNcgReader.Read())
                 {
-                    Console.WriteLine("{0}", eventTicketNcgReader.GetDecimal(0));
-                    eventTicketNcg = dauReader.GetDecimal(0);
+                    if (!eventTicketNcgReader.IsDBNull(0))
+                    {
+                        Console.WriteLine("eventTicketNcg: {0}", eventTicketNcgReader.GetDecimal(0));
+                        eventTicketNcg = eventTicketNcgReader.GetDecimal(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("eventTicketNcg is null");
+                    }
                 }
 
                 connection.Close();
