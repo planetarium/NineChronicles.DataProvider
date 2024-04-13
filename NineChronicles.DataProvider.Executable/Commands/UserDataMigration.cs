@@ -284,6 +284,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var dauQuery = $"SELECT COUNT(DISTINCT Signer) as 'Unique Address' FROM data_provider.Transactions WHERE Date = '{date}'";
                 connection.Open();
                 var dauCommand = new MySqlCommand(dauQuery, connection);
+                dauCommand.CommandTimeout = 600;
                 var dauReader = dauCommand.ExecuteReader();
                 while (dauReader.Read())
                 {
@@ -304,6 +305,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var txCountQuery = $"SELECT COUNT(TxId) as 'Transactions' FROM data_provider.Transactions WHERE Date = '{date}'";
                 connection.Open();
                 var txCountCommand = new MySqlCommand(txCountQuery, connection);
+                txCountCommand.CommandTimeout = 600;
                 var txCountReader = txCountCommand.ExecuteReader();
                 while (txCountReader.Read())
                 {
@@ -324,6 +326,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var newDauQuery = $"select count(Signer) from Transactions WHERE ActionType = 'ApprovePledge' AND Date = '{date}'";
                 connection.Open();
                 var newDauCommand = new MySqlCommand(newDauQuery, connection);
+                newDauCommand.CommandTimeout = 600;
                 var newDauReader = newDauCommand.ExecuteReader();
                 while (newDauReader.Read())
                 {
@@ -344,6 +347,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var hasCountQuery = $"select count(Id) as 'Count' from HackAndSlashes where Date = '{date}'";
                 connection.Open();
                 var hasCountCommand = new MySqlCommand(hasCountQuery, connection);
+                hasCountCommand.CommandTimeout = 600;
                 var hasCountReader = hasCountCommand.ExecuteReader();
                 while (hasCountReader.Read())
                 {
@@ -364,6 +368,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var hasUsersQuery = $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from HackAndSlashes where Date = '{date}'";
                 connection.Open();
                 var hasUsersCommand = new MySqlCommand(hasUsersQuery, connection);
+                hasUsersCommand.CommandTimeout = 600;
                 var hasUsersReader = hasUsersCommand.ExecuteReader();
                 while (hasUsersReader.Read())
                 {
@@ -384,6 +389,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var sweepCountQuery = $"select count(Id) as 'Count' from HackAndSlashSweeps where Date = '{date}'";
                 connection.Open();
                 var sweepCountCommand = new MySqlCommand(sweepCountQuery, connection);
+                sweepCountCommand.CommandTimeout = 600;
                 var sweepCountReader = sweepCountCommand.ExecuteReader();
                 while (sweepCountReader.Read())
                 {
@@ -404,6 +410,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var sweepUsersQuery = $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from HackAndSlashSweeps where Date =  '{date}'";
                 connection.Open();
                 var sweepUsersCommand = new MySqlCommand(sweepUsersQuery, connection);
+                sweepUsersCommand.CommandTimeout = 600;
                 var sweepUsersReader = sweepUsersCommand.ExecuteReader();
                 while (sweepUsersReader.Read())
                 {
@@ -424,6 +431,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var combinationEquipmentCountQuery = $"select count(Id) as 'Count' from CombinationEquipments where Date = '{date}'";
                 connection.Open();
                 var combinationEquipmentCountCommand = new MySqlCommand(combinationEquipmentCountQuery, connection);
+                combinationEquipmentCountCommand.CommandTimeout = 600;
                 var combinationEquipmentCountReader = combinationEquipmentCountCommand.ExecuteReader();
                 while (combinationEquipmentCountReader.Read())
                 {
@@ -444,6 +452,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var combinationEquipmentUsersQuery = $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from CombinationConsumables where Date = '{date}'";
                 connection.Open();
                 var combinationEquipmentUsersCommand = new MySqlCommand(combinationEquipmentUsersQuery, connection);
+                combinationEquipmentUsersCommand.CommandTimeout = 600;
                 var combinationEquipmentUsersReader = combinationEquipmentUsersCommand.ExecuteReader();
                 while (combinationEquipmentUsersReader.Read())
                 {
@@ -464,6 +473,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var combinationConsumableCountQuery = $"select count(Id) as 'Count' from CombinationConsumables where Date = '{date}'";
                 connection.Open();
                 var combinationConsumableCountCommand = new MySqlCommand(combinationConsumableCountQuery, connection);
+                combinationConsumableCountCommand.CommandTimeout = 600;
                 var combinationConsumableCountReader = combinationConsumableCountCommand.ExecuteReader();
                 while (combinationConsumableCountReader.Read())
                 {
@@ -484,6 +494,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var combinationConsumableUsersQuery = $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from CombinationEquipments where Date = '{date}'";
                 connection.Open();
                 var combinationConsumableUsersCommand = new MySqlCommand(combinationConsumableUsersQuery, connection);
+                combinationConsumableUsersCommand.CommandTimeout = 600;
                 var combinationConsumableUsersReader = combinationConsumableUsersCommand.ExecuteReader();
                 while (combinationConsumableUsersReader.Read())
                 {
@@ -504,6 +515,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var itemEnhancementCountQuery = $"select count(Id) as 'Count' from ItemEnhancements where Date = '{date}'";
                 connection.Open();
                 var itemEnhancementCountCommand = new MySqlCommand(itemEnhancementCountQuery, connection);
+                itemEnhancementCountCommand.CommandTimeout = 600;
                 var itemEnhancementCountReader = itemEnhancementCountCommand.ExecuteReader();
                 while (itemEnhancementCountReader.Read())
                 {
@@ -524,6 +536,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var itemEnhancementUsersQuery = $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from ItemEnhancements where Date = '{date}'";
                 connection.Open();
                 var itemEnhancementUsersCommand = new MySqlCommand(itemEnhancementUsersQuery, connection);
+                itemEnhancementUsersCommand.CommandTimeout = 600;
                 var itemEnhancementUsersReader = itemEnhancementUsersCommand.ExecuteReader();
                 while (itemEnhancementUsersReader.Read())
                 {
@@ -545,6 +558,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     $"select SUM(SummonCount) from AuraSummons where GroupId = '10002' AND Date = '{date}'";
                 connection.Open();
                 var auraSummonCommand = new MySqlCommand(auraSummonQuery, connection);
+                auraSummonCommand.CommandTimeout = 600;
                 var auraSummonReader = auraSummonCommand.ExecuteReader();
                 while (auraSummonReader.Read())
                 {
@@ -565,6 +579,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var runeSummonQuery = $"select SUM(SummonCount) from RuneSummons where Date = '{date}'";
                 connection.Open();
                 var runeSummonCommand = new MySqlCommand(runeSummonQuery, connection);
+                runeSummonCommand.CommandTimeout = 600;
                 var runeSummonReader = runeSummonCommand.ExecuteReader();
                 while (runeSummonReader.Read())
                 {
@@ -585,6 +600,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var apUsageQuery = $"select SUM(ApStoneCount) from HackAndSlashSweeps where Date = '{date}'";
                 connection.Open();
                 var apUsageCommand = new MySqlCommand(apUsageQuery, connection);
+                apUsageCommand.CommandTimeout = 600;
                 var apUsageReader = apUsageCommand.ExecuteReader();
                 while (apUsageReader.Read())
                 {
@@ -605,6 +621,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var hourglassUsageQuery = $"SELECT SUM(HourglassCount) FROM RapidCombinations WHERE Date = '{date}'";
                 connection.Open();
                 var hourglassUsageCommand = new MySqlCommand(hourglassUsageQuery, connection);
+                hourglassUsageCommand.CommandTimeout = 600;
                 var hourglassUsageReader = hourglassUsageCommand.ExecuteReader();
                 while (hourglassUsageReader.Read())
                 {
@@ -631,6 +648,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     ) a";
                 connection.Open();
                 var ncgTradeCommand = new MySqlCommand(ncgTradeQuery, connection);
+                ncgTradeCommand.CommandTimeout = 600;
                 var ncgTradeReader = ncgTradeCommand.ExecuteReader();
                 while (ncgTradeReader.Read())
                 {
@@ -651,6 +669,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var enhanceNcgQuery = $"SELECT sum(BurntNCG) as 'Enhance NCG(Amount)' from data_provider.ItemEnhancements  where Date = '{date}'";
                 connection.Open();
                 var enhanceNcgCommand = new MySqlCommand(enhanceNcgQuery, connection);
+                enhanceNcgCommand.CommandTimeout = 600;
                 var enhanceNcgReader = enhanceNcgCommand.ExecuteReader();
                 while (enhanceNcgReader.Read())
                 {
@@ -671,6 +690,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var runeNcgQuery = $"SELECT sum(BurntNCG) as 'Rune NCG(Amount)' from data_provider.RuneEnhancements   where Date = '{date}'";
                 connection.Open();
                 var runeNcgCommand = new MySqlCommand(runeNcgQuery, connection);
+                runeNcgCommand.CommandTimeout = 600;
                 var runeNcgReader = runeNcgCommand.ExecuteReader();
                 while (runeNcgReader.Read())
                 {
@@ -691,6 +711,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var runeSlotNcgQuery = $"SELECT sum(BurntNCG) as 'RuneSlot NCG(Amount)' from data_provider.UnlockRuneSlots  where Date = '{date}'";
                 connection.Open();
                 var runeSlotNcgCommand = new MySqlCommand(runeSlotNcgQuery, connection);
+                runeSlotNcgCommand.CommandTimeout = 600;
                 var runeSlotNcgReader = runeSlotNcgCommand.ExecuteReader();
                 while (runeSlotNcgReader.Read())
                 {
@@ -711,6 +732,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var arenaNcgQuery = $"SELECT sum(BurntNCG) as 'Arena NCG(Amount)' from data_provider.BattleArenas where Date = '{date}'";
                 connection.Open();
                 var arenaNcgCommand = new MySqlCommand(arenaNcgQuery, connection);
+                arenaNcgCommand.CommandTimeout = 600;
                 var arenaNcgReader = arenaNcgCommand.ExecuteReader();
                 while (arenaNcgReader.Read())
                 {
@@ -731,6 +753,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var eventTicketNcgQuery = $"SELECT sum(BurntNCG) as 'EventTicket NCG' from EventDungeonBattles where Date = '{date}'";
                 connection.Open();
                 var eventTicketNcgCommand = new MySqlCommand(eventTicketNcgQuery, connection);
+                eventTicketNcgCommand.CommandTimeout = 600;
                 var eventTicketNcgReader = eventTicketNcgCommand.ExecuteReader();
                 while (eventTicketNcgReader.Read())
                 {
