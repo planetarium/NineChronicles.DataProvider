@@ -5,6 +5,7 @@
     using Microsoft.EntityFrameworkCore;
 
     [Index(nameof(Date))]
+    [Index(nameof(Date), nameof(ActionType), Name = "IDX_Date_ActionType")]
 
     public class TransactionModel
     {
