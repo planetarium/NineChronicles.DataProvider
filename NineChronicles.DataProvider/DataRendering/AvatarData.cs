@@ -15,6 +15,7 @@ namespace NineChronicles.DataProvider.DataRendering
     using Nekoyume.Model.State;
     using Nekoyume.Module;
     using Nekoyume.TableData;
+    using Nekoyume.TableData.Rune;
     using NineChronicles.DataProvider.Store.Models;
     using Serilog;
 

@@ -25,6 +25,7 @@ namespace NineChronicles.DataProvider
     using Nekoyume.Model.State;
     using Nekoyume.Module;
     using Nekoyume.TableData;
+    using Nekoyume.TableData.Rune;
     using Nekoyume.TableData.Summon;
     using NineChronicles.DataProvider.DataRendering;
     using NineChronicles.DataProvider.Store;

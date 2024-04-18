@@ -32,6 +32,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using Nekoyume.Model.State;
     using Nekoyume.Module;
     using Nekoyume.TableData;
+    using Nekoyume.TableData.Rune;
     using NineChronicles.DataProvider.DataRendering;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
