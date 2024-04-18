@@ -28,6 +28,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Action", "NineChr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lib9c", "NineChronicles.Headless\Lib9c\Lib9c\Lib9c.csproj", "{CED5FBEB-7EE8-477D-B5A5-B6B2BEEBCA61}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Mocks", "NineChronicles.Headless\Lib9c\.Libplanet\Libplanet.Mocks\Libplanet.Mocks.csproj", "{994BA4E6-804B-45A1-B1A4-7230368C4914}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -158,6 +160,18 @@ Global
 		{CED5FBEB-7EE8-477D-B5A5-B6B2BEEBCA61}.Release|x64.Build.0 = Release|Any CPU
 		{CED5FBEB-7EE8-477D-B5A5-B6B2BEEBCA61}.Release|x86.ActiveCfg = Release|Any CPU
 		{CED5FBEB-7EE8-477D-B5A5-B6B2BEEBCA61}.Release|x86.Build.0 = Release|Any CPU
+		{994BA4E6-804B-45A1-B1A4-7230368C4914}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{994BA4E6-804B-45A1-B1A4-7230368C4914}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{994BA4E6-804B-45A1-B1A4-7230368C4914}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{994BA4E6-804B-45A1-B1A4-7230368C4914}.Debug|x64.Build.0 = Debug|Any CPU
+		{994BA4E6-804B-45A1-B1A4-7230368C4914}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{994BA4E6-804B-45A1-B1A4-7230368C4914}.Debug|x86.Build.0 = Debug|Any CPU
+		{994BA4E6-804B-45A1-B1A4-7230368C4914}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{994BA4E6-804B-45A1-B1A4-7230368C4914}.Release|Any CPU.Build.0 = Release|Any CPU
+		{994BA4E6-804B-45A1-B1A4-7230368C4914}.Release|x64.ActiveCfg = Release|Any CPU
+		{994BA4E6-804B-45A1-B1A4-7230368C4914}.Release|x64.Build.0 = Release|Any CPU
+		{994BA4E6-804B-45A1-B1A4-7230368C4914}.Release|x86.ActiveCfg = Release|Any CPU
+		{994BA4E6-804B-45A1-B1A4-7230368C4914}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -6,6 +6,7 @@ using Bencodex.Types;
 using Libplanet.Action.State;
 using Libplanet.Common;
 using Libplanet.Crypto;
+using Libplanet.Mocks;
 using Microsoft.Extensions.DependencyInjection;
 using Nekoyume;
 using Nekoyume.Model.State;
@@ -88,13 +89,17 @@ public class RaiderWorkerTest : TestBase
 
     protected override IWorldState GetMockState()
     {
-        return new MockWorldState()
-            .SetState(ReservedAddresses.LegacyAccount, RaiderAddress, RaiderState.Serialize())
-            .SetState(ReservedAddresses.LegacyAccount, RaiderListAddress, List.Empty.Add(RaiderAddress.Serialize()))
+        var mockWorldState = MockWorldState.CreateModern();
+        mockWorldState = mockWorldState.SetAccount(ReservedAddresses.LegacyAccount,
+            new Account(mockWorldState.GetAccountState(ReservedAddresses.LegacyAccount))
+            .SetState(RaiderAddress, RaiderState.Serialize())
+            .SetState(RaiderListAddress, List.Empty.Add(RaiderAddress.Serialize()))
             .SetState(
-                ReservedAddresses.LegacyAccount,
                 Addresses.GetSheetAddress<WorldBossListSheet>(),
                 @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
-                1,900001,0,10,300,200,100,10".Serialize());
+                1,900001,0,10,300,200,100,10".Serialize())
+                
+        );
+        return mockWorldState;
     }
 }

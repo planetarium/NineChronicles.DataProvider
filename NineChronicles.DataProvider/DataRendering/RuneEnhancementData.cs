@@ -10,6 +10,7 @@ namespace NineChronicles.DataProvider.DataRendering
     using Nekoyume.Model.State;
     using Nekoyume.Module;
     using Nekoyume.TableData;
+    using Nekoyume.TableData.Rune;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class RuneEnhancementData
@@ -70,6 +71,7 @@ namespace NineChronicles.DataProvider.DataRendering
                     typeof(RuneSheet),
                     typeof(RuneListSheet),
                     typeof(RuneCostSheet),
+                    typeof(RuneLevelBonusSheet),
                 });
             var runeSheet = sheets.GetSheet<RuneSheet>();
             runeSheet.TryGetValue(runeState.RuneId, out var runeRow);
@@ -83,6 +85,18 @@ namespace NineChronicles.DataProvider.DataRendering
                 avatarAddress,
                 runeCurrency);
             var burntRune = prevRuneBalance - outputRuneBalance;
+            var prevRuneLevelBonus =
+                RuneHelper.CalculateRuneLevelBonus(
+                    previousStates.GetRuneState(avatarAddress),
+                    sheets.GetSheet<RuneListSheet>(),
+                    sheets.GetSheet<RuneLevelBonusSheet>()
+                );
+            var outputRuneLevelBonus =
+                RuneHelper.CalculateRuneLevelBonus(
+                    outputStates.GetRuneState(avatarAddress),
+                    sheets.GetSheet<RuneListSheet>(),
+                    sheets.GetSheet<RuneLevelBonusSheet>()
+                );
 
             var runeEnhancementModel = new RuneEnhancementModel()
             {
@@ -99,6 +113,8 @@ namespace NineChronicles.DataProvider.DataRendering
                 BurntRune = Convert.ToDecimal(burntRune.GetQuantityString()),
                 Date = blockTime,
                 TimeStamp = blockTime,
+                PreviousRuneLevelBonus = prevRuneLevelBonus,
+                OutputRuneLevelBonus = outputRuneLevelBonus,
             };
 
             return runeEnhancementModel;

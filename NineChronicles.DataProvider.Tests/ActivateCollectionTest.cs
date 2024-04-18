@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using System.Threading.Tasks;
 using Libplanet.Action.State;
 using Libplanet.Crypto;
+using Libplanet.Mocks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Nekoyume.Model.Stat;
@@ -68,6 +67,6 @@ public class ActivateCollectionTest : TestBase
 
     protected override IWorldState GetMockState()
     {
-        return new MockWorldState();
+        return MockWorldState.CreateModern();
     }
 }
