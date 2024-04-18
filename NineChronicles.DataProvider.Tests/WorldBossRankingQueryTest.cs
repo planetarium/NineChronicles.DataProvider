@@ -6,6 +6,7 @@ using GraphQL.Execution;
 using Libplanet.Action.State;
 using Libplanet.Common;
 using Libplanet.Crypto;
+using Libplanet.Mocks;
 using Nekoyume;
 using NineChronicles.DataProvider.Store.Models;
 using Xunit;
@@ -117,6 +118,6 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
 
     protected override IWorldState GetMockState()
     {
-        return new MockWorldState();
+        return  MockWorldState.CreateModern();
     }
 }

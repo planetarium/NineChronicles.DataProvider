@@ -21,7 +21,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\NineChronicles.DataProvider\NineChronicles.DataProvider.csproj" />
+        <ProjectReference Include="..\NineChronicles.DataProvider\NineChronicles.DataProvider.csproj" />
+        <ProjectReference Include="..\NineChronicles.Headless\Lib9c\.Libplanet\Libplanet.Mocks\Libplanet.Mocks.csproj" />
     </ItemGroup>
 
 </Project>

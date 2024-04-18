@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using GraphQL.Execution;
 using Libplanet.Action.State;
 using Libplanet.Crypto;
+using Libplanet.Mocks;
 using NineChronicles.DataProvider.Store.Models;
 using Xunit;
 
@@ -42,6 +43,6 @@ public class AgentQueryTest : TestBase, IDisposable
 
     protected override IWorldState GetMockState()
     {
-        return new MockWorldState();
+        return MockWorldState.CreateModern();
     }
 }
