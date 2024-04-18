@@ -9,6 +9,7 @@ namespace NineChronicles.DataProvider.DataRendering
     using Nekoyume.Action;
     using Nekoyume.Battle;
     using Nekoyume.Extensions;
+    using Nekoyume.Helper;
     using Nekoyume.Model.EnumType;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.Stat;
@@ -124,6 +125,12 @@ namespace NineChronicles.DataProvider.DataRendering
                 }
             }
 
+            var runeLevelBonus = RuneHelper.CalculateRuneLevelBonus(
+                outputStates.GetRuneState(avatarAddress, out _),
+                sheets.GetSheet<RuneListSheet>(),
+                sheets.GetSheet<RuneLevelBonusSheet>()
+            );
+
             var avatarCp = CPHelper.TotalCP(
                 equipmentList,
                 costumeList,
@@ -131,7 +138,9 @@ namespace NineChronicles.DataProvider.DataRendering
                 avatarState.level,
                 characterRow,
                 costumeStatSheet,
-                collectionModifiers);
+                collectionModifiers,
+                runeLevelBonus
+                );
             string avatarName = avatarState.name;
 
             Log.Debug(
