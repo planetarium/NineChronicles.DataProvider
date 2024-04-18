@@ -87,13 +87,13 @@ namespace NineChronicles.DataProvider.DataRendering
             var burntRune = prevRuneBalance - outputRuneBalance;
             var prevRuneLevelBonus =
                 RuneHelper.CalculateRuneLevelBonus(
-                    previousStates.GetRuneState(avatarAddress),
+                    previousStates.GetRuneState(avatarAddress, out _),
                     sheets.GetSheet<RuneListSheet>(),
                     sheets.GetSheet<RuneLevelBonusSheet>()
                 );
             var outputRuneLevelBonus =
                 RuneHelper.CalculateRuneLevelBonus(
-                    outputStates.GetRuneState(avatarAddress),
+                    outputStates.GetRuneState(avatarAddress, out _),
                     sheets.GetSheet<RuneListSheet>(),
                     sheets.GetSheet<RuneLevelBonusSheet>()
                 );
