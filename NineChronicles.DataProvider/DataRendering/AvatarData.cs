@@ -40,6 +40,7 @@ namespace NineChronicles.DataProvider.DataRendering
                     typeof(RuneListSheet),
                     typeof(RuneOptionSheet),
                     typeof(CollectionSheet),
+                    typeof(RuneLevelBonusSheet),
                 };
                 if (collectionExist)
                 {
