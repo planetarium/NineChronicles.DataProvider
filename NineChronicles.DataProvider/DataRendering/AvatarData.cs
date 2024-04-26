@@ -62,16 +62,9 @@ namespace NineChronicles.DataProvider.DataRendering
                 .Where(item => item != null).ToList();
             var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
             var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
-            var runeStates = new List<RuneState>();
-            foreach (var address in runeInfos.Select(info => RuneState.DeriveAddress(avatarAddress, info.RuneId)))
-            {
-                if (outputStates.TryGetLegacyState(address, out List rawRuneState))
-                {
-                    runeStates.Add(new RuneState(rawRuneState));
-                }
-            }
+            var runeStates = outputStates.GetRuneState(avatarAddress, out _);
 
-            foreach (var runeState in runeStates)
+            foreach (var runeState in runeStates.Runes.Values)
             {
                 if (!runeOptionSheet.TryGetValue(runeState.RuneId, out var optionRow))
                 {
