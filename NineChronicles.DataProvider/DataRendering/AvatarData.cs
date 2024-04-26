@@ -38,6 +38,7 @@ namespace NineChronicles.DataProvider.DataRendering
                 typeof(RuneListSheet),
                 typeof(RuneOptionSheet),
                 typeof(CollectionSheet),
+                typeof(RuneLevelBonusSheet),
             };
             if (collectionExist)
             {
@@ -121,8 +122,7 @@ namespace NineChronicles.DataProvider.DataRendering
             var runeLevelBonus = RuneHelper.CalculateRuneLevelBonus(
                 outputStates.GetRuneState(avatarAddress, out _),
                 sheets.GetSheet<RuneListSheet>(),
-                sheets.GetSheet<RuneLevelBonusSheet>()
-            );
+                sheets.GetSheet<RuneLevelBonusSheet>());
 
             var avatarCp = CPHelper.TotalCP(
                 equipmentList,
@@ -132,8 +132,8 @@ namespace NineChronicles.DataProvider.DataRendering
                 characterRow,
                 costumeStatSheet,
                 collectionModifiers,
-                runeLevelBonus
-                );
+                runeLevelBonus);
+
             string avatarName = avatarState.name;
 
             Log.Debug(
