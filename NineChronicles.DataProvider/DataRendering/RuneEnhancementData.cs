@@ -1,7 +1,6 @@
 namespace NineChronicles.DataProvider.DataRendering
 {
     using System;
-    using Bencodex.Types;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Libplanet.Types.Assets;
@@ -28,41 +27,20 @@ namespace NineChronicles.DataProvider.DataRendering
         )
         {
             Currency ncgCurrency = outputStates.GetGoldCurrency();
-            var prevNCGBalance = previousStates.GetBalance(
-                signer,
-                ncgCurrency);
-            var outputNCGBalance = outputStates.GetBalance(
-                signer,
-                ncgCurrency);
+            var prevNCGBalance = previousStates.GetBalance(signer, ncgCurrency);
+            var outputNCGBalance = outputStates.GetBalance(signer, ncgCurrency);
             var burntNCG = prevNCGBalance - outputNCGBalance;
-            Currency crystalCurrency = CrystalCalculator.CRYSTAL;
-            var prevCrystalBalance = previousStates.GetBalance(
-                signer,
-                crystalCurrency);
-            var outputCrystalBalance = outputStates.GetBalance(
-                signer,
-                crystalCurrency);
-            var burntCrystal = prevCrystalBalance - outputCrystalBalance;
-            var runeStateAddress = RuneState.DeriveAddress(avatarAddress, runeId);
-            RuneState runeState;
-            if (outputStates.TryGetLegacyState(runeStateAddress, out List rawState))
-            {
-                runeState = new RuneState(rawState);
-            }
-            else
-            {
-                runeState = new RuneState(runeId);
-            }
 
-            RuneState previousRuneState;
-            if (previousStates.TryGetLegacyState(runeStateAddress, out List prevRawState))
-            {
-                previousRuneState = new RuneState(prevRawState);
-            }
-            else
-            {
-                previousRuneState = new RuneState(runeId);
-            }
+            Currency crystalCurrency = CrystalCalculator.CRYSTAL;
+            var prevCrystalBalance = previousStates.GetBalance(signer, crystalCurrency);
+            var outputCrystalBalance = outputStates.GetBalance(signer, crystalCurrency);
+            var burntCrystal = prevCrystalBalance - outputCrystalBalance;
+
+            var runeStates = outputStates.GetRuneState(avatarAddress, out _);
+            var runeState = runeStates.TryGetRuneState(runeId, out var rs) ? rs : new RuneState(runeId);
+
+            var prevRuneStates = previousStates.GetRuneState(avatarAddress, out _);
+            var previousRuneState = prevRuneStates.TryGetRuneState(runeId, out var prs) ? prs : new RuneState(runeId);
 
             var sheets = outputStates.GetSheets(
                 sheetTypes: new[]
@@ -87,18 +65,18 @@ namespace NineChronicles.DataProvider.DataRendering
             var burntRune = prevRuneBalance - outputRuneBalance;
             var prevRuneLevelBonus =
                 RuneHelper.CalculateRuneLevelBonus(
-                    previousStates.GetRuneState(avatarAddress, out _),
+                    prevRuneStates,
                     sheets.GetSheet<RuneListSheet>(),
                     sheets.GetSheet<RuneLevelBonusSheet>()
                 );
             var outputRuneLevelBonus =
                 RuneHelper.CalculateRuneLevelBonus(
-                    outputStates.GetRuneState(avatarAddress, out _),
+                    runeStates,
                     sheets.GetSheet<RuneListSheet>(),
                     sheets.GetSheet<RuneLevelBonusSheet>()
                 );
 
-            var runeEnhancementModel = new RuneEnhancementModel()
+            var runeEnhancementModel = new RuneEnhancementModel
             {
                 Id = actionId.ToString(),
                 BlockIndex = blockIndex,
