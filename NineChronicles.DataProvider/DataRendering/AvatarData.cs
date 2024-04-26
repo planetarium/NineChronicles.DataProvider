@@ -162,7 +162,7 @@ namespace NineChronicles.DataProvider.DataRendering
             }
             catch (Exception ex)
             {
-                Log.Error("AvatarData Error: {0}, {1}", ex, ex.StackTrace);
+                Log.Error(ex, "AvatarData Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                 return new AvatarModel();
             }
         }
