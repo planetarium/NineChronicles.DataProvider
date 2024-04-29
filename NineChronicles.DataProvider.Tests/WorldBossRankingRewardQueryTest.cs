@@ -8,6 +8,7 @@ using Libplanet.Action.State;
 using Libplanet.Common;
 using Libplanet.Types.Assets;
 using Libplanet.Crypto;
+using Libplanet.Mocks;
 using Nekoyume;
 using Nekoyume.Model.State;
 using Nekoyume.TableData;
@@ -18,7 +19,6 @@ namespace NineChronicles.DataProvider.Tests;
 
 public class WorldBossRankingRewardQueryTest : TestBase
 {
-
     [Theory]
     [InlineData(1, 1L, false, false, 1, "0")]
     [InlineData(200, 1L, false, true, 1, "0")]
@@ -290,31 +290,30 @@ public class WorldBossRankingRewardQueryTest : TestBase
             TimeStamp = DateTimeOffset.UtcNow
         };
         Context.Blocks.Add(block);
-        await Context.SaveChangesAsync();        
+        await Context.SaveChangesAsync();
     }
-    
+
     protected override IWorldState GetMockState()
     {
-        return new MockWorldState()
-            .SetState(
-                ReservedAddresses.LegacyAccount,
-                Addresses.GetSheetAddress<WorldBossListSheet>(),
-                @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
+        var mockWorldState = MockWorldState.CreateModern();
+        mockWorldState = mockWorldState.SetAccount(ReservedAddresses.LegacyAccount,
+            new Account(mockWorldState.GetAccountState(ReservedAddresses.LegacyAccount))
+                .SetState(
+                    Addresses.GetSheetAddress<WorldBossListSheet>(),
+                    @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
                 1,900001,0,10,300,200,100,10
                 2,900001,0,10,300,200,100,10
                 3,900001,0,10,300,200,100,10".Serialize())
-            .SetState(
-                ReservedAddresses.LegacyAccount,
-                Addresses.GetSheetAddress<RuneSheet>(),
-                @"id,ticker
+                .SetState(
+                    Addresses.GetSheetAddress<RuneSheet>(),
+                    @"id,ticker
                 1001,RUNE_FENRIR1
                 1002,RUNE_FENRIR2
                 1003,RUNE_FENRIR3
                 ".Serialize())
-            .SetState(
-                ReservedAddresses.LegacyAccount,
-                Addresses.GetSheetAddress<WorldBossRankingRewardSheet>(),
-                @"id,boss_id,ranking_min,ranking_max,rate_min,rate_max,rune_1_id,rune_1_qty,rune_2_id,rune_2_qty,rune_3_id,rune_3_qty,crystal
+                .SetState(
+                    Addresses.GetSheetAddress<WorldBossRankingRewardSheet>(),
+                    @"id,boss_id,ranking_min,ranking_max,rate_min,rate_max,rune_1_id,rune_1_qty,rune_2_id,rune_2_qty,rune_3_id,rune_3_qty,crystal
                 1,900001,1,1,0,0,1001,3500,1002,1200,1003,300,900000
                 2,900001,2,2,0,0,1001,2200,1002,650,1003,150,625000
                 3,900001,3,3,0,0,1001,1450,1002,450,1003,100,400000
@@ -323,6 +322,8 @@ public class WorldBossRankingRewardQueryTest : TestBase
                 6,900001,0,0,1,30,1001,370,1002,105,1003,25,100000
                 7,900001,0,0,31,50,1001,230,1002,60,1003,10,50000
                 8,900001,0,0,51,70,1001,75,1002,20,1003,5,25000
-                9,900001,0,0,71,100,1001,40,1002,10,0,0,15000".Serialize());
+                9,900001,0,0,71,100,1001,40,1002,10,0,0,15000".Serialize())
+        );
+        return mockWorldState;
     }
 }

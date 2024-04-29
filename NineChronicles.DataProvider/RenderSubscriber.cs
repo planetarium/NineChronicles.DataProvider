@@ -25,6 +25,7 @@ namespace NineChronicles.DataProvider
     using Nekoyume.Model.State;
     using Nekoyume.Module;
     using Nekoyume.TableData;
+    using Nekoyume.TableData.Rune;
     using Nekoyume.TableData.Summon;
     using NineChronicles.DataProvider.DataRendering;
     using NineChronicles.DataProvider.Store;
@@ -244,7 +245,7 @@ namespace NineChronicles.DataProvider
                         }
                         catch (Exception ex)
                         {
-                            Log.Error("RenderSubscriber: {message}", ex.Message);
+                            Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                         }
                     });
 
@@ -281,7 +282,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -302,7 +303,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -322,7 +323,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -342,7 +343,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -369,7 +370,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -404,7 +405,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -434,7 +435,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -517,7 +518,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -585,7 +586,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -654,7 +655,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -762,7 +763,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -783,7 +784,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -804,7 +805,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -832,7 +833,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -858,7 +859,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -884,7 +885,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -905,7 +906,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -926,7 +927,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -959,7 +960,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -990,7 +991,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1020,7 +1021,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1069,7 +1070,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1110,7 +1111,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1164,7 +1165,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1193,7 +1194,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1222,7 +1223,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("RenderSubscriber: {message}", ex.Message);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1295,9 +1296,9 @@ namespace NineChronicles.DataProvider
                             MySqlStore.StoreRaider(model);
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception ex)
                     {
-                        Console.WriteLine(e);
+                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1325,9 +1326,9 @@ namespace NineChronicles.DataProvider
                         Log.Debug("Stored PetEnhancement action in block #{BlockIndex}. Time taken: {Time} ms", ev.BlockIndex, end - start);
                     }
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    Log.Error("PetEnhancement RenderSubscriber: {Message}", e.Message);
+                    Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                 }
             });
 
@@ -1370,9 +1371,9 @@ namespace NineChronicles.DataProvider
                         }
                     }
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    Log.Error($"AuraSummon RenderSubscriber: {e.Message}");
+                    Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                 }
             });
 
@@ -1421,9 +1422,9 @@ namespace NineChronicles.DataProvider
                         }
                     }
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    Log.Error($"RuneSummon RenderSubscriber: {e.Message}");
+                    Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                 }
             });
 
@@ -1561,7 +1562,7 @@ namespace NineChronicles.DataProvider
                             }
                             catch (Exception ex)
                             {
-                                Console.WriteLine(ex.Message);
+                                Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                             }
                         }
                     }

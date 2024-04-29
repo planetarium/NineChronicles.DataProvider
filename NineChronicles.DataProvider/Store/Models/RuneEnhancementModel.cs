@@ -25,6 +25,10 @@
 
         public int OutputRuneLevel { get; set; }
 
+        public int? PreviousRuneLevelBonus { get; set; }
+
+        public int? OutputRuneLevelBonus { get; set; }
+
         public int RuneId { get; set; }
 
         public int TryCount { get; set; }

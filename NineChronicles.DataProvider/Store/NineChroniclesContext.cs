@@ -204,6 +204,9 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<ApprovePledgeModel> ApprovePledges => Set<ApprovePledgeModel>();
 
+        // Table for daily metrics data
+        public DbSet<DailyMetricModel> DailyMetrics => Set<DailyMetricModel>();
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.

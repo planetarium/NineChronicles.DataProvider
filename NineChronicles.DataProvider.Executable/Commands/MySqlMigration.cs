@@ -32,6 +32,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using Nekoyume.Model.State;
     using Nekoyume.Module;
     using Nekoyume.TableData;
+    using Nekoyume.TableData.Rune;
     using NineChronicles.DataProvider.DataRendering;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
@@ -1011,6 +1012,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                             if (action is Raid raid)
                             {
+                                var start = DateTimeOffset.UtcNow;
                                 var sheets = outputState.GetSheets(
                                     sheetTypes: new[]
                                     {
@@ -1052,34 +1054,13 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, raid.AvatarAddress, raid.RuneInfos, _blockTimeOffset));
 
-                                int raidId = 0;
-                                bool found = false;
-                                var legacyAccountDiff = AccountDiff.Create(
-                                    inputState.GetAccount(ReservedAddresses.LegacyAccount),
-                                    outputState.GetAccount(ReservedAddresses.LegacyAccount));
-                                var updatedAddresses = legacyAccountDiff.StateDiffs.Keys
-                                    .Union(legacyAccountDiff.FungibleAssetValueDiffs.Select(kv => kv.Key.Item1))
-                                    .ToHashSet();
-                                for (int i = 0; i < 99; i++)
-                                {
-                                    if (updatedAddresses.Contains(Addresses.GetRaiderAddress(raid.AvatarAddress, i)))
-                                    {
-                                        raidId = i;
-                                        found = true;
-                                        break;
-                                    }
-                                }
-
-                                if (found)
-                                {
-                                    RaiderState raiderState =
-                                        outputState.GetRaiderState(raid.AvatarAddress, raidId);
-                                    _raiderList.Add(RaidData.GetRaidInfo(raidId, raiderState));
-                                }
-                                else
-                                {
-                                    Console.Error.WriteLine("can't find raidId.");
-                                }
+                                var worldBossListSheet = sheets.GetSheet<WorldBossListSheet>();
+                                int raidId = worldBossListSheet.FindRaidIdByBlockIndex(ae.InputContext.BlockIndex);
+                                RaiderState raiderState =
+                                    outputState.GetRaiderState(raid.AvatarAddress, raidId);
+                                _raiderList.Add(RaidData.GetRaidInfo(raidId, raiderState));
+                                var end = DateTimeOffset.UtcNow;
+                                Console.WriteLine("Stored Raid action in block #{0}. Time taken: {1} ms", ae.InputContext.BlockIndex, end - start);
                             }
 
                             if (action is PetEnhancement petEnhancement)

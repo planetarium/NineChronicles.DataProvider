@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
@@ -10,9 +11,10 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20240411080609_AddDailyMetrics")]
+    partial class AddDailyMetrics
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -634,9 +636,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.DailyMetricModel", b =>
                 {
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
                     b.Property<int?>("ApUsage")
                         .HasColumnType("int");
 
@@ -660,6 +659,9 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
                     b.Property<int?>("DailyNew")
                         .HasColumnType("int");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
 
                     b.Property<int?>("Dau")
                         .HasColumnType("int");
@@ -705,8 +707,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
                     b.Property<int?>("TxCount")
                         .HasColumnType("int");
-
-                    b.HasKey("Date");
 
                     b.HasIndex("Date");
 
@@ -1929,14 +1929,8 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
                     b.Property<int>("OutputRuneLevel")
                         .HasColumnType("int");
-                    
-                    b.Property<int?>("OutputRuneLevelBonus")
-                        .HasColumnType("int");
 
                     b.Property<int>("PreviousRuneLevel")
-                        .HasColumnType("int");
-                    
-                    b.Property<int?>("PreviousRuneLevelBonus")
                         .HasColumnType("int");
 
                     b.Property<int>("RuneId")
