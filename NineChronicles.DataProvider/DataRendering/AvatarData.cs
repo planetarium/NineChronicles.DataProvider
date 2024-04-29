@@ -38,6 +38,7 @@ namespace NineChronicles.DataProvider.DataRendering
                 typeof(RuneListSheet),
                 typeof(RuneOptionSheet),
                 typeof(CollectionSheet),
+                typeof(RuneLevelBonusSheet),
             };
             if (collectionExist)
             {
@@ -62,16 +63,9 @@ namespace NineChronicles.DataProvider.DataRendering
                 .Where(item => item != null).ToList();
             var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
             var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
-            var runeStates = new List<RuneState>();
-            foreach (var address in runeInfos.Select(info => RuneState.DeriveAddress(avatarAddress, info.RuneId)))
-            {
-                if (outputStates.TryGetLegacyState(address, out List rawRuneState))
-                {
-                    runeStates.Add(new RuneState(rawRuneState));
-                }
-            }
+            var runeStates = outputStates.GetRuneState(avatarAddress, out _);
 
-            foreach (var runeState in runeStates)
+            foreach (var runeState in runeStates.Runes.Values)
             {
                 if (!runeOptionSheet.TryGetValue(runeState.RuneId, out var optionRow))
                 {
@@ -128,8 +122,7 @@ namespace NineChronicles.DataProvider.DataRendering
             var runeLevelBonus = RuneHelper.CalculateRuneLevelBonus(
                 outputStates.GetRuneState(avatarAddress, out _),
                 sheets.GetSheet<RuneListSheet>(),
-                sheets.GetSheet<RuneLevelBonusSheet>()
-            );
+                sheets.GetSheet<RuneLevelBonusSheet>());
 
             var avatarCp = CPHelper.TotalCP(
                 equipmentList,
@@ -139,8 +132,8 @@ namespace NineChronicles.DataProvider.DataRendering
                 characterRow,
                 costumeStatSheet,
                 collectionModifiers,
-                runeLevelBonus
-                );
+                runeLevelBonus);
+
             string avatarName = avatarState.name;
 
             Log.Debug(
