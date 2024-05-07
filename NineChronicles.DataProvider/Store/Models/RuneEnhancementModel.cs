@@ -39,7 +39,7 @@
 
         public decimal BurntRune { get; set; }
 
-        public DateTimeOffset Date { get; set; }
+        public DateOnly Date { get; set; }
 
         public DateTimeOffset TimeStamp { get; set; }
     }
