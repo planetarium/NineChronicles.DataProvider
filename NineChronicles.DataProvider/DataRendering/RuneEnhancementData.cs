@@ -89,7 +89,7 @@ namespace NineChronicles.DataProvider.DataRendering
                 BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
                 BurntCrystal = Convert.ToDecimal(burntCrystal.GetQuantityString()),
                 BurntRune = Convert.ToDecimal(burntRune.GetQuantityString()),
-                Date = blockTime,
+                Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
                 PreviousRuneLevelBonus = prevRuneLevelBonus,
                 OutputRuneLevelBonus = outputRuneLevelBonus,
