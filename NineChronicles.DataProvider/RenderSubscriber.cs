@@ -1430,38 +1430,45 @@ namespace NineChronicles.DataProvider
 
             _actionRenderer.EveryRender<ActivateCollection>().Subscribe(ev =>
             {
-                if (ev.Exception is null && ev.Action is { } activateCollection)
+                try
                 {
-                    var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                    var collectionSheet = outputState.GetSheet<CollectionSheet>();
-                    var avatar = MySqlStore.GetAvatar(activateCollection.AvatarAddress, true);
-                    foreach (var (collectionId, materials) in activateCollection.CollectionData)
+                    if (ev.Exception is null && ev.Action is { } activateCollection)
                     {
-                        var row = collectionSheet[collectionId];
-                        var options = new List<CollectionOptionModel>();
-                        foreach (var modifier in row.StatModifiers)
+                        var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                        var collectionSheet = outputState.GetSheet<CollectionSheet>();
+                        var avatar = MySqlStore.GetAvatar(activateCollection.AvatarAddress, true);
+                        foreach (var (collectionId, materials) in activateCollection.CollectionData)
                         {
-                            var option = new CollectionOptionModel
+                            var row = collectionSheet[collectionId];
+                            var options = new List<CollectionOptionModel>();
+                            foreach (var modifier in row.StatModifiers)
                             {
-                                StatType = modifier.StatType.ToString(),
-                                OperationType = modifier.Operation.ToString(),
-                                Value = modifier.Value,
+                                var option = new CollectionOptionModel
+                                {
+                                    StatType = modifier.StatType.ToString(),
+                                    OperationType = modifier.Operation.ToString(),
+                                    Value = modifier.Value,
+                                };
+                                options.Add(option);
+                            }
+
+                            var collectionModel = new ActivateCollectionModel
+                            {
+                                ActionId = activateCollection.Id.ToString(),
+                                Avatar = avatar,
+                                BlockIndex = ev.BlockIndex,
+                                CollectionId = collectionId,
+                                Options = options,
                             };
-                            options.Add(option);
+                            avatar.ActivateCollections.Add(collectionModel);
                         }
 
-                        var collectionModel = new ActivateCollectionModel
-                        {
-                            ActionId = activateCollection.Id.ToString(),
-                            Avatar = avatar,
-                            BlockIndex = ev.BlockIndex,
-                            CollectionId = collectionId,
-                            Options = options,
-                        };
-                        avatar.ActivateCollections.Add(collectionModel);
+                        MySqlStore.UpdateAvatar(avatar);
                     }
-
-                    MySqlStore.UpdateAvatar(avatar);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                 }
             });
 
