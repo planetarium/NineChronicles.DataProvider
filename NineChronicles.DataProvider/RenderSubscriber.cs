@@ -1435,6 +1435,7 @@ namespace NineChronicles.DataProvider
                     var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                     var collectionSheet = outputState.GetSheet<CollectionSheet>();
                     var avatar = MySqlStore.GetAvatar(activateCollection.AvatarAddress, true);
+
                     // check chain state ids to fill in missing collection data
                     var collectionState = outputState.GetCollectionState(activateCollection.AvatarAddress);
                     var existIds = avatar.ActivateCollections.Select(i => i.Id);
@@ -1466,6 +1467,10 @@ namespace NineChronicles.DataProvider
                     }
 
                     MySqlStore.UpdateAvatar(avatar);
+                }
+                else
+                {
+                    Log.Error($"ActivateColleciton RenderSubscriber: {ev.Exception?.Message}");
                 }
             });
 
