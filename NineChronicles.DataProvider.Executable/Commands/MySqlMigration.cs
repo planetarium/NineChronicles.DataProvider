@@ -416,6 +416,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     avatar.ActivateCollections.Add(collectionModel);
                                 }
 
+                                _mySqlStore.UpdateAvatar(avatar);
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine(
                                     "Writing ActivateCollection action in block #{0}. Time Taken: {1} ms.",
