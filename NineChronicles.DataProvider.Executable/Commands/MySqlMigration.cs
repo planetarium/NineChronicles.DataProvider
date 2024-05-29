@@ -380,41 +380,53 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                     foreach (var ae in data)
                     {
-                        if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase and ActivateCollection activateCollection)
+                        try
                         {
-                            var start = DateTimeOffset.UtcNow;
-                            var outputState = new World(blockChainStates.GetWorldState(ae.OutputState));
-                            var collectionSheet = outputState.GetSheet<CollectionSheet>();
-                            var avatar = _mySqlStore.GetAvatar(activateCollection.AvatarAddress, true);
-                            foreach (var (collectionId, materials) in activateCollection.CollectionData)
+                            if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase
+                                and ActivateCollection activateCollection)
                             {
-                                var row = collectionSheet[collectionId];
-                                var options = new List<CollectionOptionModel>();
-                                foreach (var modifier in row.StatModifiers)
+                                var start = DateTimeOffset.UtcNow;
+                                var outputState = new World(blockChainStates.GetWorldState(ae.OutputState));
+                                var collectionSheet = outputState.GetSheet<CollectionSheet>();
+                                var avatar = _mySqlStore.GetAvatar(activateCollection.AvatarAddress, true);
+                                foreach (var (collectionId, materials) in activateCollection.CollectionData)
                                 {
-                                    var option = new CollectionOptionModel
+                                    var row = collectionSheet[collectionId];
+                                    var options = new List<CollectionOptionModel>();
+                                    foreach (var modifier in row.StatModifiers)
                                     {
-                                        StatType = modifier.StatType.ToString(),
-                                        OperationType = modifier.Operation.ToString(),
-                                        Value = modifier.Value,
+                                        var option = new CollectionOptionModel
+                                        {
+                                            StatType = modifier.StatType.ToString(),
+                                            OperationType = modifier.Operation.ToString(),
+                                            Value = modifier.Value,
+                                        };
+                                        options.Add(option);
+                                    }
+
+                                    var collectionModel = new ActivateCollectionModel
+                                    {
+                                        ActionId = activateCollection.Id.ToString(),
+                                        Avatar = avatar,
+                                        BlockIndex = ae.InputContext.BlockIndex,
+                                        CollectionId = collectionId,
+                                        Options = options,
+                                        CreatedAt = _blockTimeOffset,
                                     };
-                                    options.Add(option);
+                                    avatar.ActivateCollections.Add(collectionModel);
                                 }
 
-                                var collectionModel = new ActivateCollectionModel
-                                {
-                                    ActionId = activateCollection.Id.ToString(),
-                                    Avatar = avatar,
-                                    BlockIndex = ae.InputContext.BlockIndex,
-                                    CollectionId = collectionId,
-                                    Options = options,
-                                    CreatedAt = _blockTimeOffset,
-                                };
-                                avatar.ActivateCollections.Add(collectionModel);
+                                var end = DateTimeOffset.UtcNow;
+                                Console.WriteLine(
+                                    "Writing ActivateCollection action in block #{0}. Time Taken: {1} ms.",
+                                    ae.InputContext.BlockIndex,
+                                    (end - start).Milliseconds);
                             }
-
-                            var end = DateTimeOffset.UtcNow;
-                            Console.WriteLine("Writing ActivateCollection action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                            Console.WriteLine(ex.StackTrace);
                         }
                     }
                 }
