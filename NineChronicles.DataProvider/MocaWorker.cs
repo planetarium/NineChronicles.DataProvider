@@ -127,7 +127,7 @@ namespace NineChronicles.DataProvider
 
             var collectionSheet = _stateContext.WorldState.GetSheet<CollectionSheet>();
             var collectionState = _stateContext.WorldState.GetCollectionState(new Address(avatar.Address!));
-            var existIds = avatar.ActivateCollections.Select(i => i.Id);
+            var existIds = avatar.ActivateCollections.Select(i => i.CollectionId);
             var targetIds = collectionState.Ids.Except(existIds).ToList();
             var blockIndex = _mySqlStore.GetTip();
             foreach (var targetId in targetIds)
