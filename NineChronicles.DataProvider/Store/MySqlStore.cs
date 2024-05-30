@@ -2394,5 +2394,11 @@ namespace NineChronicles.DataProvider.Store
             ctx.Database.ExecuteSqlRaw($"UPDATE MocaIntegrations SET Migrated = {true} WHERE Signer = \"{signer}\"");
             ctx.Database.CommitTransaction();
         }
+
+        public MocaIntegrationModel GetMoca(string agentAddress)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            return ctx.MocaIntegrations.First(p => p.Signer == agentAddress);
+        }
     }
 }
