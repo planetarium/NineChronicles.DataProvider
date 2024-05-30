@@ -34,7 +34,7 @@ namespace NineChronicles.DataProvider
                 try
                 {
                     var blockIndex = _mySqlStore.GetTip();
-                    var mocas = _mySqlStore.GetMocas();
+                    var mocas = _mySqlStore.GetMocas(offset);
                     var collectionSheet = _stateContext.WorldState.GetSheet<CollectionSheet>();
                     foreach (var moca in mocas)
                     {
@@ -71,16 +71,14 @@ namespace NineChronicles.DataProvider
                                         Options = options,
                                     };
                                     avatar.ActivateCollections.Add(collectionModel);
+                                    _mySqlStore.UpdateAvatar(avatar);
                                 }
                             }
                             catch (Exception e)
                             {
                                 migrated = false;
                                 Log.Error(e, "Unexpected exception occurred during MocaWorker: {Exc}", e);
-                                continue;
                             }
-
-                            _mySqlStore.UpdateAvatar(avatar);
                         }
 
                         if (migrated)
