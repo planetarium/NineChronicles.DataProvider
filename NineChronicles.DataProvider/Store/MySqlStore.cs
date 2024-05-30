@@ -2374,7 +2374,7 @@ namespace NineChronicles.DataProvider.Store
             ctx.SaveChanges();
         }
 
-        public ICollection<MocaIntegrationModel> GetMocas()
+        public ICollection<MocaIntegrationModel> GetMocas(int offset = 0)
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
             return ctx.MocaIntegrations.Where(p => !p.Migrated).Take(100).ToList();

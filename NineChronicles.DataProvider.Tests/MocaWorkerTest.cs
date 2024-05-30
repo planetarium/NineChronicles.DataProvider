@@ -64,19 +64,32 @@ public class MocaWorkerTest : TestBase
             Address = AvatarAddress.ToString(),
             Timestamp = DateTimeOffset.Now
         });
+        var am2 = new AgentModel
+        {
+            Address = new PrivateKey().Address.ToString(),
+        };
+        Context.Avatars.Add(new AvatarModel
+        {
+            Agent = am2,
+            Address = new PrivateKey().Address.ToString(),
+            Timestamp = DateTimeOffset.Now
+        });
         await Context.SaveChangesAsync(_cts.Token);
-        var avatar = await Context.Avatars.FirstAsync(_cts.Token);
+        var avatar = Context.Avatars.First(p => p.AgentAddress == agentAddress);
         Assert.Equal(avatar.AgentAddress, agentAddress);
         await Context.Database.BeginTransactionAsync(_cts.Token);
         await Context.Database.ExecuteSqlRawAsync(
             $"INSERT INTO MocaIntegrations(MocaIntegration, Signer, Migrated) VALUES (1, \"{agentAddress}\", {false})");
+        await Context.Database.ExecuteSqlRawAsync(
+            $"INSERT INTO MocaIntegrations(MocaIntegration, Signer, Migrated) VALUES (1, \"{am2.Address}\", {false})");
         await Context.Database.CommitTransactionAsync(_cts.Token);
-        var moca = Assert.Single(Context.MocaIntegrations);
+        Assert.Equal(2, Context.MocaIntegrations.Count());
+        var moca = Context.MocaIntegrations.First(f => f.Signer == agentAddress);
         Assert.Equal(moca.Signer, avatar.AgentAddress);
         await worker.StartAsync(_cts.Token);
         _cts.Cancel();
         Assert.Single(Context.MocaIntegrations.Where(i => i.Migrated));
-        Assert.Empty(Context.MocaIntegrations.Where(i => !i.Migrated));
+        Assert.Single(Context.MocaIntegrations.Where(i => !i.Migrated));
         Assert.Single(Context.ActivateCollections);
     }
 

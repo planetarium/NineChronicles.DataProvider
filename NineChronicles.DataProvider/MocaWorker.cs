@@ -5,12 +5,8 @@ namespace NineChronicles.DataProvider
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Bencodex.Types;
     using Libplanet.Crypto;
     using Microsoft.Extensions.Hosting;
-    using Nekoyume;
-    using Nekoyume.Extensions;
-    using Nekoyume.Model.State;
     using Nekoyume.Module;
     using Nekoyume.TableData;
     using NineChronicles.DataProvider.Store;
@@ -32,6 +28,7 @@ namespace NineChronicles.DataProvider
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             Log.Information("Start MocaWorker");
+            var offset = 0;
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -42,43 +39,58 @@ namespace NineChronicles.DataProvider
                     foreach (var moca in mocas)
                     {
                         var avatars = _mySqlStore.GetAvatarsFromSigner(moca.Signer);
+                        var migrated = true;
                         foreach (var avatar in avatars)
                         {
-                            var collectionState = _stateContext.WorldState.GetCollectionState(new Address(avatar.Address!));
-                            var existIds = avatar.ActivateCollections.Select(i => i.Id);
-                            var targetIds = collectionState.Ids.Except(existIds);
-                            foreach (var collectionId in targetIds)
+                            try
                             {
-                                var row = collectionSheet[collectionId];
-                                var options = new List<CollectionOptionModel>();
-                                foreach (var modifier in row.StatModifiers)
+                                var collectionState = _stateContext.WorldState.GetCollectionState(new Address(avatar.Address!));
+                                var existIds = avatar.ActivateCollections.Select(i => i.Id);
+                                var targetIds = collectionState.Ids.Except(existIds);
+                                foreach (var collectionId in targetIds)
                                 {
-                                    var option = new CollectionOptionModel
+                                    var row = collectionSheet[collectionId];
+                                    var options = new List<CollectionOptionModel>();
+                                    foreach (var modifier in row.StatModifiers)
                                     {
-                                        StatType = modifier.StatType.ToString(),
-                                        OperationType = modifier.Operation.ToString(),
-                                        Value = modifier.Value,
-                                    };
-                                    options.Add(option);
-                                }
+                                        var option = new CollectionOptionModel
+                                        {
+                                            StatType = modifier.StatType.ToString(),
+                                            OperationType = modifier.Operation.ToString(),
+                                            Value = modifier.Value,
+                                        };
+                                        options.Add(option);
+                                    }
 
-                                var collectionModel = new ActivateCollectionModel
-                                {
-                                    ActionId = "Migrate from worker",
-                                    Avatar = avatar,
-                                    BlockIndex = blockIndex,
-                                    CollectionId = collectionId,
-                                    Options = options,
-                                };
-                                avatar.ActivateCollections.Add(collectionModel);
+                                    var collectionModel = new ActivateCollectionModel
+                                    {
+                                        ActionId = "Migrate from worker",
+                                        Avatar = avatar,
+                                        BlockIndex = blockIndex,
+                                        CollectionId = collectionId,
+                                        Options = options,
+                                    };
+                                    avatar.ActivateCollections.Add(collectionModel);
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                migrated = false;
+                                Log.Error(e, "Unexpected exception occurred during MocaWorker: {Exc}", e);
+                                continue;
                             }
 
                             _mySqlStore.UpdateAvatar(avatar);
                         }
 
-                        moca.Migrated = true;
-                        _mySqlStore.UpdateMoca(moca.Signer);
+                        if (migrated)
+                        {
+                            moca.Migrated = true;
+                            _mySqlStore.UpdateMoca(moca.Signer);
+                        }
                     }
+
+                    offset += mocas.Count;
                 }
                 catch (Exception e)
                 {
