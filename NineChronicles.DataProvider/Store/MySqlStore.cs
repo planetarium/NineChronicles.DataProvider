@@ -2377,7 +2377,7 @@ namespace NineChronicles.DataProvider.Store
         public ICollection<MocaIntegrationModel> GetMocas(int offset = 0)
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-            return ctx.MocaIntegrations.Where(p => !p.Migrated).Take(100).ToList();
+            return ctx.MocaIntegrations.Where(p => !p.Migrated).Skip(offset).Take(100).ToList();
         }
 
         public ICollection<AvatarModel> GetAvatarsFromSigner(string signer)

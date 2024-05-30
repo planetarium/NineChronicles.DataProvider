@@ -89,6 +89,7 @@ namespace NineChronicles.DataProvider
                     }
 
                     offset += mocas.Count;
+                    Log.Information("[MocaWorker]{OffSet} migration completed", offset + 100);
                 }
                 catch (Exception e)
                 {
