@@ -207,6 +207,8 @@ namespace NineChronicles.DataProvider.Store
         // Table for daily metrics data
         public DbSet<DailyMetricModel> DailyMetrics => Set<DailyMetricModel>();
 
+        public DbSet<MocaIntegrationModel> MocaIntegrations => Set<MocaIntegrationModel>();
+
         /*
          * This override method enables EF database update & migration when certain models are required for data querying,
          * but tables constructed by these models are not needed.
@@ -253,6 +255,7 @@ namespace NineChronicles.DataProvider.Store
                     s.Property<int>("Id");
                     s.HasKey("Id");
                 });
+            modelBuilder.Entity<MocaIntegrationModel>().HasNoKey();
         }
     }
 }

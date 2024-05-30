@@ -2373,5 +2373,26 @@ namespace NineChronicles.DataProvider.Store
             ctx.Avatars!.Update(avatar);
             ctx.SaveChanges();
         }
+
+        public ICollection<MocaIntegrationModel> GetMocas()
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            return ctx.MocaIntegrations.Where(p => !p.Migrated).Take(100).ToList();
+        }
+
+        public ICollection<AvatarModel> GetAvatarsFromSigner(string signer)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            var avatars = ctx.Avatars!;
+            return avatars.Include(a => a.ActivateCollections).Where(a => signer == a.AgentAddress).ToList();
+        }
+
+        public void UpdateMoca(string signer)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            ctx.Database.BeginTransaction();
+            ctx.Database.ExecuteSqlRaw($"UPDATE MocaIntegrations SET Migrated = {true} WHERE Signer = \"{signer}\"");
+            ctx.Database.CommitTransaction();
+        }
     }
 }
