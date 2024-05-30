@@ -273,6 +273,7 @@ namespace NineChronicles.DataProvider.Executable
                     services.Configure<Configuration>(config);
                     services.AddSingleton(stateContext);
                     services.AddHostedService<RaiderWorker>();
+                    services.AddHostedService<MocaWorker>();
                 });
 
             await hostBuilder.RunConsoleAsync(token);
