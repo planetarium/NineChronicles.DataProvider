@@ -1440,7 +1440,7 @@ namespace NineChronicles.DataProvider
 
                         // check chain state ids to fill in missing collection data
                         var collectionState = outputState.GetCollectionState(activateCollection.AvatarAddress);
-                        var existIds = avatar.ActivateCollections.Select(i => i.Id);
+                        var existIds = avatar.ActivateCollections.Select(i => i.CollectionId);
                         var targetIds = collectionState.Ids.Except(existIds);
                         foreach (var collectionId in targetIds)
                         {
