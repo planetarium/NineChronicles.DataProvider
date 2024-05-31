@@ -3,6 +3,7 @@ namespace NineChronicles.DataProvider.Queries
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text;
     using GraphQL;
     using GraphQL.Types;
     using Libplanet.Crypto;
@@ -20,7 +21,7 @@ namespace NineChronicles.DataProvider.Queries
             Store = store;
             StateContext = stateContext;
 
-            Field<NonNullGraphType<BooleanGraphType>>(
+            Field<NonNullGraphType<StringGraphType>>(
                 name: "migrateMoca",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
@@ -34,8 +35,15 @@ namespace NineChronicles.DataProvider.Queries
                     var mocas = Store.GetMocasBySigner(signers);
                     var collectionSheet = StateContext.WorldState.GetSheet<CollectionSheet>();
                     var blockIndex = Store.GetTip();
-                    MigrateMoca(mocas, Store, collectionSheet, blockIndex, StateContext);
-                    return true;
+                    var result = MigrateMoca(mocas, Store, collectionSheet, blockIndex, StateContext);
+                    StringBuilder sb = new StringBuilder(string.Empty);
+                    foreach (var kv in result)
+                    {
+                        var log = $"{kv.Key},{kv.Value.Item1},{kv.Value.Item2}\n";
+                        sb.Append(log);
+                    }
+
+                    return sb;
                 }
             );
         }
@@ -44,8 +52,9 @@ namespace NineChronicles.DataProvider.Queries
 
         private StateContext StateContext { get; }
 
-        public static void MigrateMoca(ICollection<MocaIntegrationModel> mocas, MySqlStore mySqlStore, CollectionSheet collectionSheet, long blockIndex, StateContext stateContext)
+        public static Dictionary<string, (int, int)> MigrateMoca(ICollection<MocaIntegrationModel> mocas, MySqlStore mySqlStore, CollectionSheet collectionSheet, long blockIndex, StateContext stateContext)
         {
+            var result = new Dictionary<string, (int, int)>();
             foreach (var moca in mocas)
             {
                 var avatars = mySqlStore.GetAvatarsFromSigner(moca.Signer);
@@ -57,7 +66,8 @@ namespace NineChronicles.DataProvider.Queries
                         var collectionState = stateContext.WorldState.GetCollectionState(new Address(avatar.Address!));
                         var existIds = avatar.ActivateCollections.Select(i => i.CollectionId).ToList();
                         var targetIds = collectionState.Ids.Except(existIds).ToList();
-                        Log.Information("[MigrateMoca] migration targets: {Address}, {ExistIds}, {TargetIds}",  avatar.Address, string.Join(",", existIds), string.Join(",", targetIds));
+                        Log.Information("[MigrateMoca] migration targets: {Address}, [{ExistIds}]/[{TargetIds}]",  avatar.Address, string.Join(",", existIds), string.Join(",", targetIds));
+                        var previous = avatar.ActivateCollections.Count;
                         foreach (var collectionId in targetIds)
                         {
                             var row = collectionSheet[collectionId];
@@ -87,7 +97,10 @@ namespace NineChronicles.DataProvider.Queries
                         if (targetIds.Any())
                         {
                             mySqlStore.UpdateAvatar(avatar);
+                            Log.Information("[MigrateMoca] Update Avatar: {Address}, [{Previous}]/[{New}]",  avatar.Address, previous, avatar.ActivateCollections.Count);
                         }
+
+                        result[avatar.Address!] = (previous, avatar.ActivateCollections.Count);
                     }
                     catch (Exception e)
                     {
@@ -102,6 +115,8 @@ namespace NineChronicles.DataProvider.Queries
                     mySqlStore.UpdateMoca(moca.Signer);
                 }
             }
+
+            return result;
         }
     }
 }
