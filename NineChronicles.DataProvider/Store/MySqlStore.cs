@@ -2373,5 +2373,38 @@ namespace NineChronicles.DataProvider.Store
             ctx.Avatars!.Update(avatar);
             ctx.SaveChanges();
         }
+
+        public ICollection<MocaIntegrationModel> GetMocas(int offset = 0)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            return ctx.MocaIntegrations.Where(p => !p.Migrated).Skip(offset).Take(100).ToList();
+        }
+
+        public ICollection<AvatarModel> GetAvatarsFromSigner(string signer)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            var avatars = ctx.Avatars!;
+            return avatars.Include(a => a.ActivateCollections).Where(a => signer == a.AgentAddress).ToList();
+        }
+
+        public void UpdateMoca(string signer)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            ctx.Database.BeginTransaction();
+            ctx.Database.ExecuteSqlRaw($"UPDATE MocaIntegrations SET Migrated = {true} WHERE Signer = \"{signer}\"");
+            ctx.Database.CommitTransaction();
+        }
+
+        public MocaIntegrationModel GetMoca(string agentAddress)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            return ctx.MocaIntegrations.First(p => p.Signer == agentAddress);
+        }
+
+        public ICollection<MocaIntegrationModel> GetMocasBySigner(ICollection<string> signers)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            return ctx.MocaIntegrations.Where(p => signers.Contains(p.Signer)).ToList();
+        }
     }
 }
