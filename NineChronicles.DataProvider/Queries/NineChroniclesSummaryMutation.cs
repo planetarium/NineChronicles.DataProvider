@@ -55,8 +55,9 @@ namespace NineChronicles.DataProvider.Queries
                     try
                     {
                         var collectionState = stateContext.WorldState.GetCollectionState(new Address(avatar.Address!));
-                        var existIds = avatar.ActivateCollections.Select(i => i.CollectionId);
+                        var existIds = avatar.ActivateCollections.Select(i => i.CollectionId).ToList();
                         var targetIds = collectionState.Ids.Except(existIds).ToList();
+                        Log.Information("[MigrateMoca] migration targets: {Address}, {ExistIds}, {TargetIds}",  avatar.Address, string.Join(",", existIds), string.Join(",", targetIds));
                         foreach (var collectionId in targetIds)
                         {
                             var row = collectionSheet[collectionId];
@@ -91,7 +92,7 @@ namespace NineChronicles.DataProvider.Queries
                     catch (Exception e)
                     {
                         migrated = false;
-                        Log.Error(e, "Unexpected exception occurred during MocaWorker: {Exc}", e);
+                        Log.Error(e, "[MigrateMoca] Unexpected exception occurred during MocaWorker: {Exc}", e);
                     }
                 }
 
