@@ -27,7 +27,7 @@ namespace NineChronicles.DataProvider
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await Debug();
+            await Migrate(stoppingToken);
         }
 
         private async Task Migrate(CancellationToken stoppingToken)
