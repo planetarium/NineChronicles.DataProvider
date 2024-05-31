@@ -36,14 +36,19 @@ namespace NineChronicles.DataProvider.Queries
                     var collectionSheet = StateContext.WorldState.GetSheet<CollectionSheet>();
                     var blockIndex = Store.GetTip();
                     var result = MigrateMoca(mocas, Store, collectionSheet, blockIndex, StateContext);
-                    StringBuilder sb = new StringBuilder(string.Empty);
-                    foreach (var kv in result)
+                    if (result.Any())
                     {
-                        var log = $"{kv.Key},{kv.Value.Item1},{kv.Value.Item2}\n";
-                        sb.Append(log);
+                        StringBuilder sb = new StringBuilder("[MigrateMoca]migration result\n");
+                        foreach (var kv in result)
+                        {
+                            var log = $"{kv.Key},{kv.Value.Item1},{kv.Value.Item2}\n";
+                            sb.Append(log);
+                        }
+
+                        return sb.ToString();
                     }
 
-                    return sb;
+                    return "[MigrateMoca]no required migrations";
                 }
             );
         }
@@ -57,12 +62,14 @@ namespace NineChronicles.DataProvider.Queries
             var result = new Dictionary<string, (int, int)>();
             foreach (var moca in mocas)
             {
+                Log.Information("[MigrateMoca] integration: {Signer}, {Migrated}", moca.Signer, moca.Migrated);
                 var avatars = mySqlStore.GetAvatarsFromSigner(moca.Signer);
                 var migrated = true;
                 foreach (var avatar in avatars)
                 {
                     try
                     {
+                        Log.Information("[MigrateMoca] avatar: {Signer}, {Address}, {Collections}", avatar.AgentAddress, avatar.Address, avatar.ActivateCollections.Count);
                         var collectionState = stateContext.WorldState.GetCollectionState(new Address(avatar.Address!));
                         var existIds = avatar.ActivateCollections.Select(i => i.CollectionId).ToList();
                         var targetIds = collectionState.Ids.Except(existIds).ToList();
