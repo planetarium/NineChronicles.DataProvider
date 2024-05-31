@@ -9,6 +9,7 @@ namespace NineChronicles.DataProvider
     using Microsoft.Extensions.Hosting;
     using Nekoyume.Module;
     using Nekoyume.TableData;
+    using NineChronicles.DataProvider.Queries;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless.GraphTypes.States;
@@ -41,59 +42,7 @@ namespace NineChronicles.DataProvider
                     var blockIndex = _mySqlStore.GetTip();
                     var mocas = _mySqlStore.GetMocas(offset);
                     var collectionSheet = _stateContext.WorldState.GetSheet<CollectionSheet>();
-                    foreach (var moca in mocas)
-                    {
-                        var avatars = _mySqlStore.GetAvatarsFromSigner(moca.Signer);
-                        var migrated = true;
-                        foreach (var avatar in avatars)
-                        {
-                            try
-                            {
-                                var collectionState = _stateContext.WorldState.GetCollectionState(new Address(avatar.Address!));
-                                var existIds = avatar.ActivateCollections.Select(i => i.CollectionId);
-                                var targetIds = collectionState.Ids.Except(existIds);
-                                foreach (var collectionId in targetIds)
-                                {
-                                    var row = collectionSheet[collectionId];
-                                    var options = new List<CollectionOptionModel>();
-                                    foreach (var modifier in row.StatModifiers)
-                                    {
-                                        var option = new CollectionOptionModel
-                                        {
-                                            StatType = modifier.StatType.ToString(),
-                                            OperationType = modifier.Operation.ToString(),
-                                            Value = modifier.Value,
-                                        };
-                                        options.Add(option);
-                                    }
-
-                                    var collectionModel = new ActivateCollectionModel
-                                    {
-                                        ActionId = "Migrate from worker",
-                                        Avatar = avatar,
-                                        BlockIndex = blockIndex,
-                                        CollectionId = collectionId,
-                                        Options = options,
-                                    };
-                                    avatar.ActivateCollections.Add(collectionModel);
-                                }
-
-                                _mySqlStore.UpdateAvatar(avatar);
-                            }
-                            catch (Exception e)
-                            {
-                                migrated = false;
-                                Log.Error(e, "Unexpected exception occurred during MocaWorker: {Exc}", e);
-                            }
-                        }
-
-                        if (migrated)
-                        {
-                            moca.Migrated = true;
-                            _mySqlStore.UpdateMoca(moca.Signer);
-                        }
-                    }
-
+                    NineChroniclesSummaryMutation.MigrateMoca(mocas, _mySqlStore, collectionSheet, blockIndex, _stateContext);
                     previousOffset = offset;
                     offset += mocas.Count;
                     Log.Information("[MocaWorker]{OffSet} migration completed", offset + 100);

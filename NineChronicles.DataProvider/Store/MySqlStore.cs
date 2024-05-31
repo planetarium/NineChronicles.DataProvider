@@ -2400,5 +2400,11 @@ namespace NineChronicles.DataProvider.Store
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
             return ctx.MocaIntegrations.First(p => p.Signer == agentAddress);
         }
+
+        public ICollection<MocaIntegrationModel> GetMocasBySigner(ICollection<string> signers)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            return ctx.MocaIntegrations.Where(p => signers.Contains(p.Signer)).ToList();
+        }
     }
 }
