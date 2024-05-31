@@ -32,10 +32,27 @@ namespace NineChronicles.DataProvider.Queries
                 resolve: context =>
                 {
                     var signers = context.GetArgument<List<string>>("signers");
-                    var mocas = Store.GetMocasBySigner(signers);
                     var collectionSheet = StateContext.WorldState.GetSheet<CollectionSheet>();
                     var blockIndex = Store.GetTip();
-                    var result = MigrateMoca(mocas, Store, collectionSheet, blockIndex, StateContext);
+                    var result = new Dictionary<string, (int, int)>();
+                    foreach (var signer in signers)
+                    {
+                        var avatars = Store.GetAvatarsFromSigner(signer);
+                        foreach (var avatar in avatars)
+                        {
+                            try
+                            {
+                                var previous = MigrateActivateCollections(Store, collectionSheet, blockIndex, stateContext, avatar);
+
+                                result[avatar.Address!] = (previous, avatar.ActivateCollections.Count);
+                            }
+                            catch (Exception e)
+                            {
+                                Log.Error(e, "[MigrateMoca] Unexpected exception occurred during MocaWorker: {Exc}", e);
+                            }
+                        }
+                    }
+
                     if (result.Any())
                     {
                         StringBuilder sb = new StringBuilder("[MigrateMoca]migration result\n");
@@ -69,43 +86,7 @@ namespace NineChronicles.DataProvider.Queries
                 {
                     try
                     {
-                        Log.Information("[MigrateMoca] avatar: {Signer}, {Address}, {Collections}", avatar.AgentAddress, avatar.Address, avatar.ActivateCollections.Count);
-                        var collectionState = stateContext.WorldState.GetCollectionState(new Address(avatar.Address!));
-                        var existIds = avatar.ActivateCollections.Select(i => i.CollectionId).ToList();
-                        var targetIds = collectionState.Ids.Except(existIds).ToList();
-                        Log.Information("[MigrateMoca] migration targets: {Address}, [{ExistIds}]/[{TargetIds}]",  avatar.Address, string.Join(",", existIds), string.Join(",", targetIds));
-                        var previous = avatar.ActivateCollections.Count;
-                        foreach (var collectionId in targetIds)
-                        {
-                            var row = collectionSheet[collectionId];
-                            var options = new List<CollectionOptionModel>();
-                            foreach (var modifier in row.StatModifiers)
-                            {
-                                var option = new CollectionOptionModel
-                                {
-                                    StatType = modifier.StatType.ToString(),
-                                    OperationType = modifier.Operation.ToString(),
-                                    Value = modifier.Value,
-                                };
-                                options.Add(option);
-                            }
-
-                            var collectionModel = new ActivateCollectionModel
-                            {
-                                ActionId = "Migrate from worker",
-                                Avatar = avatar,
-                                BlockIndex = blockIndex,
-                                CollectionId = collectionId,
-                                Options = options,
-                            };
-                            avatar.ActivateCollections.Add(collectionModel);
-                        }
-
-                        if (targetIds.Any())
-                        {
-                            mySqlStore.UpdateAvatar(avatar);
-                            Log.Information("[MigrateMoca] Update Avatar: {Address}, [{Previous}]/[{New}]",  avatar.Address, previous, avatar.ActivateCollections.Count);
-                        }
+                        var previous = MigrateActivateCollections(mySqlStore, collectionSheet, blockIndex, stateContext, avatar);
 
                         result[avatar.Address!] = (previous, avatar.ActivateCollections.Count);
                     }
@@ -124,6 +105,55 @@ namespace NineChronicles.DataProvider.Queries
             }
 
             return result;
+        }
+
+        private static int MigrateActivateCollections(
+            MySqlStore mySqlStore,
+            CollectionSheet collectionSheet,
+            long blockIndex,
+            StateContext stateContext,
+            AvatarModel avatar
+        )
+        {
+            Log.Information("[MigrateMoca] avatar: {Signer}, {Address}, {Collections}", avatar.AgentAddress, avatar.Address, avatar.ActivateCollections.Count);
+            var collectionState = stateContext.WorldState.GetCollectionState(new Address(avatar.Address!));
+            var existIds = avatar.ActivateCollections.Select(i => i.CollectionId).ToList();
+            var targetIds = collectionState.Ids.Except(existIds).ToList();
+            Log.Information("[MigrateMoca] migration targets: {Address}, [{ExistIds}]/[{TargetIds}]",  avatar.Address, string.Join(",", existIds), string.Join(",", targetIds));
+            var previous = avatar.ActivateCollections.Count;
+            foreach (var collectionId in targetIds)
+            {
+                var row = collectionSheet[collectionId];
+                var options = new List<CollectionOptionModel>();
+                foreach (var modifier in row.StatModifiers)
+                {
+                    var option = new CollectionOptionModel
+                    {
+                        StatType = modifier.StatType.ToString(),
+                        OperationType = modifier.Operation.ToString(),
+                        Value = modifier.Value,
+                    };
+                    options.Add(option);
+                }
+
+                var collectionModel = new ActivateCollectionModel
+                {
+                    ActionId = "Migrate from worker",
+                    Avatar = avatar,
+                    BlockIndex = blockIndex,
+                    CollectionId = collectionId,
+                    Options = options,
+                };
+                avatar.ActivateCollections.Add(collectionModel);
+            }
+
+            if (targetIds.Any())
+            {
+                mySqlStore.UpdateAvatar(avatar);
+                Log.Information("[MigrateMoca] Update Avatar: {Address}, [{Previous}]/[{New}]",  avatar.Address, previous, avatar.ActivateCollections.Count);
+            }
+
+            return previous;
         }
     }
 }
