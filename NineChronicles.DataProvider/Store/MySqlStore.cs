@@ -2373,5 +2373,12 @@ namespace NineChronicles.DataProvider.Store
             ctx.Avatars!.Update(avatar);
             ctx.SaveChanges();
         }
+
+        public ICollection<AvatarModel> GetAvatarsFromSigner(string signer)
+        {
+            using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
+            var avatars = ctx.Avatars!;
+            return avatars.Include(a => a.ActivateCollections).Where(a => signer == a.AgentAddress).ToList();
+        }
     }
 }

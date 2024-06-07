@@ -11,6 +11,7 @@
             : base(serviceProvider)
         {
             Query = serviceProvider.GetRequiredService<NineChroniclesSummaryQuery>();
+            Mutation = serviceProvider.GetRequiredService<NineChroniclesSummaryMutation>();
         }
     }
 }
