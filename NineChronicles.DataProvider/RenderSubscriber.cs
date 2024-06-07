@@ -1430,38 +1430,27 @@ namespace NineChronicles.DataProvider
 
             _actionRenderer.EveryRender<ActivateCollection>().Subscribe(ev =>
             {
-                if (ev.Exception is null && ev.Action is { } activateCollection)
+                try
                 {
-                    var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                    var collectionSheet = outputState.GetSheet<CollectionSheet>();
-                    var avatar = MySqlStore.GetAvatar(activateCollection.AvatarAddress, true);
-                    foreach (var (collectionId, materials) in activateCollection.CollectionData)
+                    if (ev.Exception is null && ev.Action is { } activateCollection)
                     {
-                        var row = collectionSheet[collectionId];
-                        var options = new List<CollectionOptionModel>();
-                        foreach (var modifier in row.StatModifiers)
-                        {
-                            var option = new CollectionOptionModel
-                            {
-                                StatType = modifier.StatType.ToString(),
-                                OperationType = modifier.Operation.ToString(),
-                                Value = modifier.Value,
-                            };
-                            options.Add(option);
-                        }
-
-                        var collectionModel = new ActivateCollectionModel
-                        {
-                            ActionId = activateCollection.Id.ToString(),
-                            Avatar = avatar,
-                            BlockIndex = ev.BlockIndex,
-                            CollectionId = collectionId,
-                            Options = options,
-                        };
-                        avatar.ActivateCollections.Add(collectionModel);
+                        var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                        var collectionSheet = outputState.GetSheet<CollectionSheet>();
+                        var avatar = MySqlStore.GetAvatar(activateCollection.AvatarAddress, true);
+                        var collectionState = outputState.GetCollectionState(activateCollection.AvatarAddress);
+                        MigrateActivateCollections(
+                            MySqlStore,
+                            collectionSheet,
+                            ev.BlockIndex,
+                            collectionState,
+                            avatar,
+                            activateCollection.Id.ToString()
+                        );
                     }
-
-                    MySqlStore.UpdateAvatar(avatar);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                 }
             });
 
@@ -1689,6 +1678,57 @@ namespace NineChronicles.DataProvider
             blockIndexFile.Flush();
             blockIndexFile.Close();
             Log.Debug($"Storing Data Complete. Time Taken: {(end - start).Milliseconds} ms.");
+        }
+
+        public static int MigrateActivateCollections(
+            MySqlStore mySqlStore,
+            CollectionSheet collectionSheet,
+            long blockIndex,
+            CollectionState collectionState,
+            AvatarModel avatar,
+            string actionId
+        )
+        {
+            Log.Information("[MigrateActivateCollections] avatar: {Signer}, {Address}, {Collections}", avatar.AgentAddress, avatar.Address, avatar.ActivateCollections.Count);
+
+            // check chain state ids to fill in missing collection data
+            var existIds = avatar.ActivateCollections.Select(i => i.CollectionId).ToList();
+            var targetIds = collectionState.Ids.Except(existIds).ToList();
+            Log.Information("[MigrateActivateCollections] migration targets: {Address}, [{ExistIds}]/[{TargetIds}]",  avatar.Address, string.Join(",", existIds), string.Join(",", targetIds));
+            var previous = avatar.ActivateCollections.Count;
+            foreach (var collectionId in targetIds)
+            {
+                var row = collectionSheet[collectionId];
+                var options = new List<CollectionOptionModel>();
+                foreach (var modifier in row.StatModifiers)
+                {
+                    var option = new CollectionOptionModel
+                    {
+                        StatType = modifier.StatType.ToString(),
+                        OperationType = modifier.Operation.ToString(),
+                        Value = modifier.Value,
+                    };
+                    options.Add(option);
+                }
+
+                var collectionModel = new ActivateCollectionModel
+                {
+                    ActionId = actionId,
+                    Avatar = avatar,
+                    BlockIndex = blockIndex,
+                    CollectionId = collectionId,
+                    Options = options,
+                };
+                avatar.ActivateCollections.Add(collectionModel);
+            }
+
+            if (targetIds.Any())
+            {
+                mySqlStore.UpdateAvatar(avatar);
+                Log.Information("[MigrateActivateCollections] Update Avatar: {Address}, [{Previous}]/[{New}]",  avatar.Address, previous, avatar.ActivateCollections.Count);
+            }
+
+            return previous;
         }
     }
 }
