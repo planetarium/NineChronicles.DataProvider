@@ -147,6 +147,57 @@ namespace NineChronicles.DataProvider
             return sb.ToString();
         }
 
+        public static int MigrateActivateCollections(
+            MySqlStore mySqlStore,
+            CollectionSheet collectionSheet,
+            long blockIndex,
+            CollectionState collectionState,
+            AvatarModel avatar,
+            string actionId
+        )
+        {
+            Log.Information("[MigrateActivateCollections] avatar: {Signer}, {Address}, {Collections}", avatar.AgentAddress, avatar.Address, avatar.ActivateCollections.Count);
+
+            // check chain state ids to fill in missing collection data
+            var existIds = avatar.ActivateCollections.Select(i => i.CollectionId).ToList();
+            var targetIds = collectionState.Ids.Except(existIds).ToList();
+            Log.Information("[MigrateActivateCollections] migration targets: {Address}, [{ExistIds}]/[{TargetIds}]",  avatar.Address, string.Join(",", existIds), string.Join(",", targetIds));
+            var previous = avatar.ActivateCollections.Count;
+            foreach (var collectionId in targetIds)
+            {
+                var row = collectionSheet[collectionId];
+                var options = new List<CollectionOptionModel>();
+                foreach (var modifier in row.StatModifiers)
+                {
+                    var option = new CollectionOptionModel
+                    {
+                        StatType = modifier.StatType.ToString(),
+                        OperationType = modifier.Operation.ToString(),
+                        Value = modifier.Value,
+                    };
+                    options.Add(option);
+                }
+
+                var collectionModel = new ActivateCollectionModel
+                {
+                    ActionId = actionId,
+                    Avatar = avatar,
+                    BlockIndex = blockIndex,
+                    CollectionId = collectionId,
+                    Options = options,
+                };
+                avatar.ActivateCollections.Add(collectionModel);
+            }
+
+            if (targetIds.Any())
+            {
+                mySqlStore.UpdateAvatar(avatar);
+                Log.Information("[MigrateActivateCollections] Update Avatar: {Address}, [{Previous}]/[{New}]",  avatar.Address, previous, avatar.ActivateCollections.Count);
+            }
+
+            return previous;
+        }
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _blockRenderer.BlockSubject.Subscribe(b =>
@@ -1678,57 +1729,6 @@ namespace NineChronicles.DataProvider
             blockIndexFile.Flush();
             blockIndexFile.Close();
             Log.Debug($"Storing Data Complete. Time Taken: {(end - start).Milliseconds} ms.");
-        }
-
-        public static int MigrateActivateCollections(
-            MySqlStore mySqlStore,
-            CollectionSheet collectionSheet,
-            long blockIndex,
-            CollectionState collectionState,
-            AvatarModel avatar,
-            string actionId
-        )
-        {
-            Log.Information("[MigrateActivateCollections] avatar: {Signer}, {Address}, {Collections}", avatar.AgentAddress, avatar.Address, avatar.ActivateCollections.Count);
-
-            // check chain state ids to fill in missing collection data
-            var existIds = avatar.ActivateCollections.Select(i => i.CollectionId).ToList();
-            var targetIds = collectionState.Ids.Except(existIds).ToList();
-            Log.Information("[MigrateActivateCollections] migration targets: {Address}, [{ExistIds}]/[{TargetIds}]",  avatar.Address, string.Join(",", existIds), string.Join(",", targetIds));
-            var previous = avatar.ActivateCollections.Count;
-            foreach (var collectionId in targetIds)
-            {
-                var row = collectionSheet[collectionId];
-                var options = new List<CollectionOptionModel>();
-                foreach (var modifier in row.StatModifiers)
-                {
-                    var option = new CollectionOptionModel
-                    {
-                        StatType = modifier.StatType.ToString(),
-                        OperationType = modifier.Operation.ToString(),
-                        Value = modifier.Value,
-                    };
-                    options.Add(option);
-                }
-
-                var collectionModel = new ActivateCollectionModel
-                {
-                    ActionId = actionId,
-                    Avatar = avatar,
-                    BlockIndex = blockIndex,
-                    CollectionId = collectionId,
-                    Options = options,
-                };
-                avatar.ActivateCollections.Add(collectionModel);
-            }
-
-            if (targetIds.Any())
-            {
-                mySqlStore.UpdateAvatar(avatar);
-                Log.Information("[MigrateActivateCollections] Update Avatar: {Address}, [{Previous}]/[{New}]",  avatar.Address, previous, avatar.ActivateCollections.Count);
-            }
-
-            return previous;
         }
     }
 }
