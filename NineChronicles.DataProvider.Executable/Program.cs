@@ -198,8 +198,7 @@ namespace NineChronicles.DataProvider.Executable
 
             IActionLoader actionLoader = new NCActionLoader();
 
-            var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(
-                actionLoader, headlessConfig.StateServiceManagerService, null)
+            var nineChroniclesProperties = new NineChroniclesNodeServiceProperties(actionLoader, null)
             {
                 MinerPrivateKey = string.IsNullOrEmpty(headlessConfig.MinerPrivateKeyString)
                     ? null
