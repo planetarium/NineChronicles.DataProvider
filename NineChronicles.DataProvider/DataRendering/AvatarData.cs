@@ -55,20 +55,41 @@ namespace NineChronicles.DataProvider.DataRendering
                 : new ItemSlotState(BattleType.Adventure);
             var equipmentList = SetEquipments(avatarState, itemSlotState, battleType);
             var costumeList = SetCostumes(avatarState, itemSlotState, battleType);
-            var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
-            var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
             var runeStates = outputStates.GetRuneState(avatarAddress, out _);
+            var runeAddresses = RuneSlotState.DeriveAddress(avatarAddress, battleType);
+            var runeSlotState = outputStates.TryGetLegacyState(runeAddresses, out List rawRuneSlotState)
+                ? new RuneSlotState(rawRuneSlotState)
+                : new RuneSlotState(BattleType.Adventure);
+            var runeSlotStates = new List<RuneSlotState>();
+            runeSlotStates.Add(runeSlotState);
+            var runes = SetRunes(runeSlotStates, battleType);
 
-            foreach (var runeState in runeStates.Runes.Values)
+            var equippedRuneStates = new List<RuneState>();
+            var runeIds = runes[battleType].GetRuneSlot()
+                .Where(slot => slot.RuneId.HasValue)
+                .Select(slot => slot.RuneId!.Value);
+
+            foreach (var runeId in runeIds)
+            {
+                var runeState = runeStates.Runes!.FirstOrDefault(x => x.Value.RuneId == runeId);
+                if (runeStates.Runes != null)
+                {
+                    equippedRuneStates.Add(runeState.Value);
+                }
+            }
+
+            var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
+            var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
+            foreach (var runeState in equippedRuneStates)
             {
                 if (!runeOptionSheet.TryGetValue(runeState.RuneId, out var optionRow))
                 {
-                    throw new SheetRowNotFoundException("RuneOptionSheet", runeState.RuneId);
+                    continue;
                 }
 
                 if (!optionRow.LevelOptionMap.TryGetValue(runeState.Level, out var option))
                 {
-                    throw new SheetRowNotFoundException("RuneOptionSheet", runeState.Level);
+                    continue;
                 }
 
                 runeOptions.Add(option);
@@ -187,6 +208,22 @@ namespace NineChronicles.DataProvider.DataRendering
             costumes[battleType] = costumeList!;
 
             return costumes;
+        }
+
+        private static Dictionary<BattleType, RuneSlotState> SetRunes(
+            List<RuneSlotState> runeSlotStates,
+            BattleType battleType)
+        {
+            Dictionary<BattleType, RuneSlotState> runes = new ();
+            runes.Add(BattleType.Adventure, new RuneSlotState(BattleType.Adventure));
+            runes.Add(BattleType.Arena, new RuneSlotState(BattleType.Arena));
+            runes.Add(BattleType.Raid, new RuneSlotState(BattleType.Raid));
+            foreach (var state in runeSlotStates)
+            {
+                runes[battleType] = state;
+            }
+
+            return runes;
         }
     }
 }
