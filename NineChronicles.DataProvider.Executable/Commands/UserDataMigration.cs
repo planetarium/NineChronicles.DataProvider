@@ -495,12 +495,12 @@ namespace NineChronicles.DataProvider.Executable.Commands
             try
             {
                 DateTimeOffset start = DateTimeOffset.Now;
-                Console.WriteLine($"Start bulk insert to {tableName}.");
                 var target_table = tableName;
                 var temp_table = tableName + "_temp";
+                Console.WriteLine($"Start bulk insert to {temp_table}.");
                 MySqlBulkLoader loader = new MySqlBulkLoader(connection)
                 {
-                    TableName = tableName,
+                    TableName = temp_table,
                     FileName = filePath,
                     Timeout = 0,
                     LineTerminator = "\n",
@@ -510,7 +510,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 };
 
                 loader.Load();
-                Console.WriteLine($"Bulk load to {tableName} complete.");
+                Console.WriteLine($"Bulk load to {temp_table} complete.");
 
                 // Insert data from temporary table to target table
                 string insertSql = $"INSERT INTO {target_table} (Address, AgentAddress, Name, AvatarLevel, TitleId, ArmorId, Cp, Timestamp) SELECT Address, AgentAddress, Name, AvatarLevel, TitleId, ArmorId, Cp, Timestamp FROM {temp_table} ON DUPLICATE KEY UPDATE Cp = VALUES(Cp), Timestamp = VALUES(Timestamp);";
