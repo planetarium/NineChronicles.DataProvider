@@ -27,7 +27,8 @@ namespace NineChronicles.DataProvider.DataRendering
             Address signer,
             Address avatarAddress,
             List<RuneSlotInfo> runeInfos,
-            DateTimeOffset blockTime)
+            DateTimeOffset blockTime,
+            BattleType battleType)
         {
             AvatarState avatarState = outputStates.GetAvatarState(avatarAddress);
             var collectionExist = outputStates.TryGetCollectionState(avatarAddress, out var collectionState);
@@ -52,15 +53,8 @@ namespace NineChronicles.DataProvider.DataRendering
             var itemSlotState = outputStates.TryGetLegacyState(itemSlotStateAddress, out List rawItemSlotState)
                 ? new ItemSlotState(rawItemSlotState)
                 : new ItemSlotState(BattleType.Adventure);
-            var equipmentInventory = avatarState.inventory.Equipments;
-            var equipmentList = itemSlotState.Equipments
-                .Select(guid => equipmentInventory.FirstOrDefault(x => x.ItemId == guid))
-                .Where(item => item != null).ToList();
-
-            var costumeInventory = avatarState.inventory.Costumes;
-            var costumeList = itemSlotState.Costumes
-                .Select(guid => costumeInventory.FirstOrDefault(x => x.ItemId == guid))
-                .Where(item => item != null).ToList();
+            var equipmentList = SetEquipments(avatarState, itemSlotState, battleType);
+            var costumeList = SetCostumes(avatarState, itemSlotState, battleType);
             var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
             var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
             var runeStates = outputStates.GetRuneState(avatarAddress, out _);
@@ -125,8 +119,8 @@ namespace NineChronicles.DataProvider.DataRendering
                 sheets.GetSheet<RuneLevelBonusSheet>());
 
             var avatarCp = CPHelper.TotalCP(
-                equipmentList,
-                costumeList,
+                equipmentList[battleType],
+                costumeList[battleType],
                 runeOptions,
                 avatarState.level,
                 characterRow,
@@ -157,6 +151,42 @@ namespace NineChronicles.DataProvider.DataRendering
             };
 
             return avatarModel;
+        }
+
+        private static Dictionary<BattleType, List<Equipment>> SetEquipments(
+            AvatarState avatarState,
+            ItemSlotState itemSlotStates,
+            BattleType battleType)
+        {
+            Dictionary<BattleType, List<Equipment>> equipments = new ();
+            equipments.Add(BattleType.Adventure, new List<Equipment>());
+            equipments.Add(BattleType.Arena, new List<Equipment>());
+            equipments.Add(BattleType.Raid, new List<Equipment>());
+            var equipmentList = itemSlotStates.Equipments
+                .Select(guid =>
+                    avatarState.inventory.Equipments.FirstOrDefault(x => x.ItemId == guid))
+                .Where(item => item != null).ToList();
+            equipments[battleType] = equipmentList!;
+
+            return equipments;
+        }
+
+        private static Dictionary<BattleType, List<Costume>> SetCostumes(
+            AvatarState avatarState,
+            ItemSlotState itemSlotStates,
+            BattleType battleType)
+        {
+            Dictionary<BattleType, List<Costume>> costumes = new ();
+            costumes.Add(BattleType.Adventure, new List<Costume>());
+            costumes.Add(BattleType.Arena, new List<Costume>());
+            costumes.Add(BattleType.Raid, new List<Costume>());
+            var costumeList = itemSlotStates.Costumes
+                .Select(guid =>
+                    avatarState.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid))
+                .Where(item => item != null).ToList();
+            costumes[battleType] = costumeList!;
+
+            return costumes;
         }
     }
 }
