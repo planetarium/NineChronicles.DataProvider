@@ -494,6 +494,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
             using MySqlConnection connection = new MySqlConnection(_connectionString);
             try
             {
+                connection.Open(); // Ensure the connection is open
+
                 DateTimeOffset start = DateTimeOffset.Now;
                 var target_table = tableName;
                 var temp_table = tableName + "_temp";
@@ -522,6 +524,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                 DateTimeOffset end = DateTimeOffset.Now;
                 Console.WriteLine("Time elapsed: {0}", end - start);
+                connection.Close(); // Ensure the connection is closed
             }
             catch (Exception e)
             {
