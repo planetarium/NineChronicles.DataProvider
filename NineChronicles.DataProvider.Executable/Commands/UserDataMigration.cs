@@ -298,10 +298,19 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
 
+                // Disable foreign key checks
+                MySqlCommand disableForeignKeyCheck = new MySqlCommand("SET foreign_key_checks = 0;", connection);
+                disableForeignKeyCheck.ExecuteNonQuery();
+
+                // Perform bulk insert operation
                 foreach (var path in _avatarFiles)
                 {
                     BulkInsert(AvatarDbName, path);
                 }
+
+                // Re-enable foreign key checks
+                MySqlCommand enableForeignKeyCheck = new MySqlCommand("SET foreign_key_checks = 1;", connection);
+                enableForeignKeyCheck.ExecuteNonQuery();
             }
             catch (Exception)
             {
