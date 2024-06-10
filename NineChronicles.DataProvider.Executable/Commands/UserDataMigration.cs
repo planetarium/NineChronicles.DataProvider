@@ -269,8 +269,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         // Check if intervalCount has hit 5, if so reset it and continue
                         if (intervalCount == 5)
                         {
-                            intervalCount = 0;
-                            continue;
+                            break;
                         }
 
                         var avatarAddress = new Address(avatar);
@@ -489,6 +488,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
             {
                 DateTimeOffset start = DateTimeOffset.Now;
                 Console.WriteLine($"Start bulk insert to {tableName}.");
+                var target_table = tableName;
+                var temp_table = tableName + "_temp";
                 MySqlBulkLoader loader = new MySqlBulkLoader(connection)
                 {
                     TableName = tableName,
@@ -497,11 +498,20 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     LineTerminator = "\n",
                     FieldTerminator = ";",
                     Local = true,
-                    ConflictOption = MySqlBulkLoaderConflictOption.Replace,
+                    ConflictOption = MySqlBulkLoaderConflictOption.Replace
                 };
 
                 loader.Load();
                 Console.WriteLine($"Bulk load to {tableName} complete.");
+
+                // Insert data from temporary table to target table
+                string insertSql = $"INSERT INTO {target_table} (Address, AgentAddress, Name, AvatarLevel, TitleId, ArmorId, Cp, Timestamp) SELECT Address, AgentAddress, Name, AvatarLevel, TitleId, ArmorId, Cp, Timestamp FROM {temp_table} ON DUPLICATE KEY UPDATE Cp = VALUES(Cp), Timestamp = VALUES(Timestamp);";
+
+                using (MySqlCommand command = new MySqlCommand(insertSql, connection))
+                {
+                    command.ExecuteNonQuery();
+                }
+
                 DateTimeOffset end = DateTimeOffset.Now;
                 Console.WriteLine("Time elapsed: {0}", end - start);
             }
