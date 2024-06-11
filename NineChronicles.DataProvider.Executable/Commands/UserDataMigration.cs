@@ -492,61 +492,85 @@ namespace NineChronicles.DataProvider.Executable.Commands
             string filePath)
         {
             using MySqlConnection connection = new MySqlConnection(_connectionString);
-            try
+            const int maxRetryCount = 5;
+            int retryCount = 0;
+            bool success = false;
+
+            while (!success && retryCount < maxRetryCount)
             {
-                connection.Open(); // Ensure the connection is open
-
-                DateTimeOffset start = DateTimeOffset.Now;
-                var target_table = tableName;
-                var temp_table = tableName + "_temp";
-                Console.WriteLine($"Start bulk insert to {temp_table}.");
-                MySqlBulkLoader loader = new MySqlBulkLoader(connection)
+                try
                 {
-                    TableName = temp_table,
-                    FileName = filePath,
-                    Timeout = 0,
-                    LineTerminator = "\n",
-                    FieldTerminator = ";",
-                    Local = true,
-                    ConflictOption = MySqlBulkLoaderConflictOption.Replace
-                };
+                    connection.Open();
 
-                loader.Load();
-                Console.WriteLine($"Bulk load to {temp_table} complete.");
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        try
+                        {
+                            DateTimeOffset start = DateTimeOffset.Now;
+                            var target_table = tableName;
+                            var temp_table = tableName + "_temp";
+                            Console.WriteLine($"Start bulk insert to {temp_table}.");
 
-                // Insert data from temporary table to target table
-                string insertSql = $"INSERT INTO {target_table} (Address, AgentAddress, Name, AvatarLevel, TitleId, ArmorId, Cp, Timestamp) SELECT Address, AgentAddress, Name, AvatarLevel, TitleId, ArmorId, Cp, Timestamp FROM {temp_table} ON DUPLICATE KEY UPDATE Cp = VALUES(Cp), Timestamp = VALUES(Timestamp);";
+                            MySqlBulkLoader loader = new MySqlBulkLoader(connection)
+                            {
+                                TableName = temp_table,
+                                FileName = filePath,
+                                Timeout = 0,
+                                LineTerminator = "\n",
+                                FieldTerminator = ";",
+                                Local = true,
+                                ConflictOption = MySqlBulkLoaderConflictOption.Replace
+                            };
 
-                using (MySqlCommand command = new MySqlCommand(insertSql, connection))
-                {
-                    command.ExecuteNonQuery();
+                            loader.Load();
+                            Console.WriteLine($"Bulk load to {temp_table} complete.");
+
+                            // Insert data from temporary table to target table
+                            string insertSql = $"INSERT INTO {target_table} (Address, AgentAddress, Name, AvatarLevel, TitleId, ArmorId, Cp, Timestamp) " +
+                                               $"SELECT Address, AgentAddress, Name, AvatarLevel, TitleId, ArmorId, Cp, Timestamp FROM {temp_table} " +
+                                               $"ON DUPLICATE KEY UPDATE Cp = VALUES(Cp), Timestamp = VALUES(Timestamp);";
+
+                            using (MySqlCommand command = new MySqlCommand(insertSql, connection, transaction))
+                            {
+                                command.ExecuteNonQuery();
+                            }
+
+                            transaction.Commit();
+
+                            DateTimeOffset end = DateTimeOffset.Now;
+                            Console.WriteLine("Time elapsed: {0}", end - start);
+                            success = true; // Mark success
+                        }
+                        catch (MySqlException ex) when (ex.Number == 1213) // Error code for deadlock
+                        {
+                            Console.WriteLine("Deadlock detected. Retrying transaction...");
+                            transaction.Rollback();
+                            retryCount++;
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error: " + ex.Message);
+                            Console.WriteLine(ex.StackTrace);
+                            transaction.Rollback();
+                            throw;
+                        }
+                    }
                 }
-
-                DateTimeOffset end = DateTimeOffset.Now;
-                Console.WriteLine("Time elapsed: {0}", end - start);
-                connection.Close(); // Ensure the connection is closed
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                Console.WriteLine($"Bulk load to {tableName} failed. Retry bulk insert");
-                DateTimeOffset start = DateTimeOffset.Now;
-                Console.WriteLine($"Start bulk insert to {tableName}.");
-                MySqlBulkLoader loader = new MySqlBulkLoader(connection)
+                catch (Exception ex)
                 {
-                    TableName = tableName,
-                    FileName = filePath,
-                    Timeout = 0,
-                    LineTerminator = "\n",
-                    FieldTerminator = ";",
-                    Local = true,
-                    ConflictOption = MySqlBulkLoaderConflictOption.Replace,
-                };
+                    Console.WriteLine("Error: " + ex.Message);
+                    Console.WriteLine(ex.StackTrace);
+                    retryCount++;
+                }
+                finally
+                {
+                    connection.Close();
+                }
+            }
 
-                loader.Load();
-                Console.WriteLine($"Bulk load to {tableName} complete.");
-                DateTimeOffset end = DateTimeOffset.Now;
-                Console.WriteLine("Time elapsed: {0}", end - start);
+            if (!success)
+            {
+                Console.WriteLine("Failed to complete the operation after multiple retries.");
             }
         }
 
