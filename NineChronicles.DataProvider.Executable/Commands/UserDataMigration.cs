@@ -266,12 +266,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         Console.WriteLine("Interval Count {0}", intervalCount);
                         Console.WriteLine("Migrating {0}/{1}", avatarCount, avatars.Count);
 
-                        // Check if intervalCount has hit 5, if so reset it and continue
-                        if (intervalCount == 5)
-                        {
-                            break;
-                        }
-
                         var avatarAddress = new Address(avatar);
                         avatarState = outputState.GetAvatarState(avatarAddress);
                         var runeSlotStateAddress = RuneSlotState.DeriveAddress(avatarAddress, BattleType.Adventure);
