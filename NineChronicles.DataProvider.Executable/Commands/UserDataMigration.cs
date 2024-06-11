@@ -289,7 +289,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             $"{avatarModel.TitleId ?? 0};" +
                             $"{avatarModel.ArmorId};" +
                             $"{avatarModel.Cp};" +
-                            $"{avatarModel.Timestamp}"
+                            $"{tip.Timestamp}"
                         );
 
                         Console.WriteLine("Migrating Complete {0}/{1}", avatarCount, avatars.Count);
@@ -541,7 +541,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             Console.WriteLine("Time elapsed: {0}", end - start);
                             success = true; // Mark success
                         }
-                        catch (MySqlException ex) when (ex.Number == 1213) // Error code for deadlock
+                        catch (MySqlException ex) when (ex.Number == 1213)
                         {
                             Console.WriteLine("Deadlock detected. Retrying transaction...");
                             transaction.Rollback();
