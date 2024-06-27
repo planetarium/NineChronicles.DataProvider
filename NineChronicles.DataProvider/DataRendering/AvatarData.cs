@@ -27,7 +27,8 @@ namespace NineChronicles.DataProvider.DataRendering
             Address signer,
             Address avatarAddress,
             List<RuneSlotInfo> runeInfos,
-            DateTimeOffset blockTime)
+            DateTimeOffset blockTime,
+            BattleType battleType)
         {
             AvatarState avatarState = outputStates.GetAvatarState(avatarAddress);
             var collectionExist = outputStates.TryGetCollectionState(avatarAddress, out var collectionState);
@@ -52,29 +53,43 @@ namespace NineChronicles.DataProvider.DataRendering
             var itemSlotState = outputStates.TryGetLegacyState(itemSlotStateAddress, out List rawItemSlotState)
                 ? new ItemSlotState(rawItemSlotState)
                 : new ItemSlotState(BattleType.Adventure);
-            var equipmentInventory = avatarState.inventory.Equipments;
-            var equipmentList = itemSlotState.Equipments
-                .Select(guid => equipmentInventory.FirstOrDefault(x => x.ItemId == guid))
-                .Where(item => item != null).ToList();
-
-            var costumeInventory = avatarState.inventory.Costumes;
-            var costumeList = itemSlotState.Costumes
-                .Select(guid => costumeInventory.FirstOrDefault(x => x.ItemId == guid))
-                .Where(item => item != null).ToList();
-            var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
-            var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
+            var equipmentList = SetEquipments(avatarState, itemSlotState, battleType);
+            var costumeList = SetCostumes(avatarState, itemSlotState, battleType);
             var runeStates = outputStates.GetRuneState(avatarAddress, out _);
+            var runeAddresses = RuneSlotState.DeriveAddress(avatarAddress, battleType);
+            var runeSlotState = outputStates.TryGetLegacyState(runeAddresses, out List rawRuneSlotState)
+                ? new RuneSlotState(rawRuneSlotState)
+                : new RuneSlotState(BattleType.Adventure);
+            var runeSlotStates = new List<RuneSlotState>();
+            runeSlotStates.Add(runeSlotState);
+            var runes = SetRunes(runeSlotStates, battleType);
 
-            foreach (var runeState in runeStates.Runes.Values)
+            var equippedRuneStates = new List<RuneState>();
+            var runeIds = runes[battleType].GetRuneSlot()
+                .Where(slot => slot.RuneId.HasValue)
+                .Select(slot => slot.RuneId!.Value);
+
+            foreach (var runeId in runeIds)
+            {
+                var runeState = runeStates.Runes!.FirstOrDefault(x => x.Value.RuneId == runeId);
+                if (runeStates.Runes != null)
+                {
+                    equippedRuneStates.Add(runeState.Value);
+                }
+            }
+
+            var runeOptions = new List<RuneOptionSheet.Row.RuneOptionInfo>();
+            var runeOptionSheet = sheets.GetSheet<RuneOptionSheet>();
+            foreach (var runeState in equippedRuneStates)
             {
                 if (!runeOptionSheet.TryGetValue(runeState.RuneId, out var optionRow))
                 {
-                    throw new SheetRowNotFoundException("RuneOptionSheet", runeState.RuneId);
+                    continue;
                 }
 
                 if (!optionRow.LevelOptionMap.TryGetValue(runeState.Level, out var option))
                 {
-                    throw new SheetRowNotFoundException("RuneOptionSheet", runeState.Level);
+                    continue;
                 }
 
                 runeOptions.Add(option);
@@ -125,8 +140,8 @@ namespace NineChronicles.DataProvider.DataRendering
                 sheets.GetSheet<RuneLevelBonusSheet>());
 
             var avatarCp = CPHelper.TotalCP(
-                equipmentList,
-                costumeList,
+                equipmentList[battleType],
+                costumeList[battleType],
                 runeOptions,
                 avatarState.level,
                 characterRow,
@@ -157,6 +172,58 @@ namespace NineChronicles.DataProvider.DataRendering
             };
 
             return avatarModel;
+        }
+
+        private static Dictionary<BattleType, List<Equipment>> SetEquipments(
+            AvatarState avatarState,
+            ItemSlotState itemSlotStates,
+            BattleType battleType)
+        {
+            Dictionary<BattleType, List<Equipment>> equipments = new ();
+            equipments.Add(BattleType.Adventure, new List<Equipment>());
+            equipments.Add(BattleType.Arena, new List<Equipment>());
+            equipments.Add(BattleType.Raid, new List<Equipment>());
+            var equipmentList = itemSlotStates.Equipments
+                .Select(guid =>
+                    avatarState.inventory.Equipments.FirstOrDefault(x => x.ItemId == guid))
+                .Where(item => item != null).ToList();
+            equipments[battleType] = equipmentList!;
+
+            return equipments;
+        }
+
+        private static Dictionary<BattleType, List<Costume>> SetCostumes(
+            AvatarState avatarState,
+            ItemSlotState itemSlotStates,
+            BattleType battleType)
+        {
+            Dictionary<BattleType, List<Costume>> costumes = new ();
+            costumes.Add(BattleType.Adventure, new List<Costume>());
+            costumes.Add(BattleType.Arena, new List<Costume>());
+            costumes.Add(BattleType.Raid, new List<Costume>());
+            var costumeList = itemSlotStates.Costumes
+                .Select(guid =>
+                    avatarState.inventory.Costumes.FirstOrDefault(x => x.ItemId == guid))
+                .Where(item => item != null).ToList();
+            costumes[battleType] = costumeList!;
+
+            return costumes;
+        }
+
+        private static Dictionary<BattleType, RuneSlotState> SetRunes(
+            List<RuneSlotState> runeSlotStates,
+            BattleType battleType)
+        {
+            Dictionary<BattleType, RuneSlotState> runes = new ();
+            runes.Add(BattleType.Adventure, new RuneSlotState(BattleType.Adventure));
+            runes.Add(BattleType.Arena, new RuneSlotState(BattleType.Arena));
+            runes.Add(BattleType.Raid, new RuneSlotState(BattleType.Raid));
+            foreach (var state in runeSlotStates)
+            {
+                runes[battleType] = state;
+            }
+
+            return runes;
         }
     }
 }
