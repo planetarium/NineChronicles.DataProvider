@@ -6,7 +6,7 @@ namespace NineChronicles.DataProvider.Store.Models.AdventureBoss
     public class AdventureBossSeasonModel
     {
         [Key]
-        public int Season { get; set; }
+        public long Season { get; set; }
 
         public long StartBlockIndex { get; set; }
 

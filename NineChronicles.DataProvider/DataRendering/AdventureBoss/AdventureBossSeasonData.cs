@@ -9,7 +9,7 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
     {
         public static AdventureBossSeasonModel GetAdventureBossSeasonInfo(
             IWorld outputStates,
-            int season,
+            long season,
             DateTimeOffset blockTime
         )
         {
