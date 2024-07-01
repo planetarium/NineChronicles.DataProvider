@@ -21,11 +21,11 @@ namespace NineChronicles.DataProvider.Store.Models.AdventureBoss
 
         public long UsedGoldenDust { get; set; }
 
-        public BigInteger UsedNcg { get; set; }
+        public decimal UsedNcg { get; set; }
 
         public long TotalUsedGoldenDust { get; set; }
 
-        public BigInteger TotalUsedNcg { get; set; }
+        public decimal TotalUsedNcg { get; set; }
 
         public DateOnly Date { get; set; }
 

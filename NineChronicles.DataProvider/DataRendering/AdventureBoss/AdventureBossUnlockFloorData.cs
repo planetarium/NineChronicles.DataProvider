@@ -28,9 +28,9 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
                 AvatarAddress = unlock.AvatarAddress.ToString(),
                 UnlockFloor = prevExplorer.Floor + 1,
                 UsedGoldenDust = outputExplorer.UsedGoldenDust - prevExploreBoard.UsedGoldenDust,
-                UsedNcg = outputExploreBoard.UsedNcg - prevExploreBoard.UsedNcg,
+                UsedNcg = (decimal)(outputExploreBoard.UsedNcg - prevExploreBoard.UsedNcg),
                 TotalUsedGoldenDust = outputExploreBoard.UsedGoldenDust,
-                TotalUsedNcg = outputExploreBoard.UsedNcg,
+                TotalUsedNcg = (decimal)outputExploreBoard.UsedNcg,
                 Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };

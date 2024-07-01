@@ -17,7 +17,7 @@ namespace NineChronicles.DataProvider.Store.Models.AdventureBoss
 
         public AvatarModel? Avatar { get; set; }
 
-        public BigInteger NcgReward { get; set; }
+        public decimal NcgReward { get; set; }
 
         public string? RewardData { get; set; }
 

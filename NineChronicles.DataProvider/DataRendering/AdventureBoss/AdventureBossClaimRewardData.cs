@@ -3,9 +3,7 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Libplanet.Action;
     using Libplanet.Action.State;
-    using Libplanet.Crypto;
     using Nekoyume.Action.AdventureBoss;
     using Nekoyume.Data;
     using Nekoyume.Helper;
@@ -130,7 +128,7 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
                 BlockIndex = blockIndex,
                 AvatarAddress = claim.AvatarAddress.ToString(),
                 ClaimedSeason = string.Join(",", claimedSeasonList),
-                NcgReward = myReward.NcgReward?.RawValue / 100 ?? 0,
+                NcgReward = (decimal)(myReward.NcgReward?.RawValue / 100 ?? 0),
                 RewardData = string.Join(",", rewardData),
                 Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
