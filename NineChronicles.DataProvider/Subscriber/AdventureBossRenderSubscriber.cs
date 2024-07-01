@@ -7,6 +7,7 @@ namespace NineChronicles.DataProvider
     using Lib9c.Renderers;
     using Libplanet.Action.State;
     using Nekoyume.Action.AdventureBoss;
+    using Nekoyume.Module;
     using NineChronicles.DataProvider.DataRendering.AdventureBoss;
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
     using Serilog;
@@ -51,6 +52,9 @@ namespace NineChronicles.DataProvider
                     ));
 
                     // Update season info
+                    _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
+                        outputState, wanted.Season, _blockTimeOffset
+                    ));
                 }
             }
             catch (Exception e)
@@ -143,11 +147,19 @@ namespace NineChronicles.DataProvider
                 if (evt.Exception is null && evt.Action is { } claim)
                 {
                     var prevState = new World(_blockChainStates.GetWorldState(evt.PreviousState));
+                    var outputState = new World(_blockChainStates.GetWorldState(evt.OutputState));
                     _adventureBossClaimRewardList.Add(AdventureBossClaimRewardData.GetClaimInfo(
                         prevState, evt.BlockIndex, _blockTimeOffset, claim
                     ));
 
                     // Update season info
+                    var latestSeason = prevState.GetLatestAdventureBossSeason();
+                    var season = latestSeason.EndBlockIndex <= evt.BlockIndex
+                        ? latestSeason.Season
+                        : latestSeason.Season - 1;
+                    _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
+                        outputState, season, _blockTimeOffset
+                    ));
                 }
             }
             catch (Exception e)
