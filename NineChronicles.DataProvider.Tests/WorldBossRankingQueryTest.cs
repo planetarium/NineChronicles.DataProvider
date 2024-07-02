@@ -107,7 +107,80 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
         var result = await ExecuteAsync(query);
         var count = (int)((Dictionary<string, object>) ((ExecutionNode) result.Data).ToValue())["worldBossTotalUsers"];
         Assert.Equal(200, count);
+    }
 
+    [Fact]
+    public async Task WorldBossRanking_Sort()
+    {
+        var avatarAddresses = new List<Address>
+        {
+            new PrivateKey().Address,
+            new PrivateKey().Address,
+            new PrivateKey().Address,
+        };
+        var targetAvatarAddress = avatarAddresses[0];
+        var queryAddress = targetAvatarAddress.ToString();
+        var query = $@"query {{
+            worldBossRanking(raidId: 1, avatarAddress: ""{queryAddress}"") {{
+                blockIndex
+                rankingInfo {{
+                    ranking
+                    avatarName
+                    address
+                }}
+            }}
+        }}";
+        for (int idx = 0; idx < 2; idx++)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                var avatarAddress = avatarAddresses[i];
+                var model = new RaiderModel(
+                    idx + 1,
+                    i.ToString(),
+                    idx,
+                    idx + 1,
+                    i + 2,
+                    GameConfig.DefaultAvatarArmorId,
+                    i,
+                    avatarAddress.ToHex(),
+                    0
+                );
+                Context.Raiders.Add(model);
+            }
+        }
+
+        var block = new BlockModel
+        {
+            Index = 1L,
+            Hash = "4582250d0da33b06779a8475d283d5dd210c683b9b999d74d03fac4f58fa6bce",
+            Miner = "47d082a115c63e7b58b1532d20e631538eafadde",
+            Difficulty = 0L,
+            Nonce = "dff109a0abf1762673ed",
+            PreviousHash = "asd",
+            ProtocolVersion = 1,
+            PublicKey = ByteUtil.Hex(new PrivateKey().PublicKey.ToImmutableArray(false)),
+            StateRootHash = "ce667fcd0b69076d9ff7e7755daa2f35cb0488e4c47978468dfbd6b88fca8a90",
+            TotalDifficulty = 0L,
+            TxCount = 1,
+            TxHash = "fd47c10ffbee8ff2da8fa08cec3072de06a72f73693f5d3399b093b0877fa954",
+            TimeStamp = DateTimeOffset.UtcNow
+        };
+        Context.Blocks.Add(block);
+
+        await Context.SaveChangesAsync();
+        var result = await ExecuteAsync(query);
+        var data = (Dictionary<string, object>)((Dictionary<string, object>)((ExecutionNode)result.Data).ToValue())["worldBossRanking"];
+        Assert.Equal(1L, data["blockIndex"]);
+        var models = (object[]) data["rankingInfo"];
+        Assert.Equal(3, models.Length);
+        for (int j = 0; j < 3; j++)
+        {
+            var model = (Dictionary<string, object>)models[j];
+            Assert.Equal(j + 1, model["ranking"]);
+            Assert.Equal(avatarAddresses[j].ToHex(), model["address"]);
+
+        }
     }
 
     public void Dispose()
