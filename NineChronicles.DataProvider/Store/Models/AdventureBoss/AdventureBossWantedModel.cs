@@ -16,11 +16,11 @@ namespace NineChronicles.DataProvider.Store.Models.AdventureBoss
 
         public AvatarModel? Avatar { get; set; }
 
-        public int Bounty { get; set; }
+        public decimal Bounty { get; set; }
 
         public int Count { get; set; }
 
-        public int TotalBounty { get; set; }
+        public decimal TotalBounty { get; set; }
 
         public DateOnly Date { get; set; }
 

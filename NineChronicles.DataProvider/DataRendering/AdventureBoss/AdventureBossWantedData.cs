@@ -25,9 +25,9 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
                 BlockIndex = blockIndex,
                 Season = wanted.Season,
                 AvatarAddress = wanted.AvatarAddress.ToString(),
-                Bounty = (int)wanted.Bounty.RawValue,
+                Bounty = Convert.ToDecimal(wanted.Bounty.GetQuantityString()),
                 Count = investor.Count,
-                TotalBounty = (int)bountyBoard.totalBounty().RawValue,
+                TotalBounty = Convert.ToDecimal(bountyBoard.totalBounty().GetQuantityString()),
                 Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };

@@ -128,7 +128,7 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
                 BlockIndex = blockIndex,
                 AvatarAddress = claim.AvatarAddress.ToString(),
                 ClaimedSeason = string.Join(",", claimedSeasonList),
-                NcgReward = (decimal)(myReward.NcgReward?.RawValue / 100 ?? 0),
+                NcgReward = Convert.ToDecimal(myReward.NcgReward?.GetQuantityString()),
                 RewardData = string.Join(",", rewardData),
                 Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
