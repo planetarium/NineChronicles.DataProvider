@@ -2,6 +2,7 @@ namespace NineChronicles.DataProvider.Store
 {
     using Microsoft.EntityFrameworkCore;
     using NineChronicles.DataProvider.Store.Models;
+    using NineChronicles.DataProvider.Store.Models.AdventureBoss;
 
     public sealed class NineChroniclesContext : DbContext
     {
@@ -203,6 +204,20 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<ActivateCollectionModel> ActivateCollections => Set<ActivateCollectionModel>();
 
         public DbSet<ApprovePledgeModel> ApprovePledges => Set<ApprovePledgeModel>();
+
+        // Adventure Boss
+        public DbSet<AdventureBossSeasonModel> AdventureBossSeason => Set<AdventureBossSeasonModel>();
+
+        public DbSet<AdventureBossWantedModel> AdventureBossWanted => Set<AdventureBossWantedModel>();
+
+        public DbSet<AdventureBossChallengeModel> AdventureBossChallenge => Set<AdventureBossChallengeModel>();
+
+        public DbSet<AdventureBossRushModel> AdventureBossRush => Set<AdventureBossRushModel>();
+
+        public DbSet<AdventureBossUnlockFloorModel> AdventureBossUnlockFloor => Set<AdventureBossUnlockFloorModel>();
+
+        public DbSet<AdventureBossClaimRewardModel> AdventureBossClaimReward => Set<AdventureBossClaimRewardModel>();
+        /* Adventure Boss */
 
         // Table for daily metrics data
         public DbSet<DailyMetricModel> DailyMetrics => Set<DailyMetricModel>();

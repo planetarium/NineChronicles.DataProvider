@@ -4,14 +4,14 @@ namespace NineChronicles.DataProvider.Store
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Libplanet;
     using Libplanet.Crypto;
     using Microsoft.EntityFrameworkCore;
     using Nekoyume.Model.Item;
     using NineChronicles.DataProvider.Store.Models;
+    using NineChronicles.DataProvider.Store.Models.AdventureBoss;
     using Serilog;
 
-    public class MySqlStore
+    public partial class MySqlStore
     {
         private readonly IDbContextFactory<NineChroniclesContext> _dbContextFactory;
 
@@ -1941,6 +1941,20 @@ namespace NineChronicles.DataProvider.Store
                 Log.Debug(e.Message);
             }
         }
+
+        // Adventure Boss
+        public partial Task StoreAdventureBossSeasonList(List<AdventureBossSeasonModel> seasonList);
+
+        public partial Task StoreAdventureBossWantedList(List<AdventureBossWantedModel> wantedList);
+
+        public partial Task StoreAdventureBossChallengeList(List<AdventureBossChallengeModel> challengeList);
+
+        public partial Task StoreAdventureBossRushList(List<AdventureBossRushModel> rushList);
+
+        public partial Task StoreAdventureBossUnlockFloorList(List<AdventureBossUnlockFloorModel> unlockFloorList);
+
+        public partial Task StoreAdventureBossClaimRewardList(List<AdventureBossClaimRewardModel> claimList);
+        /* Adventure Boss */
 
         public List<RaiderModel> GetRaiderList()
         {

@@ -17,6 +17,7 @@ namespace NineChronicles.DataProvider
     using Microsoft.Extensions.Hosting;
     using Nekoyume;
     using Nekoyume.Action;
+    using Nekoyume.Action.AdventureBoss;
     using Nekoyume.Extensions;
     using Nekoyume.Helper;
     using Nekoyume.Model.EnumType;
@@ -34,7 +35,7 @@ namespace NineChronicles.DataProvider
     using Serilog;
     using static Lib9c.SerializeKeys;
 
-    public class RenderSubscriber : BackgroundService
+    public partial class RenderSubscriber : BackgroundService
     {
         private const int DefaultInsertInterval = 1;
         private readonly int _blockInsertInterval;
@@ -1505,8 +1506,30 @@ namespace NineChronicles.DataProvider
                 }
             });
 
+            // Adventure Boss
+            _actionRenderer.EveryRender<Wanted>().Subscribe(SubscribeAdventureBossWanted);
+            _actionRenderer.EveryRender<ExploreAdventureBoss>().Subscribe(SubscribeAdventureBossChallenge);
+            _actionRenderer.EveryRender<SweepAdventureBoss>().Subscribe(SubscribeAdventureBossRush);
+            _actionRenderer.EveryRender<UnlockFloor>().Subscribe(SubscribeAdventureBossUnlockFloor);
+            _actionRenderer.EveryRender<ClaimAdventureBossReward>().Subscribe(SubscribeAdventureBossClaim);
+            /* Adventure Boss */
+
             return Task.CompletedTask;
         }
+
+        // Partial Methods
+        //// Adventure Boss
+        partial void SubscribeAdventureBossWanted(ActionEvaluation<Wanted> evt);
+
+        partial void SubscribeAdventureBossChallenge(ActionEvaluation<ExploreAdventureBoss> evt);
+
+        partial void SubscribeAdventureBossRush(ActionEvaluation<SweepAdventureBoss> evt);
+
+        partial void SubscribeAdventureBossUnlockFloor(ActionEvaluation<UnlockFloor> evt);
+
+        partial void SubscribeAdventureBossClaim(ActionEvaluation<ClaimAdventureBossReward> evt);
+        /** Adventure Boss **/
+        /* Partial Methods */
 
         private void AddShopHistoryItem(ITradableItem orderItem, Address buyerAvatarAddress, PurchaseInfo purchaseInfo, int itemCount, long blockIndex)
         {
@@ -1673,6 +1696,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreAuraSummonFailList(_auraSummonFailList);
                     MySqlStore.StoreRuneSummonList(_runeSummonList);
                     MySqlStore.StoreRuneSummonFailList(_runeSummonFailList);
+                    StoreAdventureBossList();
                 }),
             };
 
@@ -1721,6 +1745,7 @@ namespace NineChronicles.DataProvider
             _approvePledgeList.Clear();
             _auraSummonList.Clear();
             _auraSummonFailList.Clear();
+            ClearAdventureBossList();
 
             var end = DateTimeOffset.Now;
             long blockIndex = b.OldTip.Index;
