@@ -293,7 +293,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<int>("Bounty")
-                        .HasColumnType("int");
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<int>("Count")
                         .HasColumnType("int");
@@ -308,7 +308,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<int>("TotalBounty")
-                        .HasColumnType("int");
+                        .HasColumnType("decimal(65,30)");
 
                     b.HasKey("Id");
 
