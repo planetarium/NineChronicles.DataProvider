@@ -10,219 +10,239 @@ namespace NineChronicles.DataProvider.Store
 
     public partial class MySqlStore
     {
-        public partial void StoreAdventureBossSeasonList(List<AdventureBossSeasonModel> seasonList)
+        public async partial Task StoreAdventureBossSeasonList(List<AdventureBossSeasonModel> seasonList)
         {
+            NineChroniclesContext? ctx = null;
             try
             {
+                ctx = await _dbContextFactory.CreateDbContextAsync();
                 var tasks = new List<Task>();
+
                 foreach (var season in seasonList)
                 {
                     tasks.Add(Task.Run(async () =>
                     {
-                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
                         if (ctx.AdventureBossSeason.FindAsync(season.Season).Result is null)
                         {
                             await ctx.AdventureBossSeason.AddRangeAsync(season);
-                            await ctx.SaveChangesAsync();
-                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            await ctx.DisposeAsync();
-                            await using NineChroniclesContext
-                                updateCtx = await _dbContextFactory.CreateDbContextAsync();
-                            updateCtx.AdventureBossSeason.UpdateRange(season);
-                            await updateCtx.SaveChangesAsync();
-                            await updateCtx.DisposeAsync();
+                            ctx.AdventureBossSeason.UpdateRange(season);
                         }
                     }));
                 }
 
                 Task.WaitAll(tasks.ToArray());
+                await ctx.SaveChangesAsync();
             }
             catch (Exception e)
             {
                 Log.Debug(e.Message);
             }
+            finally
+            {
+                if (ctx is not null)
+                {
+                    await ctx.DisposeAsync();
+                }
+            }
         }
 
-        public partial void StoreAdventureBossWantedList(List<AdventureBossWantedModel> wantedList)
+        public async partial Task StoreAdventureBossWantedList(List<AdventureBossWantedModel> wantedList)
         {
+            NineChroniclesContext? ctx = null;
             try
             {
+                ctx = await _dbContextFactory.CreateDbContextAsync();
                 var tasks = new List<Task>();
+
                 foreach (var wanted in wantedList)
                 {
                     tasks.Add(Task.Run(async () =>
                     {
-                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
                         if (ctx.AdventureBossWanted.FindAsync(wanted.Id).Result is null)
                         {
                             await ctx.AdventureBossWanted.AddRangeAsync(wanted);
-                            await ctx.SaveChangesAsync();
-                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            await ctx.DisposeAsync();
-                            await using NineChroniclesContext
-                                updateCtx = await _dbContextFactory.CreateDbContextAsync();
-                            updateCtx.AdventureBossWanted.UpdateRange(wanted);
-                            await updateCtx.SaveChangesAsync();
-                            await updateCtx.DisposeAsync();
+                            ctx.AdventureBossWanted.UpdateRange(wanted);
                         }
                     }));
                 }
 
                 Task.WaitAll(tasks.ToArray());
+                await ctx.SaveChangesAsync();
             }
             catch (Exception e)
             {
                 Log.Debug(e.Message);
             }
+            finally
+            {
+                if (ctx is not null)
+                {
+                    await ctx.DisposeAsync();
+                }
+            }
         }
 
-        public partial void StoreAdventureBossChallengeList(List<AdventureBossChallengeModel> challengeList)
+        public async partial Task StoreAdventureBossChallengeList(List<AdventureBossChallengeModel> challengeList)
         {
+            NineChroniclesContext? ctx = null;
             try
             {
+                ctx = await _dbContextFactory.CreateDbContextAsync();
                 var tasks = new List<Task>();
+
                 foreach (var challenge in challengeList)
                 {
                     tasks.Add(Task.Run(async () =>
                     {
-                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
                         if (ctx.AdventureBossChallenge.FindAsync(challenge.Id).Result is null)
                         {
                             await ctx.AdventureBossChallenge.AddRangeAsync(challenge);
-                            await ctx.SaveChangesAsync();
-                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            await ctx.DisposeAsync();
-                            await using NineChroniclesContext
-                                updateCtx = await _dbContextFactory.CreateDbContextAsync();
-                            updateCtx.AdventureBossChallenge.UpdateRange(challenge);
-                            await updateCtx.SaveChangesAsync();
-                            await updateCtx.DisposeAsync();
+                            ctx.AdventureBossChallenge.UpdateRange(challenge);
                         }
                     }));
                 }
 
                 Task.WaitAll(tasks.ToArray());
+                await ctx.SaveChangesAsync();
             }
             catch (Exception e)
             {
                 Log.Debug(e.Message);
             }
+            finally
+            {
+                if (ctx is not null)
+                {
+                    await ctx.DisposeAsync();
+                }
+            }
         }
 
-        public partial void StoreAdventureBossRushList(List<AdventureBossRushModel> rushList)
+        public async partial Task StoreAdventureBossRushList(List<AdventureBossRushModel> rushList)
         {
+            NineChroniclesContext? ctx = null;
             try
             {
+                ctx = await _dbContextFactory.CreateDbContextAsync();
                 var tasks = new List<Task>();
+
                 foreach (var rush in rushList)
                 {
                     tasks.Add(Task.Run(async () =>
                     {
-                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
                         if (ctx.AdventureBossRush.FindAsync(rush.Id).Result is null)
                         {
                             await ctx.AdventureBossRush.AddRangeAsync(rush);
-                            await ctx.SaveChangesAsync();
-                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            await ctx.DisposeAsync();
-                            await using NineChroniclesContext
-                                updateCtx = await _dbContextFactory.CreateDbContextAsync();
-                            updateCtx.AdventureBossRush.UpdateRange(rush);
-                            await updateCtx.SaveChangesAsync();
-                            await updateCtx.DisposeAsync();
+                            ctx.AdventureBossRush.UpdateRange(rush);
                         }
                     }));
                 }
 
                 Task.WaitAll(tasks.ToArray());
+                await ctx.SaveChangesAsync();
             }
             catch (Exception e)
             {
                 Log.Debug(e.Message);
             }
+            finally
+            {
+                if (ctx is not null)
+                {
+                    await ctx.DisposeAsync();
+                }
+            }
         }
 
-        public partial void StoreAdventureBossUnlockFloorList(List<AdventureBossUnlockFloorModel> unlockFloorList)
+        public async partial Task StoreAdventureBossUnlockFloorList(List<AdventureBossUnlockFloorModel> unlockFloorList)
         {
+            NineChroniclesContext? ctx = null;
+
             try
             {
+                ctx = await _dbContextFactory.CreateDbContextAsync();
                 var tasks = new List<Task>();
+
                 foreach (var unlock in unlockFloorList)
                 {
                     tasks.Add(Task.Run(async () =>
                     {
-                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
                         if (ctx.AdventureBossUnlockFloor.FindAsync(unlock.Id).Result is null)
                         {
                             await ctx.AdventureBossUnlockFloor.AddRangeAsync(unlock);
-                            await ctx.SaveChangesAsync();
-                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            await ctx.DisposeAsync();
-                            await using NineChroniclesContext
-                                updateCtx = await _dbContextFactory.CreateDbContextAsync();
-                            updateCtx.AdventureBossUnlockFloor.UpdateRange(unlock);
-                            await updateCtx.SaveChangesAsync();
-                            await updateCtx.DisposeAsync();
+                            ctx.AdventureBossUnlockFloor.UpdateRange(unlock);
                         }
                     }));
                 }
 
                 Task.WaitAll(tasks.ToArray());
+                await ctx.SaveChangesAsync();
             }
             catch (Exception e)
             {
                 Log.Debug(e.Message);
             }
+            finally
+            {
+                if (ctx is not null)
+                {
+                    await ctx.DisposeAsync();
+                }
+            }
         }
 
-        public partial void StoreAdventureBossClaimRewardList(List<AdventureBossClaimRewardModel> claimList)
+        public async partial Task StoreAdventureBossClaimRewardList(List<AdventureBossClaimRewardModel> claimList)
         {
+            NineChroniclesContext? ctx = null;
+
             try
             {
+                ctx = await _dbContextFactory.CreateDbContextAsync();
                 var tasks = new List<Task>();
+
                 foreach (var claim in claimList)
                 {
                     tasks.Add(Task.Run(async () =>
                     {
-                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
                         if (ctx.AdventureBossClaimReward.FindAsync(claim.Id).Result is null)
                         {
                             await ctx.AdventureBossClaimReward.AddRangeAsync(claim);
-                            await ctx.SaveChangesAsync();
-                            await ctx.DisposeAsync();
                         }
                         else
                         {
-                            await ctx.DisposeAsync();
-                            await using NineChroniclesContext
-                                updateCtx = await _dbContextFactory.CreateDbContextAsync();
-                            updateCtx.AdventureBossClaimReward.UpdateRange(claim);
-                            await updateCtx.SaveChangesAsync();
-                            await updateCtx.DisposeAsync();
+                            ctx.AdventureBossClaimReward.UpdateRange(claim);
                         }
                     }));
                 }
 
                 Task.WaitAll(tasks.ToArray());
+                await ctx.SaveChangesAsync();
             }
             catch (Exception e)
             {
                 Log.Debug(e.Message);
+            }
+            finally
+            {
+                if (ctx is not null)
+                {
+                    await ctx.DisposeAsync();
+                }
             }
         }
     }

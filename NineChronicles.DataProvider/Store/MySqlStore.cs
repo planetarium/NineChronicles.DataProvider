@@ -1943,17 +1943,17 @@ namespace NineChronicles.DataProvider.Store
         }
 
         // Adventure Boss
-        public partial void StoreAdventureBossSeasonList(List<AdventureBossSeasonModel> seasonList);
+        public partial Task StoreAdventureBossSeasonList(List<AdventureBossSeasonModel> seasonList);
 
-        public partial void StoreAdventureBossWantedList(List<AdventureBossWantedModel> wantedList);
+        public partial Task StoreAdventureBossWantedList(List<AdventureBossWantedModel> wantedList);
 
-        public partial void StoreAdventureBossChallengeList(List<AdventureBossChallengeModel> challengeList);
+        public partial Task StoreAdventureBossChallengeList(List<AdventureBossChallengeModel> challengeList);
 
-        public partial void StoreAdventureBossRushList(List<AdventureBossRushModel> rushList);
+        public partial Task StoreAdventureBossRushList(List<AdventureBossRushModel> rushList);
 
-        public partial void StoreAdventureBossUnlockFloorList(List<AdventureBossUnlockFloorModel> unlockFloorList);
+        public partial Task StoreAdventureBossUnlockFloorList(List<AdventureBossUnlockFloorModel> unlockFloorList);
 
-        public partial void StoreAdventureBossClaimRewardList(List<AdventureBossClaimRewardModel> claimList);
+        public partial Task StoreAdventureBossClaimRewardList(List<AdventureBossClaimRewardModel> claimList);
         /* Adventure Boss */
 
         public List<RaiderModel> GetRaiderList()
