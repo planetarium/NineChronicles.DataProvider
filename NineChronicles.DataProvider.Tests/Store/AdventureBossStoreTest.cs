@@ -7,6 +7,7 @@ using Libplanet.Crypto;
 using Libplanet.Mocks;
 using Microsoft.Extensions.DependencyInjection;
 using NineChronicles.DataProvider.Store;
+using NineChronicles.DataProvider.Store.Models;
 using NineChronicles.DataProvider.Store.Models.AdventureBoss;
 using Xunit;
 
@@ -44,9 +45,12 @@ public class AdventureBossStoreTest : TestBase
         Assert.Null(seasonData.RaffleWinnerAddress);
         Assert.Equal(0, seasonData.RaffleReward);
 
-        // Update 
+        // Update
+        var avatarAddress = new PrivateKey().Address;
+        store.StoreAgent(avatarAddress);
+        store.StoreAvatar(avatarAddress, avatarAddress, "name", now, 1, null, null, 0);
         var address = new PrivateKey().Address.ToString();
-        season.RaffleWinnerAddress = address;
+        season.RaffleWinnerAddress = avatarAddress.ToString();
         season.RaffleReward = 5m;
 
         await store.StoreAdventureBossSeasonList(new List<AdventureBossSeasonModel> { season });
