@@ -7,7 +7,6 @@ using Libplanet.Crypto;
 using Libplanet.Mocks;
 using Microsoft.Extensions.DependencyInjection;
 using NineChronicles.DataProvider.Store;
-using NineChronicles.DataProvider.Store.Models;
 using NineChronicles.DataProvider.Store.Models.AdventureBoss;
 using Xunit;
 
@@ -21,6 +20,11 @@ public class AdventureBossStoreTest : TestBase
         var provider = Services.BuildServiceProvider();
         var store = provider.GetRequiredService<MySqlStore>();
         var now = DateTimeOffset.UtcNow;
+
+        var avatarAddress = new PrivateKey().Address;
+        store.StoreAgent(avatarAddress);
+        store.StoreAvatar(avatarAddress, avatarAddress, "name", now, 1, null, null, 0);
+        
         var season = new AdventureBossSeasonModel
         {
             Season = 1,
@@ -46,15 +50,12 @@ public class AdventureBossStoreTest : TestBase
         Assert.Equal(0, seasonData.RaffleReward);
 
         // Update
-        var avatarAddress = new PrivateKey().Address;
-        store.StoreAgent(avatarAddress);
-        store.StoreAvatar(avatarAddress, avatarAddress, "name", now, 1, null, null, 0);
-        var address = new PrivateKey().Address.ToString();
         season.RaffleWinnerAddress = avatarAddress.ToString();
         season.RaffleReward = 5m;
 
         await store.StoreAdventureBossSeasonList(new List<AdventureBossSeasonModel> { season });
-        seasonData = Context.AdventureBossSeason.First(s => s.Season == 1);
+        await Context.Entry(seasonData).ReloadAsync();
+        
         // Must be same
         Assert.Equal(1L, seasonData.StartBlockIndex);
         Assert.Equal(10L, seasonData.EndBlockIndex);
@@ -63,7 +64,7 @@ public class AdventureBossStoreTest : TestBase
         Assert.Equal(207001, seasonData.BossId);
 
         // Must be changed
-        Assert.Equal(address, seasonData.RaffleWinnerAddress);
+        Assert.Equal(avatarAddress.ToString(), seasonData.RaffleWinnerAddress);
         Assert.Equal(5, seasonData.RaffleReward);
     }
 
