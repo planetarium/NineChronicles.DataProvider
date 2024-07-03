@@ -23,6 +23,8 @@ namespace NineChronicles.DataProvider.Store
                 {
                     tasks.Add(Task.Run(async () =>
                     {
+                        // Season info will be updated once claim executed.
+                        // So season info needs to be updated.
                         if (await ctx.AdventureBossSeason.FirstOrDefaultAsync(s => s.Season == season.Season) is null)
                         {
                             await ctx.AdventureBossSeason.AddAsync(season);
@@ -66,10 +68,6 @@ namespace NineChronicles.DataProvider.Store
                         {
                             await ctx.AdventureBossWanted.AddAsync(wanted);
                         }
-                        else
-                        {
-                            ctx.AdventureBossWanted.Update(wanted);
-                        }
                     }));
                 }
 
@@ -105,10 +103,6 @@ namespace NineChronicles.DataProvider.Store
                         {
                             await ctx.AdventureBossChallenge.AddAsync(challenge);
                         }
-                        else
-                        {
-                            ctx.AdventureBossChallenge.Update(challenge);
-                        }
                     }));
                 }
 
@@ -143,10 +137,6 @@ namespace NineChronicles.DataProvider.Store
                         if (await ctx.AdventureBossRush.FirstOrDefaultAsync(r => r.Id == rush.Id) is null)
                         {
                             await ctx.AdventureBossRush.AddAsync(rush);
-                        }
-                        else
-                        {
-                            ctx.AdventureBossRush.Update(rush);
                         }
                     }));
                 }
@@ -184,10 +174,6 @@ namespace NineChronicles.DataProvider.Store
                         {
                             await ctx.AdventureBossUnlockFloor.AddAsync(unlock);
                         }
-                        else
-                        {
-                            ctx.AdventureBossUnlockFloor.Update(unlock);
-                        }
                     }));
                 }
 
@@ -223,10 +209,6 @@ namespace NineChronicles.DataProvider.Store
                         if (await ctx.AdventureBossClaimReward.FirstOrDefaultAsync(c => c.Id == claim.Id) is null)
                         {
                             await ctx.AdventureBossClaimReward.AddAsync(claim);
-                        }
-                        else
-                        {
-                            ctx.AdventureBossClaimReward.Update(claim);
                         }
                     }));
                 }
