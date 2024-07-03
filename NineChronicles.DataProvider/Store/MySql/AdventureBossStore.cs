@@ -5,6 +5,7 @@ namespace NineChronicles.DataProvider.Store
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Microsoft.EntityFrameworkCore;
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
     using Serilog;
 
@@ -22,13 +23,13 @@ namespace NineChronicles.DataProvider.Store
                 {
                     tasks.Add(Task.Run(async () =>
                     {
-                        if (ctx.AdventureBossSeason.FindAsync(season.Season).Result is null)
+                        if (await ctx.AdventureBossSeason.FirstOrDefaultAsync(s => s.Season == season.Season) is null)
                         {
-                            await ctx.AdventureBossSeason.AddRangeAsync(season);
+                            await ctx.AdventureBossSeason.AddAsync(season);
                         }
                         else
                         {
-                            ctx.AdventureBossSeason.UpdateRange(season);
+                            ctx.AdventureBossSeason.Update(season);
                         }
                     }));
                 }
@@ -61,13 +62,13 @@ namespace NineChronicles.DataProvider.Store
                 {
                     tasks.Add(Task.Run(async () =>
                     {
-                        if (ctx.AdventureBossWanted.FindAsync(wanted.Id).Result is null)
+                        if (await ctx.AdventureBossWanted.FirstOrDefaultAsync(w => w.Id == wanted.Id) is null)
                         {
-                            await ctx.AdventureBossWanted.AddRangeAsync(wanted);
+                            await ctx.AdventureBossWanted.AddAsync(wanted);
                         }
                         else
                         {
-                            ctx.AdventureBossWanted.UpdateRange(wanted);
+                            ctx.AdventureBossWanted.Update(wanted);
                         }
                     }));
                 }
@@ -100,13 +101,13 @@ namespace NineChronicles.DataProvider.Store
                 {
                     tasks.Add(Task.Run(async () =>
                     {
-                        if (ctx.AdventureBossChallenge.FindAsync(challenge.Id).Result is null)
+                        if (await ctx.AdventureBossChallenge.FirstOrDefaultAsync(c => c.Id == challenge.Id) is null)
                         {
-                            await ctx.AdventureBossChallenge.AddRangeAsync(challenge);
+                            await ctx.AdventureBossChallenge.AddAsync(challenge);
                         }
                         else
                         {
-                            ctx.AdventureBossChallenge.UpdateRange(challenge);
+                            ctx.AdventureBossChallenge.Update(challenge);
                         }
                     }));
                 }
@@ -139,13 +140,13 @@ namespace NineChronicles.DataProvider.Store
                 {
                     tasks.Add(Task.Run(async () =>
                     {
-                        if (ctx.AdventureBossRush.FindAsync(rush.Id).Result is null)
+                        if (await ctx.AdventureBossRush.FirstOrDefaultAsync(r => r.Id == rush.Id) is null)
                         {
-                            await ctx.AdventureBossRush.AddRangeAsync(rush);
+                            await ctx.AdventureBossRush.AddAsync(rush);
                         }
                         else
                         {
-                            ctx.AdventureBossRush.UpdateRange(rush);
+                            ctx.AdventureBossRush.Update(rush);
                         }
                     }));
                 }
@@ -179,13 +180,13 @@ namespace NineChronicles.DataProvider.Store
                 {
                     tasks.Add(Task.Run(async () =>
                     {
-                        if (ctx.AdventureBossUnlockFloor.FindAsync(unlock.Id).Result is null)
+                        if (await ctx.AdventureBossUnlockFloor.FirstOrDefaultAsync(u => u.Id == unlock.Id) is null)
                         {
-                            await ctx.AdventureBossUnlockFloor.AddRangeAsync(unlock);
+                            await ctx.AdventureBossUnlockFloor.AddAsync(unlock);
                         }
                         else
                         {
-                            ctx.AdventureBossUnlockFloor.UpdateRange(unlock);
+                            ctx.AdventureBossUnlockFloor.Update(unlock);
                         }
                     }));
                 }
@@ -219,13 +220,13 @@ namespace NineChronicles.DataProvider.Store
                 {
                     tasks.Add(Task.Run(async () =>
                     {
-                        if (ctx.AdventureBossClaimReward.FindAsync(claim.Id).Result is null)
+                        if (await ctx.AdventureBossClaimReward.FirstOrDefaultAsync(c => c.Id == claim.Id) is null)
                         {
-                            await ctx.AdventureBossClaimReward.AddRangeAsync(claim);
+                            await ctx.AdventureBossClaimReward.AddAsync(claim);
                         }
                         else
                         {
-                            ctx.AdventureBossClaimReward.UpdateRange(claim);
+                            ctx.AdventureBossClaimReward.Update(claim);
                         }
                     }));
                 }
