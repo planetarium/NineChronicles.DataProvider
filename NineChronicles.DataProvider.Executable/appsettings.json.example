@@ -86,7 +86,7 @@
     "AppProtocolVersionToken": "",
     "StorePath": "",
     "PeerStrings": [""],
-    "MySqlConnectionString": "",
+    "MySqlConnectionString": "server=[host];database=[database];uid=[user];pwd=[password]",
     "NoMiner": true,
     "Preload": false,
     "GenesisBlockPath": "https://release.nine-chronicles.com/genesis-block-9c-main",

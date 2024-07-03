@@ -32,7 +32,7 @@
       <ProjectReference Include="..\NineChronicles.Headless\Lib9c\Lib9c\Lib9c.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="appsettings.json">
+    <None Update="appsettings.json.example">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
