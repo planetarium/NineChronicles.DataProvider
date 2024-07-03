@@ -17,26 +17,23 @@ namespace NineChronicles.DataProvider.Store
             try
             {
                 ctx = await _dbContextFactory.CreateDbContextAsync();
-                var tasks = new List<Task>();
-
                 foreach (var season in seasonList)
                 {
-                    tasks.Add(Task.Run(async () =>
+                    // Season info will be updated once claim executed.
+                    // So season info needs to be updated.
+                    var existSeason = await ctx.AdventureBossSeason.FirstOrDefaultAsync(s => s.Season == season.Season);
+                    if (existSeason is null)
                     {
-                        // Season info will be updated once claim executed.
-                        // So season info needs to be updated.
-                        if (await ctx.AdventureBossSeason.FirstOrDefaultAsync(s => s.Season == season.Season) is null)
-                        {
-                            await ctx.AdventureBossSeason.AddAsync(season);
-                        }
-                        else
-                        {
-                            ctx.AdventureBossSeason.Update(season);
-                        }
-                    }));
+                        await ctx.AdventureBossSeason.AddAsync(season);
+                    }
+                    else
+                    {
+                        existSeason.RaffleReward = season.RaffleReward;
+                        existSeason.RaffleWinnerAddress = season.RaffleWinnerAddress;
+                        ctx.AdventureBossSeason.Update(existSeason);
+                    }
                 }
 
-                Task.WaitAll(tasks.ToArray());
                 await ctx.SaveChangesAsync();
             }
             catch (Exception e)
