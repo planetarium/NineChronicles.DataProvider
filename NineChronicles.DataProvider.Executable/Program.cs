@@ -40,6 +40,16 @@ namespace NineChronicles.DataProvider.Executable
         {
             await CoconaLiteApp.CreateHostBuilder()
                 .RunAsync<Program>(args);
+            var host = CreateHostBuilder(args).Build();
+            using (var scope = host.Services.CreateScope())
+            {
+                var db = ServiceProviderServiceExtensions
+                    .GetRequiredService<NineChroniclesContext>(scope.ServiceProvider);
+                Console.WriteLine("Migrate db.");
+                db.Database.Migrate();
+            }
+
+            host.Run();
         }
 
         // EF Core uses this method at design time to access the DbContext
