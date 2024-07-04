@@ -27,6 +27,7 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
             {
                 Id = challenge.Id.ToString(),
                 BlockIndex = blockIndex,
+                Season = challenge.Season,
                 AvatarAddress = challenge.AvatarAddress.ToString(),
                 StartFloor = prevExplorer.Floor,
                 EndFloor = outputExplorer.Floor,

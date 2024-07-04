@@ -1,4 +1,5 @@
 // Refactor: Move MySqlStore.cs to MySql and make all namespaces to NineChronicles.dataProvider.MySqlStore
+// NOTE: Only `StoreAdventureBossSeasonList` will update incoming data because other data does not have any data to be updated.
 
 namespace NineChronicles.DataProvider.Store
 {
