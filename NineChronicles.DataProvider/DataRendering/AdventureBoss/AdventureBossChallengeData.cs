@@ -3,6 +3,7 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
     using System;
     using Libplanet.Action.State;
     using Nekoyume.Action.AdventureBoss;
+    using Nekoyume.Model.AdventureBoss;
     using Nekoyume.Module;
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
 
@@ -16,7 +17,9 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
             ExploreAdventureBoss challenge
         )
         {
-            var prevExplorer = prevStates.GetExplorer(challenge.Season, challenge.AvatarAddress);
+            var prevExplorer = prevStates.TryGetExplorer(challenge.Season, challenge.AvatarAddress, out var exp)
+                ? exp
+                : new Explorer(challenge.AvatarAddress, "name");
             var outputExplorer = outputStates.GetExplorer(challenge.Season, challenge.AvatarAddress);
             var exploreBoard = outputStates.GetExploreBoard(challenge.Season);
 
@@ -25,7 +28,7 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
                 Id = challenge.Id.ToString(),
                 BlockIndex = blockIndex,
                 AvatarAddress = challenge.AvatarAddress.ToString(),
-                StartFloor = prevExplorer.Floor + 1, // Challenge from next of last cleared floor
+                StartFloor = prevExplorer.Floor,
                 EndFloor = outputExplorer.Floor,
                 UsedApPotion = outputExplorer.UsedApPotion - prevExplorer.UsedApPotion,
                 Point = outputExplorer.Score - prevExplorer.Score,
