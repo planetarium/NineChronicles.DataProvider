@@ -61,11 +61,6 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
 
                 if (investor is not null)
                 {
-                    if (!claimedSeasonList.Contains(szn))
-                    {
-                        claimedSeasonList.Add(szn);
-                    }
-
                     continueInv = AdventureBossHelper.CollectWantedReward(
                         myReward,
                         gameConfig,
@@ -83,11 +78,6 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
 
                 if (explorer is not null)
                 {
-                    if (!claimedSeasonList.Contains(szn))
-                    {
-                        claimedSeasonList.Add(szn);
-                    }
-
                     continueExp = AdventureBossHelper.CollectExploreReward(
                         myReward,
                         gameConfig,
@@ -108,6 +98,12 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
                 if (!continueInv && !continueExp)
                 {
                     break;
+                }
+
+                // Add claimed season if not breaking loop
+                if (!claimedSeasonList.Contains(szn))
+                {
+                    claimedSeasonList.Add(szn);
                 }
             }
 
