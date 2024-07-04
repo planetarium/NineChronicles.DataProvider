@@ -18,7 +18,6 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
         {
             var prevExplorer = prevStates.GetExplorer(rush.Season, rush.AvatarAddress);
             var outputExplorer = outputStates.GetExplorer(rush.Season, rush.AvatarAddress);
-            var prevExploreBoard = prevStates.GetExploreBoard(rush.Season);
             var outputExploreBoard = outputStates.GetExploreBoard(rush.Season);
 
             return new AdventureBossRushModel
@@ -30,7 +29,7 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
                 EndFloor = outputExplorer.Floor,
                 UsedApPotion = outputExplorer.UsedApPotion - prevExplorer.UsedApPotion,
                 Point = outputExplorer.Score - prevExplorer.Score,
-                TotalPoint = outputExploreBoard.TotalPoint - prevExploreBoard.TotalPoint,
+                TotalPoint = outputExploreBoard.TotalPoint,
                 Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
