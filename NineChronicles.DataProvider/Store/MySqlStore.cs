@@ -2296,19 +2296,21 @@ namespace NineChronicles.DataProvider.Store
         public List<WorldBossRankingModel> GetWorldBossRanking(int raidId, int? queryOffset, int? queryLimit)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            var query = ctx.Set<WorldBossRankingModel>()
+
+            // Call ToList for convert query result from IQueryable
+            IEnumerable<WorldBossRankingModel> query = ctx.Set<WorldBossRankingModel>()
                 .FromSqlRaw("SET @prev_score = (SELECT max(`TotalScore`) FROM `Raiders` WHERE `RaidId` = {0}); SET @rank = (SELECT count(*) FROM `Raiders` WHERE `RaidId` = {0} AND `TotalScore` = @prev_score); SELECT `AvatarName`, `HighScore`, `TotalScore`, `Cp`, `Level`, `Address`, `IconId`, @rank := IF(@prev_score = TotalScore, @rank, @rank + 1) as `Ranking` FROM `Raiders` WHERE `RaidId` = {0} ORDER BY `TotalScore` DESC", raidId).ToList();
             if (queryOffset.HasValue)
             {
-                query = query.Skip(queryOffset.Value).ToList();
+                query = query.Skip(queryOffset.Value);
             }
 
             if (queryLimit.HasValue)
             {
-                query = query.Take(queryLimit.Value).ToList();
+                query = query.Take(queryLimit.Value);
             }
 
-            return query;
+            return query.OrderBy(i => i.Ranking).ToList();
         }
 
         public int GetTotalRaiders(int raidId)
