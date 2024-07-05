@@ -10,6 +10,8 @@ namespace NineChronicles.DataProvider.Store.Models.AdventureBoss
 
         public long BlockIndex { get; set; }
 
+        public long Season { get; set; }
+
         public string? AvatarAddress { get; set; }
 
         public AvatarModel? Avatar { get; set; }
