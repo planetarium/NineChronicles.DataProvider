@@ -4,14 +4,14 @@ namespace NineChronicles.DataProvider.Store
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Libplanet;
     using Libplanet.Crypto;
     using Microsoft.EntityFrameworkCore;
     using Nekoyume.Model.Item;
     using NineChronicles.DataProvider.Store.Models;
+    using NineChronicles.DataProvider.Store.Models.AdventureBoss;
     using Serilog;
 
-    public class MySqlStore
+    public partial class MySqlStore
     {
         private readonly IDbContextFactory<NineChroniclesContext> _dbContextFactory;
 
@@ -1942,6 +1942,20 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
+        // Adventure Boss
+        public partial Task StoreAdventureBossSeasonList(List<AdventureBossSeasonModel> seasonList);
+
+        public partial Task StoreAdventureBossWantedList(List<AdventureBossWantedModel> wantedList);
+
+        public partial Task StoreAdventureBossChallengeList(List<AdventureBossChallengeModel> challengeList);
+
+        public partial Task StoreAdventureBossRushList(List<AdventureBossRushModel> rushList);
+
+        public partial Task StoreAdventureBossUnlockFloorList(List<AdventureBossUnlockFloorModel> unlockFloorList);
+
+        public partial Task StoreAdventureBossClaimRewardList(List<AdventureBossClaimRewardModel> claimList);
+        /* Adventure Boss */
+
         public List<RaiderModel> GetRaiderList()
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
@@ -2296,8 +2310,10 @@ namespace NineChronicles.DataProvider.Store
         public List<WorldBossRankingModel> GetWorldBossRanking(int raidId, int? queryOffset, int? queryLimit)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
-            var query = ctx.Set<WorldBossRankingModel>()
-                .FromSqlRaw(@"SELECT `AvatarName`, `HighScore`, `TotalScore`, `Cp`, `Level`, `Address`, `IconId`, row_number() over(ORDER BY `TotalScore` DESC, `UpdatedAt`) as `Ranking` FROM `Raiders` WHERE `RaidId` = {0}", raidId);
+
+            // Call ToList for convert query result from IQueryable
+            IEnumerable<WorldBossRankingModel> query = ctx.Set<WorldBossRankingModel>()
+                .FromSqlRaw("SET @prev_score = (SELECT max(`TotalScore`) FROM `Raiders` WHERE `RaidId` = {0}); SET @rank = (SELECT count(*) FROM `Raiders` WHERE `RaidId` = {0} AND `TotalScore` = @prev_score); SELECT `AvatarName`, `HighScore`, `TotalScore`, `Cp`, `Level`, `Address`, `IconId`, @rank := IF(@prev_score = TotalScore, @rank, @rank + 1) as `Ranking` FROM `Raiders` WHERE `RaidId` = {0} ORDER BY `TotalScore` DESC", raidId).ToList();
             if (queryOffset.HasValue)
             {
                 query = query.Skip(queryOffset.Value);
@@ -2308,7 +2324,7 @@ namespace NineChronicles.DataProvider.Store
                 query = query.Take(queryLimit.Value);
             }
 
-            return query.ToList();
+            return query.OrderBy(i => i.Ranking).ToList();
         }
 
         public int GetTotalRaiders(int raidId)

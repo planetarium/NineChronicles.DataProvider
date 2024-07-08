@@ -177,9 +177,8 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
         for (int j = 0; j < 3; j++)
         {
             var model = (Dictionary<string, object>)models[j];
-            Assert.Equal(j + 1, model["ranking"]);
-            Assert.Equal(avatarAddresses[j].ToHex(), model["address"]);
-
+            Assert.Equal(3, model["ranking"]);
+            Assert.Contains(new Address((string)model["address"]), avatarAddresses);
         }
     }
 

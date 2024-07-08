@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
@@ -10,9 +11,10 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20240701080836_AdventureBoss")]
+    partial class AdventureBoss
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -99,9 +101,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
                     b.Property<int>("Point")
                         .HasColumnType("int");
-
-                    b.Property<long>("Season")
-                        .HasColumnType("bigint");
 
                     b.Property<int>("StartFloor")
                         .HasColumnType("int");
@@ -293,7 +292,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<long>("BlockIndex")
                         .HasColumnType("bigint");
 
-                    b.Property<decimal>("Bounty")
+                    b.Property<int>("Bounty")
                         .HasColumnType("decimal(65,30)");
 
                     b.Property<int>("Count")
@@ -308,7 +307,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<DateTimeOffset>("TimeStamp")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<decimal>("TotalBounty")
+                    b.Property<int>("TotalBounty")
                         .HasColumnType("decimal(65,30)");
 
                     b.HasKey("Id");
