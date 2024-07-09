@@ -4,6 +4,7 @@ namespace NineChronicles.DataProvider
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
     using Lib9c.Renderers;
     using Libplanet.Action.State;
     using Nekoyume.Action.AdventureBoss;
@@ -23,25 +24,28 @@ namespace NineChronicles.DataProvider
 
         private void StoreAdventureBossList()
         {
-            Log.Information("[Adventure Boss] Store adventure boss list");
+            Task.Run(async () =>
+            {
+                Log.Information("[Adventure Boss] Store adventure boss list");
 
-            Log.Information($"[Adventure Boss] {_adventureBossSeasonList.Count} Season");
-            MySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonList);
+                Log.Information($"[Adventure Boss] {_adventureBossSeasonList.Count} Season");
+                await MySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonList);
 
-            Log.Information($"[Adventure Boss] {_adventureBossWantedList.Count} Wanted");
-            MySqlStore.StoreAdventureBossWantedList(_adventureBossWantedList);
+                Log.Information($"[Adventure Boss] {_adventureBossWantedList.Count} Wanted");
+                await MySqlStore.StoreAdventureBossWantedList(_adventureBossWantedList);
 
-            Log.Information($"[Adventure Boss] {_adventureBossChallengeList.Count} Challenge");
-            MySqlStore.StoreAdventureBossChallengeList(_adventureBossChallengeList);
+                Log.Information($"[Adventure Boss] {_adventureBossChallengeList.Count} Challenge");
+                await MySqlStore.StoreAdventureBossChallengeList(_adventureBossChallengeList);
 
-            Log.Information($"[Adventure Boss] {_adventureBossRushList.Count} Rush");
-            MySqlStore.StoreAdventureBossRushList(_adventureBossRushList);
+                Log.Information($"[Adventure Boss] {_adventureBossRushList.Count} Rush");
+                await MySqlStore.StoreAdventureBossRushList(_adventureBossRushList);
 
-            Log.Information($"[Adventure Boss] {_adventureBossUnlockFloorList.Count} Unlock");
-            MySqlStore.StoreAdventureBossUnlockFloorList(_adventureBossUnlockFloorList);
+                Log.Information($"[Adventure Boss] {_adventureBossUnlockFloorList.Count} Unlock");
+                await MySqlStore.StoreAdventureBossUnlockFloorList(_adventureBossUnlockFloorList);
 
-            Log.Information($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
-            MySqlStore.StoreAdventureBossClaimRewardList(_adventureBossClaimRewardList);
+                Log.Information($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
+                await MySqlStore.StoreAdventureBossClaimRewardList(_adventureBossClaimRewardList);
+            });
         }
 
         private void ClearAdventureBossList()
