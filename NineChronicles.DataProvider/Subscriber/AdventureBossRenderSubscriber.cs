@@ -82,6 +82,7 @@ namespace NineChronicles.DataProvider
         private void ClearAdventureBossList()
         {
             Log.Debug("[Adventure Boss] Clear adventure boss action lists");
+            _adventureBossSeasonList.Clear();
             _adventureBossWantedList.Clear();
             _adventureBossChallengeList.Clear();
             _adventureBossRushList.Clear();
