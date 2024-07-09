@@ -27,46 +27,46 @@ namespace NineChronicles.DataProvider
             try
             {
                 var tasks = new List<Task>();
-                Log.Information("[Adventure Boss] Store adventure boss list");
+                Log.Debug("[Adventure Boss] Store adventure boss list");
 
                 tasks.Add(Task.Run(async () =>
                     {
-                        Log.Information($"[Adventure Boss] {_adventureBossSeasonList.Count} Season");
+                        Log.Debug($"[Adventure Boss] {_adventureBossSeasonList.Count} Season");
                         await MySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonList);
                     }
                 ));
 
                 tasks.Add(Task.Run(async () =>
                     {
-                        Log.Information($"[Adventure Boss] {_adventureBossWantedList.Count} Wanted");
+                        Log.Debug($"[Adventure Boss] {_adventureBossWantedList.Count} Wanted");
                         await MySqlStore.StoreAdventureBossWantedList(_adventureBossWantedList);
                     }
                 ));
 
                 tasks.Add(Task.Run(async () =>
                     {
-                        Log.Information($"[Adventure Boss] {_adventureBossChallengeList.Count} Challenge");
+                        Log.Debug($"[Adventure Boss] {_adventureBossChallengeList.Count} Challenge");
                         await MySqlStore.StoreAdventureBossChallengeList(_adventureBossChallengeList);
                     }
                 ));
 
                 tasks.Add(Task.Run(async () =>
                     {
-                        Log.Information($"[Adventure Boss] {_adventureBossRushList.Count} Rush");
+                        Log.Debug($"[Adventure Boss] {_adventureBossRushList.Count} Rush");
                         await MySqlStore.StoreAdventureBossRushList(_adventureBossRushList);
                     }
                 ));
 
                 tasks.Add(Task.Run(async () =>
                     {
-                        Log.Information($"[Adventure Boss] {_adventureBossUnlockFloorList.Count} Unlock");
+                        Log.Debug($"[Adventure Boss] {_adventureBossUnlockFloorList.Count} Unlock");
                         await MySqlStore.StoreAdventureBossUnlockFloorList(_adventureBossUnlockFloorList);
                     }
                 ));
 
                 tasks.Add(Task.Run(async () =>
                     {
-                        Log.Information($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
+                        Log.Debug($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
                         await MySqlStore.StoreAdventureBossClaimRewardList(_adventureBossClaimRewardList);
                     }
                 ));
@@ -81,7 +81,7 @@ namespace NineChronicles.DataProvider
 
         private void ClearAdventureBossList()
         {
-            Log.Information("[Adventure Boss] Clear adventure boss action lists");
+            Log.Debug("[Adventure Boss] Clear adventure boss action lists");
             _adventureBossWantedList.Clear();
             _adventureBossChallengeList.Clear();
             _adventureBossRushList.Clear();
@@ -91,7 +91,7 @@ namespace NineChronicles.DataProvider
 
         partial void SubscribeAdventureBossWanted(ActionEvaluation<Wanted> evt)
         {
-            Log.Information("[Adventure Boss] Subscribe Wanted");
+            Log.Debug("[Adventure Boss] Subscribe Wanted");
             try
             {
                 if (evt.Exception is null && evt.Action is { } wanted)
@@ -122,7 +122,7 @@ namespace NineChronicles.DataProvider
 
         partial void SubscribeAdventureBossChallenge(ActionEvaluation<ExploreAdventureBoss> evt)
         {
-            Log.Information("[Adventure Boss] Subscribe Explore");
+            Log.Debug("[Adventure Boss] Subscribe Explore");
             try
             {
                 if (evt.Exception is null && evt.Action is { } challenge)
@@ -148,7 +148,7 @@ namespace NineChronicles.DataProvider
 
         partial void SubscribeAdventureBossRush(ActionEvaluation<SweepAdventureBoss> evt)
         {
-            Log.Information("[Adventure Boss] Subscribe Rush");
+            Log.Debug("[Adventure Boss] Subscribe Rush");
             try
             {
                 if (evt.Exception is null && evt.Action is { } rush)
@@ -174,7 +174,7 @@ namespace NineChronicles.DataProvider
 
         partial void SubscribeAdventureBossUnlockFloor(ActionEvaluation<UnlockFloor> evt)
         {
-            Log.Information("[Adventure Boss] Subscribe UnlockFloor");
+            Log.Debug("[Adventure Boss] Subscribe UnlockFloor");
             try
             {
                 if (evt.Exception is null && evt.Action is { } unlock)
@@ -200,7 +200,7 @@ namespace NineChronicles.DataProvider
 
         partial void SubscribeAdventureBossClaim(ActionEvaluation<ClaimAdventureBossReward> evt)
         {
-            Log.Information("[Adventure Boss] Subscribe Claim");
+            Log.Debug("[Adventure Boss] Subscribe Claim");
             try
             {
                 if (evt.Exception is null && evt.Action is { } claim)
