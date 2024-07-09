@@ -23,11 +23,24 @@ namespace NineChronicles.DataProvider
 
         private void StoreAdventureBossList()
         {
+            Log.Information("[Adventure Boss] Store adventure boss list");
+
+            Log.Information($"[Adventure Boss] {_adventureBossSeasonList.Count} Season");
             MySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonList);
+
+            Log.Information($"[Adventure Boss] {_adventureBossWantedList.Count} Wanted");
             MySqlStore.StoreAdventureBossWantedList(_adventureBossWantedList);
+
+            Log.Information($"[Adventure Boss] {_adventureBossChallengeList.Count} Challenge");
             MySqlStore.StoreAdventureBossChallengeList(_adventureBossChallengeList);
+
+            Log.Information($"[Adventure Boss] {_adventureBossRushList.Count} Rush");
             MySqlStore.StoreAdventureBossRushList(_adventureBossRushList);
+
+            Log.Information($"[Adventure Boss] {_adventureBossUnlockFloorList.Count} Unlock");
             MySqlStore.StoreAdventureBossUnlockFloorList(_adventureBossUnlockFloorList);
+
+            Log.Information($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
             MySqlStore.StoreAdventureBossClaimRewardList(_adventureBossClaimRewardList);
         }
 
@@ -42,6 +55,7 @@ namespace NineChronicles.DataProvider
 
         partial void SubscribeAdventureBossWanted(ActionEvaluation<Wanted> evt)
         {
+            Log.Information("[Adventure Boss] Subscribe Wanted");
             try
             {
                 if (evt.Exception is null && evt.Action is { } wanted)
@@ -70,6 +84,7 @@ namespace NineChronicles.DataProvider
 
         partial void SubscribeAdventureBossChallenge(ActionEvaluation<ExploreAdventureBoss> evt)
         {
+            Log.Information("[Adventure Boss] Subscribe Explore");
             try
             {
                 if (evt.Exception is null && evt.Action is { } challenge)
@@ -94,6 +109,7 @@ namespace NineChronicles.DataProvider
 
         partial void SubscribeAdventureBossRush(ActionEvaluation<SweepAdventureBoss> evt)
         {
+            Log.Information("[Adventure Boss] Subscribe Rush");
             try
             {
                 if (evt.Exception is null && evt.Action is { } rush)
@@ -118,6 +134,7 @@ namespace NineChronicles.DataProvider
 
         partial void SubscribeAdventureBossUnlockFloor(ActionEvaluation<UnlockFloor> evt)
         {
+            Log.Information("[Adventure Boss] Subscribe UnlockFloor");
             try
             {
                 if (evt.Exception is null && evt.Action is { } unlock)
@@ -142,6 +159,7 @@ namespace NineChronicles.DataProvider
 
         partial void SubscribeAdventureBossClaim(ActionEvaluation<ClaimAdventureBossReward> evt)
         {
+            Log.Information("[Adventure Boss] Subscribe Claim");
             try
             {
                 if (evt.Exception is null && evt.Action is { } claim)
