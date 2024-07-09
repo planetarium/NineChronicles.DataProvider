@@ -118,7 +118,7 @@ namespace NineChronicles.DataProvider.Store
                 Task.WaitAll(tasks.ToArray());
                 Log.Information("[Adventure Boss] Challenge Added");
                 await ctx.SaveChangesAsync();
-                Log.Information("[Adventure Boss] Challenge Added");
+                Log.Information("[Adventure Boss] Challenge Saved");
             }
             catch (Exception e)
             {
@@ -158,7 +158,7 @@ namespace NineChronicles.DataProvider.Store
                 Task.WaitAll(tasks.ToArray());
                 Log.Information("[Adventure Boss] Rush Added");
                 await ctx.SaveChangesAsync();
-                Log.Information("[Adventure Boss] Rush Added");
+                Log.Information("[Adventure Boss] Rush Saved");
             }
             catch (Exception e)
             {
@@ -199,7 +199,7 @@ namespace NineChronicles.DataProvider.Store
                 Task.WaitAll(tasks.ToArray());
                 Log.Information("[Adventure Boss] UnlockFloor Added");
                 await ctx.SaveChangesAsync();
-                Log.Information("[Adventure Boss] UnlockFloor Added");
+                Log.Information("[Adventure Boss] UnlockFloor Saved");
             }
             catch (Exception e)
             {
@@ -240,7 +240,7 @@ namespace NineChronicles.DataProvider.Store
                 Task.WaitAll(tasks.ToArray());
                 Log.Information("[Adventure Boss] Claim Added");
                 await ctx.SaveChangesAsync();
-                Log.Information("[Adventure Boss] Claim Added");
+                Log.Information("[Adventure Boss] Claim Saved");
             }
             catch (Exception e)
             {

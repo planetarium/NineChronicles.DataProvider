@@ -50,6 +50,7 @@ namespace NineChronicles.DataProvider
 
         private void ClearAdventureBossList()
         {
+            Log.Information("[Adventure Boss] Clear adventure boss action lists");
             _adventureBossWantedList.Clear();
             _adventureBossChallengeList.Clear();
             _adventureBossRushList.Clear();
@@ -68,11 +69,13 @@ namespace NineChronicles.DataProvider
                     _adventureBossWantedList.Add(AdventureBossWantedData.GetWantedInfo(
                         outputState, evt.BlockIndex, _blockTimeOffset, wanted
                     ));
+                    Log.Debug($"[Adventure Boss] Wanted added : {_adventureBossWantedList.Count}");
 
                     // Update season info
                     _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
                         outputState, wanted.Season, _blockTimeOffset
                     ));
+                    Log.Debug($"[Adventure Boss] Season added : {_adventureBossSeasonList.Count}");
                 }
             }
             catch (Exception e)
@@ -98,6 +101,7 @@ namespace NineChronicles.DataProvider
                     _adventureBossChallengeList.Add(AdventureBossChallengeData.GetChallengeInfo(
                         prevState, outputState, evt.BlockIndex, _blockTimeOffset, challenge
                     ));
+                    Log.Debug($"[Adventure Boss] Challenge added : {_adventureBossChallengeList.Count}");
                 }
             }
             catch (Exception e)
@@ -123,6 +127,7 @@ namespace NineChronicles.DataProvider
                     _adventureBossRushList.Add(AdventureBossRushData.GetRushInfo(
                         prevState, outputState, evt.BlockIndex, _blockTimeOffset, rush
                     ));
+                    Log.Debug($"[Adventure Boss] Rush added : {_adventureBossRushList.Count}");
                 }
             }
             catch (Exception e)
@@ -148,6 +153,7 @@ namespace NineChronicles.DataProvider
                     _adventureBossUnlockFloorList.Add(AdventureBossUnlockFloorData.GetUnlockInfo(
                         prevState, outputState, evt.BlockIndex, _blockTimeOffset, unlock
                     ));
+                    Log.Debug($"[Adventure Boss] Unlock added : {_adventureBossUnlockFloorList.Count}");
                 }
             }
             catch (Exception e)
@@ -173,6 +179,7 @@ namespace NineChronicles.DataProvider
                     _adventureBossClaimRewardList.Add(AdventureBossClaimRewardData.GetClaimInfo(
                         prevState, evt.BlockIndex, _blockTimeOffset, claim
                     ));
+                    Log.Debug($"[Adventure Boss] Claim added : {_adventureBossClaimRewardList.Count}");
 
                     // Update season info
                     var latestSeason = prevState.GetLatestAdventureBossSeason();
@@ -182,6 +189,7 @@ namespace NineChronicles.DataProvider
                     _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
                         outputState, season, _blockTimeOffset
                     ));
+                    Log.Debug($"[Adventure Boss] Season updated : {_adventureBossSeasonList.Count}");
                 }
             }
             catch (Exception e)
