@@ -16,7 +16,6 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
             UnlockFloor unlock
         )
         {
-            var prevExploreBoard = prevState.GetExploreBoard(unlock.Season);
             var outputExploreBoard = outputState.GetExploreBoard(unlock.Season);
             var prevExplorer = prevState.GetExplorer(unlock.Season, unlock.AvatarAddress);
             var outputExplorer = outputState.GetExplorer(unlock.Season, unlock.AvatarAddress);
@@ -27,8 +26,8 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
                 Season = unlock.Season,
                 AvatarAddress = unlock.AvatarAddress.ToString(),
                 UnlockFloor = prevExplorer.Floor + 1,
-                UsedGoldenDust = outputExplorer.UsedGoldenDust - prevExploreBoard.UsedGoldenDust,
-                UsedNcg = (decimal)(outputExploreBoard.UsedNcg - prevExploreBoard.UsedNcg),
+                UsedGoldenDust = outputExplorer.UsedGoldenDust - prevExplorer.UsedGoldenDust,
+                UsedNcg = (decimal)(outputExplorer.UsedNcg - prevExplorer.UsedNcg),
                 TotalUsedGoldenDust = outputExploreBoard.UsedGoldenDust,
                 TotalUsedNcg = (decimal)outputExploreBoard.UsedNcg,
                 Date = DateOnly.FromDateTime(blockTime.DateTime),
