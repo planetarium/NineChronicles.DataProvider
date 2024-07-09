@@ -155,8 +155,8 @@ namespace NineChronicles.DataProvider
                     // Update season info
                     var latestSeason = prevState.GetLatestAdventureBossSeason();
                     var season = latestSeason.EndBlockIndex <= evt.BlockIndex
-                        ? latestSeason.Season
-                        : latestSeason.Season - 1;
+                        ? latestSeason.Season // New season not started
+                        : latestSeason.Season - 1; // New season started
                     _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
                         outputState, season, _blockTimeOffset
                     ));

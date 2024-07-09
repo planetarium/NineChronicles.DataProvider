@@ -29,7 +29,7 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
                 FixedRewardData = (bountyBoard.FixedRewardItemId ?? bountyBoard.FixedRewardFavId).ToString(),
                 RandomRewardData = (bountyBoard.RandomRewardItemId ?? bountyBoard.RandomRewardFavId).ToString(),
                 RaffleWinnerAddress = exploreBoard.RaffleWinner is null ? null : exploreBoard.RaffleWinner.ToString(),
-                RaffleReward = Convert.ToDecimal(exploreBoard.RaffleReward?.RawValue),
+                RaffleReward = Convert.ToDecimal(exploreBoard.RaffleReward?.GetQuantityString()),
                 Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
             };
