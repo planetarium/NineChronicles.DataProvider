@@ -24,7 +24,7 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
             var outputExplorer = outputStates.GetExplorer(challenge.Season, challenge.AvatarAddress);
             var exploreBoard = outputStates.GetExploreBoard(challenge.Season);
 
-            Log.Debug(
+            Log.Verbose(
                 $"[Adventure Boss] GetChallengeData: {challenge.Season}::{prevExplorer.Floor}~{outputExplorer.Floor}::{outputExplorer.UsedApPotion - prevExplorer.UsedApPotion}::{exploreBoard.TotalPoint}"
             );
             return new AdventureBossChallengeModel
