@@ -1,3 +1,5 @@
+using Nekoyume.Model.EnumType;
+
 namespace NineChronicles.DataProvider.Executable.Commands
 {
     using System;
@@ -299,6 +301,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 {
                                     // avatarNames will be stored as "N/A" for optimization
                                     case Wanted wanted:
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, wanted.AvatarAddress, new List<RuneSlotInfo>(), _blockTimeOffset, BattleType.Adventure));
                                         _adventureBossWantedList.Add(AdventureBossWantedData.GetWantedInfo(
                                             outputState, _blockIndex, _blockTimeOffset, wanted
                                         ));
@@ -311,6 +314,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         Console.WriteLine($"[Adventure Boss] Season added : {_adventureBossSeasonList.Count}");
                                         break;
                                     case ExploreAdventureBoss challenge:
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, challenge.AvatarAddress, new List<RuneSlotInfo>(), _blockTimeOffset, BattleType.Adventure));
                                         _adventureBossChallengeList.Add(AdventureBossChallengeData.GetChallengeInfo(
                                             inputState, outputState, _blockIndex, _blockTimeOffset, challenge
                                         ));
@@ -318,12 +322,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             $"[Adventure Boss] Challenge added : {_adventureBossChallengeList.Count}");
                                         break;
                                     case SweepAdventureBoss rush:
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, rush.AvatarAddress, new List<RuneSlotInfo>(), _blockTimeOffset, BattleType.Adventure));
                                         _adventureBossRushList.Add(AdventureBossRushData.GetRushInfo(
                                             inputState, outputState, _blockIndex, _blockTimeOffset, rush
                                         ));
                                         Console.WriteLine($"[Adventure Boss] Rush added : {_adventureBossRushList.Count}");
                                         break;
                                     case UnlockFloor unlock:
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, unlock.AvatarAddress, new List<RuneSlotInfo>(), _blockTimeOffset, BattleType.Adventure));
                                         _adventureBossUnlockFloorList.Add(AdventureBossUnlockFloorData.GetUnlockInfo(
                                             inputState, outputState, _blockIndex, _blockTimeOffset, unlock
                                         ));
@@ -331,6 +337,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         break;
                                     case ClaimAdventureBossReward claim:
                                     {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, claim.AvatarAddress, new List<RuneSlotInfo>(), _blockTimeOffset, BattleType.Adventure));
                                         _adventureBossClaimRewardList.Add(AdventureBossClaimRewardData.GetClaimInfo(
                                             inputState, _blockIndex, _blockTimeOffset, claim
                                         ));
