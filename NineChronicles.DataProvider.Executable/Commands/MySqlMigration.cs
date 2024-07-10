@@ -1,96 +1,57 @@
-using Nekoyume.Model.EnumType;
-
 namespace NineChronicles.DataProvider.Executable.Commands
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Text;
     using System.Threading.Tasks;
-    using Bencodex.Types;
     using Cocona;
-    using Lib9c.Model.Order;
     using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Blockchain;
     using Libplanet.Blockchain.Policies;
     using Libplanet.RocksDBStore;
     using Libplanet.Store;
-    using Libplanet.Types.Assets;
     using Libplanet.Types.Blocks;
-    using Libplanet.Types.Tx;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Internal;
     using Microsoft.Extensions.DependencyInjection;
     using MySqlConnector;
-    using Nekoyume;
     using Nekoyume.Action;
+    using Nekoyume.Action.AdventureBoss;
     using Nekoyume.Action.Loader;
     using Nekoyume.Blockchain.Policy;
-    using Nekoyume.Extensions;
-    using Nekoyume.Helper;
-    using Nekoyume.Model.Item;
-    using Nekoyume.Model.State;
     using Nekoyume.Module;
-    using Nekoyume.TableData;
-    using Nekoyume.TableData.Rune;
     using NineChronicles.DataProvider.DataRendering;
+    using NineChronicles.DataProvider.DataRendering.AdventureBoss;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
+    using NineChronicles.DataProvider.Store.Models.AdventureBoss;
     using Serilog;
-    using static Lib9c.SerializeKeys;
 
     public class MySqlMigration
     {
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain _baseChain;
-        private List<string> _agentCheck;
-        private List<string> _avatarCheck;
+
+        // lists to keep track of inserted addresses to minimize duplicates
+        private List<string> _agentCheck = new ();
+        private List<string> _avatarCheck = new ();
         private MySqlStore _mySqlStore;
         private BlockHash _blockHash;
         private long _blockIndex;
         private DateTimeOffset _blockTimeOffset;
-        private List<BlockModel> _blockList;
-        private List<TransactionModel> _txList;
-        private List<AgentModel> _agentList;
-        private List<AvatarModel> _avatarList;
-        private List<HackAndSlashModel> _hackAndSlashList;
-        private List<HasWithRandomBuffModel> _hasWithRandomBuffList;
-        private List<ClaimStakeRewardModel> _claimStakeRewardList;
-        private List<RunesAcquiredModel> _runesAcquiredList;
-        private List<EventDungeonBattleModel> _eventDungeonBattleList;
-        private List<EventConsumableItemCraftsModel> _eventConsumableItemCraftsList;
-        private List<HackAndSlashSweepModel> _hackAndSlashSweepList;
-        private List<CombinationConsumableModel> _combinationConsumableList;
-        private List<CombinationEquipmentModel> _combinationEquipmentList;
-        private List<EquipmentModel> _equipmentList;
-        private List<ItemEnhancementModel> _itemEnhancementList;
-        private List<ShopHistoryEquipmentModel> _buyShopEquipmentsList;
-        private List<ShopHistoryCostumeModel> _buyShopCostumesList;
-        private List<ShopHistoryMaterialModel> _buyShopMaterialsList;
-        private List<ShopHistoryConsumableModel> _buyShopConsumablesList;
-        private List<StakeModel> _stakeList;
-        private List<ClaimStakeRewardModel> _claimStakeList;
-        private List<MigrateMonsterCollectionModel> _migrateMonsterCollectionList;
-        private List<GrindingModel> _grindList;
-        private List<ItemEnhancementFailModel> _itemEnhancementFailList;
-        private List<UnlockEquipmentRecipeModel> _unlockEquipmentRecipeList;
-        private List<UnlockWorldModel> _unlockWorldList;
-        private List<ReplaceCombinationEquipmentMaterialModel> _replaceCombinationEquipmentMaterialList;
-        private List<HasRandomBuffModel> _hasRandomBuffList;
-        private List<JoinArenaModel> _joinArenaList;
-        private List<BattleArenaModel> _battleArenaList;
-        private List<RaiderModel> _raiderList;
-        private List<BattleGrandFinaleModel> _battleGrandFinaleList;
-        private List<EventMaterialItemCraftsModel> _eventMaterialItemCraftsList;
-        private List<RuneEnhancementModel> _runeEnhancementList;
-        private List<UnlockRuneSlotModel> _unlockRuneSlotList;
-        private List<RapidCombinationModel> _rapidCombinationList;
-        private List<PetEnhancementModel> _petEnhancementList;
-        private List<TransferAssetModel> _transferAssetList;
-        private List<RequestPledgeModel> _requestPledgeList;
+        private List<BlockModel> _blockList = new ();
+        private List<TransactionModel> _txList = new ();
+        private List<AgentModel> _agentList = new ();
+        private List<AvatarModel> _avatarList = new ();
+        private List<AdventureBossSeasonModel> _adventureBossSeasonList = new ();
+        private List<AdventureBossWantedModel> _adventureBossWantedList = new ();
+        private List<AdventureBossChallengeModel> _adventureBossChallengeList = new ();
+        private List<AdventureBossRushModel> _adventureBossRushList = new ();
+        private List<AdventureBossUnlockFloorModel> _adventureBossUnlockFloorList = new ();
+        private List<AdventureBossClaimRewardModel> _adventureBossClaimRewardList = new ();
 
         [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
         public void Migration(
@@ -191,7 +152,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _ => blockPolicy.BlockAction,
                 baseStateStore,
                 new NCActionLoader());
-            _baseChain = new BlockChain(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, actionEvaluator);
+            _baseChain = new BlockChain(
+                blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, actionEvaluator
+            );
 
             // Check offset and limit value based on chain height
             long height = _baseChain.Tip.Index;
@@ -205,50 +168,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
             }
 
             Console.WriteLine("Start migration.");
-
-            // lists to keep track of inserted addresses to minimize duplicates
-            _agentCheck = new List<string>();
-            _avatarCheck = new List<string>();
-
-            _blockList = new List<BlockModel>();
-            _txList = new List<TransactionModel>();
-            _agentList = new List<AgentModel>();
-            _avatarList = new List<AvatarModel>();
-            _hackAndSlashList = new List<HackAndSlashModel>();
-            _hasWithRandomBuffList = new List<HasWithRandomBuffModel>();
-            _claimStakeRewardList = new List<ClaimStakeRewardModel>();
-            _runesAcquiredList = new List<RunesAcquiredModel>();
-            _eventDungeonBattleList = new List<EventDungeonBattleModel>();
-            _eventConsumableItemCraftsList = new List<EventConsumableItemCraftsModel>();
-            _hackAndSlashSweepList = new List<HackAndSlashSweepModel>();
-            _combinationConsumableList = new List<CombinationConsumableModel>();
-            _combinationEquipmentList = new List<CombinationEquipmentModel>();
-            _equipmentList = new List<EquipmentModel>();
-            _itemEnhancementList = new List<ItemEnhancementModel>();
-            _buyShopEquipmentsList = new List<ShopHistoryEquipmentModel>();
-            _buyShopCostumesList = new List<ShopHistoryCostumeModel>();
-            _buyShopMaterialsList = new List<ShopHistoryMaterialModel>();
-            _buyShopConsumablesList = new List<ShopHistoryConsumableModel>();
-            _stakeList = new List<StakeModel>();
-            _claimStakeList = new List<ClaimStakeRewardModel>();
-            _migrateMonsterCollectionList = new List<MigrateMonsterCollectionModel>();
-            _grindList = new List<GrindingModel>();
-            _itemEnhancementFailList = new List<ItemEnhancementFailModel>();
-            _unlockEquipmentRecipeList = new List<UnlockEquipmentRecipeModel>();
-            _unlockWorldList = new List<UnlockWorldModel>();
-            _replaceCombinationEquipmentMaterialList = new List<ReplaceCombinationEquipmentMaterialModel>();
-            _hasRandomBuffList = new List<HasRandomBuffModel>();
-            _joinArenaList = new List<JoinArenaModel>();
-            _battleArenaList = new List<BattleArenaModel>();
-            _raiderList = new List<RaiderModel>();
-            _battleGrandFinaleList = new List<BattleGrandFinaleModel>();
-            _eventMaterialItemCraftsList = new List<EventMaterialItemCraftsModel>();
-            _runeEnhancementList = new List<RuneEnhancementModel>();
-            _unlockRuneSlotList = new List<UnlockRuneSlotModel>();
-            _rapidCombinationList = new List<RapidCombinationModel>();
-            _petEnhancementList = new List<PetEnhancementModel>();
-            _transferAssetList = new List<TransferAssetModel>();
-            _requestPledgeList = new List<RequestPledgeModel>();
 
             try
             {
@@ -273,7 +192,11 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     }
 
                     foreach (var item in
-                        _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
+                             _baseStore.IterateIndexes(
+                                 _baseChain.Id,
+                                 offset + offsetIdx ?? 0 + offsetIdx,
+                                 limitInterval
+                             ).Select((value, i) => new { i, value }))
                     {
                         var block = _baseStore.GetBlock(item.value);
                         _blockList.Add(BlockData.GetBlockInfo(block));
@@ -322,46 +245,50 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _mySqlStore.StoreTransactionList(_txList);
                 _mySqlStore.StoreAgentList(_agentList);
                 _mySqlStore.StoreAvatarList(_avatarList);
-                _mySqlStore.StoreHackAndSlashList(_hackAndSlashList);
-                _mySqlStore.StoreHasWithRandomBuffList(_hasWithRandomBuffList);
-                _mySqlStore.StoreClaimStakeRewardList(_claimStakeRewardList);
-                _mySqlStore.StoreRunesAcquiredList(_runesAcquiredList);
-                _mySqlStore.StoreEventDungeonBattleList(_eventDungeonBattleList);
-                _mySqlStore.StoreEventConsumableItemCraftsList(_eventConsumableItemCraftsList);
-                _mySqlStore.StoreHackAndSlashSweepList(_hackAndSlashSweepList);
-                _mySqlStore.StoreCombinationConsumableList(_combinationConsumableList);
-                _mySqlStore.StoreCombinationEquipmentList(_combinationEquipmentList);
-                _mySqlStore.StoreItemEnhancementList(_itemEnhancementList);
-                _mySqlStore.StoreShopHistoryEquipmentList(_buyShopEquipmentsList);
-                _mySqlStore.StoreShopHistoryCostumeList(_buyShopCostumesList);
-                _mySqlStore.StoreShopHistoryMaterialList(_buyShopMaterialsList);
-                _mySqlStore.StoreShopHistoryConsumableList(_buyShopConsumablesList);
-                _mySqlStore.ProcessEquipmentList(_equipmentList);
-                _mySqlStore.StoreStakingList(_stakeList);
-                _mySqlStore.StoreClaimStakeRewardList(_claimStakeList);
-                _mySqlStore.StoreMigrateMonsterCollectionList(_migrateMonsterCollectionList);
-                _mySqlStore.StoreGrindList(_grindList);
-                _mySqlStore.StoreItemEnhancementFailList(_itemEnhancementFailList);
-                _mySqlStore.StoreUnlockEquipmentRecipeList(_unlockEquipmentRecipeList);
-                _mySqlStore.StoreUnlockWorldList(_unlockWorldList);
-                _mySqlStore.StoreReplaceCombinationEquipmentMaterialList(_replaceCombinationEquipmentMaterialList);
-                _mySqlStore.StoreHasRandomBuffList(_hasRandomBuffList);
-                _mySqlStore.StoreHasWithRandomBuffList(_hasWithRandomBuffList);
-                _mySqlStore.StoreJoinArenaList(_joinArenaList);
-                _mySqlStore.StoreBattleArenaList(_battleArenaList);
-                _mySqlStore.StoreBlockList(_blockList);
-                _mySqlStore.StoreEventDungeonBattleList(_eventDungeonBattleList);
-                _mySqlStore.StoreEventConsumableItemCraftsList(_eventConsumableItemCraftsList);
-                _mySqlStore.StoreRaiderList(_raiderList);
-                _mySqlStore.StoreBattleGrandFinaleList(_battleGrandFinaleList);
-                _mySqlStore.StoreEventMaterialItemCraftsList(_eventMaterialItemCraftsList);
-                _mySqlStore.StoreRuneEnhancementList(_runeEnhancementList);
-                _mySqlStore.StoreRunesAcquiredList(_runesAcquiredList);
-                _mySqlStore.StoreUnlockRuneSlotList(_unlockRuneSlotList);
-                _mySqlStore.StoreRapidCombinationList(_rapidCombinationList);
-                _mySqlStore.StorePetEnhancementList(_petEnhancementList);
-                _mySqlStore.StoreTransferAssetList(_transferAssetList);
-                _mySqlStore.StoreRequestPledgeList(_requestPledgeList);
+                var tasks = new List<Task>();
+                tasks.Add(Task.Run(async () =>
+                    {
+                        Log.Debug($"[Adventure Boss] {_adventureBossSeasonList.Count} Season");
+                        await _mySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonList);
+                    }
+                ));
+
+                tasks.Add(Task.Run(async () =>
+                    {
+                        Log.Debug($"[Adventure Boss] {_adventureBossWantedList.Count} Wanted");
+                        await _mySqlStore.StoreAdventureBossWantedList(_adventureBossWantedList);
+                    }
+                ));
+
+                tasks.Add(Task.Run(async () =>
+                    {
+                        Log.Debug($"[Adventure Boss] {_adventureBossChallengeList.Count} Challenge");
+                        await _mySqlStore.StoreAdventureBossChallengeList(_adventureBossChallengeList);
+                    }
+                ));
+
+                tasks.Add(Task.Run(async () =>
+                    {
+                        Log.Debug($"[Adventure Boss] {_adventureBossRushList.Count} Rush");
+                        await _mySqlStore.StoreAdventureBossRushList(_adventureBossRushList);
+                    }
+                ));
+
+                tasks.Add(Task.Run(async () =>
+                    {
+                        Log.Debug($"[Adventure Boss] {_adventureBossUnlockFloorList.Count} Unlock");
+                        await _mySqlStore.StoreAdventureBossUnlockFloorList(_adventureBossUnlockFloorList);
+                    }
+                ));
+
+                tasks.Add(Task.Run(async () =>
+                    {
+                        Log.Debug($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
+                        await _mySqlStore.StoreAdventureBossClaimRewardList(_adventureBossClaimRewardList);
+                    }
+                ));
+
+                Task.WaitAll(tasks.ToArray());
             }
             catch (Exception e)
             {
@@ -372,7 +299,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
         }
 
-        private void ProcessTasks(Task<List<ICommittedActionEvaluation>>[] taskArray, IBlockChainStates blockChainStates)
+        private void ProcessTasks(
+            Task<List<ICommittedActionEvaluation>>[] taskArray, IBlockChainStates blockChainStates
+        )
         {
             foreach (var task in taskArray)
             {
@@ -387,759 +316,58 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                         if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase action)
                         {
-                            // avatarNames will be stored as "N/A" for optimization
-                            if (action is HackAndSlash hasAction)
+                            switch (action)
                             {
-                                var avatarAddress = hasAction.AvatarAddress;
+                                // avatarNames will be stored as "N/A" for optimization
+                                case Wanted wanted:
+                                    _adventureBossWantedList.Add(AdventureBossWantedData.GetWantedInfo(
+                                        outputState, _blockIndex, _blockTimeOffset, wanted
+                                    ));
+                                    Log.Debug($"[Adventure Boss] Wanted added : {_adventureBossWantedList.Count}");
 
-                                // check if address is already in _avatarCheck
-                                if (!_avatarCheck.Contains(avatarAddress.ToString()))
+                                    // Update season info
+                                    _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
+                                        outputState, wanted.Season, _blockTimeOffset
+                                    ));
+                                    Log.Debug($"[Adventure Boss] Season added : {_adventureBossSeasonList.Count}");
+                                    break;
+                                case ExploreAdventureBoss challenge:
+                                    _adventureBossChallengeList.Add(AdventureBossChallengeData.GetChallengeInfo(
+                                        inputState, outputState, _blockIndex, _blockTimeOffset, challenge
+                                    ));
+                                    Log.Debug(
+                                        $"[Adventure Boss] Challenge added : {_adventureBossChallengeList.Count}");
+                                    break;
+                                case SweepAdventureBoss rush:
+                                    _adventureBossRushList.Add(AdventureBossRushData.GetRushInfo(
+                                        inputState, outputState, _blockIndex, _blockTimeOffset, rush
+                                    ));
+                                    Log.Debug($"[Adventure Boss] Rush added : {_adventureBossRushList.Count}");
+                                    break;
+                                case UnlockFloor unlock:
+                                    _adventureBossUnlockFloorList.Add(AdventureBossUnlockFloorData.GetUnlockInfo(
+                                        inputState, outputState, _blockIndex, _blockTimeOffset, unlock
+                                    ));
+                                    Log.Debug($"[Adventure Boss] Unlock added : {_adventureBossUnlockFloorList.Count}");
+                                    break;
+                                case ClaimAdventureBossReward claim:
                                 {
-                                    _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, hasAction.AvatarAddress, hasAction.RuneInfos, _blockTimeOffset, BattleType.Adventure));
-                                    _avatarCheck.Add(avatarAddress.ToString());
+                                    _adventureBossClaimRewardList.Add(AdventureBossClaimRewardData.GetClaimInfo(
+                                        inputState, _blockIndex, _blockTimeOffset, claim
+                                    ));
+                                    Log.Debug($"[Adventure Boss] Claim added : {_adventureBossClaimRewardList.Count}");
+
+                                    // Update season info
+                                    var latestSeason = inputState.GetLatestAdventureBossSeason();
+                                    var season = latestSeason.EndBlockIndex <= _blockIndex
+                                        ? latestSeason.Season // New season not started
+                                        : latestSeason.Season - 1; // New season started
+                                    _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
+                                        outputState, season, _blockTimeOffset
+                                    ));
+                                    Log.Debug($"[Adventure Boss] Season updated : {_adventureBossSeasonList.Count}");
+                                    break;
                                 }
-
-                                Console.WriteLine("Writing {0} action {1} in block #{2}", nameof(HackAndSlash), ae.InputContext.TxId, ae.InputContext.BlockIndex);
-                                _hackAndSlashList.Add(HackAndSlashData.GetHackAndSlashInfo(inputState, outputState, ae.InputContext.Signer, hasAction.AvatarAddress, hasAction.StageId, hasAction.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
-                                if (hasAction.StageBuffId.HasValue)
-                                {
-                                    _hasWithRandomBuffList.Add(HasWithRandomBuffData.GetHasWithRandomBuffInfo(inputState, outputState, ae.InputContext.Signer, hasAction.AvatarAddress, hasAction.StageId, hasAction.StageBuffId, hasAction.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
-                                }
-                            }
-
-                            if (action is IClaimStakeReward claimStakeReward)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var plainValue = (Bencodex.Types.Dictionary)claimStakeReward.PlainValue;
-                                var avatarAddress = plainValue[AvatarAddressKey].ToAddress();
-                                var id = ((GameAction)claimStakeReward).Id;
-#pragma warning disable CS0618
-                                var runeCurrency = Currency.Legacy(RuneHelper.StakeRune.Ticker, 0, minters: null);
-#pragma warning restore CS0618
-                                var prevRuneBalance = inputState.GetBalance(
-                                    avatarAddress,
-                                    runeCurrency);
-                                var outputRuneBalance = outputState.GetBalance(
-                                    avatarAddress,
-                                    runeCurrency);
-                                var acquiredRune = outputRuneBalance - prevRuneBalance;
-                                var actionType = claimStakeReward.ToString()!.Split('.').LastOrDefault()?.Replace(">", string.Empty);
-                                _runesAcquiredList.Add(RunesAcquiredData.GetRunesAcquiredInfo(
-                                    id,
-                                    ae.InputContext.Signer,
-                                    avatarAddress,
-                                    ae.InputContext.BlockIndex,
-                                    actionType!,
-                                    runeCurrency.Ticker,
-                                    acquiredRune,
-                                    _blockTimeOffset));
-                                _claimStakeRewardList.Add(ClaimStakeRewardData.GetClaimStakeRewardInfo(claimStakeReward, inputState, outputState, ae.InputContext.Signer, ae.InputContext.BlockIndex, _blockTimeOffset));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing ClaimStakeReward action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is EventDungeonBattle eventDungeonBattle)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var actionType = eventDungeonBattle.ToString()!.Split('.').LastOrDefault()
-                                    ?.Replace(">", string.Empty);
-                                _eventDungeonBattleList.Add(EventDungeonBattleData.GetEventDungeonBattleInfo(
-                                    inputState,
-                                    outputState,
-                                    ae.InputContext.Signer,
-                                    eventDungeonBattle.AvatarAddress,
-                                    eventDungeonBattle.EventScheduleId,
-                                    eventDungeonBattle.EventDungeonId,
-                                    eventDungeonBattle.EventDungeonStageId,
-                                    eventDungeonBattle.Foods.Count,
-                                    eventDungeonBattle.Costumes.Count,
-                                    eventDungeonBattle.Equipments.Count,
-                                    eventDungeonBattle.Id,
-                                    actionType!,
-                                    ae.InputContext.BlockIndex,
-                                    _blockTimeOffset));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing EventDungeonBattle action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is EventConsumableItemCrafts eventConsumableItemCrafts)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _eventConsumableItemCraftsList.Add(EventConsumableItemCraftsData.GetEventConsumableItemCraftsInfo(eventConsumableItemCrafts, inputState, outputState, ae.InputContext.Signer, ae.InputContext.BlockIndex, _blockTimeOffset));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing EventConsumableItemCrafts action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is HackAndSlashSweep hasSweep)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, hasSweep.avatarAddress, hasSweep.runeInfos, _blockTimeOffset, BattleType.Adventure));
-                                _hackAndSlashSweepList.Add(HackAndSlashSweepData.GetHackAndSlashSweepInfo(
-                                    inputState,
-                                    outputState,
-                                    ae.InputContext.Signer,
-                                    hasSweep.avatarAddress,
-                                    hasSweep.stageId,
-                                    hasSweep.worldId,
-                                    hasSweep.apStoneCount,
-                                    hasSweep.actionPoint,
-                                    hasSweep.costumes.Count,
-                                    hasSweep.equipments.Count,
-                                    hasSweep.Id,
-                                    ae.InputContext.BlockIndex,
-                                    _blockTimeOffset));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing HackAndSlashSweep action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is CombinationConsumable combinationConsumable)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _combinationConsumableList.Add(CombinationConsumableData.GetCombinationConsumableInfo(
-                                    inputState,
-                                    outputState,
-                                    ae.InputContext.Signer,
-                                    combinationConsumable.avatarAddress,
-                                    combinationConsumable.recipeId,
-                                    combinationConsumable.slotIndex,
-                                    combinationConsumable.Id,
-                                    ae.InputContext.BlockIndex,
-                                    _blockTimeOffset));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing CombinationConsumable action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is CombinationEquipment combinationEquipment)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                if (combinationEquipment.payByCrystal)
-                                {
-                                    var replaceCombinationEquipmentMaterialList = ReplaceCombinationEquipmentMaterialData
-                                        .GetReplaceCombinationEquipmentMaterialInfo(
-                                            inputState,
-                                            outputState,
-                                            ae.InputContext.Signer,
-                                            combinationEquipment.avatarAddress,
-                                            combinationEquipment.recipeId,
-                                            combinationEquipment.subRecipeId,
-                                            combinationEquipment.payByCrystal,
-                                            combinationEquipment.Id,
-                                            ae.InputContext.BlockIndex,
-                                            _blockTimeOffset);
-                                    foreach (var replaceCombinationEquipmentMaterial in replaceCombinationEquipmentMaterialList)
-                                    {
-                                        _replaceCombinationEquipmentMaterialList.Add(replaceCombinationEquipmentMaterial);
-                                    }
-                                }
-
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine(
-                                    "Writing CombinationEquipment action in block #{0}. Time Taken: {1} ms.",
-                                    ae.InputContext.BlockIndex,
-                                    (end - start).Milliseconds);
-                                start = DateTimeOffset.UtcNow;
-
-                                var slotState = outputState.GetCombinationSlotState(
-                                    combinationEquipment.avatarAddress,
-                                    combinationEquipment.slotIndex);
-
-                                int optionCount = 0;
-                                bool skillContains = false;
-                                if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
-                                {
-                                    var equipment = (Equipment)slotState.Result.itemUsable;
-                                    _equipmentList.Add(EquipmentData.GetEquipmentInfo(
-                                        ae.InputContext.Signer,
-                                        combinationEquipment.avatarAddress,
-                                        equipment,
-                                        _blockTimeOffset));
-                                    optionCount = equipment.optionCountFromCombination;
-                                    skillContains = equipment.Skills.Any() || equipment.BuffSkills.Any();
-                                }
-
-                                _combinationEquipmentList.Add(CombinationEquipmentData.GetCombinationEquipmentInfo(
-                                    inputState,
-                                    outputState,
-                                    ae.InputContext.Signer,
-                                    combinationEquipment.avatarAddress,
-                                    combinationEquipment.recipeId,
-                                    combinationEquipment.slotIndex,
-                                    combinationEquipment.subRecipeId,
-                                    combinationEquipment.Id,
-                                    ae.InputContext.BlockIndex,
-                                    _blockTimeOffset,
-                                    optionCount,
-                                    skillContains));
-
-                                end = DateTimeOffset.UtcNow;
-                                Console.WriteLine(
-                                    "Writing avatar {0}'s equipment in block #{1}. Time Taken: {2} ms.",
-                                    combinationEquipment.avatarAddress,
-                                    ae.InputContext.BlockIndex,
-                                    (end - start).Milliseconds);
-                            }
-
-                            if (action is ItemEnhancement itemEnhancement)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
-                                        inputState,
-                                        outputState,
-                                        ae.InputContext.Signer,
-                                        itemEnhancement.avatarAddress,
-                                        Guid.Empty,
-                                        itemEnhancement.materialIds,
-                                        itemEnhancement.itemId,
-                                        itemEnhancement.Id,
-                                        ae.InputContext.BlockIndex,
-                                        _blockTimeOffset) is { } itemEnhancementFailModel)
-                                {
-                                    _itemEnhancementFailList.Add(itemEnhancementFailModel);
-                                }
-
-                                _itemEnhancementList.Add(ItemEnhancementData.GetItemEnhancementInfo(
-                                    inputState,
-                                    outputState,
-                                    ae.InputContext.Signer,
-                                    itemEnhancement.avatarAddress,
-                                    itemEnhancement.slotIndex,
-                                    Guid.Empty,
-                                    itemEnhancement.materialIds,
-                                    itemEnhancement.itemId,
-                                    itemEnhancement.Id,
-                                    ae.InputContext.BlockIndex,
-                                    _blockTimeOffset));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                                start = DateTimeOffset.UtcNow;
-
-                                var slotState = outputState.GetCombinationSlotState(
-                                    itemEnhancement.avatarAddress,
-                                    itemEnhancement.slotIndex);
-
-                                if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
-                                {
-                                    _equipmentList.Add(EquipmentData.GetEquipmentInfo(
-                                        ae.InputContext.Signer,
-                                        itemEnhancement.avatarAddress,
-                                        (Equipment)slotState.Result.itemUsable,
-                                        _blockTimeOffset));
-                                }
-
-                                end = DateTimeOffset.UtcNow;
-                                Console.WriteLine(
-                                    "Writing avatar {0}'s equipment in block #{1}. Time Taken: {2} ms.",
-                                    itemEnhancement.avatarAddress,
-                                    ae.InputContext.BlockIndex,
-                                    (end - start).Milliseconds);
-                            }
-
-                            if (action is Buy buy)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                AvatarState avatarState = outputState.GetAvatarState(buy.buyerAvatarAddress);
-                                var buyerInventory = avatarState.inventory;
-                                foreach (var purchaseInfo in buy.purchaseInfos)
-                                {
-                                    var state = outputState.GetLegacyState(
-                                    Addresses.GetItemAddress(purchaseInfo.TradableId));
-                                    ITradableItem orderItem =
-                                        (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
-                                    Order order =
-                                        OrderFactory.Deserialize(
-                                            (Dictionary)outputState.GetLegacyState(
-                                                Order.DeriveAddress(purchaseInfo.OrderId))!);
-                                    int itemCount = order is FungibleOrder fungibleOrder
-                                        ? fungibleOrder.ItemCount
-                                        : 1;
-                                    if (orderItem.ItemType == ItemType.Equipment)
-                                    {
-                                        Equipment equipment = (Equipment)orderItem;
-                                        _buyShopEquipmentsList.Add(ShopHistoryEquipmentData.GetShopHistoryEquipmentInfo(
-                                            buy.buyerAvatarAddress,
-                                            purchaseInfo,
-                                            equipment,
-                                            itemCount,
-                                            ae.InputContext.BlockIndex,
-                                            _blockTimeOffset));
-                                    }
-
-                                    if (orderItem.ItemType == ItemType.Costume)
-                                    {
-                                        Costume costume = (Costume)orderItem;
-                                        _buyShopCostumesList.Add(ShopHistoryCostumeData.GetShopHistoryCostumeInfo(
-                                            buy.buyerAvatarAddress,
-                                            purchaseInfo,
-                                            costume,
-                                            itemCount,
-                                            ae.InputContext.BlockIndex,
-                                            _blockTimeOffset));
-                                    }
-
-                                    if (orderItem.ItemType == ItemType.Material)
-                                    {
-                                        Material material = (Material)orderItem;
-                                        _buyShopMaterialsList.Add(ShopHistoryMaterialData.GetShopHistoryMaterialInfo(
-                                            buy.buyerAvatarAddress,
-                                            purchaseInfo,
-                                            material,
-                                            itemCount,
-                                            ae.InputContext.BlockIndex,
-                                            _blockTimeOffset));
-                                    }
-
-                                    if (orderItem.ItemType == ItemType.Consumable)
-                                    {
-                                        Consumable consumable = (Consumable)orderItem;
-                                        _buyShopConsumablesList.Add(ShopHistoryConsumableData.GetShopHistoryConsumableInfo(
-                                            buy.buyerAvatarAddress,
-                                            purchaseInfo,
-                                            consumable,
-                                            itemCount,
-                                            ae.InputContext.BlockIndex,
-                                            _blockTimeOffset));
-                                    }
-
-                                    if (purchaseInfo.ItemSubType == ItemSubType.Armor
-                                        || purchaseInfo.ItemSubType == ItemSubType.Belt
-                                        || purchaseInfo.ItemSubType == ItemSubType.Necklace
-                                        || purchaseInfo.ItemSubType == ItemSubType.Ring
-                                        || purchaseInfo.ItemSubType == ItemSubType.Weapon)
-                                    {
-                                        var sellerState = outputState.GetAvatarState(purchaseInfo.SellerAvatarAddress);
-                                        var sellerInventory = sellerState.inventory;
-
-                                        if (buyerInventory.Equipments == null || sellerInventory.Equipments == null)
-                                        {
-                                            continue;
-                                        }
-
-                                        Equipment equipment = buyerInventory.Equipments.SingleOrDefault(i =>
-                                            i.ItemId == purchaseInfo.TradableId) ?? sellerInventory.Equipments.SingleOrDefault(i =>
-                                            i.ItemId == purchaseInfo.TradableId);
-
-                                        if (equipment is { } equipmentNotNull)
-                                        {
-                                            _equipmentList.Add(EquipmentData.GetEquipmentInfo(
-                                                ae.InputContext.Signer,
-                                                buy.buyerAvatarAddress,
-                                                equipmentNotNull,
-                                                _blockTimeOffset));
-                                        }
-                                    }
-                                }
-
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine(
-                                    "Writing avatar {0}'s equipment in block #{1}. Time Taken: {2} ms.",
-                                    buy.buyerAvatarAddress,
-                                    ae.InputContext.BlockIndex,
-                                    (end - start).Milliseconds);
-                            }
-
-                            if (action is Stake stake)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _stakeList.Add(StakeData.GetStakeInfo(inputState, outputState, ae.InputContext.Signer, ae.InputContext.BlockIndex, _blockTimeOffset, stake.Id));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing Stake action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is Stake0 stake0)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _stakeList.Add(StakeData.GetStakeInfo(inputState, outputState, ae.InputContext.Signer, ae.InputContext.BlockIndex, _blockTimeOffset, Guid.Empty));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing Stake action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is MigrateMonsterCollection migrateMonsterCollection)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _migrateMonsterCollectionList.Add(MigrateMonsterCollectionData.GetMigrateMonsterCollectionInfo(inputState, outputState, ae.InputContext.Signer, ae.InputContext.BlockIndex, _blockTimeOffset));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing MigrateMonsterCollection action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is Grinding grinding)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-
-                                var grindList = GrindingData.GetGrindingInfo(inputState, outputState, ae.InputContext.Signer, grinding.AvatarAddress, grinding.EquipmentIds, grinding.Id, ae.InputContext.BlockIndex, _blockTimeOffset);
-
-                                foreach (var grind in grindList)
-                                {
-                                    _grindList.Add(grind);
-                                }
-
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing Grinding action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is UnlockEquipmentRecipe unlockEquipmentRecipe)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var unlockEquipmentRecipeList = UnlockEquipmentRecipeData.GetUnlockEquipmentRecipeInfo(inputState, outputState, ae.InputContext.Signer, unlockEquipmentRecipe.AvatarAddress, unlockEquipmentRecipe.RecipeIds, unlockEquipmentRecipe.Id, ae.InputContext.BlockIndex, _blockTimeOffset);
-                                foreach (var unlockEquipmentRecipeData in unlockEquipmentRecipeList)
-                                {
-                                    _unlockEquipmentRecipeList.Add(unlockEquipmentRecipeData);
-                                }
-
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing UnlockEquipmentRecipe action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is UnlockWorld unlockWorld)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var unlockWorldList = UnlockWorldData.GetUnlockWorldInfo(inputState, outputState, ae.InputContext.Signer, unlockWorld.AvatarAddress, unlockWorld.WorldIds, unlockWorld.Id, ae.InputContext.BlockIndex, _blockTimeOffset);
-                                foreach (var unlockWorldData in unlockWorldList)
-                                {
-                                    _unlockWorldList.Add(unlockWorldData);
-                                }
-
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing UnlockWorld action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is HackAndSlashRandomBuff hasRandomBuff)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _hasRandomBuffList.Add(HackAndSlashRandomBuffData.GetHasRandomBuffInfo(inputState, outputState, ae.InputContext.Signer, hasRandomBuff.AvatarAddress, hasRandomBuff.AdvancedGacha, hasRandomBuff.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing HasRandomBuff action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is JoinArena joinArena)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _joinArenaList.Add(JoinArenaData.GetJoinArenaInfo(inputState, outputState, ae.InputContext.Signer, joinArena.avatarAddress, joinArena.round, joinArena.championshipId, joinArena.Id, ae.InputContext.BlockIndex, _blockTimeOffset));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing JoinArena action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is BattleArena battleArena)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, battleArena.myAvatarAddress, battleArena.runeInfos, _blockTimeOffset, BattleType.Adventure));
-                                _battleArenaList.Add(BattleArenaData.GetBattleArenaInfo(
-                                    inputState,
-                                    outputState,
-                                    ae.InputContext.Signer,
-                                    battleArena.myAvatarAddress,
-                                    battleArena.enemyAvatarAddress,
-                                    battleArena.round,
-                                    battleArena.championshipId,
-                                    battleArena.ticket,
-                                    battleArena.Id,
-                                    ae.InputContext.BlockIndex,
-                                    _blockTimeOffset));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing BattleArena action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is EventMaterialItemCrafts eventMaterialItemCrafts)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _eventMaterialItemCraftsList.Add(EventMaterialItemCraftsData.GetEventMaterialItemCraftsInfo(
-                                    inputState,
-                                    outputState,
-                                    ae.InputContext.Signer,
-                                    eventMaterialItemCrafts.AvatarAddress,
-                                    eventMaterialItemCrafts.MaterialsToUse,
-                                    eventMaterialItemCrafts.EventScheduleId,
-                                    eventMaterialItemCrafts.EventMaterialItemRecipeId,
-                                    eventMaterialItemCrafts.Id,
-                                    ae.InputContext.BlockIndex,
-                                    _blockTimeOffset));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing EventMaterialItemCrafts action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is RuneEnhancement runeEnhancement)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _runeEnhancementList.Add(RuneEnhancementData.GetRuneEnhancementInfo(
-                                    inputState,
-                                    outputState,
-                                    ae.InputContext.Signer,
-                                    runeEnhancement.AvatarAddress,
-                                    runeEnhancement.RuneId,
-                                    runeEnhancement.TryCount,
-                                    runeEnhancement.Id,
-                                    ae.InputContext.BlockIndex,
-                                    _blockTimeOffset));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing RuneEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is TransferAssets transferAssets)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var count = 0;
-                                foreach (var recipient in transferAssets.Recipients)
-                                {
-                                    var actionString = count + ae.InputContext.TxId.ToString();
-                                    var actionByteArray = Encoding.UTF8.GetBytes(actionString).Take(16).ToArray();
-                                    var id = new Guid(actionByteArray);
-                                    var avatarAddress = recipient.recipient;
-                                    var actionType = transferAssets.ToString()!.Split('.').LastOrDefault()
-                                        ?.Replace(">", string.Empty);
-                                    _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
-                                        id,
-                                        (TxId)ae.InputContext.TxId!,
-                                        ae.InputContext.BlockIndex,
-                                        _blockHash!.ToString(),
-                                        transferAssets.Sender,
-                                        recipient.recipient,
-                                        recipient.amount.Currency.Ticker,
-                                        recipient.amount,
-                                        _blockTimeOffset));
-                                    _runesAcquiredList.Add(RunesAcquiredData.GetRunesAcquiredInfo(
-                                        id,
-                                        ae.InputContext.Signer,
-                                        avatarAddress,
-                                        ae.InputContext.BlockIndex,
-                                        actionType!,
-                                        recipient.amount.Currency.Ticker,
-                                        recipient.amount,
-                                        _blockTimeOffset));
-                                    count++;
-                                }
-
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing TransferAssets action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is DailyReward dailyReward)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-#pragma warning disable CS0618
-                                var runeCurrency = Currency.Legacy(RuneHelper.DailyRewardRune.Ticker, 0, minters: null);
-#pragma warning restore CS0618
-                                var prevRuneBalance = inputState.GetBalance(
-                                    dailyReward.avatarAddress,
-                                    runeCurrency);
-                                var outputRuneBalance = outputState.GetBalance(
-                                    dailyReward.avatarAddress,
-                                    runeCurrency);
-                                var acquiredRune = outputRuneBalance - prevRuneBalance;
-                                var actionType = dailyReward.ToString()!.Split('.').LastOrDefault()
-                                    ?.Replace(">", string.Empty);
-                                _runesAcquiredList.Add(RunesAcquiredData.GetRunesAcquiredInfo(
-                                    dailyReward.Id,
-                                    ae.InputContext.Signer,
-                                    dailyReward.avatarAddress,
-                                    ae.InputContext.BlockIndex,
-                                    actionType!,
-                                    runeCurrency.Ticker,
-                                    acquiredRune,
-                                    _blockTimeOffset));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing DailyReward action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is ClaimRaidReward claimRaidReward)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var sheets = outputState.GetSheets(
-                                    sheetTypes: new[]
-                                    {
-                                        typeof(RuneSheet),
-                                    });
-                                var runeSheet = sheets.GetSheet<RuneSheet>();
-                                foreach (var runeType in runeSheet.Values)
-                                {
-#pragma warning disable CS0618
-                                    var runeCurrency = Currency.Legacy(runeType.Ticker, 0, minters: null);
-#pragma warning restore CS0618
-                                    var prevRuneBalance = inputState.GetBalance(
-                                        claimRaidReward.AvatarAddress,
-                                        runeCurrency);
-                                    var outputRuneBalance = outputState.GetBalance(
-                                        claimRaidReward.AvatarAddress,
-                                        runeCurrency);
-                                    var acquiredRune = outputRuneBalance - prevRuneBalance;
-                                    var actionType = claimRaidReward.ToString()!.Split('.').LastOrDefault()
-                                        ?.Replace(">", string.Empty);
-                                    if (Convert.ToDecimal(acquiredRune.GetQuantityString()) > 0)
-                                    {
-                                        _runesAcquiredList.Add(RunesAcquiredData.GetRunesAcquiredInfo(
-                                            claimRaidReward.Id,
-                                            ae.InputContext.Signer,
-                                            claimRaidReward.AvatarAddress,
-                                            ae.InputContext.BlockIndex,
-                                            actionType!,
-                                            runeCurrency.Ticker,
-                                            acquiredRune,
-                                            _blockTimeOffset));
-                                    }
-                                }
-
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing ClaimRaidReward action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is UnlockRuneSlot unlockRuneSlot)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _unlockRuneSlotList.Add(UnlockRuneSlotData.GetUnlockRuneSlotInfo(
-                                    inputState,
-                                    outputState,
-                                    ae.InputContext.Signer,
-                                    unlockRuneSlot.AvatarAddress,
-                                    unlockRuneSlot.SlotIndex,
-                                    unlockRuneSlot.Id,
-                                    ae.InputContext.BlockIndex,
-                                    _blockTimeOffset));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing UnlockRuneSlot action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is RapidCombination rapidCombination)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
-                                    inputState,
-                                    outputState,
-                                    ae.InputContext.Signer,
-                                    rapidCombination.avatarAddress,
-                                    rapidCombination.slotIndex,
-                                    rapidCombination.Id,
-                                    ae.InputContext.BlockIndex,
-                                    _blockTimeOffset));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing RapidCombination action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is Raid raid)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var sheets = outputState.GetSheets(
-                                    sheetTypes: new[]
-                                    {
-                                        typeof(CharacterSheet),
-                                        typeof(CostumeStatSheet),
-                                        typeof(RuneSheet),
-                                        typeof(RuneListSheet),
-                                        typeof(RuneOptionSheet),
-                                    });
-
-                                var runeSheet = sheets.GetSheet<RuneSheet>();
-                                foreach (var runeType in runeSheet.Values)
-                                {
-#pragma warning disable CS0618
-                                    var runeCurrency = Currency.Legacy(runeType.Ticker, 0, minters: null);
-#pragma warning restore CS0618
-                                    var prevRuneBalance = inputState.GetBalance(
-                                        raid.AvatarAddress,
-                                        runeCurrency);
-                                    var outputRuneBalance = outputState.GetBalance(
-                                        raid.AvatarAddress,
-                                        runeCurrency);
-                                    var acquiredRune = outputRuneBalance - prevRuneBalance;
-                                    var actionType = raid.ToString()!.Split('.').LastOrDefault()
-                                        ?.Replace(">", string.Empty);
-                                    if (Convert.ToDecimal(acquiredRune.GetQuantityString()) > 0)
-                                    {
-                                        _runesAcquiredList.Add(RunesAcquiredData.GetRunesAcquiredInfo(
-                                            raid.Id,
-                                            ae.InputContext.Signer,
-                                            raid.AvatarAddress,
-                                            ae.InputContext.BlockIndex,
-                                            actionType!,
-                                            runeCurrency.Ticker,
-                                            acquiredRune,
-                                            _blockTimeOffset));
-                                    }
-                                }
-
-                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, raid.AvatarAddress, raid.RuneInfos, _blockTimeOffset, BattleType.Adventure));
-
-                                var worldBossListSheet = sheets.GetSheet<WorldBossListSheet>();
-                                int raidId = worldBossListSheet.FindRaidIdByBlockIndex(ae.InputContext.BlockIndex);
-                                RaiderState raiderState =
-                                    outputState.GetRaiderState(raid.AvatarAddress, raidId);
-                                _raiderList.Add(RaidData.GetRaidInfo(raidId, raiderState));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Stored Raid action in block #{0}. Time taken: {1} ms", ae.InputContext.BlockIndex, end - start);
-                            }
-
-                            if (action is PetEnhancement petEnhancement)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _petEnhancementList.Add(PetEnhancementData.GetPetEnhancementInfo(
-                                    inputState,
-                                    outputState,
-                                    ae.InputContext.Signer,
-                                    petEnhancement.AvatarAddress,
-                                    petEnhancement.PetId,
-                                    petEnhancement.TargetLevel,
-                                    petEnhancement.Id,
-                                    ae.InputContext.BlockIndex,
-                                    _blockTimeOffset
-                                ));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Stored PetEnhancement action in block #{0}. Time taken: {1} ms", ae.InputContext.BlockIndex, end - start);
-                            }
-
-                            if (action is TransferAsset transferAsset)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var actionString = ae.InputContext.TxId.ToString();
-                                var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
-                                var id = new Guid(actionByteArray);
-                                _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
-                                    id,
-                                    (TxId)ae.InputContext.TxId!,
-                                    ae.InputContext.BlockIndex,
-                                    _blockHash!.ToString(),
-                                    transferAsset.Sender,
-                                    transferAsset.Recipient,
-                                    transferAsset.Amount.Currency.Ticker,
-                                    transferAsset.Amount,
-                                    _blockTimeOffset));
-
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Stored TransferAsset action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is TransferAsset0 transferAsset0)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var actionString = ae.InputContext.TxId.ToString();
-                                var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
-                                var id = new Guid(actionByteArray);
-                                _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
-                                    id,
-                                    (TxId)ae.InputContext.TxId!,
-                                    ae.InputContext.BlockIndex,
-                                    _blockHash!.ToString(),
-                                    transferAsset0.Sender,
-                                    transferAsset0.Recipient,
-                                    transferAsset0.Amount.Currency.Ticker,
-                                    transferAsset0.Amount,
-                                    _blockTimeOffset));
-
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Stored TransferAsset action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is RequestPledge requestPledge)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _requestPledgeList.Add(RequestPledgeData.GetRequestPledgeInfo(
-                                    ae.InputContext.TxId!.ToString()!,
-                                    ae.InputContext.BlockIndex,
-                                    _blockHash!.ToString(),
-                                    ae.InputContext.Signer,
-                                    requestPledge.AgentAddress,
-                                    requestPledge.RefillMead,
-                                    _blockTimeOffset));
-
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine(
-                                    "Stored RequestPledge action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                     }
