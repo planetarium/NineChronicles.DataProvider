@@ -215,12 +215,20 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             }
                         }
 
-                        taskArray[item.i] = Task.Factory.StartNew(() =>
+                        try
                         {
-                            List<ICommittedActionEvaluation> actionEvaluations = EvaluateBlock(block);
-                            Console.WriteLine($"Block progress: #{block.Index}/{remainingCount}");
-                            return actionEvaluations;
-                        });
+                            taskArray[item.i] = Task.Factory.StartNew(() =>
+                            {
+                                List<ICommittedActionEvaluation> actionEvaluations = EvaluateBlock(block);
+                                Console.WriteLine($"Block progress: #{block.Index}/{remainingCount}");
+                                return actionEvaluations;
+                            });
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                            Console.WriteLine(e.StackTrace);
+                        }
                     }
 
                     if (interval < remainingCount)
@@ -293,6 +301,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
             }
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
