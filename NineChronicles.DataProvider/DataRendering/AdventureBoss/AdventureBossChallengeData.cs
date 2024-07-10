@@ -6,6 +6,7 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
     using Nekoyume.Model.AdventureBoss;
     using Nekoyume.Module;
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
+    using Serilog;
 
     public static class AdventureBossChallengeData
     {
@@ -23,6 +24,9 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
             var outputExplorer = outputStates.GetExplorer(challenge.Season, challenge.AvatarAddress);
             var exploreBoard = outputStates.GetExploreBoard(challenge.Season);
 
+            Log.Verbose(
+                $"[Adventure Boss] GetChallengeData: {challenge.Season}::{prevExplorer.Floor}~{outputExplorer.Floor}::{outputExplorer.UsedApPotion - prevExplorer.UsedApPotion}::{exploreBoard.TotalPoint}"
+            );
             return new AdventureBossChallengeModel
             {
                 Id = challenge.Id.ToString(),

@@ -5,6 +5,7 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
     using Nekoyume.Action.AdventureBoss;
     using Nekoyume.Module;
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
+    using Serilog;
 
     public static class AdventureBossRushData
     {
@@ -20,6 +21,9 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
             var outputExplorer = outputStates.GetExplorer(rush.Season, rush.AvatarAddress);
             var outputExploreBoard = outputStates.GetExploreBoard(rush.Season);
 
+            Log.Verbose(
+                $"[Adventure Boss] GetRushData: {rush.Season}::{outputExplorer.Floor}::{outputExplorer.UsedApPotion - prevExplorer.UsedApPotion}::{outputExploreBoard.TotalPoint}"
+            );
             return new AdventureBossRushModel
             {
                 Id = rush.Id.ToString(),
