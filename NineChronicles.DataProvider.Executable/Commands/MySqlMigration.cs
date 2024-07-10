@@ -256,42 +256,42 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var tasks = new List<Task>();
                 tasks.Add(Task.Run(async () =>
                     {
-                        Log.Debug($"[Adventure Boss] {_adventureBossSeasonList.Count} Season");
+                        Console.WriteLine($"[Adventure Boss] {_adventureBossSeasonList.Count} Season");
                         await _mySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonList);
                     }
                 ));
 
                 tasks.Add(Task.Run(async () =>
                     {
-                        Log.Debug($"[Adventure Boss] {_adventureBossWantedList.Count} Wanted");
+                        Console.WriteLine($"[Adventure Boss] {_adventureBossWantedList.Count} Wanted");
                         await _mySqlStore.StoreAdventureBossWantedList(_adventureBossWantedList);
                     }
                 ));
 
                 tasks.Add(Task.Run(async () =>
                     {
-                        Log.Debug($"[Adventure Boss] {_adventureBossChallengeList.Count} Challenge");
+                        Console.WriteLine($"[Adventure Boss] {_adventureBossChallengeList.Count} Challenge");
                         await _mySqlStore.StoreAdventureBossChallengeList(_adventureBossChallengeList);
                     }
                 ));
 
                 tasks.Add(Task.Run(async () =>
                     {
-                        Log.Debug($"[Adventure Boss] {_adventureBossRushList.Count} Rush");
+                        Console.WriteLine($"[Adventure Boss] {_adventureBossRushList.Count} Rush");
                         await _mySqlStore.StoreAdventureBossRushList(_adventureBossRushList);
                     }
                 ));
 
                 tasks.Add(Task.Run(async () =>
                     {
-                        Log.Debug($"[Adventure Boss] {_adventureBossUnlockFloorList.Count} Unlock");
+                        Console.WriteLine($"[Adventure Boss] {_adventureBossUnlockFloorList.Count} Unlock");
                         await _mySqlStore.StoreAdventureBossUnlockFloorList(_adventureBossUnlockFloorList);
                     }
                 ));
 
                 tasks.Add(Task.Run(async () =>
                     {
-                        Log.Debug($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
+                        Console.WriteLine($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
                         await _mySqlStore.StoreAdventureBossClaimRewardList(_adventureBossClaimRewardList);
                     }
                 ));
@@ -334,39 +334,39 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         _adventureBossWantedList.Add(AdventureBossWantedData.GetWantedInfo(
                                             outputState, _blockIndex, _blockTimeOffset, wanted
                                         ));
-                                        Log.Debug($"[Adventure Boss] Wanted added : {_adventureBossWantedList.Count}");
+                                        Console.WriteLine($"[Adventure Boss] Wanted added : {_adventureBossWantedList.Count}");
 
                                         // Update season info
                                         _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
                                             outputState, wanted.Season, _blockTimeOffset
                                         ));
-                                        Log.Debug($"[Adventure Boss] Season added : {_adventureBossSeasonList.Count}");
+                                        Console.WriteLine($"[Adventure Boss] Season added : {_adventureBossSeasonList.Count}");
                                         break;
                                     case ExploreAdventureBoss challenge:
                                         _adventureBossChallengeList.Add(AdventureBossChallengeData.GetChallengeInfo(
                                             inputState, outputState, _blockIndex, _blockTimeOffset, challenge
                                         ));
-                                        Log.Debug(
+                                        Console.WriteLine(
                                             $"[Adventure Boss] Challenge added : {_adventureBossChallengeList.Count}");
                                         break;
                                     case SweepAdventureBoss rush:
                                         _adventureBossRushList.Add(AdventureBossRushData.GetRushInfo(
                                             inputState, outputState, _blockIndex, _blockTimeOffset, rush
                                         ));
-                                        Log.Debug($"[Adventure Boss] Rush added : {_adventureBossRushList.Count}");
+                                        Console.WriteLine($"[Adventure Boss] Rush added : {_adventureBossRushList.Count}");
                                         break;
                                     case UnlockFloor unlock:
                                         _adventureBossUnlockFloorList.Add(AdventureBossUnlockFloorData.GetUnlockInfo(
                                             inputState, outputState, _blockIndex, _blockTimeOffset, unlock
                                         ));
-                                        Log.Debug($"[Adventure Boss] Unlock added : {_adventureBossUnlockFloorList.Count}");
+                                        Console.WriteLine($"[Adventure Boss] Unlock added : {_adventureBossUnlockFloorList.Count}");
                                         break;
                                     case ClaimAdventureBossReward claim:
                                     {
                                         _adventureBossClaimRewardList.Add(AdventureBossClaimRewardData.GetClaimInfo(
                                             inputState, _blockIndex, _blockTimeOffset, claim
                                         ));
-                                        Log.Debug($"[Adventure Boss] Claim added : {_adventureBossClaimRewardList.Count}");
+                                        Console.WriteLine($"[Adventure Boss] Claim added : {_adventureBossClaimRewardList.Count}");
 
                                         // Update season info
                                         var latestSeason = inputState.GetLatestAdventureBossSeason();
@@ -376,7 +376,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
                                             outputState, season, _blockTimeOffset
                                         ));
-                                        Log.Debug($"[Adventure Boss] Season updated : {_adventureBossSeasonList.Count}");
+                                        Console.WriteLine($"[Adventure Boss] Season updated : {_adventureBossSeasonList.Count}");
                                         break;
                                     }
                                 }
