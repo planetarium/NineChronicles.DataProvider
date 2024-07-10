@@ -56,7 +56,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private DateTimeOffset _blockTimeOffset;
 
         [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
-        public void Migration(
+        public async Task Migration(
             [Option('o', Description = "Rocksdb path to migrate.")]
             string storePath,
             [Option(
@@ -255,47 +255,41 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _mySqlStore.StoreTransactionList(_txList);
                 _mySqlStore.StoreAgentList(_agentList);
                 _mySqlStore.StoreAvatarList(_avatarList);
-                Task.Run(async () =>
-                    {
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossSeasonList.Count} Season");
-                        await _mySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonList);
-                    }
-                );
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossSeasonList.Count} Season");
+                    await _mySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonList);
+                });
 
-                Task.Run(async () =>
-                    {
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossWantedList.Count} Wanted");
-                        await _mySqlStore.StoreAdventureBossWantedList(_adventureBossWantedList);
-                    }
-                );
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossWantedList.Count} Wanted");
+                    await _mySqlStore.StoreAdventureBossWantedList(_adventureBossWantedList);
+                });
 
-                Task.Run(async () =>
-                    {
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossChallengeList.Count} Challenge");
-                        await _mySqlStore.StoreAdventureBossChallengeList(_adventureBossChallengeList);
-                    }
-                );
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossChallengeList.Count} Challenge");
+                    await _mySqlStore.StoreAdventureBossChallengeList(_adventureBossChallengeList);
+                });
 
-                Task.Run(async () =>
-                    {
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossRushList.Count} Rush");
-                        await _mySqlStore.StoreAdventureBossRushList(_adventureBossRushList);
-                    }
-                );
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossRushList.Count} Rush");
+                    await _mySqlStore.StoreAdventureBossRushList(_adventureBossRushList);
+                });
 
-                Task.Run(async () =>
-                    {
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossUnlockFloorList.Count} Unlock");
-                        await _mySqlStore.StoreAdventureBossUnlockFloorList(_adventureBossUnlockFloorList);
-                    }
-                );
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossUnlockFloorList.Count} Unlock");
+                    await _mySqlStore.StoreAdventureBossUnlockFloorList(_adventureBossUnlockFloorList);
+                });
 
-                Task.Run(async () =>
-                    {
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
-                        await _mySqlStore.StoreAdventureBossClaimRewardList(_adventureBossClaimRewardList);
-                    }
-                );
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
+                    await _mySqlStore.StoreAdventureBossClaimRewardList(_adventureBossClaimRewardList);
+                });
             }
             catch (Exception e)
             {

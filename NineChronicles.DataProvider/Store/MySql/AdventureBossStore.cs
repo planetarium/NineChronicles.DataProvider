@@ -43,6 +43,7 @@ namespace NineChronicles.DataProvider.Store
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
             }
             finally
             {
@@ -76,6 +77,7 @@ namespace NineChronicles.DataProvider.Store
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
             }
             finally
             {
@@ -109,6 +111,7 @@ namespace NineChronicles.DataProvider.Store
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
             }
             finally
             {
@@ -142,6 +145,7 @@ namespace NineChronicles.DataProvider.Store
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
             }
             finally
             {
@@ -176,6 +180,7 @@ namespace NineChronicles.DataProvider.Store
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
             }
             finally
             {
@@ -210,6 +215,7 @@ namespace NineChronicles.DataProvider.Store
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
             }
             finally
             {
