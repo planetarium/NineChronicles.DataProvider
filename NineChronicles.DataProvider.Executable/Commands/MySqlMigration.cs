@@ -31,27 +31,27 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
     public class MySqlMigration
     {
+        private readonly List<string> _avatarCheck = new ();
+        private readonly List<string> _agentCheck = new ();
+        private readonly List<BlockModel> _blockList = new ();
+        private readonly List<TransactionModel> _txList = new ();
+        private readonly List<AgentModel> _agentList = new ();
+        private readonly List<AvatarModel> _avatarList = new ();
+        private readonly List<AdventureBossSeasonModel> _adventureBossSeasonList = new ();
+        private readonly List<AdventureBossWantedModel> _adventureBossWantedList = new ();
+        private readonly List<AdventureBossChallengeModel> _adventureBossChallengeList = new ();
+        private readonly List<AdventureBossRushModel> _adventureBossRushList = new ();
+        private readonly List<AdventureBossUnlockFloorModel> _adventureBossUnlockFloorList = new ();
+        private readonly List<AdventureBossClaimRewardModel> _adventureBossClaimRewardList = new ();
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain _baseChain;
 
         // lists to keep track of inserted addresses to minimize duplicates
-        private List<string> _agentCheck = new ();
-        private List<string> _avatarCheck = new ();
         private MySqlStore _mySqlStore;
         private BlockHash _blockHash;
         private long _blockIndex;
         private DateTimeOffset _blockTimeOffset;
-        private List<BlockModel> _blockList = new ();
-        private List<TransactionModel> _txList = new ();
-        private List<AgentModel> _agentList = new ();
-        private List<AvatarModel> _avatarList = new ();
-        private List<AdventureBossSeasonModel> _adventureBossSeasonList = new ();
-        private List<AdventureBossWantedModel> _adventureBossWantedList = new ();
-        private List<AdventureBossChallengeModel> _adventureBossChallengeList = new ();
-        private List<AdventureBossRushModel> _adventureBossRushList = new ();
-        private List<AdventureBossUnlockFloorModel> _adventureBossUnlockFloorList = new ();
-        private List<AdventureBossClaimRewardModel> _adventureBossClaimRewardList = new ();
 
         [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
         public void Migration(
