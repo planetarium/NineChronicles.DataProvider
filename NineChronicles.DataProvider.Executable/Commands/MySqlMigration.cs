@@ -255,56 +255,18 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _mySqlStore.StoreTransactionList(_txList);
                 _mySqlStore.StoreAgentList(_agentList);
                 _mySqlStore.StoreAvatarList(_avatarList);
-                var tasks = new List<Task>();
-                tasks.Add(Task.Run(async () =>
-                    {
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossSeasonList.Count} Season");
-                        await _mySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonList);
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossSeasonList.Count} Season Complete");
-                    }
-                ));
-
-                tasks.Add(Task.Run(async () =>
-                    {
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossWantedList.Count} Wanted");
-                        await _mySqlStore.StoreAdventureBossWantedList(_adventureBossWantedList);
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossWantedList.Count} Wanted Complete");
-                    }
-                ));
-
-                tasks.Add(Task.Run(async () =>
-                    {
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossChallengeList.Count} Challenge");
-                        await _mySqlStore.StoreAdventureBossChallengeList(_adventureBossChallengeList);
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossChallengeList.Count} Challenge Complete");
-                    }
-                ));
-
-                tasks.Add(Task.Run(async () =>
-                    {
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossRushList.Count} Rush");
-                        await _mySqlStore.StoreAdventureBossRushList(_adventureBossRushList);
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossRushList.Count} Rush Complete");
-                    }
-                ));
-
-                tasks.Add(Task.Run(async () =>
-                    {
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossUnlockFloorList.Count} Unlock");
-                        await _mySqlStore.StoreAdventureBossUnlockFloorList(_adventureBossUnlockFloorList);
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossUnlockFloorList.Count} Unlock Complete");
-                    }
-                ));
-
-                tasks.Add(Task.Run(async () =>
-                    {
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
-                        await _mySqlStore.StoreAdventureBossClaimRewardList(_adventureBossClaimRewardList);
-                        Console.WriteLine($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim Complete");
-                    }
-                ));
-
-                Task.WaitAll(tasks.ToArray());
+                Console.WriteLine($"[Adventure Boss] {_adventureBossSeasonList.Count} Season");
+                _mySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonList);
+                Console.WriteLine($"[Adventure Boss] {_adventureBossWantedList.Count} Wanted");
+                _mySqlStore.StoreAdventureBossWantedList(_adventureBossWantedList);
+                Console.WriteLine($"[Adventure Boss] {_adventureBossChallengeList.Count} Challenge");
+                _mySqlStore.StoreAdventureBossChallengeList(_adventureBossChallengeList);
+                Console.WriteLine($"[Adventure Boss] {_adventureBossRushList.Count} Rush");
+                _mySqlStore.StoreAdventureBossRushList(_adventureBossRushList);
+                Console.WriteLine($"[Adventure Boss] {_adventureBossUnlockFloorList.Count} Unlock");
+                _mySqlStore.StoreAdventureBossUnlockFloorList(_adventureBossUnlockFloorList);
+                Console.WriteLine($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
+                _mySqlStore.StoreAdventureBossClaimRewardList(_adventureBossClaimRewardList);
             }
             catch (Exception e)
             {
