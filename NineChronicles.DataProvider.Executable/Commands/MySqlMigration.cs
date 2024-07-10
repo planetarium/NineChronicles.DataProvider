@@ -314,72 +314,80 @@ namespace NineChronicles.DataProvider.Executable.Commands
         {
             foreach (var task in taskArray)
             {
-                if (task.Result is { } data)
+                try
                 {
-                    var actionLoader = new NCActionLoader();
-
-                    foreach (var ae in data)
+                    if (task.Result is { } data)
                     {
-                        var inputState = new World(blockChainStates.GetWorldState(ae.InputContext.PreviousState));
-                        var outputState = new World(blockChainStates.GetWorldState(ae.OutputState));
+                        var actionLoader = new NCActionLoader();
 
-                        if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase action)
+                        foreach (var ae in data)
                         {
-                            switch (action)
+                            var inputState = new World(blockChainStates.GetWorldState(ae.InputContext.PreviousState));
+                            var outputState = new World(blockChainStates.GetWorldState(ae.OutputState));
+
+                            if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase action)
                             {
-                                // avatarNames will be stored as "N/A" for optimization
-                                case Wanted wanted:
-                                    _adventureBossWantedList.Add(AdventureBossWantedData.GetWantedInfo(
-                                        outputState, _blockIndex, _blockTimeOffset, wanted
-                                    ));
-                                    Log.Debug($"[Adventure Boss] Wanted added : {_adventureBossWantedList.Count}");
-
-                                    // Update season info
-                                    _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
-                                        outputState, wanted.Season, _blockTimeOffset
-                                    ));
-                                    Log.Debug($"[Adventure Boss] Season added : {_adventureBossSeasonList.Count}");
-                                    break;
-                                case ExploreAdventureBoss challenge:
-                                    _adventureBossChallengeList.Add(AdventureBossChallengeData.GetChallengeInfo(
-                                        inputState, outputState, _blockIndex, _blockTimeOffset, challenge
-                                    ));
-                                    Log.Debug(
-                                        $"[Adventure Boss] Challenge added : {_adventureBossChallengeList.Count}");
-                                    break;
-                                case SweepAdventureBoss rush:
-                                    _adventureBossRushList.Add(AdventureBossRushData.GetRushInfo(
-                                        inputState, outputState, _blockIndex, _blockTimeOffset, rush
-                                    ));
-                                    Log.Debug($"[Adventure Boss] Rush added : {_adventureBossRushList.Count}");
-                                    break;
-                                case UnlockFloor unlock:
-                                    _adventureBossUnlockFloorList.Add(AdventureBossUnlockFloorData.GetUnlockInfo(
-                                        inputState, outputState, _blockIndex, _blockTimeOffset, unlock
-                                    ));
-                                    Log.Debug($"[Adventure Boss] Unlock added : {_adventureBossUnlockFloorList.Count}");
-                                    break;
-                                case ClaimAdventureBossReward claim:
+                                switch (action)
                                 {
-                                    _adventureBossClaimRewardList.Add(AdventureBossClaimRewardData.GetClaimInfo(
-                                        inputState, _blockIndex, _blockTimeOffset, claim
-                                    ));
-                                    Log.Debug($"[Adventure Boss] Claim added : {_adventureBossClaimRewardList.Count}");
+                                    // avatarNames will be stored as "N/A" for optimization
+                                    case Wanted wanted:
+                                        _adventureBossWantedList.Add(AdventureBossWantedData.GetWantedInfo(
+                                            outputState, _blockIndex, _blockTimeOffset, wanted
+                                        ));
+                                        Log.Debug($"[Adventure Boss] Wanted added : {_adventureBossWantedList.Count}");
 
-                                    // Update season info
-                                    var latestSeason = inputState.GetLatestAdventureBossSeason();
-                                    var season = latestSeason.EndBlockIndex <= _blockIndex
-                                        ? latestSeason.Season // New season not started
-                                        : latestSeason.Season - 1; // New season started
-                                    _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
-                                        outputState, season, _blockTimeOffset
-                                    ));
-                                    Log.Debug($"[Adventure Boss] Season updated : {_adventureBossSeasonList.Count}");
-                                    break;
+                                        // Update season info
+                                        _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
+                                            outputState, wanted.Season, _blockTimeOffset
+                                        ));
+                                        Log.Debug($"[Adventure Boss] Season added : {_adventureBossSeasonList.Count}");
+                                        break;
+                                    case ExploreAdventureBoss challenge:
+                                        _adventureBossChallengeList.Add(AdventureBossChallengeData.GetChallengeInfo(
+                                            inputState, outputState, _blockIndex, _blockTimeOffset, challenge
+                                        ));
+                                        Log.Debug(
+                                            $"[Adventure Boss] Challenge added : {_adventureBossChallengeList.Count}");
+                                        break;
+                                    case SweepAdventureBoss rush:
+                                        _adventureBossRushList.Add(AdventureBossRushData.GetRushInfo(
+                                            inputState, outputState, _blockIndex, _blockTimeOffset, rush
+                                        ));
+                                        Log.Debug($"[Adventure Boss] Rush added : {_adventureBossRushList.Count}");
+                                        break;
+                                    case UnlockFloor unlock:
+                                        _adventureBossUnlockFloorList.Add(AdventureBossUnlockFloorData.GetUnlockInfo(
+                                            inputState, outputState, _blockIndex, _blockTimeOffset, unlock
+                                        ));
+                                        Log.Debug($"[Adventure Boss] Unlock added : {_adventureBossUnlockFloorList.Count}");
+                                        break;
+                                    case ClaimAdventureBossReward claim:
+                                    {
+                                        _adventureBossClaimRewardList.Add(AdventureBossClaimRewardData.GetClaimInfo(
+                                            inputState, _blockIndex, _blockTimeOffset, claim
+                                        ));
+                                        Log.Debug($"[Adventure Boss] Claim added : {_adventureBossClaimRewardList.Count}");
+
+                                        // Update season info
+                                        var latestSeason = inputState.GetLatestAdventureBossSeason();
+                                        var season = latestSeason.EndBlockIndex <= _blockIndex
+                                            ? latestSeason.Season // New season not started
+                                            : latestSeason.Season - 1; // New season started
+                                        _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
+                                            outputState, season, _blockTimeOffset
+                                        ));
+                                        Log.Debug($"[Adventure Boss] Season updated : {_adventureBossSeasonList.Count}");
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine(e.StackTrace);
                 }
             }
         }
