@@ -21,8 +21,8 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
             var outputExplorer = outputStates.GetExplorer(rush.Season, rush.AvatarAddress);
             var outputExploreBoard = outputStates.GetExploreBoard(rush.Season);
 
-            Log.Debug(
-                $"[Adventure Boss] GetChallengeData: {rush.Season}::{outputExplorer.Floor}::{outputExplorer.UsedApPotion - prevExplorer.UsedApPotion}::{outputExploreBoard.TotalPoint}"
+            Log.Verbose(
+                $"[Adventure Boss] GetRushData: {rush.Season}::{outputExplorer.Floor}::{outputExplorer.UsedApPotion - prevExplorer.UsedApPotion}::{outputExploreBoard.TotalPoint}"
             );
             return new AdventureBossRushModel
             {
