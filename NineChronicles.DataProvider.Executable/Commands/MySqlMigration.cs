@@ -39,7 +39,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private readonly List<TransactionModel> _txList = new ();
         private readonly List<AgentModel> _agentList = new ();
         private readonly List<AvatarModel> _avatarList = new ();
-        private readonly List<AdventureBossSeasonModel> _adventureBossSeasonList = new ();
+        private readonly Dictionary<long, AdventureBossSeasonModel> _adventureBossSeasonDict = new ();
         private readonly List<AdventureBossWantedModel> _adventureBossWantedList = new ();
         private readonly List<AdventureBossChallengeModel> _adventureBossChallengeList = new ();
         private readonly List<AdventureBossRushModel> _adventureBossRushList = new ();
@@ -257,8 +257,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _mySqlStore.StoreAvatarList(_avatarList);
                 await Task.Run(async () =>
                 {
-                    Console.WriteLine($"[Adventure Boss] {_adventureBossSeasonList.Count} Season");
-                    await _mySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonList);
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossSeasonDict.Count} Season");
+                    await _mySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonDict.Values.ToList());
                 });
 
                 await Task.Run(async () =>
@@ -324,20 +324,37 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 {
                                     // avatarNames will be stored as "N/A" for optimization
                                     case Wanted wanted:
-                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, wanted.AvatarAddress, new List<RuneSlotInfo>(), _blockTimeOffset, BattleType.Adventure));
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(
+                                            outputState,
+                                            ae.InputContext.Signer,
+                                            wanted.AvatarAddress,
+                                            new List<RuneSlotInfo>(),
+                                            _blockTimeOffset,
+                                            BattleType.Adventure
+                                        ));
                                         _adventureBossWantedList.Add(AdventureBossWantedData.GetWantedInfo(
                                             outputState, _blockIndex, _blockTimeOffset, wanted
                                         ));
-                                        Console.WriteLine($"[Adventure Boss] Wanted added : {_adventureBossWantedList.Count}");
+                                        Console.WriteLine(
+                                            $"[Adventure Boss] Wanted added : {_adventureBossWantedList.Count}");
 
                                         // Update season info
-                                        _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
-                                            outputState, wanted.Season, _blockTimeOffset
-                                        ));
-                                        Console.WriteLine($"[Adventure Boss] Season added : {_adventureBossSeasonList.Count}");
+                                        _adventureBossSeasonDict[wanted.Season] =
+                                            AdventureBossSeasonData.GetAdventureBossSeasonInfo(
+                                                outputState, wanted.Season, _blockTimeOffset
+                                            );
+                                        Console.WriteLine(
+                                            $"[Adventure Boss] Season added : {_adventureBossSeasonDict.Count}");
                                         break;
                                     case ExploreAdventureBoss challenge:
-                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, challenge.AvatarAddress, new List<RuneSlotInfo>(), _blockTimeOffset, BattleType.Adventure));
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(
+                                            outputState,
+                                            ae.InputContext.Signer,
+                                            challenge.AvatarAddress,
+                                            new List<RuneSlotInfo>(),
+                                            _blockTimeOffset,
+                                            BattleType.Adventure
+                                        ));
                                         _adventureBossChallengeList.Add(AdventureBossChallengeData.GetChallengeInfo(
                                             inputState, outputState, _blockIndex, _blockTimeOffset, challenge
                                         ));
@@ -345,36 +362,62 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             $"[Adventure Boss] Challenge added : {_adventureBossChallengeList.Count}");
                                         break;
                                     case SweepAdventureBoss rush:
-                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, rush.AvatarAddress, new List<RuneSlotInfo>(), _blockTimeOffset, BattleType.Adventure));
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(
+                                            outputState,
+                                            ae.InputContext.Signer,
+                                            rush.AvatarAddress,
+                                            new List<RuneSlotInfo>(),
+                                            _blockTimeOffset,
+                                            BattleType.Adventure
+                                        ));
                                         _adventureBossRushList.Add(AdventureBossRushData.GetRushInfo(
                                             inputState, outputState, _blockIndex, _blockTimeOffset, rush
                                         ));
-                                        Console.WriteLine($"[Adventure Boss] Rush added : {_adventureBossRushList.Count}");
+                                        Console.WriteLine(
+                                            $"[Adventure Boss] Rush added : {_adventureBossRushList.Count}");
                                         break;
                                     case UnlockFloor unlock:
-                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, unlock.AvatarAddress, new List<RuneSlotInfo>(), _blockTimeOffset, BattleType.Adventure));
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(
+                                            outputState,
+                                            ae.InputContext.Signer,
+                                            unlock.AvatarAddress,
+                                            new List<RuneSlotInfo>(),
+                                            _blockTimeOffset,
+                                            BattleType.Adventure
+                                        ));
                                         _adventureBossUnlockFloorList.Add(AdventureBossUnlockFloorData.GetUnlockInfo(
                                             inputState, outputState, _blockIndex, _blockTimeOffset, unlock
                                         ));
-                                        Console.WriteLine($"[Adventure Boss] Unlock added : {_adventureBossUnlockFloorList.Count}");
+                                        Console.WriteLine(
+                                            $"[Adventure Boss] Unlock added : {_adventureBossUnlockFloorList.Count}");
                                         break;
                                     case ClaimAdventureBossReward claim:
                                     {
-                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, claim.AvatarAddress, new List<RuneSlotInfo>(), _blockTimeOffset, BattleType.Adventure));
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(
+                                            outputState,
+                                            ae.InputContext.Signer,
+                                            claim.AvatarAddress,
+                                            new List<RuneSlotInfo>(),
+                                            _blockTimeOffset,
+                                            BattleType.Adventure
+                                        ));
                                         _adventureBossClaimRewardList.Add(AdventureBossClaimRewardData.GetClaimInfo(
                                             inputState, _blockIndex, _blockTimeOffset, claim
                                         ));
-                                        Console.WriteLine($"[Adventure Boss] Claim added : {_adventureBossClaimRewardList.Count}");
+                                        Console.WriteLine(
+                                            $"[Adventure Boss] Claim added : {_adventureBossClaimRewardList.Count}");
 
                                         // Update season info
                                         var latestSeason = inputState.GetLatestAdventureBossSeason();
                                         var season = latestSeason.EndBlockIndex <= _blockIndex
                                             ? latestSeason.Season // New season not started
                                             : latestSeason.Season - 1; // New season started
-                                        _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
-                                            outputState, season, _blockTimeOffset
-                                        ));
-                                        Console.WriteLine($"[Adventure Boss] Season updated : {_adventureBossSeasonList.Count}");
+                                        _adventureBossSeasonDict[season] =
+                                            AdventureBossSeasonData.GetAdventureBossSeasonInfo(
+                                                outputState, season, _blockTimeOffset
+                                            );
+                                        Console.WriteLine(
+                                            $"[Adventure Boss] Season updated : {_adventureBossSeasonDict.Count}");
                                         break;
                                     }
                                 }
