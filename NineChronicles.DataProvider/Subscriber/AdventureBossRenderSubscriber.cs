@@ -4,6 +4,7 @@ namespace NineChronicles.DataProvider
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using Lib9c.Renderers;
     using Libplanet.Action.State;
@@ -15,7 +16,7 @@ namespace NineChronicles.DataProvider
 
     public partial class RenderSubscriber
     {
-        private readonly List<AdventureBossSeasonModel> _adventureBossSeasonList = new ();
+        private readonly Dictionary<long, AdventureBossSeasonModel> _adventureBossSeasonDict = new ();
         private readonly List<AdventureBossWantedModel> _adventureBossWantedList = new ();
         private readonly List<AdventureBossChallengeModel> _adventureBossChallengeList = new ();
         private readonly List<AdventureBossRushModel> _adventureBossRushList = new ();
@@ -31,8 +32,8 @@ namespace NineChronicles.DataProvider
 
                 tasks.Add(Task.Run(async () =>
                     {
-                        Log.Debug($"[Adventure Boss] {_adventureBossSeasonList.Count} Season");
-                        await MySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonList);
+                        Log.Debug($"[Adventure Boss] {_adventureBossSeasonDict.Count} Season");
+                        await MySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonDict.Values.ToList());
                     }
                 ));
 
@@ -82,7 +83,7 @@ namespace NineChronicles.DataProvider
         private void ClearAdventureBossList()
         {
             Log.Debug("[Adventure Boss] Clear adventure boss action lists");
-            _adventureBossSeasonList.Clear();
+            _adventureBossSeasonDict.Clear();
             _adventureBossWantedList.Clear();
             _adventureBossChallengeList.Clear();
             _adventureBossRushList.Clear();
@@ -104,10 +105,10 @@ namespace NineChronicles.DataProvider
                     Log.Debug($"[Adventure Boss] Wanted added : {_adventureBossWantedList.Count}");
 
                     // Update season info
-                    _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
+                    _adventureBossSeasonDict[wanted.Season] = AdventureBossSeasonData.GetAdventureBossSeasonInfo(
                         outputState, wanted.Season, _blockTimeOffset
-                    ));
-                    Log.Debug($"[Adventure Boss] Season added : {_adventureBossSeasonList.Count}");
+                    );
+                    Log.Debug($"[Adventure Boss] Season added : {_adventureBossSeasonDict.Count}");
                 }
             }
             catch (Exception e)
@@ -218,10 +219,10 @@ namespace NineChronicles.DataProvider
                     var season = latestSeason.EndBlockIndex <= evt.BlockIndex
                         ? latestSeason.Season // New season not started
                         : latestSeason.Season - 1; // New season started
-                    _adventureBossSeasonList.Add(AdventureBossSeasonData.GetAdventureBossSeasonInfo(
+                    _adventureBossSeasonDict[season] = AdventureBossSeasonData.GetAdventureBossSeasonInfo(
                         outputState, season, _blockTimeOffset
-                    ));
-                    Log.Debug($"[Adventure Boss] Season updated : {_adventureBossSeasonList.Count}");
+                    );
+                    Log.Debug($"[Adventure Boss] Season updated : {_adventureBossSeasonDict.Count}");
                 }
             }
             catch (Exception e)
