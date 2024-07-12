@@ -60,21 +60,15 @@ namespace NineChronicles.DataProvider.Store
             try
             {
                 ctx = await _dbContextFactory.CreateDbContextAsync();
-                var tasks = new List<Task>();
 
                 foreach (var wanted in wantedList)
                 {
-                    tasks.Add(Task.Run(async () =>
+                    if (await ctx.AdventureBossWanted.FirstOrDefaultAsync(w => w.Id == wanted.Id) is null)
                     {
-                        if (await ctx.AdventureBossWanted.FirstOrDefaultAsync(w => w.Id == wanted.Id) is null)
-                        {
-                            await ctx.AdventureBossWanted.AddAsync(wanted);
-                        }
-                    }));
+                        await ctx.AdventureBossWanted.AddAsync(wanted);
+                    }
                 }
 
-                Task.WaitAll(tasks.ToArray());
-                Log.Debug("[Adventure Boss] Wanted Added");
                 await ctx.SaveChangesAsync();
                 Log.Debug("[Adventure Boss] Wanted Saved");
             }
@@ -98,21 +92,15 @@ namespace NineChronicles.DataProvider.Store
             try
             {
                 ctx = await _dbContextFactory.CreateDbContextAsync();
-                var tasks = new List<Task>();
 
                 foreach (var challenge in challengeList)
                 {
-                    tasks.Add(Task.Run(async () =>
+                    if (await ctx.AdventureBossChallenge.FirstOrDefaultAsync(c => c.Id == challenge.Id) is null)
                     {
-                        if (await ctx.AdventureBossChallenge.FirstOrDefaultAsync(c => c.Id == challenge.Id) is null)
-                        {
-                            await ctx.AdventureBossChallenge.AddAsync(challenge);
-                        }
-                    }));
+                        await ctx.AdventureBossChallenge.AddAsync(challenge);
+                    }
                 }
 
-                Task.WaitAll(tasks.ToArray());
-                Log.Debug("[Adventure Boss] Challenge Added");
                 await ctx.SaveChangesAsync();
                 Log.Debug("[Adventure Boss] Challenge Saved");
             }
@@ -136,21 +124,15 @@ namespace NineChronicles.DataProvider.Store
             try
             {
                 ctx = await _dbContextFactory.CreateDbContextAsync();
-                var tasks = new List<Task>();
 
                 foreach (var rush in rushList)
                 {
-                    tasks.Add(Task.Run(async () =>
+                    if (await ctx.AdventureBossRush.FirstOrDefaultAsync(r => r.Id == rush.Id) is null)
                     {
-                        if (await ctx.AdventureBossRush.FirstOrDefaultAsync(r => r.Id == rush.Id) is null)
-                        {
-                            await ctx.AdventureBossRush.AddAsync(rush);
-                        }
-                    }));
+                        await ctx.AdventureBossRush.AddAsync(rush);
+                    }
                 }
 
-                Task.WaitAll(tasks.ToArray());
-                Log.Debug("[Adventure Boss] Rush Added");
                 await ctx.SaveChangesAsync();
                 Log.Debug("[Adventure Boss] Rush Saved");
             }
@@ -175,21 +157,15 @@ namespace NineChronicles.DataProvider.Store
             try
             {
                 ctx = await _dbContextFactory.CreateDbContextAsync();
-                var tasks = new List<Task>();
 
                 foreach (var unlock in unlockFloorList)
                 {
-                    tasks.Add(Task.Run(async () =>
+                    if (await ctx.AdventureBossUnlockFloor.FirstOrDefaultAsync(u => u.Id == unlock.Id) is null)
                     {
-                        if (await ctx.AdventureBossUnlockFloor.FirstOrDefaultAsync(u => u.Id == unlock.Id) is null)
-                        {
-                            await ctx.AdventureBossUnlockFloor.AddAsync(unlock);
-                        }
-                    }));
+                        await ctx.AdventureBossUnlockFloor.AddAsync(unlock);
+                    }
                 }
 
-                Task.WaitAll(tasks.ToArray());
-                Log.Debug("[Adventure Boss] UnlockFloor Added");
                 await ctx.SaveChangesAsync();
                 Log.Debug("[Adventure Boss] UnlockFloor Saved");
             }
@@ -214,21 +190,15 @@ namespace NineChronicles.DataProvider.Store
             try
             {
                 ctx = await _dbContextFactory.CreateDbContextAsync();
-                var tasks = new List<Task>();
 
                 foreach (var claim in claimList)
                 {
-                    tasks.Add(Task.Run(async () =>
+                    if (await ctx.AdventureBossClaimReward.FirstOrDefaultAsync(c => c.Id == claim.Id) is null)
                     {
-                        if (await ctx.AdventureBossClaimReward.FirstOrDefaultAsync(c => c.Id == claim.Id) is null)
-                        {
-                            await ctx.AdventureBossClaimReward.AddAsync(claim);
-                        }
-                    }));
+                        await ctx.AdventureBossClaimReward.AddAsync(claim);
+                    }
                 }
 
-                Task.WaitAll(tasks.ToArray());
-                Log.Debug("[Adventure Boss] Claim Added");
                 await ctx.SaveChangesAsync();
                 Log.Debug("[Adventure Boss] Claim Saved");
             }
