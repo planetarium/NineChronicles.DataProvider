@@ -1616,21 +1616,6 @@ namespace NineChronicles.DataProvider
                         {
                             try
                             {
-                                AvatarState avatarState;
-                                try
-                                {
-                                    avatarState = outputState.GetAvatarState(avatarAddress);
-                                }
-                                catch (Exception)
-                                {
-                                    avatarState = outputState.GetAvatarState(address: avatarAddress);
-                                }
-
-                                if (avatarState == null)
-                                {
-                                    continue;
-                                }
-
                                 var runeSlotStateAddress = RuneSlotState.DeriveAddress(avatarAddress, BattleType.Adventure);
                                 var runeSlotState = outputState.TryGetLegacyState(runeSlotStateAddress, out List rawRuneSlotState)
                                     ? new RuneSlotState(rawRuneSlotState)
@@ -1647,7 +1632,7 @@ namespace NineChronicles.DataProvider
                     }
 
                     var end = DateTimeOffset.UtcNow;
-                    Log.Debug("[DataProvider] Stored Avatar Information in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                    Log.Debug("[DataProvider] Stored Agent Avatar Information in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                 }
             }
         }
