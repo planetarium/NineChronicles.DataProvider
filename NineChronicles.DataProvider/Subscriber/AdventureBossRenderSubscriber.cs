@@ -102,7 +102,13 @@ namespace NineChronicles.DataProvider
                 {
                     var start = DateTimeOffset.UtcNow;
                     var outputState = new World(_blockChainStates.GetWorldState(evt.OutputState));
-                    _avatarList.Add(AvatarData.GetAvatarInfo(outputState, evt.Signer, wanted.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                    var avatarAddress = wanted.AvatarAddress;
+                    if (!_avatars.Contains(avatarAddress.ToString()))
+                    {
+                        _avatars.Add(avatarAddress.ToString());
+                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, evt.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                    }
+
                     _adventureBossWantedList.Add(AdventureBossWantedData.GetWantedInfo(
                         outputState, evt.BlockIndex, _blockTimeOffset, wanted
                     ));
@@ -138,7 +144,13 @@ namespace NineChronicles.DataProvider
                     var start = DateTimeOffset.UtcNow;
                     var prevState = new World(_blockChainStates.GetWorldState(evt.PreviousState));
                     var outputState = new World(_blockChainStates.GetWorldState(evt.OutputState));
-                    _avatarList.Add(AvatarData.GetAvatarInfo(outputState, evt.Signer, challenge.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                    var avatarAddress = challenge.AvatarAddress;
+                    if (!_avatars.Contains(avatarAddress.ToString()))
+                    {
+                        _avatars.Add(avatarAddress.ToString());
+                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, evt.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                    }
+
                     _adventureBossChallengeList.Add(AdventureBossChallengeData.GetChallengeInfo(
                         prevState, outputState, evt.BlockIndex, _blockTimeOffset, challenge
                     ));
@@ -168,7 +180,13 @@ namespace NineChronicles.DataProvider
                     var start = DateTimeOffset.UtcNow;
                     var prevState = new World(_blockChainStates.GetWorldState(evt.PreviousState));
                     var outputState = new World(_blockChainStates.GetWorldState(evt.OutputState));
-                    _avatarList.Add(AvatarData.GetAvatarInfo(outputState, evt.Signer, rush.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                    var avatarAddress = rush.AvatarAddress;
+                    if (!_avatars.Contains(avatarAddress.ToString()))
+                    {
+                        _avatars.Add(avatarAddress.ToString());
+                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, evt.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                    }
+
                     _adventureBossRushList.Add(AdventureBossRushData.GetRushInfo(
                         prevState, outputState, evt.BlockIndex, _blockTimeOffset, rush
                     ));
@@ -198,7 +216,13 @@ namespace NineChronicles.DataProvider
                     var start = DateTimeOffset.UtcNow;
                     var prevState = new World(_blockChainStates.GetWorldState(evt.PreviousState));
                     var outputState = new World(_blockChainStates.GetWorldState(evt.OutputState));
-                    _avatarList.Add(AvatarData.GetAvatarInfo(outputState, evt.Signer, unlock.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                    var avatarAddress = unlock.AvatarAddress;
+                    if (!_avatars.Contains(avatarAddress.ToString()))
+                    {
+                        _avatars.Add(avatarAddress.ToString());
+                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, evt.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                    }
+
                     _adventureBossUnlockFloorList.Add(AdventureBossUnlockFloorData.GetUnlockInfo(
                         prevState, outputState, evt.BlockIndex, _blockTimeOffset, unlock
                     ));
@@ -228,7 +252,13 @@ namespace NineChronicles.DataProvider
                     var start = DateTimeOffset.UtcNow;
                     var prevState = new World(_blockChainStates.GetWorldState(evt.PreviousState));
                     var outputState = new World(_blockChainStates.GetWorldState(evt.OutputState));
-                    _avatarList.Add(AvatarData.GetAvatarInfo(outputState, evt.Signer, claim.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                    var avatarAddress = claim.AvatarAddress;
+                    if (!_avatars.Contains(avatarAddress.ToString()))
+                    {
+                        _avatars.Add(avatarAddress.ToString());
+                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, evt.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                    }
+
                     _adventureBossClaimRewardList.Add(AdventureBossClaimRewardData.GetClaimInfo(
                         prevState, evt.BlockIndex, _blockTimeOffset, claim
                     ));

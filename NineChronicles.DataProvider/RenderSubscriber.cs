@@ -90,6 +90,7 @@ namespace NineChronicles.DataProvider
         private readonly List<RuneSummonModel> _runeSummonList = new List<RuneSummonModel>();
         private readonly List<RuneSummonFailModel> _runeSummonFailList = new List<RuneSummonFailModel>();
         private readonly List<string> _agents;
+        private readonly List<string> _avatars;
         private readonly bool _render;
         private int _renderedBlockCount;
         private DateTimeOffset _blockTimeOffset;
@@ -109,6 +110,7 @@ namespace NineChronicles.DataProvider
             MySqlStore = mySqlStore;
             _renderedBlockCount = 0;
             _agents = new List<string>();
+            _avatars = new List<string>();
             _render = Convert.ToBoolean(Environment.GetEnvironmentVariable("NC_Render") ?? "true");
             string dataPath = Environment.GetEnvironmentVariable("NC_BlockIndexFilePath")
                               ?? Path.GetTempPath();
@@ -281,7 +283,12 @@ namespace NineChronicles.DataProvider
                                     runeCurrency);
                                 var acquiredRune = outputRuneBalance - prevRuneBalance;
                                 var actionType = claimStakeReward.ToString()!.Split('.').LastOrDefault()?.Replace(">", string.Empty);
-                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                if (!_avatars.Contains(avatarAddress.ToString()))
+                                {
+                                    _avatars.Add(avatarAddress.ToString());
+                                    _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                }
+
                                 _runesAcquiredList.Add(RunesAcquiredData.GetRunesAcquiredInfo(
                                     id,
                                     ev.Signer,
@@ -314,7 +321,13 @@ namespace NineChronicles.DataProvider
                                 ?.Replace(">", string.Empty);
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, eventDungeonBattle.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = eventDungeonBattle.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _eventDungeonBattleList.Add(EventDungeonBattleData.GetEventDungeonBattleInfo(
                                 inputState,
                                 outputState,
@@ -350,7 +363,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, eventConsumableItemCrafts.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = eventConsumableItemCrafts.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _eventConsumableItemCraftsList.Add(EventConsumableItemCraftsData.GetEventConsumableItemCraftsInfo(eventConsumableItemCrafts, inputState, outputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("[DataProvider] Stored EventConsumableItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
@@ -412,7 +431,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, has.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = has.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _hasList.Add(HackAndSlashData.GetHackAndSlashInfo(inputState, outputState, ev.Signer, has.AvatarAddress, has.StageId, has.Id, ev.BlockIndex, _blockTimeOffset));
                             if (has.StageBuffId.HasValue)
                             {
@@ -439,7 +464,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, hasSweep.avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = hasSweep.avatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _hasSweepList.Add(HackAndSlashSweepData.GetHackAndSlashSweepInfo(
                                 inputState,
                                 outputState,
@@ -474,7 +505,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, combinationConsumable.avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = combinationConsumable.avatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _ccList.Add(CombinationConsumableData.GetCombinationConsumableInfo(
                                 inputState,
                                 outputState,
@@ -505,7 +542,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, combinationEquipment.avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = combinationEquipment.avatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             if (combinationEquipment.payByCrystal)
                             {
                                 var replaceCombinationEquipmentMaterialList = ReplaceCombinationEquipmentMaterialData
@@ -589,7 +632,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, itemEnhancement.avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = itemEnhancement.avatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
                                     inputState,
                                     outputState,
@@ -658,7 +707,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                             AvatarState avatarState = outputState.GetAvatarState(buy.buyerAvatarAddress);
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, buy.buyerAvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = buy.buyerAvatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             var buyerInventory = avatarState.inventory;
                             foreach (var purchaseInfo in buy.purchaseInfos)
                             {
@@ -728,7 +783,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, buy.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = buy.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             foreach (var productInfo in buy.ProductInfos)
                             {
                                 switch (productInfo)
@@ -858,7 +919,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, mc.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = mc.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _mmcList.Add(MigrateMonsterCollectionData.GetMigrateMonsterCollectionInfo(inputState, outputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("[DataProvider] Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
@@ -880,7 +947,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, grinding.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = grinding.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             var grindList = GrindingData.GetGrindingInfo(inputState, outputState, ev.Signer, grinding.AvatarAddress, grinding.EquipmentIds, grinding.Id, ev.BlockIndex, _blockTimeOffset);
 
                             foreach (var grind in grindList)
@@ -908,7 +981,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, unlockEquipmentRecipe.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = unlockEquipmentRecipe.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             var unlockEquipmentRecipeList = UnlockEquipmentRecipeData.GetUnlockEquipmentRecipeInfo(inputState, outputState, ev.Signer, unlockEquipmentRecipe.AvatarAddress, unlockEquipmentRecipe.RecipeIds, unlockEquipmentRecipe.Id, ev.BlockIndex, _blockTimeOffset);
                             foreach (var unlockEquipmentRecipeData in unlockEquipmentRecipeList)
                             {
@@ -935,7 +1014,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, unlockWorld.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = unlockWorld.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             var unlockWorldList = UnlockWorldData.GetUnlockWorldInfo(inputState, outputState, ev.Signer, unlockWorld.AvatarAddress, unlockWorld.WorldIds, unlockWorld.Id, ev.BlockIndex, _blockTimeOffset);
                             foreach (var unlockWorldData in unlockWorldList)
                             {
@@ -962,7 +1047,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, hasRandomBuff.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = hasRandomBuff.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _hasRandomBuffList.Add(HackAndSlashRandomBuffData.GetHasRandomBuffInfo(inputState, outputState, ev.Signer, hasRandomBuff.AvatarAddress, hasRandomBuff.AdvancedGacha, hasRandomBuff.Id, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("[DataProvider] Stored HasRandomBuff action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
@@ -984,7 +1075,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, joinArena.avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = joinArena.avatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _joinArenaList.Add(JoinArenaData.GetJoinArenaInfo(inputState, outputState, ev.Signer, joinArena.avatarAddress, joinArena.round, joinArena.championshipId, joinArena.Id, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("[DataProvider] Stored JoinArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
@@ -1006,7 +1103,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, battleArena.myAvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = battleArena.myAvatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _battleArenaList.Add(BattleArenaData.GetBattleArenaInfo(
                                 inputState,
                                 outputState,
@@ -1039,7 +1142,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, eventMaterialItemCrafts.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = eventMaterialItemCrafts.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _eventMaterialItemCraftsList.Add(EventMaterialItemCraftsData.GetEventMaterialItemCraftsInfo(
                                 inputState,
                                 outputState,
@@ -1071,7 +1180,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, runeEnhancement.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = runeEnhancement.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _runeEnhancementList.Add(RuneEnhancementData.GetRuneEnhancementInfo(
                                 inputState,
                                 outputState,
@@ -1154,7 +1269,13 @@ namespace NineChronicles.DataProvider
 #pragma warning restore CS0618
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, dailyReward.avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = dailyReward.avatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             var prevRuneBalance = inputState.GetBalance(
                                 dailyReward.avatarAddress,
                                 runeCurrency);
@@ -1193,7 +1314,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, claimRaidReward.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = claimRaidReward.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             var sheets = outputState.GetSheets(
                                 sheetTypes: new[]
                                 {
@@ -1248,7 +1375,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, unlockRuneSlot.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = unlockRuneSlot.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _unlockRuneSlotList.Add(UnlockRuneSlotData.GetUnlockRuneSlotInfo(
                                 inputState,
                                 outputState,
@@ -1278,7 +1411,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, rapidCombination.avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = rapidCombination.avatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
                                 inputState,
                                 outputState,
@@ -1348,7 +1487,12 @@ namespace NineChronicles.DataProvider
                                 }
                             }
 
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, ev.Action.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = ev.Action.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress.ToString()))
+                            {
+                                _avatars.Add(avatarAddress.ToString());
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
 
                             var worldBossListSheet = sheets.GetSheet<WorldBossListSheet>();
                             int raidId = worldBossListSheet.FindRaidIdByBlockIndex(ev.BlockIndex);
@@ -1385,7 +1529,13 @@ namespace NineChronicles.DataProvider
                         var start = DateTimeOffset.UtcNow;
                         var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                         var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, petEnhancement.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                        var avatarAddress = petEnhancement.AvatarAddress;
+                        if (!_avatars.Contains(avatarAddress.ToString()))
+                        {
+                            _avatars.Add(avatarAddress.ToString());
+                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                        }
+
                         _petEnhancementList.Add(PetEnhancementData.GetPetEnhancementInfo(
                             inputState,
                             outputState,
@@ -1416,7 +1566,13 @@ namespace NineChronicles.DataProvider
                         var start = DateTimeOffset.UtcNow;
                         var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                         var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, auraSummon.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                        var avatarAddress = auraSummon.AvatarAddress;
+                        if (!_avatars.Contains(avatarAddress.ToString()))
+                        {
+                            _avatars.Add(avatarAddress.ToString());
+                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                        }
+
                         if (ev.Exception is null)
                         {
                             _auraSummonList.Add(AuraSummonData.GetAuraSummonInfo(
@@ -1465,7 +1621,13 @@ namespace NineChronicles.DataProvider
                     {
                         var start = DateTimeOffset.UtcNow;
                         var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, runeSummon.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                        var avatarAddress = runeSummon.AvatarAddress;
+                        if (!_avatars.Contains(avatarAddress.ToString()))
+                        {
+                            _avatars.Add(avatarAddress.ToString());
+                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                        }
+
                         if (ev.Exception is null)
                         {
                             var sheets = outputState.GetSheets(
@@ -1521,7 +1683,13 @@ namespace NineChronicles.DataProvider
                     {
                         var start = DateTimeOffset.UtcNow;
                         var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, activateCollection.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                        var avatarAddress = activateCollection.AvatarAddress;
+                        if (!_avatars.Contains(avatarAddress.ToString()))
+                        {
+                            _avatars.Add(avatarAddress.ToString());
+                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                        }
+
                         var collectionSheet = outputState.GetSheet<CollectionSheet>();
                         var avatar = MySqlStore.GetAvatar(activateCollection.AvatarAddress, true);
                         var collectionState = outputState.GetCollectionState(activateCollection.AvatarAddress);
@@ -1709,6 +1877,7 @@ namespace NineChronicles.DataProvider
             Task.WaitAll(tasks.ToArray());
             _renderedBlockCount = 0;
             _agents.Clear();
+            _avatars.Clear();
             _agentList.Clear();
             _avatarList.Clear();
             _hasList.Clear();
