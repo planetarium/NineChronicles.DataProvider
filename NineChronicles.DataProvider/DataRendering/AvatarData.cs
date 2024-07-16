@@ -26,10 +26,10 @@ namespace NineChronicles.DataProvider.DataRendering
             IWorld outputStates,
             Address signer,
             Address avatarAddress,
-            List<RuneSlotInfo> runeInfos,
             DateTimeOffset blockTime,
             BattleType battleType)
         {
+            var start = DateTimeOffset.UtcNow;
             AvatarState avatarState = outputStates.GetAvatarState(avatarAddress);
             var collectionExist = outputStates.TryGetCollectionState(avatarAddress, out var collectionState);
             var sheetTypes = new List<Type>
@@ -151,14 +151,6 @@ namespace NineChronicles.DataProvider.DataRendering
 
             string avatarName = avatarState.name;
 
-            Log.Debug(
-                "AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}",
-                avatarName,
-                avatarLevel,
-                avatarArmorId,
-                avatarTitleId,
-                avatarCp);
-
             var avatarModel = new AvatarModel()
             {
                 Address = avatarAddress.ToString(),
@@ -171,6 +163,15 @@ namespace NineChronicles.DataProvider.DataRendering
                 Timestamp = blockTime,
             };
 
+            var end = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}, Time Taken: {5} ms.",
+                avatarName,
+                avatarLevel,
+                avatarArmorId,
+                avatarTitleId,
+                avatarCp,
+                (end - start).Milliseconds);
             return avatarModel;
         }
 

@@ -395,7 +395,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 // check if address is already in _avatarCheck
                                 if (!_avatarCheck.Contains(avatarAddress.ToString()))
                                 {
-                                    _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, hasAction.AvatarAddress, hasAction.RuneInfos, _blockTimeOffset, BattleType.Adventure));
+                                    _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, hasAction.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
                                     _avatarCheck.Add(avatarAddress.ToString());
                                 }
 
@@ -473,7 +473,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             if (action is HackAndSlashSweep hasSweep)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, hasSweep.avatarAddress, hasSweep.runeInfos, _blockTimeOffset, BattleType.Adventure));
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, hasSweep.avatarAddress, _blockTimeOffset, BattleType.Adventure));
                                 _hackAndSlashSweepList.Add(HackAndSlashSweepData.GetHackAndSlashSweepInfo(
                                     inputState,
                                     outputState,
@@ -821,7 +821,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             if (action is BattleArena battleArena)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, battleArena.myAvatarAddress, battleArena.runeInfos, _blockTimeOffset, BattleType.Adventure));
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, battleArena.myAvatarAddress, _blockTimeOffset, BattleType.Adventure));
                                 _battleArenaList.Add(BattleArenaData.GetBattleArenaInfo(
                                     inputState,
                                     outputState,
@@ -1054,7 +1054,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     }
                                 }
 
-                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, raid.AvatarAddress, raid.RuneInfos, _blockTimeOffset, BattleType.Adventure));
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer, raid.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
 
                                 var worldBossListSheet = sheets.GetSheet<WorldBossListSheet>();
                                 int raidId = worldBossListSheet.FindRaidIdByBlockIndex(ae.InputContext.BlockIndex);
