@@ -745,14 +745,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing Stake action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action is Stake0 stake0)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _stakeList.Add(StakeData.GetStakeInfo(inputState, outputState, ae.InputContext.Signer, ae.InputContext.BlockIndex, _blockTimeOffset, Guid.Empty));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing Stake action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
                             if (action is MigrateMonsterCollection migrateMonsterCollection)
                             {
                                 var start = DateTimeOffset.UtcNow;
@@ -1098,27 +1090,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     transferAsset.Recipient,
                                     transferAsset.Amount.Currency.Ticker,
                                     transferAsset.Amount,
-                                    _blockTimeOffset));
-
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Stored TransferAsset action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is TransferAsset0 transferAsset0)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var actionString = ae.InputContext.TxId.ToString();
-                                var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
-                                var id = new Guid(actionByteArray);
-                                _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
-                                    id,
-                                    (TxId)ae.InputContext.TxId!,
-                                    ae.InputContext.BlockIndex,
-                                    _blockHash!.ToString(),
-                                    transferAsset0.Sender,
-                                    transferAsset0.Recipient,
-                                    transferAsset0.Amount.Currency.Ticker,
-                                    transferAsset0.Amount,
                                     _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
