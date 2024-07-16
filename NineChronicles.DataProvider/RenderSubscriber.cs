@@ -239,7 +239,7 @@ namespace NineChronicles.DataProvider
                                 return;
                             }
 
-                            ProcessAgentAvatarData(ev);
+                            ProcessAgentData(ev);
 
                             if (ev.Action is ITransferAsset transferAsset)
                             {
@@ -1597,58 +1597,43 @@ namespace NineChronicles.DataProvider
             }
         }
 
-        private void ProcessAgentAvatarData(ActionEvaluation<ActionBase> ev)
+        private void ProcessAgentData(ActionEvaluation<ActionBase> ev)
         {
-            if (!_agents.Contains(ev.Signer.ToString()))
+            try
             {
-                _agents.Add(ev.Signer.ToString());
-                _agentList.Add(AgentData.GetAgentInfo(ev.Signer));
-
-                if (ev.Signer != _miner)
+                if (!_agents.Contains(ev.Signer.ToString()))
                 {
                     var start = DateTimeOffset.UtcNow;
-                    var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                    var agentState = outputState.GetAgentState(ev.Signer);
-                    if (agentState is { } ag)
-                    {
-                        var avatarAddresses = ag.avatarAddresses;
-                        foreach (var avatarAddress in avatarAddresses.Select(avatarAddress => avatarAddress.Value))
-                        {
-                            try
-                            {
-                                AvatarState avatarState;
-                                try
-                                {
-                                    avatarState = outputState.GetAvatarState(avatarAddress);
-                                }
-                                catch (Exception)
-                                {
-                                    avatarState = outputState.GetAvatarState(address: avatarAddress);
-                                }
-
-                                if (avatarState == null)
-                                {
-                                    continue;
-                                }
-
-                                var runeSlotStateAddress = RuneSlotState.DeriveAddress(avatarAddress, BattleType.Adventure);
-                                var runeSlotState = outputState.TryGetLegacyState(runeSlotStateAddress, out List rawRuneSlotState)
-                                    ? new RuneSlotState(rawRuneSlotState)
-                                    : new RuneSlotState(BattleType.Adventure);
-                                var runeSlotInfos = runeSlotState.GetEquippedRuneSlotInfos();
-
-                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, runeSlotInfos, _blockTimeOffset, BattleType.Adventure));
-                            }
-                            catch (Exception ex)
-                            {
-                                Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
-                            }
-                        }
-                    }
-
+                    _agents.Add(ev.Signer.ToString());
+                    _agentList.Add(AgentData.GetAgentInfo(ev.Signer));
                     var end = DateTimeOffset.UtcNow;
-                    Log.Debug("[DataProvider] Stored Avatar Information in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                    Log.Debug("[DataProvider] Stored Agent Information in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+            }
+        }
+
+        private void ProcessAvatarData(ActionEvaluation<ActionBase> ev, World outputState, Address avatarAddress)
+        {
+            try
+            {
+                var start = DateTimeOffset.UtcNow;
+                var runeSlotStateAddress = RuneSlotState.DeriveAddress(avatarAddress, BattleType.Adventure);
+                var runeSlotState = outputState.TryGetLegacyState(runeSlotStateAddress, out List rawRuneSlotState)
+                    ? new RuneSlotState(rawRuneSlotState)
+                    : new RuneSlotState(BattleType.Adventure);
+                var runeSlotInfos = runeSlotState.GetEquippedRuneSlotInfos();
+
+                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, runeSlotInfos, _blockTimeOffset, BattleType.Adventure));
+                var end = DateTimeOffset.UtcNow;
+                Log.Debug("[DataProvider] Stored Avatar Information in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
             }
         }
 
