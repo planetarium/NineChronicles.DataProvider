@@ -259,7 +259,7 @@ namespace NineChronicles.DataProvider
                                     _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                                Log.Debug("[DataProvider] Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is IClaimStakeReward claimStakeReward)
@@ -292,12 +292,12 @@ namespace NineChronicles.DataProvider
                                     _blockTimeOffset));
                                 _claimStakeList.Add(ClaimStakeRewardData.GetClaimStakeRewardInfo(claimStakeReward, inputState, outputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored ClaimStakeReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                                Log.Debug("[DataProvider] Stored ClaimStakeReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                         catch (Exception ex)
                         {
-                            Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                            Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                         }
                     });
 
@@ -329,12 +329,12 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored EventDungeonBattle action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored EventDungeonBattle action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -350,12 +350,12 @@ namespace NineChronicles.DataProvider
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                             _eventConsumableItemCraftsList.Add(EventConsumableItemCraftsData.GetEventConsumableItemCraftsInfo(eventConsumableItemCrafts, inputState, outputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored EventConsumableItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored EventConsumableItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -370,12 +370,12 @@ namespace NineChronicles.DataProvider
                             _requestPledgeList.Add(RequestPledgeData.GetRequestPledgeInfo(ev.TxId.ToString()!, ev.BlockIndex, _blockHash!, ev.Signer, requestPledge.AgentAddress, requestPledge.RefillMead, _blockTimeOffset));
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored RequestPledge action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored RequestPledge action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -390,12 +390,12 @@ namespace NineChronicles.DataProvider
                             _approvePledgeList.Add(ApprovePledgeData.GetApprovePledgeInfo(ev.TxId.ToString()!, ev.BlockIndex, _blockHash!, ev.Signer, approvePledge.PatronAddress, _blockTimeOffset));
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored ApprovePledge action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored ApprovePledge action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -417,12 +417,12 @@ namespace NineChronicles.DataProvider
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -452,12 +452,12 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored HackAndSlashSweep action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored HackAndSlashSweep action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -482,12 +482,12 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored CombinationConsumable action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored CombinationConsumable action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -570,7 +570,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -612,7 +612,7 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             start = DateTimeOffset.UtcNow;
 
                             var slotState = outputState.GetCombinationSlotState(
@@ -638,7 +638,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -707,7 +707,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -815,7 +815,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -831,12 +831,12 @@ namespace NineChronicles.DataProvider
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                             _stakeList.Add(StakeData.GetStakeInfo(inputState, outputState, ev.Signer, ev.BlockIndex, _blockTimeOffset, stake.Id));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored Stake action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored Stake action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -852,12 +852,12 @@ namespace NineChronicles.DataProvider
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                             _mmcList.Add(MigrateMonsterCollectionData.GetMigrateMonsterCollectionInfo(inputState, outputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -880,12 +880,12 @@ namespace NineChronicles.DataProvider
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored Grinding action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored Grinding action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -906,12 +906,12 @@ namespace NineChronicles.DataProvider
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored UnlockEquipmentRecipe action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored UnlockEquipmentRecipe action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -932,12 +932,12 @@ namespace NineChronicles.DataProvider
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored UnlockWorld action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored UnlockWorld action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -953,12 +953,12 @@ namespace NineChronicles.DataProvider
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                             _hasRandomBuffList.Add(HackAndSlashRandomBuffData.GetHasRandomBuffInfo(inputState, outputState, ev.Signer, hasRandomBuff.AvatarAddress, hasRandomBuff.AdvancedGacha, hasRandomBuff.Id, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored HasRandomBuff action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored HasRandomBuff action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -974,12 +974,12 @@ namespace NineChronicles.DataProvider
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                             _joinArenaList.Add(JoinArenaData.GetJoinArenaInfo(inputState, outputState, ev.Signer, joinArena.avatarAddress, joinArena.round, joinArena.championshipId, joinArena.Id, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored JoinArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored JoinArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1007,12 +1007,12 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored BattleArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored BattleArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1038,12 +1038,12 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored EventMaterialItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored EventMaterialItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1068,12 +1068,12 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored RuneEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored RuneEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1117,12 +1117,12 @@ namespace NineChronicles.DataProvider
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored TransferAssets action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored TransferAssets action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1158,12 +1158,12 @@ namespace NineChronicles.DataProvider
                                 acquiredRune,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored DailyReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored DailyReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1212,12 +1212,12 @@ namespace NineChronicles.DataProvider
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored ClaimRaidReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored ClaimRaidReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1241,12 +1241,12 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored UnlockRuneSlot action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored UnlockRuneSlot action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1270,12 +1270,12 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored RapidCombination action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored RapidCombination action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1286,6 +1286,7 @@ namespace NineChronicles.DataProvider
                     {
                         if (ev.Exception is null)
                         {
+                            var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                             var sheets = outputState.GetSheets(
@@ -1346,11 +1347,13 @@ namespace NineChronicles.DataProvider
                                 raiderState.PurchaseCount);
                             _raiderList.Add(RaidData.GetRaidInfo(raidId, raiderState));
                             MySqlStore.StoreRaider(model);
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("[DataProvider] Stored Raid action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1375,12 +1378,12 @@ namespace NineChronicles.DataProvider
                             _blockTimeOffset
                         ));
                         var end = DateTimeOffset.UtcNow;
-                        Log.Debug("Stored PetEnhancement action in block #{BlockIndex}. Time taken: {Time} ms", ev.BlockIndex, end - start);
+                        Log.Debug("[DataProvider] Stored PetEnhancement action in block #{BlockIndex}. Time taken: {Time} ms", ev.BlockIndex, end - start);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                    Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                 }
             });
 
@@ -1390,6 +1393,7 @@ namespace NineChronicles.DataProvider
                 {
                     if (ev.Action is { } auraSummon)
                     {
+                        var start = DateTimeOffset.UtcNow;
                         var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                         var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                         if (ev.Exception is null)
@@ -1421,11 +1425,14 @@ namespace NineChronicles.DataProvider
                                 _blockTimeOffset
                             ));
                         }
+
+                        var end = DateTimeOffset.UtcNow;
+                        Log.Debug("[DataProvider] Stored AuraSummon action in block #{BlockIndex}. Time taken: {Time} ms", ev.BlockIndex, end - start);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                    Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                 }
             });
 
@@ -1435,6 +1442,7 @@ namespace NineChronicles.DataProvider
                 {
                     if (ev.Action is { } runeSummon)
                     {
+                        var start = DateTimeOffset.UtcNow;
                         var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                         if (ev.Exception is null)
                         {
@@ -1472,11 +1480,14 @@ namespace NineChronicles.DataProvider
                                 _blockTimeOffset
                             ));
                         }
+
+                        var end = DateTimeOffset.UtcNow;
+                        Log.Debug("[DataProvider] Stored RuneSummon action in block #{BlockIndex}. Time taken: {Time} ms", ev.BlockIndex, end - start);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                    Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                 }
             });
 
@@ -1486,6 +1497,7 @@ namespace NineChronicles.DataProvider
                 {
                     if (ev.Exception is null && ev.Action is { } activateCollection)
                     {
+                        var start = DateTimeOffset.UtcNow;
                         var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                         var collectionSheet = outputState.GetSheet<CollectionSheet>();
                         var avatar = MySqlStore.GetAvatar(activateCollection.AvatarAddress, true);
@@ -1498,11 +1510,14 @@ namespace NineChronicles.DataProvider
                             avatar,
                             activateCollection.Id.ToString()
                         );
+
+                        var end = DateTimeOffset.UtcNow;
+                        Log.Debug("[DataProvider] Stored MigrateActivateCollections action in block #{BlockIndex}. Time taken: {Time} ms", ev.BlockIndex, end - start);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                    Log.Error(ex, "R[DataProvider] enderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                 }
             });
 
@@ -1591,6 +1606,7 @@ namespace NineChronicles.DataProvider
 
                 if (ev.Signer != _miner)
                 {
+                    var start = DateTimeOffset.UtcNow;
                     var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                     var agentState = outputState.GetAgentState(ev.Signer);
                     if (agentState is { } ag)
@@ -1625,10 +1641,13 @@ namespace NineChronicles.DataProvider
                             }
                             catch (Exception ex)
                             {
-                                Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                                Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                             }
                         }
                     }
+
+                    var end = DateTimeOffset.UtcNow;
+                    Log.Debug("[DataProvider] Stored Avatar Information in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                 }
             }
         }
@@ -1636,7 +1655,7 @@ namespace NineChronicles.DataProvider
         private void StoreRenderedData((Block OldTip, Block NewTip) b)
         {
             var start = DateTimeOffset.Now;
-            Log.Debug("Storing Data...");
+            Log.Debug("[DataProvider] Storing Data...");
             var tasks = new List<Task>
             {
                 Task.Run(() =>
