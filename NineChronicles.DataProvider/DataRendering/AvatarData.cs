@@ -72,22 +72,63 @@ namespace NineChronicles.DataProvider.DataRendering
 
             subStart = DateTimeOffset.UtcNow;
             var runeStates = outputStates.GetRuneState(avatarAddress, out _);
+            subEnd = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarInfo RuneSlotState1 Address: {0} Time Taken: {1} ms.",
+                avatarAddress,
+                (subEnd - subStart).Milliseconds);
+            subStart = DateTimeOffset.UtcNow;
             var runeAddresses = RuneSlotState.DeriveAddress(avatarAddress, battleType);
+            subEnd = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarInfo RuneSlotState2 Address: {0} Time Taken: {1} ms.",
+                avatarAddress,
+                (subEnd - subStart).Milliseconds);
+            subStart = DateTimeOffset.UtcNow;
             var runeSlotState = outputStates.TryGetLegacyState(runeAddresses, out List rawRuneSlotState)
                 ? new RuneSlotState(rawRuneSlotState)
                 : new RuneSlotState(BattleType.Adventure);
+            subEnd = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarInfo RuneSlotState3 Address: {0} Time Taken: {1} ms.",
+                avatarAddress,
+                (subEnd - subStart).Milliseconds);
+            subStart = DateTimeOffset.UtcNow;
             var runeSlotStates = new List<RuneSlotState>();
+            subEnd = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarInfo RuneSlotState4 Address: {0} Time Taken: {1} ms.",
+                avatarAddress,
+                (subEnd - subStart).Milliseconds);
+            subStart = DateTimeOffset.UtcNow;
             runeSlotStates.Add(runeSlotState);
+            subEnd = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarInfo RuneSlotState5 Address: {0} Time Taken: {1} ms.",
+                avatarAddress,
+                (subEnd - subStart).Milliseconds);
+            subStart = DateTimeOffset.UtcNow;
             var runes = SetRunes(runeSlotStates, battleType);
-
+            subEnd = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarInfo RuneSlotState6 Address: {0} Time Taken: {1} ms.",
+                avatarAddress,
+                (subEnd - subStart).Milliseconds);
+            subStart = DateTimeOffset.UtcNow;
             var equippedRuneStates = new List<RuneState>();
+            subEnd = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarInfo RuneSlotState7 Address: {0} Time Taken: {1} ms.",
+                avatarAddress,
+                (subEnd - subStart).Milliseconds);
+            subStart = DateTimeOffset.UtcNow;
             var runeIds = runes[battleType].GetRuneSlot()
                 .Where(slot => slot.RuneId.HasValue)
                 .Select(slot => slot.RuneId!.Value);
 
             subEnd = DateTimeOffset.UtcNow;
             Log.Debug(
-                "[DataProvider] AvatarInfo RuneSlotState Address: {0} Time Taken: {1} ms.",
+                "[DataProvider] AvatarInfo RuneSlotState8 Address: {0} Time Taken: {1} ms.",
                 avatarAddress,
                 (subEnd - subStart).Milliseconds);
 
