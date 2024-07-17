@@ -39,9 +39,9 @@ namespace NineChronicles.DataProvider.DataRendering
                 typeof(CostumeStatSheet),
                 typeof(RuneListSheet),
                 typeof(RuneOptionSheet),
-                typeof(CollectionSheet),
                 typeof(RuneLevelBonusSheet),
             };
+
             if (collectionExist)
             {
                 sheetTypes.Add(typeof(CollectionSheet));
