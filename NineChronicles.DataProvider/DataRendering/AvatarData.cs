@@ -32,7 +32,19 @@ namespace NineChronicles.DataProvider.DataRendering
             var start = DateTimeOffset.UtcNow;
             var subStart = DateTimeOffset.UtcNow;
             AvatarState avatarState = outputStates.GetAvatarState(avatarAddress);
+            var subEnd = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarInfo GetSheets1 Address: {0} Time Taken: {1} ms.",
+                avatarAddress,
+                (subEnd - subStart).Milliseconds);
+            subStart = DateTimeOffset.UtcNow;
             var collectionExist = outputStates.TryGetCollectionState(avatarAddress, out var collectionState);
+            subEnd = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarInfo GetSheets2 Address: {0} Time Taken: {1} ms.",
+                avatarAddress,
+                (subEnd - subStart).Milliseconds);
+            subStart = DateTimeOffset.UtcNow;
             var sheetTypes = new List<Type>
             {
                 typeof(CharacterSheet),
@@ -50,9 +62,9 @@ namespace NineChronicles.DataProvider.DataRendering
             var sheets = outputStates.GetSheets(
                 sheetTypes: sheetTypes);
 
-            var subEnd = DateTimeOffset.UtcNow;
+            subEnd = DateTimeOffset.UtcNow;
             Log.Debug(
-                "[DataProvider] AvatarInfo GetSheets Address: {0} Time Taken: {1} ms.",
+                "[DataProvider] AvatarInfo GetSheets3 Address: {0} Time Taken: {1} ms.",
                 avatarAddress,
                 (subEnd - subStart).Milliseconds);
 
