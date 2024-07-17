@@ -30,6 +30,7 @@ namespace NineChronicles.DataProvider.DataRendering
             BattleType battleType)
         {
             var start = DateTimeOffset.UtcNow;
+            var subStart = DateTimeOffset.UtcNow;
             AvatarState avatarState = outputStates.GetAvatarState(avatarAddress);
             var collectionExist = outputStates.TryGetCollectionState(avatarAddress, out var collectionState);
             var sheetTypes = new List<Type>
@@ -49,12 +50,27 @@ namespace NineChronicles.DataProvider.DataRendering
             var sheets = outputStates.GetSheets(
                 sheetTypes: sheetTypes);
 
+            var subEnd = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarInfo GetSheets Address: {0} Time Taken: {1} ms.",
+                avatarAddress,
+                (subEnd - subStart).Milliseconds);
+
+            subStart = DateTimeOffset.UtcNow;
             var itemSlotStateAddress = ItemSlotState.DeriveAddress(avatarAddress, BattleType.Adventure);
             var itemSlotState = outputStates.TryGetLegacyState(itemSlotStateAddress, out List rawItemSlotState)
                 ? new ItemSlotState(rawItemSlotState)
                 : new ItemSlotState(BattleType.Adventure);
             var equipmentList = SetEquipments(avatarState, itemSlotState, battleType);
             var costumeList = SetCostumes(avatarState, itemSlotState, battleType);
+
+            subEnd = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarInfo ItemSlotState Address: {0} Time Taken: {1} ms.",
+                avatarAddress,
+                (subEnd - subStart).Milliseconds);
+
+            subStart = DateTimeOffset.UtcNow;
             var runeStates = outputStates.GetRuneState(avatarAddress, out _);
             var runeAddresses = RuneSlotState.DeriveAddress(avatarAddress, battleType);
             var runeSlotState = outputStates.TryGetLegacyState(runeAddresses, out List rawRuneSlotState)
@@ -69,6 +85,13 @@ namespace NineChronicles.DataProvider.DataRendering
                 .Where(slot => slot.RuneId.HasValue)
                 .Select(slot => slot.RuneId!.Value);
 
+            subEnd = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarInfo RuneSlotState Address: {0} Time Taken: {1} ms.",
+                avatarAddress,
+                (subEnd - subStart).Milliseconds);
+
+            subStart = DateTimeOffset.UtcNow;
             foreach (var runeId in runeIds)
             {
                 var runeState = runeStates.Runes!.FirstOrDefault(x => x.Value.RuneId == runeId);
@@ -95,6 +118,13 @@ namespace NineChronicles.DataProvider.DataRendering
                 runeOptions.Add(option);
             }
 
+            subEnd = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarInfo RuneOptions Address: {0} Time Taken: {1} ms.",
+                avatarAddress,
+                (subEnd - subStart).Milliseconds);
+
+            subStart = DateTimeOffset.UtcNow;
             var characterSheet = sheets.GetSheet<CharacterSheet>();
             if (!characterSheet.TryGetValue(avatarState.characterId, out var characterRow))
             {
@@ -134,11 +164,24 @@ namespace NineChronicles.DataProvider.DataRendering
                 }
             }
 
+            subEnd = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarInfo AvatarTitle Address: {0} Time Taken: {1} ms.",
+                avatarAddress,
+                (subEnd - subStart).Milliseconds);
+
+            subStart = DateTimeOffset.UtcNow;
             var runeLevelBonus = RuneHelper.CalculateRuneLevelBonus(
                 outputStates.GetRuneState(avatarAddress, out _),
                 sheets.GetSheet<RuneListSheet>(),
                 sheets.GetSheet<RuneLevelBonusSheet>());
+            subEnd = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarInfo RuneHelper Address: {0} Time Taken: {1} ms.",
+                avatarAddress,
+                (subEnd - subStart).Milliseconds);
 
+            subStart = DateTimeOffset.UtcNow;
             var avatarCp = CPHelper.TotalCP(
                 equipmentList[battleType],
                 costumeList[battleType],
@@ -148,6 +191,11 @@ namespace NineChronicles.DataProvider.DataRendering
                 costumeStatSheet,
                 collectionModifiers,
                 runeLevelBonus);
+            subEnd = DateTimeOffset.UtcNow;
+            Log.Debug(
+                "[DataProvider] AvatarInfo CPHelper Address: {0} Time Taken: {1} ms.",
+                avatarAddress,
+                (subEnd - subStart).Milliseconds);
 
             string avatarName = avatarState.name;
 
