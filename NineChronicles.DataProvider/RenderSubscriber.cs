@@ -605,7 +605,7 @@ namespace NineChronicles.DataProvider
                             foreach (var kv in itemEnhancement.hammers)
                             {
                                 var hammerId = kv.Key;
-                                var exp = Equipment.GetHammerExp(hammerId, enhancementCostSheet);
+                                var exp = enhancementCostSheet.GetHammerExp(hammerId);
                                 totalHammerExp += exp * kv.Value;
                             }
 
