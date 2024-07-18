@@ -1287,7 +1287,6 @@ namespace NineChronicles.DataProvider
 #pragma warning restore CS0618
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            var avatarAddress = dailyReward.avatarAddress;
 
                             var prevRuneBalance = inputState.GetBalance(
                                 dailyReward.avatarAddress,
