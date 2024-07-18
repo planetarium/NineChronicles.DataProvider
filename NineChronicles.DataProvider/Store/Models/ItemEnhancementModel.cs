@@ -40,5 +40,9 @@ namespace NineChronicles.DataProvider.Store.Models
         public DateOnly Date { get; set; }
 
         public DateTimeOffset TimeStamp { get; set; }
+
+        public int HammerCount { get; set; }
+
+        public long HammerExp { get; set; }
     }
 }

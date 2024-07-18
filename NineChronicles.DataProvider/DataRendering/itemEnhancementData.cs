@@ -22,8 +22,9 @@ namespace NineChronicles.DataProvider.DataRendering
             Guid itemId,
             Guid actionId,
             long blockIndex,
-            DateTimeOffset blockTime
-        )
+            DateTimeOffset blockTime,
+            int totalHammerCount = 0,
+            long totalHammerExp = 0)
         {
             Currency ncgCurrency = outputStates.GetGoldCurrency();
             var prevNCGBalance = previousStates.GetBalance(
@@ -53,6 +54,8 @@ namespace NineChronicles.DataProvider.DataRendering
                 Exp = equipment.Exp,
                 Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
+                HammerCount = totalHammerCount,
+                HammerExp = totalHammerExp,
             };
 
             return itemEnhancementModel;

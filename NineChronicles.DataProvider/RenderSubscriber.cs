@@ -584,6 +584,7 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var enhancementCostSheet = outputState.GetSheet<EnhancementCostSheetV3>();
                             if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
                                     inputState,
                                     outputState,
@@ -599,6 +600,15 @@ namespace NineChronicles.DataProvider
                                 _itemEnhancementFailList.Add(itemEnhancementFailModel);
                             }
 
+                            int totalHammerCount = 0;
+                            long totalHammerExp = 0;
+                            foreach (var kv in itemEnhancement.hammers)
+                            {
+                                var hammerId = kv.Key;
+                                var exp = enhancementCostSheet.GetHammerExp(hammerId);
+                                totalHammerExp += exp * kv.Value;
+                            }
+
                             _ieList.Add(ItemEnhancementData.GetItemEnhancementInfo(
                                 inputState,
                                 outputState,
@@ -610,7 +620,9 @@ namespace NineChronicles.DataProvider
                                 itemEnhancement.itemId,
                                 itemEnhancement.Id,
                                 ev.BlockIndex,
-                                _blockTimeOffset));
+                                _blockTimeOffset,
+                                totalHammerCount,
+                                totalHammerExp));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             start = DateTimeOffset.UtcNow;
