@@ -324,6 +324,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = eventDungeonBattle.AvatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} EventDungeonBattle action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -366,6 +367,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = eventConsumableItemCrafts.AvatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} EventConsumableItemCrafts action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -434,6 +436,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = has.AvatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} HackAndSlash action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -467,6 +470,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = hasSweep.avatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} HackAndSlashSweep action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -508,6 +512,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = combinationConsumable.avatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} CombinationConsumable action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -545,6 +550,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = combinationEquipment.avatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} CombinationEquipment action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -635,6 +641,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = itemEnhancement.avatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} ItemEnhancement action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -710,6 +717,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = buy.buyerAvatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} Buy action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -786,6 +794,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = buy.AvatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} BuyProduct action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -922,6 +931,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = mc.AvatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} MigrateMonsterCollection action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -950,6 +960,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = grinding.AvatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} Grinding action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -984,6 +995,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = unlockEquipmentRecipe.AvatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} UnlockEquipmentRecipe action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -1017,6 +1029,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = unlockWorld.AvatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} UnlockWorld action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -1050,6 +1063,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = hasRandomBuff.AvatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} HackAndSlashRandomBuff action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -1078,6 +1092,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = joinArena.avatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} JoinArena action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -1106,6 +1121,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = battleArena.myAvatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} BattleArena action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -1145,6 +1161,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = eventMaterialItemCrafts.AvatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} EventMaterialItemCrafts action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -1183,6 +1200,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = runeEnhancement.AvatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} RuneEnhancement action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -1272,6 +1290,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = dailyReward.avatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} DailyReward action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -1317,6 +1336,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = claimRaidReward.AvatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} ClaimRaidReward action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -1378,6 +1398,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = unlockRuneSlot.AvatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} UnlockRuneSlot action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -1414,6 +1435,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = rapidCombination.avatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} RapidCombination action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -1490,6 +1512,7 @@ namespace NineChronicles.DataProvider
                             var avatarAddress = ev.Action.AvatarAddress;
                             if (!_avatars.Contains(avatarAddress.ToString()))
                             {
+                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} Raid action in block #{index}.", avatarAddress, ev.BlockIndex);
                                 _avatars.Add(avatarAddress.ToString());
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
@@ -1532,6 +1555,7 @@ namespace NineChronicles.DataProvider
                         var avatarAddress = petEnhancement.AvatarAddress;
                         if (!_avatars.Contains(avatarAddress.ToString()))
                         {
+                            Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} PetEnhancement action in block #{index}.", avatarAddress, ev.BlockIndex);
                             _avatars.Add(avatarAddress.ToString());
                             _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                         }
@@ -1569,6 +1593,7 @@ namespace NineChronicles.DataProvider
                         var avatarAddress = auraSummon.AvatarAddress;
                         if (!_avatars.Contains(avatarAddress.ToString()))
                         {
+                            Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} AuraSummon action in block #{index}.", avatarAddress, ev.BlockIndex);
                             _avatars.Add(avatarAddress.ToString());
                             _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                         }
@@ -1624,6 +1649,7 @@ namespace NineChronicles.DataProvider
                         var avatarAddress = runeSummon.AvatarAddress;
                         if (!_avatars.Contains(avatarAddress.ToString()))
                         {
+                            Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} RuneSummon action in block #{index}.", avatarAddress, ev.BlockIndex);
                             _avatars.Add(avatarAddress.ToString());
                             _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                         }
@@ -1686,6 +1712,7 @@ namespace NineChronicles.DataProvider
                         var avatarAddress = activateCollection.AvatarAddress;
                         if (!_avatars.Contains(avatarAddress.ToString()))
                         {
+                            Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} ActivateCollection action in block #{index}.", avatarAddress, ev.BlockIndex);
                             _avatars.Add(avatarAddress.ToString());
                             _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                         }
