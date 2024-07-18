@@ -1288,12 +1288,6 @@ namespace NineChronicles.DataProvider
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                             var avatarAddress = dailyReward.avatarAddress;
-                            if (!_avatars.Contains(avatarAddress.ToString()))
-                            {
-                                Log.Debug("[DataProvider] AvatarInfo Stored {avatarAddress} DailyReward action in block #{index}.", avatarAddress, ev.BlockIndex);
-                                _avatars.Add(avatarAddress.ToString());
-                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
-                            }
 
                             var prevRuneBalance = inputState.GetBalance(
                                 dailyReward.avatarAddress,
