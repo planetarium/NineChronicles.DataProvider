@@ -266,7 +266,8 @@ namespace NineChronicles.DataProvider.DataRendering
 
             var end = DateTimeOffset.UtcNow;
             Log.Debug(
-                "[DataProvider] AvatarName: {0}, AvatarLevel: {1}, ArmorId: {2}, TitleId: {3}, CP: {4}, Time Taken: {5} ms.",
+                "[DataProvider] AvatarAddress: {0}, AvatarName: {1}, AvatarLevel: {2}, ArmorId: {3}, TitleId: {4}, CP: {5}, Time Taken: {6} ms.",
+                avatarAddress,
                 avatarName,
                 avatarLevel,
                 avatarArmorId,
