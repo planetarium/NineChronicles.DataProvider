@@ -89,7 +89,8 @@ namespace NineChronicles.DataProvider
         private readonly List<AuraSummonFailModel> _auraSummonFailList = new List<AuraSummonFailModel>();
         private readonly List<RuneSummonModel> _runeSummonList = new List<RuneSummonModel>();
         private readonly List<RuneSummonFailModel> _runeSummonFailList = new List<RuneSummonFailModel>();
-        private readonly List<string> _agents;
+        private readonly List<Address> _agents;
+        private readonly List<Address> _avatars;
         private readonly bool _render;
         private int _renderedBlockCount;
         private DateTimeOffset _blockTimeOffset;
@@ -108,7 +109,8 @@ namespace NineChronicles.DataProvider
             _nodeStatusRenderer = nodeService.NodeStatusRenderer;
             MySqlStore = mySqlStore;
             _renderedBlockCount = 0;
-            _agents = new List<string>();
+            _agents = new List<Address>();
+            _avatars = new List<Address>();
             _render = Convert.ToBoolean(Environment.GetEnvironmentVariable("NC_Render") ?? "true");
             string dataPath = Environment.GetEnvironmentVariable("NC_BlockIndexFilePath")
                               ?? Path.GetTempPath();
@@ -239,7 +241,7 @@ namespace NineChronicles.DataProvider
                                 return;
                             }
 
-                            ProcessAgentAvatarData(ev);
+                            ProcessAgentData(ev);
 
                             if (ev.Action is ITransferAsset transferAsset)
                             {
@@ -259,7 +261,7 @@ namespace NineChronicles.DataProvider
                                     _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                                Log.Debug("[DataProvider] Stored TransferAsset action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
 
                             if (ev.Action is IClaimStakeReward claimStakeReward)
@@ -281,6 +283,12 @@ namespace NineChronicles.DataProvider
                                     runeCurrency);
                                 var acquiredRune = outputRuneBalance - prevRuneBalance;
                                 var actionType = claimStakeReward.ToString()!.Split('.').LastOrDefault()?.Replace(">", string.Empty);
+                                if (!_avatars.Contains(avatarAddress))
+                                {
+                                    _avatars.Add(avatarAddress);
+                                    _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                }
+
                                 _runesAcquiredList.Add(RunesAcquiredData.GetRunesAcquiredInfo(
                                     id,
                                     ev.Signer,
@@ -292,12 +300,12 @@ namespace NineChronicles.DataProvider
                                     _blockTimeOffset));
                                 _claimStakeList.Add(ClaimStakeRewardData.GetClaimStakeRewardInfo(claimStakeReward, inputState, outputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
                                 var end = DateTimeOffset.UtcNow;
-                                Log.Debug("Stored ClaimStakeReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                                Log.Debug("[DataProvider] Stored ClaimStakeReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             }
                         }
                         catch (Exception ex)
                         {
-                            Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                            Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                         }
                     });
 
@@ -313,6 +321,13 @@ namespace NineChronicles.DataProvider
                                 ?.Replace(">", string.Empty);
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var avatarAddress = eventDungeonBattle.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _eventDungeonBattleList.Add(EventDungeonBattleData.GetEventDungeonBattleInfo(
                                 inputState,
                                 outputState,
@@ -329,12 +344,12 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored EventDungeonBattle action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored EventDungeonBattle action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -348,14 +363,21 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var avatarAddress = eventConsumableItemCrafts.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _eventConsumableItemCraftsList.Add(EventConsumableItemCraftsData.GetEventConsumableItemCraftsInfo(eventConsumableItemCrafts, inputState, outputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored EventConsumableItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored EventConsumableItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -370,12 +392,12 @@ namespace NineChronicles.DataProvider
                             _requestPledgeList.Add(RequestPledgeData.GetRequestPledgeInfo(ev.TxId.ToString()!, ev.BlockIndex, _blockHash!, ev.Signer, requestPledge.AgentAddress, requestPledge.RefillMead, _blockTimeOffset));
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored RequestPledge action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored RequestPledge action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -390,12 +412,12 @@ namespace NineChronicles.DataProvider
                             _approvePledgeList.Add(ApprovePledgeData.GetApprovePledgeInfo(ev.TxId.ToString()!, ev.BlockIndex, _blockHash!, ev.Signer, approvePledge.PatronAddress, _blockTimeOffset));
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored ApprovePledge action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored ApprovePledge action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -409,7 +431,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, has.AvatarAddress, has.RuneInfos, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = has.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _hasList.Add(HackAndSlashData.GetHackAndSlashInfo(inputState, outputState, ev.Signer, has.AvatarAddress, has.StageId, has.Id, ev.BlockIndex, _blockTimeOffset));
                             if (has.StageBuffId.HasValue)
                             {
@@ -417,12 +445,12 @@ namespace NineChronicles.DataProvider
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored HackAndSlash action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -436,7 +464,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, hasSweep.avatarAddress, hasSweep.runeInfos, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = hasSweep.avatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _hasSweepList.Add(HackAndSlashSweepData.GetHackAndSlashSweepInfo(
                                 inputState,
                                 outputState,
@@ -452,12 +486,12 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored HackAndSlashSweep action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored HackAndSlashSweep action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -471,6 +505,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var avatarAddress = combinationConsumable.avatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _ccList.Add(CombinationConsumableData.GetCombinationConsumableInfo(
                                 inputState,
                                 outputState,
@@ -482,12 +523,12 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored CombinationConsumable action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored CombinationConsumable action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -501,6 +542,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var avatarAddress = combinationEquipment.avatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             if (combinationEquipment.payByCrystal)
                             {
                                 var replaceCombinationEquipmentMaterialList = ReplaceCombinationEquipmentMaterialData
@@ -570,7 +618,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -585,6 +633,13 @@ namespace NineChronicles.DataProvider
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                             var enhancementCostSheet = outputState.GetSheet<EnhancementCostSheetV3>();
+                            var avatarAddress = itemEnhancement.avatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
                                     inputState,
                                     outputState,
@@ -624,7 +679,7 @@ namespace NineChronicles.DataProvider
                                 totalHammerCount,
                                 totalHammerExp));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             start = DateTimeOffset.UtcNow;
 
                             var slotState = outputState.GetCombinationSlotState(
@@ -650,7 +705,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -664,6 +719,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                             AvatarState avatarState = outputState.GetAvatarState(buy.buyerAvatarAddress);
+                            var avatarAddress = buy.buyerAvatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             var buyerInventory = avatarState.inventory;
                             foreach (var purchaseInfo in buy.purchaseInfos)
                             {
@@ -719,7 +781,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -733,6 +795,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var avatarAddress = buy.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             foreach (var productInfo in buy.ProductInfos)
                             {
                                 switch (productInfo)
@@ -827,7 +896,7 @@ namespace NineChronicles.DataProvider
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -843,12 +912,12 @@ namespace NineChronicles.DataProvider
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                             _stakeList.Add(StakeData.GetStakeInfo(inputState, outputState, ev.Signer, ev.BlockIndex, _blockTimeOffset, stake.Id));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored Stake action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored Stake action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -862,14 +931,21 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var avatarAddress = mc.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _mmcList.Add(MigrateMonsterCollectionData.GetMigrateMonsterCollectionInfo(inputState, outputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -883,6 +959,12 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var avatarAddress = grinding.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
 
                             var grindList = GrindingData.GetGrindingInfo(inputState, outputState, ev.Signer, grinding.AvatarAddress, grinding.EquipmentIds, grinding.Id, ev.BlockIndex, _blockTimeOffset);
 
@@ -892,12 +974,12 @@ namespace NineChronicles.DataProvider
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored Grinding action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored Grinding action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -911,6 +993,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var avatarAddress = unlockEquipmentRecipe.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             var unlockEquipmentRecipeList = UnlockEquipmentRecipeData.GetUnlockEquipmentRecipeInfo(inputState, outputState, ev.Signer, unlockEquipmentRecipe.AvatarAddress, unlockEquipmentRecipe.RecipeIds, unlockEquipmentRecipe.Id, ev.BlockIndex, _blockTimeOffset);
                             foreach (var unlockEquipmentRecipeData in unlockEquipmentRecipeList)
                             {
@@ -918,12 +1007,12 @@ namespace NineChronicles.DataProvider
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored UnlockEquipmentRecipe action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored UnlockEquipmentRecipe action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -937,6 +1026,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var avatarAddress = unlockWorld.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             var unlockWorldList = UnlockWorldData.GetUnlockWorldInfo(inputState, outputState, ev.Signer, unlockWorld.AvatarAddress, unlockWorld.WorldIds, unlockWorld.Id, ev.BlockIndex, _blockTimeOffset);
                             foreach (var unlockWorldData in unlockWorldList)
                             {
@@ -944,12 +1040,12 @@ namespace NineChronicles.DataProvider
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored UnlockWorld action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored UnlockWorld action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -963,14 +1059,21 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var avatarAddress = hasRandomBuff.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _hasRandomBuffList.Add(HackAndSlashRandomBuffData.GetHasRandomBuffInfo(inputState, outputState, ev.Signer, hasRandomBuff.AvatarAddress, hasRandomBuff.AdvancedGacha, hasRandomBuff.Id, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored HasRandomBuff action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored HasRandomBuff action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -984,14 +1087,21 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var avatarAddress = joinArena.avatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _joinArenaList.Add(JoinArenaData.GetJoinArenaInfo(inputState, outputState, ev.Signer, joinArena.avatarAddress, joinArena.round, joinArena.championshipId, joinArena.Id, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored JoinArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored JoinArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1005,7 +1115,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, battleArena.myAvatarAddress, battleArena.runeInfos, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = battleArena.myAvatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _battleArenaList.Add(BattleArenaData.GetBattleArenaInfo(
                                 inputState,
                                 outputState,
@@ -1019,12 +1135,12 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored BattleArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored BattleArena action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1038,6 +1154,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var avatarAddress = eventMaterialItemCrafts.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _eventMaterialItemCraftsList.Add(EventMaterialItemCraftsData.GetEventMaterialItemCraftsInfo(
                                 inputState,
                                 outputState,
@@ -1050,12 +1173,12 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored EventMaterialItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored EventMaterialItemCrafts action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1069,6 +1192,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var avatarAddress = runeEnhancement.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _runeEnhancementList.Add(RuneEnhancementData.GetRuneEnhancementInfo(
                                 inputState,
                                 outputState,
@@ -1080,12 +1210,12 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored RuneEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored RuneEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1129,12 +1259,12 @@ namespace NineChronicles.DataProvider
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored TransferAssets action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored TransferAssets action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1170,12 +1300,12 @@ namespace NineChronicles.DataProvider
                                 acquiredRune,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored DailyReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored DailyReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1189,6 +1319,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var avatarAddress = claimRaidReward.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             var sheets = outputState.GetSheets(
                                 sheetTypes: new[]
                                 {
@@ -1224,12 +1361,12 @@ namespace NineChronicles.DataProvider
                             }
 
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored ClaimRaidReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored ClaimRaidReward action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1243,6 +1380,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var avatarAddress = unlockRuneSlot.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _unlockRuneSlotList.Add(UnlockRuneSlotData.GetUnlockRuneSlotInfo(
                                 inputState,
                                 outputState,
@@ -1253,12 +1397,12 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored UnlockRuneSlot action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored UnlockRuneSlot action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1272,6 +1416,13 @@ namespace NineChronicles.DataProvider
                             var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                            var avatarAddress = rapidCombination.avatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
+
                             _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
                                 inputState,
                                 outputState,
@@ -1282,12 +1433,12 @@ namespace NineChronicles.DataProvider
                                 ev.BlockIndex,
                                 _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
-                            Log.Debug("Stored RapidCombination action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
+                            Log.Debug("[DataProvider] Stored RapidCombination action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1298,6 +1449,7 @@ namespace NineChronicles.DataProvider
                     {
                         if (ev.Exception is null)
                         {
+                            var start = DateTimeOffset.UtcNow;
                             var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                             var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
                             var sheets = outputState.GetSheets(
@@ -1340,7 +1492,12 @@ namespace NineChronicles.DataProvider
                                 }
                             }
 
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, ev.Action.AvatarAddress, ev.Action.RuneInfos, _blockTimeOffset, BattleType.Adventure));
+                            var avatarAddress = ev.Action.AvatarAddress;
+                            if (!_avatars.Contains(avatarAddress))
+                            {
+                                _avatars.Add(avatarAddress);
+                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                            }
 
                             var worldBossListSheet = sheets.GetSheet<WorldBossListSheet>();
                             int raidId = worldBossListSheet.FindRaidIdByBlockIndex(ev.BlockIndex);
@@ -1358,11 +1515,13 @@ namespace NineChronicles.DataProvider
                                 raiderState.PurchaseCount);
                             _raiderList.Add(RaidData.GetRaidInfo(raidId, raiderState));
                             MySqlStore.StoreRaider(model);
+                            var end = DateTimeOffset.UtcNow;
+                            Log.Debug("[DataProvider] Stored Raid action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                     }
                 });
 
@@ -1375,6 +1534,13 @@ namespace NineChronicles.DataProvider
                         var start = DateTimeOffset.UtcNow;
                         var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                         var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                        var avatarAddress = petEnhancement.AvatarAddress;
+                        if (!_avatars.Contains(avatarAddress))
+                        {
+                            _avatars.Add(avatarAddress);
+                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                        }
+
                         _petEnhancementList.Add(PetEnhancementData.GetPetEnhancementInfo(
                             inputState,
                             outputState,
@@ -1387,12 +1553,12 @@ namespace NineChronicles.DataProvider
                             _blockTimeOffset
                         ));
                         var end = DateTimeOffset.UtcNow;
-                        Log.Debug("Stored PetEnhancement action in block #{BlockIndex}. Time taken: {Time} ms", ev.BlockIndex, end - start);
+                        Log.Debug("[DataProvider] Stored PetEnhancement action in block #{BlockIndex}. Time taken: {Time} ms", ev.BlockIndex, (end - start).Milliseconds);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                    Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                 }
             });
 
@@ -1402,8 +1568,16 @@ namespace NineChronicles.DataProvider
                 {
                     if (ev.Action is { } auraSummon)
                     {
+                        var start = DateTimeOffset.UtcNow;
                         var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
                         var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                        var avatarAddress = auraSummon.AvatarAddress;
+                        if (!_avatars.Contains(avatarAddress))
+                        {
+                            _avatars.Add(avatarAddress);
+                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                        }
+
                         if (ev.Exception is null)
                         {
                             _auraSummonList.Add(AuraSummonData.GetAuraSummonInfo(
@@ -1433,11 +1607,14 @@ namespace NineChronicles.DataProvider
                                 _blockTimeOffset
                             ));
                         }
+
+                        var end = DateTimeOffset.UtcNow;
+                        Log.Debug("[DataProvider] Stored AuraSummon action in block #{BlockIndex}. Time taken: {Time} ms", ev.BlockIndex, (end - start).Milliseconds);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                    Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                 }
             });
 
@@ -1447,7 +1624,15 @@ namespace NineChronicles.DataProvider
                 {
                     if (ev.Action is { } runeSummon)
                     {
+                        var start = DateTimeOffset.UtcNow;
                         var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                        var avatarAddress = runeSummon.AvatarAddress;
+                        if (!_avatars.Contains(avatarAddress))
+                        {
+                            _avatars.Add(avatarAddress);
+                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                        }
+
                         if (ev.Exception is null)
                         {
                             var sheets = outputState.GetSheets(
@@ -1484,11 +1669,14 @@ namespace NineChronicles.DataProvider
                                 _blockTimeOffset
                             ));
                         }
+
+                        var end = DateTimeOffset.UtcNow;
+                        Log.Debug("[DataProvider] Stored RuneSummon action in block #{BlockIndex}. Time taken: {Time} ms", ev.BlockIndex, (end - start).Milliseconds);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                    Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                 }
             });
 
@@ -1498,7 +1686,15 @@ namespace NineChronicles.DataProvider
                 {
                     if (ev.Exception is null && ev.Action is { } activateCollection)
                     {
+                        var start = DateTimeOffset.UtcNow;
                         var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
+                        var avatarAddress = activateCollection.AvatarAddress;
+                        if (!_avatars.Contains(avatarAddress))
+                        {
+                            _avatars.Add(avatarAddress);
+                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                        }
+
                         var collectionSheet = outputState.GetSheet<CollectionSheet>();
                         var avatar = MySqlStore.GetAvatar(activateCollection.AvatarAddress, true);
                         var collectionState = outputState.GetCollectionState(activateCollection.AvatarAddress);
@@ -1510,11 +1706,14 @@ namespace NineChronicles.DataProvider
                             avatar,
                             activateCollection.Id.ToString()
                         );
+
+                        var end = DateTimeOffset.UtcNow;
+                        Log.Debug("[DataProvider] Stored MigrateActivateCollections action in block #{BlockIndex}. Time taken: {Time} ms", ev.BlockIndex, (end - start).Milliseconds);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
+                    Log.Error(ex, "R[DataProvider] enderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
                 }
             });
 
@@ -1594,61 +1793,29 @@ namespace NineChronicles.DataProvider
             }
         }
 
-        private void ProcessAgentAvatarData(ActionEvaluation<ActionBase> ev)
+        private void ProcessAgentData(ActionEvaluation<ActionBase> ev)
         {
-            if (!_agents.Contains(ev.Signer.ToString()))
+            try
             {
-                _agents.Add(ev.Signer.ToString());
-                _agentList.Add(AgentData.GetAgentInfo(ev.Signer));
-
-                if (ev.Signer != _miner)
+                if (!_agents.Contains(ev.Signer))
                 {
-                    var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                    var agentState = outputState.GetAgentState(ev.Signer);
-                    if (agentState is { } ag)
-                    {
-                        var avatarAddresses = ag.avatarAddresses;
-                        foreach (var avatarAddress in avatarAddresses.Select(avatarAddress => avatarAddress.Value))
-                        {
-                            try
-                            {
-                                AvatarState avatarState;
-                                try
-                                {
-                                    avatarState = outputState.GetAvatarState(avatarAddress);
-                                }
-                                catch (Exception)
-                                {
-                                    avatarState = outputState.GetAvatarState(address: avatarAddress);
-                                }
-
-                                if (avatarState == null)
-                                {
-                                    continue;
-                                }
-
-                                var runeSlotStateAddress = RuneSlotState.DeriveAddress(avatarAddress, BattleType.Adventure);
-                                var runeSlotState = outputState.TryGetLegacyState(runeSlotStateAddress, out List rawRuneSlotState)
-                                    ? new RuneSlotState(rawRuneSlotState)
-                                    : new RuneSlotState(BattleType.Adventure);
-                                var runeSlotInfos = runeSlotState.GetEquippedRuneSlotInfos();
-
-                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, runeSlotInfos, _blockTimeOffset, BattleType.Adventure));
-                            }
-                            catch (Exception ex)
-                            {
-                                Log.Error(ex, "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
-                            }
-                        }
-                    }
+                    var start = DateTimeOffset.UtcNow;
+                    _agents.Add(ev.Signer);
+                    _agentList.Add(AgentData.GetAgentInfo(ev.Signer));
+                    var end = DateTimeOffset.UtcNow;
+                    Log.Debug("[DataProvider] Stored Agent Information in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
             }
         }
 
         private void StoreRenderedData((Block OldTip, Block NewTip) b)
         {
             var start = DateTimeOffset.Now;
-            Log.Debug("Storing Data...");
+            Log.Debug("[DataProvider] Storing Data...");
             var tasks = new List<Task>
             {
                 Task.Run(() =>
@@ -1715,6 +1882,7 @@ namespace NineChronicles.DataProvider
             Task.WaitAll(tasks.ToArray());
             _renderedBlockCount = 0;
             _agents.Clear();
+            _avatars.Clear();
             _agentList.Clear();
             _avatarList.Clear();
             _hasList.Clear();
