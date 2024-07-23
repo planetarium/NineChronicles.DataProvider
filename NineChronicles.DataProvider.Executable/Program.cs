@@ -41,7 +41,8 @@ namespace NineChronicles.DataProvider.Executable
         {
             var host = CreateHostBuilder(args).Build();
             await MigrateDatabaseAsync(host);
-            await host.RunAsync();
+            await CoconaLiteApp.CreateHostBuilder()
+                .RunAsync<Program>(args);
         }
 
         [PrimaryCommand]
