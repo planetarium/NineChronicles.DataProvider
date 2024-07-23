@@ -24,11 +24,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lib9c.Renderers", "NineChro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lib9c.Utils", "NineChronicles.Headless\Lib9c\Lib9c.Utils\Lib9c.Utils.csproj", "{0B12D053-8CB1-445E-91AA-D23EDDE2CC88}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Action", "NineChronicles.Headless\Lib9c\.Libplanet\Libplanet.Action\Libplanet.Action.csproj", "{116A01C6-D07A-4E5B-87E1-871D931CFCFE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Action", "NineChronicles.Headless\Lib9c\.Libplanet\src\Libplanet.Action\Libplanet.Action.csproj", "{116A01C6-D07A-4E5B-87E1-871D931CFCFE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lib9c", "NineChronicles.Headless\Lib9c\Lib9c\Lib9c.csproj", "{CED5FBEB-7EE8-477D-B5A5-B6B2BEEBCA61}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Mocks", "NineChronicles.Headless\Lib9c\.Libplanet\Libplanet.Mocks\Libplanet.Mocks.csproj", "{994BA4E6-804B-45A1-B1A4-7230368C4914}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libplanet.Mocks", "NineChronicles.Headless\Lib9c\.Libplanet\test\Libplanet.Mocks\Libplanet.Mocks.csproj", "{994BA4E6-804B-45A1-B1A4-7230368C4914}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
