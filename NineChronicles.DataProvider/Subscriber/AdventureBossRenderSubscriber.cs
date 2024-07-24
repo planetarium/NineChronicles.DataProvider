@@ -84,7 +84,7 @@ namespace NineChronicles.DataProvider
 
         private void ClearAdventureBossList()
         {
-            Log.Debug("[DataProvider] AdventureBossClear adventure boss action lists");
+            Log.Debug("[DataProvider] Clear adventure boss action lists");
             _adventureBossSeasonDict.Clear();
             _adventureBossWantedList.Clear();
             _adventureBossChallengeList.Clear();
@@ -95,22 +95,24 @@ namespace NineChronicles.DataProvider
 
         partial void SubscribeAdventureBossWanted(ActionEvaluation<Wanted> evt)
         {
-            Log.Debug("[DataProvider] AdventureBossSubscribe Wanted");
             try
             {
                 if (evt.Exception is null && evt.Action is { } wanted)
                 {
+                    var start = DateTimeOffset.UtcNow;
                     var outputState = new World(_blockChainStates.GetWorldState(evt.OutputState));
                     _adventureBossWantedList.Add(AdventureBossWantedData.GetWantedInfo(
                         outputState, evt.BlockIndex, _blockTimeOffset, wanted
                     ));
-                    Log.Debug($"[Adventure Boss] Wanted added : {_adventureBossWantedList.Count}");
+                    var end = DateTimeOffset.UtcNow;
+                    Log.Debug("[DataProvider] Stored {count} AdventureBossWanted action in block #{BlockIndex}. Time taken: {Time} ms", _adventureBossWantedList.Count, evt.BlockIndex, end - start);
 
                     // Update season info
                     _adventureBossSeasonDict[wanted.Season] = AdventureBossSeasonData.GetAdventureBossSeasonInfo(
                         outputState, wanted.Season, _blockTimeOffset
                     );
-                    Log.Debug($"[Adventure Boss] Season added : {_adventureBossSeasonDict.Count}");
+                    end = DateTimeOffset.UtcNow;
+                    Log.Debug("[DataProvider] Stored {count} AdventureBossSeason action in block #{BlockIndex}. Time taken: {Time} ms", _adventureBossSeasonDict.Count, evt.BlockIndex, end - start);
                 }
             }
             catch (Exception e)
@@ -126,24 +128,25 @@ namespace NineChronicles.DataProvider
 
         partial void SubscribeAdventureBossChallenge(ActionEvaluation<ExploreAdventureBoss> evt)
         {
-            Log.Debug("[DataProvider] AdventureBossSubscribe Explore");
             try
             {
                 if (evt.Exception is null && evt.Action is { } challenge)
                 {
+                    var start = DateTimeOffset.UtcNow;
                     var prevState = new World(_blockChainStates.GetWorldState(evt.PreviousState));
                     var outputState = new World(_blockChainStates.GetWorldState(evt.OutputState));
                     _adventureBossChallengeList.Add(AdventureBossChallengeData.GetChallengeInfo(
                         prevState, outputState, evt.BlockIndex, _blockTimeOffset, challenge
                     ));
-                    Log.Debug($"[DataProvider] AdventureBossChallenge added : {_adventureBossChallengeList.Count}");
+                    var end = DateTimeOffset.UtcNow;
+                    Log.Debug("[DataProvider] Stored {count} AdventureBossChallenge action in block #{BlockIndex}. Time taken: {Time} ms", _adventureBossChallengeList.Count, evt.BlockIndex, end - start);
                 }
             }
             catch (Exception e)
             {
                 Log.Error(
                     e,
-                    "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}",
+                    "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}",
                     e.Message,
                     e.StackTrace
                 );
@@ -152,9 +155,9 @@ namespace NineChronicles.DataProvider
 
         partial void SubscribeAdventureBossRush(ActionEvaluation<SweepAdventureBoss> evt)
         {
-            Log.Debug("[DataProvider] AdventureBossSubscribe Rush");
             try
             {
+                var start = DateTimeOffset.UtcNow;
                 if (evt.Exception is null && evt.Action is { } rush)
                 {
                     var prevState = new World(_blockChainStates.GetWorldState(evt.PreviousState));
@@ -162,14 +165,15 @@ namespace NineChronicles.DataProvider
                     _adventureBossRushList.Add(AdventureBossRushData.GetRushInfo(
                         prevState, outputState, evt.BlockIndex, _blockTimeOffset, rush
                     ));
-                    Log.Debug($"[DataProvider] AdventureBossRush added : {_adventureBossRushList.Count}");
+                    var end = DateTimeOffset.UtcNow;
+                    Log.Debug("[DataProvider] Stored {count} AdventureBossRush action in block #{BlockIndex}. Time taken: {Time} ms", _adventureBossRushList.Count, evt.BlockIndex, end - start);
                 }
             }
             catch (Exception e)
             {
                 Log.Error(
                     e,
-                    "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}",
+                    "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}",
                     e.Message,
                     e.StackTrace
                 );
@@ -178,24 +182,25 @@ namespace NineChronicles.DataProvider
 
         partial void SubscribeAdventureBossUnlockFloor(ActionEvaluation<UnlockFloor> evt)
         {
-            Log.Debug("[DataProvider] AdventureBossSubscribe UnlockFloor");
             try
             {
                 if (evt.Exception is null && evt.Action is { } unlock)
                 {
+                    var start = DateTimeOffset.UtcNow;
                     var prevState = new World(_blockChainStates.GetWorldState(evt.PreviousState));
                     var outputState = new World(_blockChainStates.GetWorldState(evt.OutputState));
                     _adventureBossUnlockFloorList.Add(AdventureBossUnlockFloorData.GetUnlockInfo(
                         prevState, outputState, evt.BlockIndex, _blockTimeOffset, unlock
                     ));
-                    Log.Debug($"[DataProvider] AdventureBossUnlock added : {_adventureBossUnlockFloorList.Count}");
+                    var end = DateTimeOffset.UtcNow;
+                    Log.Debug("[DataProvider] Stored {count} AdventureBossUnlock action in block #{BlockIndex}. Time taken: {Time} ms", _adventureBossUnlockFloorList.Count, evt.BlockIndex, end - start);
                 }
             }
             catch (Exception e)
             {
                 Log.Error(
                     e,
-                    "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}",
+                    "[DataProvider]RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}",
                     e.Message,
                     e.StackTrace
                 );
@@ -204,19 +209,21 @@ namespace NineChronicles.DataProvider
 
         partial void SubscribeAdventureBossClaim(ActionEvaluation<ClaimAdventureBossReward> evt)
         {
-            Log.Debug("[DataProvider] AdventureBossSubscribe Claim");
             try
             {
                 if (evt.Exception is null && evt.Action is { } claim)
                 {
+                    var start = DateTimeOffset.UtcNow;
                     var prevState = new World(_blockChainStates.GetWorldState(evt.PreviousState));
                     var outputState = new World(_blockChainStates.GetWorldState(evt.OutputState));
                     _adventureBossClaimRewardList.Add(AdventureBossClaimRewardData.GetClaimInfo(
                         prevState, evt.BlockIndex, _blockTimeOffset, claim
                     ));
-                    Log.Debug($"[DataProvider] AdventureBossClaim added : {_adventureBossClaimRewardList.Count}");
+                    var end = DateTimeOffset.UtcNow;
+                    Log.Debug("[DataProvider] Stored {count} AdventureBossClaim action in block #{BlockIndex}. Time taken: {Time} ms", _adventureBossClaimRewardList.Count, evt.BlockIndex, end - start);
 
                     // Update season info
+                    start = DateTimeOffset.UtcNow;
                     var latestSeason = prevState.GetLatestAdventureBossSeason();
                     var season = latestSeason.EndBlockIndex <= evt.BlockIndex
                         ? latestSeason.Season // New season not started
@@ -224,14 +231,15 @@ namespace NineChronicles.DataProvider
                     _adventureBossSeasonDict[season] = AdventureBossSeasonData.GetAdventureBossSeasonInfo(
                         outputState, season, _blockTimeOffset
                     );
-                    Log.Debug($"[DataProvider] AdventureBossSeason updated : {_adventureBossSeasonDict.Count}");
+                    end = DateTimeOffset.UtcNow;
+                    Log.Debug("[DataProvider] Stored {count} AdventureBossSeason action in block #{BlockIndex}. Time taken: {Time} ms", _adventureBossClaimRewardList.Count, evt.BlockIndex, end - start);
                 }
             }
             catch (Exception e)
             {
                 Log.Error(
                     e,
-                    "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}",
+                    "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}",
                     e.Message,
                     e.StackTrace
                 );
