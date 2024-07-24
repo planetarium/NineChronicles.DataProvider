@@ -119,7 +119,7 @@ namespace NineChronicles.DataProvider
             {
                 Log.Error(
                     e,
-                    "RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}",
+                    "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}",
                     e.Message,
                     e.StackTrace
                 );
@@ -200,7 +200,7 @@ namespace NineChronicles.DataProvider
             {
                 Log.Error(
                     e,
-                    "[DataProvider]RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}",
+                    "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}",
                     e.Message,
                     e.StackTrace
                 );
