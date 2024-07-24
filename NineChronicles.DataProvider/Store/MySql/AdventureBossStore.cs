@@ -42,6 +42,7 @@ namespace NineChronicles.DataProvider.Store
             catch (Exception e)
             {
                 Log.Debug(e.Message);
+                Log.Debug(e.StackTrace);
             }
             finally
             {
@@ -67,12 +68,14 @@ namespace NineChronicles.DataProvider.Store
                     }
                 }
 
+                Log.Debug("[DataProvider] AdventureBossWanted Added");
                 await ctx.SaveChangesAsync();
                 Log.Debug($"[DataProvider] AdventureBossWanted Saved: {wantedList.Count}");
             }
             catch (Exception e)
             {
                 Log.Debug(e.Message);
+                Log.Debug(e.StackTrace);
             }
             finally
             {
@@ -98,12 +101,14 @@ namespace NineChronicles.DataProvider.Store
                     }
                 }
 
+                Log.Debug("[DataProvider] AdventureBossChallenge Added");
                 await ctx.SaveChangesAsync();
                 Log.Debug($"[DataProvider] AdventureBossChallenge Saved: {challengeList.Count}");
             }
             catch (Exception e)
             {
                 Log.Debug(e.Message);
+                Log.Debug(e.StackTrace);
             }
             finally
             {
@@ -129,12 +134,14 @@ namespace NineChronicles.DataProvider.Store
                     }
                 }
 
+                Log.Debug("[DataProvider] AdventureBossRush Added");
                 await ctx.SaveChangesAsync();
                 Log.Debug($"[DataProvider] AdventureBossRush Saved: {rushList.Count}");
             }
             catch (Exception e)
             {
                 Log.Debug(e.Message);
+                Log.Debug(e.StackTrace);
             }
             finally
             {
@@ -161,12 +168,14 @@ namespace NineChronicles.DataProvider.Store
                     }
                 }
 
+                Log.Debug("[DataProvider] AdventureBossUnlockFloor Added");
                 await ctx.SaveChangesAsync();
                 Log.Debug($"[DataProvider] AdventureBossUnlockFloor Saved: {unlockFloorList.Count}");
             }
             catch (Exception e)
             {
                 Log.Debug(e.Message);
+                Log.Debug(e.StackTrace);
             }
             finally
             {
@@ -193,12 +202,14 @@ namespace NineChronicles.DataProvider.Store
                     }
                 }
 
+                Log.Debug("[DataProvider] AdventureBossClaim Added");
                 await ctx.SaveChangesAsync();
                 Log.Debug($"[DataProvider] AdventureBossClaim Saved: {claimList.Count}");
             }
             catch (Exception e)
             {
                 Log.Debug(e.Message);
+                Log.Debug(e.StackTrace);
             }
             finally
             {
