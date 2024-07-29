@@ -14,7 +14,6 @@ namespace NineChronicles.DataProvider.Store
     {
         public async partial Task StoreAdventureBossSeasonList(List<AdventureBossSeasonModel> seasonList)
         {
-            Log.Debug($"[Adventure Boss] StoreAdventureBossSeason: {seasonList.Count}");
             NineChroniclesContext? ctx = null;
             try
             {
@@ -26,12 +25,12 @@ namespace NineChronicles.DataProvider.Store
                     var existSeason = await ctx.AdventureBossSeason.FirstOrDefaultAsync(s => s.Season == season.Season);
                     if (existSeason is null)
                     {
-                        Log.Debug("[Adventure Boss] Season not exist.");
+                        Log.Debug("[DataProvider] AdventureBossSeason does not exist.");
                         await ctx.AdventureBossSeason.AddAsync(season);
                     }
                     else
                     {
-                        Log.Debug("[Adventure Boss] Season Exist: update");
+                        Log.Debug($"[DataProvider] AdventureBossSeason Exist: update: {seasonList.Count}");
                         existSeason.RaffleReward = season.RaffleReward;
                         existSeason.RaffleWinnerAddress = season.RaffleWinnerAddress;
                         ctx.AdventureBossSeason.Update(existSeason);
@@ -43,6 +42,7 @@ namespace NineChronicles.DataProvider.Store
             catch (Exception e)
             {
                 Log.Debug(e.Message);
+                Log.Debug(e.StackTrace);
             }
             finally
             {
@@ -55,7 +55,6 @@ namespace NineChronicles.DataProvider.Store
 
         public async partial Task StoreAdventureBossWantedList(List<AdventureBossWantedModel> wantedList)
         {
-            Log.Debug($"[Adventure Boss] StoreAdventureBossWantedList: {wantedList.Count}");
             NineChroniclesContext? ctx = null;
             try
             {
@@ -69,12 +68,14 @@ namespace NineChronicles.DataProvider.Store
                     }
                 }
 
+                Log.Debug("[DataProvider] AdventureBossWanted Added");
                 await ctx.SaveChangesAsync();
-                Log.Debug("[Adventure Boss] Wanted Saved");
+                Log.Debug($"[DataProvider] AdventureBossWanted Saved: {wantedList.Count}");
             }
             catch (Exception e)
             {
                 Log.Debug(e.Message);
+                Log.Debug(e.StackTrace);
             }
             finally
             {
@@ -87,7 +88,6 @@ namespace NineChronicles.DataProvider.Store
 
         public async partial Task StoreAdventureBossChallengeList(List<AdventureBossChallengeModel> challengeList)
         {
-            Log.Debug($"[Adventure Boss] StoreAdventureBossChallenge: {challengeList.Count}");
             NineChroniclesContext? ctx = null;
             try
             {
@@ -101,12 +101,14 @@ namespace NineChronicles.DataProvider.Store
                     }
                 }
 
+                Log.Debug("[DataProvider] AdventureBossChallenge Added");
                 await ctx.SaveChangesAsync();
-                Log.Debug("[Adventure Boss] Challenge Saved");
+                Log.Debug($"[DataProvider] AdventureBossChallenge Saved: {challengeList.Count}");
             }
             catch (Exception e)
             {
                 Log.Debug(e.Message);
+                Log.Debug(e.StackTrace);
             }
             finally
             {
@@ -119,7 +121,6 @@ namespace NineChronicles.DataProvider.Store
 
         public async partial Task StoreAdventureBossRushList(List<AdventureBossRushModel> rushList)
         {
-            Log.Debug($"[Adventure Boss] StoreAdventureBossRush: {rushList.Count}");
             NineChroniclesContext? ctx = null;
             try
             {
@@ -133,12 +134,14 @@ namespace NineChronicles.DataProvider.Store
                     }
                 }
 
+                Log.Debug("[DataProvider] AdventureBossRush Added");
                 await ctx.SaveChangesAsync();
-                Log.Debug("[Adventure Boss] Rush Saved");
+                Log.Debug($"[DataProvider] AdventureBossRush Saved: {rushList.Count}");
             }
             catch (Exception e)
             {
                 Log.Debug(e.Message);
+                Log.Debug(e.StackTrace);
             }
             finally
             {
@@ -151,7 +154,6 @@ namespace NineChronicles.DataProvider.Store
 
         public async partial Task StoreAdventureBossUnlockFloorList(List<AdventureBossUnlockFloorModel> unlockFloorList)
         {
-            Log.Debug($"[Adventure Boss] StoreAdventureBossUnlockFloor: {unlockFloorList.Count}");
             NineChroniclesContext? ctx = null;
 
             try
@@ -166,12 +168,14 @@ namespace NineChronicles.DataProvider.Store
                     }
                 }
 
+                Log.Debug("[DataProvider] AdventureBossUnlockFloor Added");
                 await ctx.SaveChangesAsync();
-                Log.Debug("[Adventure Boss] UnlockFloor Saved");
+                Log.Debug($"[DataProvider] AdventureBossUnlockFloor Saved: {unlockFloorList.Count}");
             }
             catch (Exception e)
             {
                 Log.Debug(e.Message);
+                Log.Debug(e.StackTrace);
             }
             finally
             {
@@ -184,7 +188,6 @@ namespace NineChronicles.DataProvider.Store
 
         public async partial Task StoreAdventureBossClaimRewardList(List<AdventureBossClaimRewardModel> claimList)
         {
-            Log.Debug($"[Adventure Boss] StoreAdventureBossClaimReward: {claimList.Count}");
             NineChroniclesContext? ctx = null;
 
             try
@@ -199,12 +202,14 @@ namespace NineChronicles.DataProvider.Store
                     }
                 }
 
+                Log.Debug("[DataProvider] AdventureBossClaim Added");
                 await ctx.SaveChangesAsync();
-                Log.Debug("[Adventure Boss] Claim Saved");
+                Log.Debug($"[DataProvider] AdventureBossClaim Saved: {claimList.Count}");
             }
             catch (Exception e)
             {
                 Log.Debug(e.Message);
+                Log.Debug(e.StackTrace);
             }
             finally
             {

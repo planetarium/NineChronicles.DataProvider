@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using Libplanet.Headless.Hosting;
+using Microsoft.Extensions.Logging;
 using Nekoyume.Action.Loader;
 using IPAddress = System.Net.IPAddress;
 
@@ -38,50 +39,11 @@ namespace NineChronicles.DataProvider.Executable
     {
         public static async Task Main(string[] args)
         {
+            var host = CreateHostBuilder(args).Build();
+            await MigrateDatabaseAsync(host);
             await CoconaLiteApp.CreateHostBuilder()
                 .RunAsync<Program>(args);
         }
-
-        // EF Core uses this method at design time to access the DbContext
-        public static IHostBuilder CreateHostBuilder(string[] args)
-            => Host.CreateDefaultBuilder(args)
-                .ConfigureServices(services =>
-                {
-                    services.AddDbContextFactory<NineChroniclesContext>(options =>
-                    {
-                        // Get configuration from appsettings or env
-                        var configurationBuilder = new ConfigurationBuilder()
-                            .AddJsonFile("appsettings.json")
-                            .AddEnvironmentVariables("NC_");
-                        IConfiguration config = configurationBuilder.Build();
-                        var headlessConfig = new Configuration();
-                        config.Bind(headlessConfig);
-                        if (headlessConfig.MySqlConnectionString != string.Empty)
-                        {
-                            args = new[] { headlessConfig.MySqlConnectionString };
-                        }
-
-                        if (args.Length == 1)
-                        {
-                            options.UseMySql(
-                                args[0],
-                                ServerVersion.AutoDetect(
-                                    args[0]),
-                                b =>
-                                {
-                                    b.MigrationsAssembly("NineChronicles.DataProvider.Executable");
-                                    b.CommandTimeout(600000);
-                                });
-                        }
-                        else
-                        {
-                            options.UseSqlite(
-                                @"Data Source=9c.gg.db",
-                                b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable")
-                            );
-                        }
-                    });
-                });
 
         [PrimaryCommand]
         public async Task Run(
@@ -275,6 +237,63 @@ namespace NineChronicles.DataProvider.Executable
                 });
 
             await hostBuilder.RunConsoleAsync(token);
+        }
+
+        // EF Core uses this method at design time to access the DbContext
+        private static IHostBuilder CreateHostBuilder(string[] args)
+            => Host.CreateDefaultBuilder(args)
+                .ConfigureServices(services =>
+                {
+                    services.AddDbContextFactory<NineChroniclesContext>(options =>
+                    {
+                        // Get configuration from appsettings or env
+                        var configurationBuilder = new ConfigurationBuilder()
+                            .AddJsonFile("appsettings.json")
+                            .AddEnvironmentVariables("NC_");
+                        IConfiguration config = configurationBuilder.Build();
+                        var headlessConfig = new Configuration();
+                        config.Bind(headlessConfig);
+                        if (headlessConfig.MySqlConnectionString != string.Empty)
+                        {
+                            args = new[] { headlessConfig.MySqlConnectionString };
+                        }
+
+                        if (args.Length == 1)
+                        {
+                            options.UseMySql(
+                                args[0],
+                                ServerVersion.AutoDetect(
+                                    args[0]),
+                                b =>
+                                {
+                                    b.MigrationsAssembly("NineChronicles.DataProvider.Executable");
+                                    b.CommandTimeout(600000);
+                                });
+                        }
+                        else
+                        {
+                            options.UseSqlite(
+                                @"Data Source=9c.gg.db",
+                                b => b.MigrationsAssembly("NineChronicles.DataProvider.Executable")
+                            );
+                        }
+                    });
+                });
+
+        private static async Task MigrateDatabaseAsync(IHost host)
+        {
+            using var scope = host.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            try
+            {
+                var context = ServiceProviderServiceExtensions.GetRequiredService<NineChroniclesContext>(services);
+                await context.Database.MigrateAsync();
+            }
+            catch (Exception ex)
+            {
+                var logger = ServiceProviderServiceExtensions.GetRequiredService<ILogger<Program>>(services);
+                logger.LogError(ex, "An error occurred while migrating the database.");
+            }
         }
     }
 }
