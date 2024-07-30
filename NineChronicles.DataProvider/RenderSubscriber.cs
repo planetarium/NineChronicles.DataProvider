@@ -661,6 +661,7 @@ namespace NineChronicles.DataProvider
                             {
                                 var hammerId = kv.Key;
                                 var exp = enhancementCostSheet.GetHammerExp(hammerId);
+                                totalHammerCount += kv.Value;
                                 totalHammerExp += exp * kv.Value;
                             }
 

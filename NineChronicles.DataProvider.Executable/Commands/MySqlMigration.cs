@@ -1,4 +1,7 @@
+using Nekoyume.Action.AdventureBoss;
 using Nekoyume.Model.EnumType;
+using NineChronicles.DataProvider.DataRendering.AdventureBoss;
+using NineChronicles.DataProvider.Store.Models.AdventureBoss;
 
 namespace NineChronicles.DataProvider.Executable.Commands
 {
@@ -43,6 +46,12 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
     public class MySqlMigration
     {
+        private readonly Dictionary<long, AdventureBossSeasonModel> _adventureBossSeasonDict = new ();
+        private readonly List<AdventureBossWantedModel> _adventureBossWantedList = new ();
+        private readonly List<AdventureBossChallengeModel> _adventureBossChallengeList = new ();
+        private readonly List<AdventureBossRushModel> _adventureBossRushList = new ();
+        private readonly List<AdventureBossUnlockFloorModel> _adventureBossUnlockFloorList = new ();
+        private readonly List<AdventureBossClaimRewardModel> _adventureBossClaimRewardList = new ();
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain _baseChain;
@@ -93,7 +102,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private List<RequestPledgeModel> _requestPledgeList;
 
         [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
-        public void Migration(
+        public async Task Migration(
             [Option('o', Description = "Rocksdb path to migrate.")]
             string storePath,
             [Option(
@@ -191,7 +200,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _ => blockPolicy.BlockAction,
                 baseStateStore,
                 new NCActionLoader());
-            _baseChain = new BlockChain(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, actionEvaluator);
+            _baseChain = new BlockChain(
+                blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, actionEvaluator
+            );
 
             // Check offset and limit value based on chain height
             long height = _baseChain.Tip.Index;
@@ -273,7 +284,11 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     }
 
                     foreach (var item in
-                        _baseStore.IterateIndexes(_baseChain.Id, offset + offsetIdx ?? 0 + offsetIdx, limitInterval).Select((value, i) => new { i, value }))
+                             _baseStore.IterateIndexes(
+                                 _baseChain.Id,
+                                 offset + offsetIdx ?? 0 + offsetIdx,
+                                 limitInterval
+                             ).Select((value, i) => new { i, value }))
                     {
                         var block = _baseStore.GetBlock(item.value);
                         _blockList.Add(BlockData.GetBlockInfo(block));
@@ -292,12 +307,20 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             }
                         }
 
-                        taskArray[item.i] = Task.Factory.StartNew(() =>
+                        try
                         {
-                            List<ICommittedActionEvaluation> actionEvaluations = EvaluateBlock(block);
-                            Console.WriteLine($"Block progress: #{block.Index}/{remainingCount}");
-                            return actionEvaluations;
-                        });
+                            taskArray[item.i] = Task.Factory.StartNew(() =>
+                            {
+                                List<ICommittedActionEvaluation> actionEvaluations = EvaluateBlock(block);
+                                Console.WriteLine($"Block progress: #{block.Index}/{remainingCount}");
+                                return actionEvaluations;
+                            });
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                            Console.WriteLine(e.StackTrace);
+                        }
                     }
 
                     if (interval < remainingCount)
@@ -362,10 +385,46 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _mySqlStore.StorePetEnhancementList(_petEnhancementList);
                 _mySqlStore.StoreTransferAssetList(_transferAssetList);
                 _mySqlStore.StoreRequestPledgeList(_requestPledgeList);
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossSeasonDict.Count} Season");
+                    await _mySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonDict.Values.ToList());
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossWantedList.Count} Wanted");
+                    await _mySqlStore.StoreAdventureBossWantedList(_adventureBossWantedList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossChallengeList.Count} Challenge");
+                    await _mySqlStore.StoreAdventureBossChallengeList(_adventureBossChallengeList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossRushList.Count} Rush");
+                    await _mySqlStore.StoreAdventureBossRushList(_adventureBossRushList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossUnlockFloorList.Count} Unlock");
+                    await _mySqlStore.StoreAdventureBossUnlockFloorList(_adventureBossUnlockFloorList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
+                    await _mySqlStore.StoreAdventureBossClaimRewardList(_adventureBossClaimRewardList);
+                });
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
             }
 
             DateTimeOffset end = DateTimeOffset.UtcNow;
@@ -1140,6 +1199,103 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine(
                                     "Stored RequestPledge action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                            }
+
+                            switch (action)
+                            {
+                                // avatarNames will be stored as "N/A" for optimization
+                                case Wanted wanted:
+                                    _avatarList.Add(AvatarData.GetAvatarInfo(
+                                        outputState,
+                                        ae.InputContext.Signer,
+                                        wanted.AvatarAddress,
+                                        _blockTimeOffset,
+                                        BattleType.Adventure
+                                    ));
+                                    _adventureBossWantedList.Add(AdventureBossWantedData.GetWantedInfo(
+                                        outputState, _blockIndex, _blockTimeOffset, wanted
+                                    ));
+                                    Console.WriteLine(
+                                        $"[Adventure Boss] Wanted added : {_adventureBossWantedList.Count}");
+
+                                    // Update season info
+                                    _adventureBossSeasonDict[wanted.Season] =
+                                        AdventureBossSeasonData.GetAdventureBossSeasonInfo(
+                                            outputState, wanted.Season, _blockTimeOffset
+                                        );
+                                    Console.WriteLine(
+                                        $"[Adventure Boss] Season added : {_adventureBossSeasonDict.Count}");
+                                    break;
+                                case ExploreAdventureBoss challenge:
+                                    _avatarList.Add(AvatarData.GetAvatarInfo(
+                                        outputState,
+                                        ae.InputContext.Signer,
+                                        challenge.AvatarAddress,
+                                        _blockTimeOffset,
+                                        BattleType.Adventure
+                                    ));
+                                    _adventureBossChallengeList.Add(AdventureBossChallengeData.GetChallengeInfo(
+                                        inputState, outputState, _blockIndex, _blockTimeOffset, challenge
+                                    ));
+                                    Console.WriteLine(
+                                        $"[Adventure Boss] Challenge added : {_adventureBossChallengeList.Count}");
+                                    break;
+                                case SweepAdventureBoss rush:
+                                    _avatarList.Add(AvatarData.GetAvatarInfo(
+                                        outputState,
+                                        ae.InputContext.Signer,
+                                        rush.AvatarAddress,
+                                        _blockTimeOffset,
+                                        BattleType.Adventure
+                                    ));
+                                    _adventureBossRushList.Add(AdventureBossRushData.GetRushInfo(
+                                        inputState, outputState, _blockIndex, _blockTimeOffset, rush
+                                    ));
+                                    Console.WriteLine(
+                                        $"[Adventure Boss] Rush added : {_adventureBossRushList.Count}");
+                                    break;
+                                case UnlockFloor unlock:
+                                    _avatarList.Add(AvatarData.GetAvatarInfo(
+                                        outputState,
+                                        ae.InputContext.Signer,
+                                        unlock.AvatarAddress,
+                                        _blockTimeOffset,
+                                        BattleType.Adventure
+                                    ));
+                                    _adventureBossUnlockFloorList.Add(AdventureBossUnlockFloorData.GetUnlockInfo(
+                                        inputState, outputState, _blockIndex, _blockTimeOffset, unlock
+                                    ));
+                                    Console.WriteLine(
+                                        $"[Adventure Boss] Unlock added : {_adventureBossUnlockFloorList.Count}");
+                                    break;
+                                case ClaimAdventureBossReward claim:
+                                {
+                                    _avatarList.Add(AvatarData.GetAvatarInfo(
+                                        outputState,
+                                        ae.InputContext.Signer,
+                                        claim.AvatarAddress,
+                                        _blockTimeOffset,
+                                        BattleType.Adventure
+                                    ));
+                                    _adventureBossClaimRewardList.Add(AdventureBossClaimRewardData.GetClaimInfo(
+                                        inputState, _blockIndex, _blockTimeOffset, claim
+                                    ));
+                                    Console.WriteLine(
+                                        $"[Adventure Boss] Claim added : {_adventureBossClaimRewardList.Count}");
+
+                                    // Update season info
+                                    var latestSeason = inputState.GetLatestAdventureBossSeason();
+                                    var season = latestSeason.EndBlockIndex <= _blockIndex
+                                        ? latestSeason.Season // New season not started
+                                        : latestSeason.Season - 1; // New season started
+                                    _adventureBossSeasonDict[season] =
+                                        AdventureBossSeasonData.GetAdventureBossSeasonInfo(
+                                            outputState, season, _blockTimeOffset
+                                        );
+                                    Console.WriteLine(
+                                        $"[Adventure Boss] Season updated : {_adventureBossSeasonDict.Count}");
+                                    break;
+                                }
                             }
                         }
                     }
