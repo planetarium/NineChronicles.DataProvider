@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Concurrent;
     using GraphQL.Server;
+    using GraphQL.Server.Transports.AspNetCore;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
@@ -43,7 +44,7 @@
                 .AddGraphTypes(typeof(NineChroniclesSummarySchema))
                 .AddGraphTypes(typeof(StandaloneSchema))
                 .AddLibplanetExplorer()
-                .AddUserContextBuilder<UserContextBuilder>();
+                .AddUserContextBuilder<IUserContextBuilder>();
             services.AddSingleton<StateMemoryCache>();
             services.AddGraphTypes();
             services.AddSingleton<NineChroniclesSummarySchema>();
