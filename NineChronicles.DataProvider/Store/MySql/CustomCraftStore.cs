@@ -2,6 +2,7 @@ namespace NineChronicles.DataProvider.Store
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
     using NineChronicles.DataProvider.Store.Models.CustomCraft;
@@ -9,7 +10,8 @@ namespace NineChronicles.DataProvider.Store
 
     public partial class MySqlStore
     {
-        public async partial Task StoreCustomEquipmentCraftList(List<CustomEquipmentCraftModel> customEquipmentCraftList)
+        public async partial Task StoreCustomEquipmentCraftList(
+            List<CustomEquipmentCraftModel> customEquipmentCraftList)
         {
             NineChroniclesContext? ctx = null;
             try
@@ -63,6 +65,12 @@ namespace NineChronicles.DataProvider.Store
                     await ctx.DisposeAsync();
                 }
             }
+        }
+
+        public partial List<CustomEquipmentCraftCountModel> GetCustomEquipmentCraftCount(string itemSubType)
+        {
+            using var ctx = _dbContextFactory.CreateDbContext();
+            return ctx.CustomEquipmentCraftCount.Where(c => c.ItemSubType == itemSubType).ToList();
         }
     }
 }

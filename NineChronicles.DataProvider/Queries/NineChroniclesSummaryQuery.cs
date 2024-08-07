@@ -353,6 +353,22 @@ namespace NineChronicles.DataProvider.Queries
                     throw new ExecutionError("can't receive");
                 }
             );
+
+            Field<ListGraphType<CustomEquipmentCraftIconCountType>>(
+                "customEquipmentCraftIconCount",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "itemSubType",
+                        Description = "ItemSubType to get craft count for icons",
+                    }
+                    ),
+                resolve: context =>
+                {
+                    var itemSubType = context.GetArgument<string>("itemSubType");
+                    return Store.GetCustomEquipmentCraftCount(itemSubType);
+                }
+            );
         }
 
         private MySqlStore Store { get; }
