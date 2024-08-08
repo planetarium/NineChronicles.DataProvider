@@ -11,7 +11,8 @@ namespace NineChronicles.DataProvider.Store
     public partial class MySqlStore
     {
         public async partial Task StoreCustomEquipmentCraftList(
-            List<CustomEquipmentCraftModel> customEquipmentCraftList)
+            List<CustomEquipmentCraftModel> customEquipmentCraftList
+        )
         {
             NineChroniclesContext? ctx = null;
             try
@@ -26,7 +27,15 @@ namespace NineChronicles.DataProvider.Store
                 {
                     if (await ctx.CustomEquipmentCraft.FirstOrDefaultAsync(c => c.Id == craftData.Id) is null)
                     {
-                        iconCraftCountDict[(craftData.ItemSubType!, craftData.IconId)]++;
+                        if (iconCraftCountDict.ContainsKey((craftData.ItemSubType!, craftData.IconId)))
+                        {
+                            iconCraftCountDict[(craftData.ItemSubType!, craftData.IconId)]++;
+                        }
+                        else
+                        {
+                            iconCraftCountDict[(craftData.ItemSubType!, craftData.IconId)] = 1;
+                        }
+
                         await ctx.CustomEquipmentCraft.AddAsync(craftData);
                     }
                 }

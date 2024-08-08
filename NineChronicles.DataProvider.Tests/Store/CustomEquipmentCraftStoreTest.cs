@@ -30,38 +30,38 @@ public class CustomEquipmentCraftStoreTest : TestBase
         store.StoreAgent(avatarAddress);
         store.StoreAvatar(avatarAddress, avatarAddress, "name", now, 1, null, null, 0);
         var prevDataCount = 0;
-        var targetData = new CustomEquipmentCraftModel
-        {
-            Id = Guid.NewGuid().ToString(),
-            BlockIndex = 1L,
-            AvatarAddress = avatarAddress.ToString(),
-            EquipmentItemId = 10010001,
-            RecipeId = 1,
-            SlotIndex = 1,
-            ItemSubType = itemSubType,
-            IconId = 10010001,
-            ElementalType = "Normal",
-            DrawingAmount = 1,
-            DrawingToolAmount = 1,
-            NcgCost = 0,
-            AdditionalCost = "",
-            Date = DateOnly.FromDateTime(now.DateTime),
-            TimeStamp = now
-        };
 
         if (hasPrevData)
         {
             prevDataCount = new Random().Next(1, 11);
             var cecList = new List<CustomEquipmentCraftModel>();
+            var guid = Guid.NewGuid().ToString();
             for (var i = 0; i < prevDataCount; i++)
             {
-                cecList.Add(targetData);
+                cecList.Add(new CustomEquipmentCraftModel
+                {
+                    Id = $"{guid}_{i}",
+                    BlockIndex = 1L,
+                    AvatarAddress = avatarAddress.ToString(),
+                    EquipmentItemId = 10010001,
+                    RecipeId = 1,
+                    SlotIndex = 1,
+                    ItemSubType = itemSubType,
+                    IconId = iconId,
+                    ElementalType = "Normal",
+                    DrawingAmount = 1,
+                    DrawingToolAmount = 1,
+                    NcgCost = 0,
+                    AdditionalCost = "",
+                    Date = DateOnly.FromDateTime(now.DateTime),
+                    TimeStamp = now
+                });
             }
 
             await store.StoreCustomEquipmentCraftList(cecList);
         }
 
-        var countList = Context.CustomEquipmentCraftCount.Where(c => c.ItemSubType == itemSubType).ToList();
+        var countList = store.GetCustomEquipmentCraftCount(itemSubType);
         if (hasPrevData)
         {
             Assert.Single(countList);
@@ -75,9 +75,31 @@ public class CustomEquipmentCraftStoreTest : TestBase
             Assert.Empty(countList);
         }
 
-        await store.StoreCustomEquipmentCraftList(new List<CustomEquipmentCraftModel> { targetData });
-        await Context.Entry(countList).ReloadAsync();
+        // Add new data
+        await store.StoreCustomEquipmentCraftList(new List<CustomEquipmentCraftModel>
+        {
+            new()
+            {
+                Id = Guid.NewGuid().ToString(),
+                BlockIndex = 1L,
+                AvatarAddress = avatarAddress.ToString(),
+                EquipmentItemId = 10010001,
+                RecipeId = 1,
+                SlotIndex = 1,
+                ItemSubType = itemSubType,
+                IconId = iconId,
+                ElementalType = "Normal",
+                DrawingAmount = 1,
+                DrawingToolAmount = 1,
+                NcgCost = 0,
+                AdditionalCost = "",
+                Date = DateOnly.FromDateTime(now.DateTime),
+                TimeStamp = now
+            }
+        });
+        countList = store.GetCustomEquipmentCraftCount(itemSubType);
 
+        // Test
         Assert.Single(countList);
         var data = countList.First();
         Assert.Equal(itemSubType, data.ItemSubType);
