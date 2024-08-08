@@ -189,7 +189,6 @@ namespace NineChronicles.DataProvider.Executable
                 {
                     RpcRemoteSever = false
                 },
-                new ConcurrentDictionary<string, Sentry.ITransaction>(),
                 new StateMemoryCache()
             );
 
