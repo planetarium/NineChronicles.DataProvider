@@ -197,7 +197,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             Block genesis = _baseStore.GetBlock(gHash);
             var blockChainStates = new BlockChainStates(_baseStore, baseStateStore);
             var actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
+                blockPolicy.PolicyActionsRegistry,
                 baseStateStore,
                 new NCActionLoader());
             _baseChain = new BlockChain(

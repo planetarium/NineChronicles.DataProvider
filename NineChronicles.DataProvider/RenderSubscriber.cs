@@ -18,6 +18,7 @@ namespace NineChronicles.DataProvider
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Action.AdventureBoss;
+    using Nekoyume.Action.CustomEquipmentCraft;
     using Nekoyume.Extensions;
     using Nekoyume.Helper;
     using Nekoyume.Model.EnumType;
@@ -1726,6 +1727,10 @@ namespace NineChronicles.DataProvider
             _actionRenderer.EveryRender<ClaimAdventureBossReward>().Subscribe(SubscribeAdventureBossClaim);
             /* Adventure Boss */
 
+            // CustomCraft
+            _actionRenderer.EveryRender<CustomEquipmentCraft>().Subscribe(SubscribeCustomEquipmentCraft);
+            /* CustomCraft */
+
             return Task.CompletedTask;
         }
 
@@ -1740,7 +1745,11 @@ namespace NineChronicles.DataProvider
         partial void SubscribeAdventureBossUnlockFloor(ActionEvaluation<UnlockFloor> evt);
 
         partial void SubscribeAdventureBossClaim(ActionEvaluation<ClaimAdventureBossReward> evt);
+
         /** Adventure Boss **/
+        //// Custom Craft
+        partial void SubscribeCustomEquipmentCraft(ActionEvaluation<CustomEquipmentCraft> evt);
+        /** Custom Craft **/
         /* Partial Methods */
 
         private void AddShopHistoryItem(ITradableItem orderItem, Address buyerAvatarAddress, PurchaseInfo purchaseInfo, int itemCount, long blockIndex)
@@ -1877,6 +1886,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreRuneSummonList(_runeSummonList);
                     MySqlStore.StoreRuneSummonFailList(_runeSummonFailList);
                     StoreAdventureBossList();
+                    StoreCustomEquipmentCraftList();
                 }),
             };
 
@@ -1927,6 +1937,7 @@ namespace NineChronicles.DataProvider
             _auraSummonList.Clear();
             _auraSummonFailList.Clear();
             ClearAdventureBossList();
+            ClearCustomCraftList();
 
             var end = DateTimeOffset.Now;
             long blockIndex = b.OldTip.Index;
