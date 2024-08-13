@@ -46,11 +46,12 @@ namespace NineChronicles.DataProvider
                 {
                     var start = DateTimeOffset.UtcNow;
                     var prevState = new World(_blockChainStates.GetWorldState(evt.PreviousState));
+                    var outputState = new World(_blockChainStates.GetWorldState(evt.OutputState));
                     var craftList = CustomEquipmentCraftData.GetCraftInfo(
                         prevState,
+                        outputState,
                         evt.BlockIndex,
                         _blockTimeOffset,
-                        new ReplayRandom(evt.RandomSeed),
                         customEquipmentCraft
                     );
                     foreach (var craft in craftList)

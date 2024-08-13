@@ -9,7 +9,6 @@ namespace NineChronicles.DataProvider.DataRendering.CustomCraft
     using Nekoyume.Action.CustomEquipmentCraft;
     using Nekoyume.Extensions;
     using Nekoyume.Helper;
-    using Nekoyume.Model.Elemental;
     using Nekoyume.Model.Item;
     using Nekoyume.Module;
     using Nekoyume.TableData;
@@ -21,29 +20,30 @@ namespace NineChronicles.DataProvider.DataRendering.CustomCraft
     {
         public static List<CustomEquipmentCraftModel> GetCraftInfo(
             IWorld prevStates,
+            IWorld outputStates,
             long blockIndex,
             DateTimeOffset blockTime,
-            IRandom random,
             CustomEquipmentCraft craftData
         )
         {
             Log.Verbose($"[CustomEquipmentCraft] GetCraftData");
-            var craftList = new List<CustomEquipmentCraftModel>();
 
+            Dictionary<Type, (Address, ISheet)> sheets = prevStates.GetSheets(sheetTypes: new[]
+            {
+                typeof(CustomEquipmentCraftRecipeSheet),
+                typeof(CustomEquipmentCraftRelationshipSheet),
+                typeof(CustomEquipmentCraftIconSheet),
+                typeof(CustomEquipmentCraftCostSheet),
+                typeof(EquipmentItemSheet),
+                typeof(MaterialItemSheet),
+            });
+
+            var craftList = new List<CustomEquipmentCraftModel>();
             var i = 0;
             foreach (var craft in craftData.CraftList)
             {
                 var guid = Guid.NewGuid().ToString();
-
-                Dictionary<Type, (Address, ISheet)> sheets = prevStates.GetSheets(sheetTypes: new[]
-                {
-                    typeof(CustomEquipmentCraftRecipeSheet),
-                    typeof(CustomEquipmentCraftRelationshipSheet),
-                    typeof(CustomEquipmentCraftIconSheet),
-                    typeof(CustomEquipmentCraftCostSheet),
-                    typeof(EquipmentItemSheet),
-                    typeof(MaterialItemSheet),
-                });
+                var equipment = outputStates.GetCombinationSlotState(craftData.AvatarAddress, craft.SlotIndex).Result!.itemUsable!;
 
                 var relationship = prevStates.GetRelationship(craftData.AvatarAddress);
                 var recipeSheet = sheets.GetSheet<CustomEquipmentCraftRecipeSheet>();
@@ -85,37 +85,16 @@ namespace NineChronicles.DataProvider.DataRendering.CustomCraft
                     }
                 }
 
-                // Create equipment with ItemFactory
-                var uid = random.GenerateRandomGuid();
-                var equipmentItemId = relationshipRow.GetItemId(recipeRow.ItemSubType);
-                var equipmentRow = sheets.GetSheet<EquipmentItemSheet>()[equipmentItemId];
-                var equipment =
-                    (Equipment)ItemFactory.CreateItemUsable(equipmentRow, uid, 0L);
-
-                // Set Icon
-                equipment.IconId = ItemFactory.SelectIconId(
-                    craft.IconId,
-                    craft.IconId == CustomEquipmentCraft.RandomIconId,
-                    equipmentRow,
-                    relationship,
-                    sheets.GetSheet<CustomEquipmentCraftIconSheet>(),
-                    random
-                );
-
-                // Set Elemental Type
-                var elementalList = (ElementalType[])Enum.GetValues(typeof(ElementalType));
-                equipment.ElementalType = elementalList[random.Next(elementalList.Length)];
-
                 craftList.Add(new CustomEquipmentCraftModel
                 {
                     Id = $"{guid}_{i++}",
                     BlockIndex = blockIndex,
                     AvatarAddress = craftData.AvatarAddress.ToString(),
-                    EquipmentItemId = 1,
+                    EquipmentItemId = equipment.Id,
                     RecipeId = craft.RecipeId,
                     SlotIndex = craft.SlotIndex,
                     ItemSubType = equipment.ItemSubType.ToString(),
-                    IconId = equipment.IconId,
+                    IconId = equipment.Id,
                     ElementalType = equipment.ElementalType.ToString(),
                     DrawingAmount = drawingAmount,
                     DrawingToolAmount = drawingToolAmount,
