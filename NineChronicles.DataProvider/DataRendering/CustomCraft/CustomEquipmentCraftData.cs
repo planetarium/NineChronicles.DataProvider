@@ -40,10 +40,12 @@ namespace NineChronicles.DataProvider.DataRendering.CustomCraft
 
             var craftList = new List<CustomEquipmentCraftModel>();
             var i = 0;
+            var guid = Guid.NewGuid().ToString();
+
             foreach (var craft in craftData.CraftList)
             {
-                var guid = Guid.NewGuid().ToString();
-                var equipment = outputStates.GetCombinationSlotState(craftData.AvatarAddress, craft.SlotIndex).Result!.itemUsable!;
+                var equipment = outputStates.GetCombinationSlotState(craftData.AvatarAddress, craft.SlotIndex)
+                    .Result!.itemUsable!;
 
                 var relationship = prevStates.GetRelationship(craftData.AvatarAddress);
                 var recipeSheet = sheets.GetSheet<CustomEquipmentCraftRecipeSheet>();
