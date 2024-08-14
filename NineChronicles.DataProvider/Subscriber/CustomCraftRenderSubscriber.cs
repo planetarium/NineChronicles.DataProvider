@@ -25,6 +25,8 @@ namespace NineChronicles.DataProvider
                     Log.Debug($"[CustomCraft] {_customEquipmentCraftList.Count} craft data");
                     await MySqlStore.StoreCustomEquipmentCraftList(_customEquipmentCraftList);
                 }));
+
+                Task.WaitAll(tasks.ToArray());
             }
             catch (Exception e)
             {
