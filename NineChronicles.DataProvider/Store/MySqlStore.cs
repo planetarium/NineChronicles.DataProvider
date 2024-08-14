@@ -1960,7 +1960,7 @@ namespace NineChronicles.DataProvider.Store
         // CustomCraft
         public partial Task StoreCustomEquipmentCraftList(List<CustomEquipmentCraftModel> customEquipmentCraftList);
 
-        public partial List<CustomEquipmentCraftCountModel> GetCustomEquipmentCraftCount(string itemSubType);
+        public partial List<CustomEquipmentCraftCountModel> GetCustomEquipmentCraftCount(string? itemSubType);
         /* CustomCraft */
 
         public List<RaiderModel> GetRaiderList()

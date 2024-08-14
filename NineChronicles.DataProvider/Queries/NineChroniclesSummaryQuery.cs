@@ -357,7 +357,7 @@ namespace NineChronicles.DataProvider.Queries
             Field<ListGraphType<CustomEquipmentCraftIconCountType>>(
                 "customEquipmentCraftIconCount",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<StringGraphType>
                     {
                         Name = "itemSubType",
                         Description = "ItemSubType to get craft count for icons",
@@ -365,7 +365,7 @@ namespace NineChronicles.DataProvider.Queries
                     ),
                 resolve: context =>
                 {
-                    var itemSubType = context.GetArgument<string>("itemSubType");
+                    var itemSubType = context.GetArgument<string?>("itemSubType");
                     return Store.GetCustomEquipmentCraftCount(itemSubType);
                 }
             );

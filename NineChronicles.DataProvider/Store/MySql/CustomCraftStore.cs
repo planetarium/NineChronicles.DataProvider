@@ -76,10 +76,12 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
-        public partial List<CustomEquipmentCraftCountModel> GetCustomEquipmentCraftCount(string itemSubType)
+        public partial List<CustomEquipmentCraftCountModel> GetCustomEquipmentCraftCount(string? itemSubType)
         {
             using var ctx = _dbContextFactory.CreateDbContext();
-            return ctx.CustomEquipmentCraftCount.Where(c => c.ItemSubType == itemSubType).ToList();
+            return itemSubType is null
+                ? ctx.CustomEquipmentCraftCount.ToList()
+                : ctx.CustomEquipmentCraftCount.Where(c => c.ItemSubType == itemSubType).ToList();
         }
     }
 }
