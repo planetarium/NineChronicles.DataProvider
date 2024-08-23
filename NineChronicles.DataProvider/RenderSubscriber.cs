@@ -577,9 +577,8 @@ namespace NineChronicles.DataProvider
                                 (end - start).Milliseconds);
                             start = DateTimeOffset.UtcNow;
 
-                            var slotState = outputState.GetCombinationSlotState(
-                                combinationEquipment.avatarAddress,
-                                combinationEquipment.slotIndex);
+                            var slotState = outputState.GetAllCombinationSlotState(combinationEquipment.avatarAddress)
+                                .GetSlot(combinationEquipment.slotIndex);
 
                             int optionCount = 0;
                             bool skillContains = false;
@@ -684,9 +683,8 @@ namespace NineChronicles.DataProvider
                             Log.Debug("[DataProvider] Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             start = DateTimeOffset.UtcNow;
 
-                            var slotState = outputState.GetCombinationSlotState(
-                                itemEnhancement.avatarAddress,
-                                itemEnhancement.slotIndex);
+                            var slotState = outputState.GetAllCombinationSlotState(itemEnhancement.avatarAddress)
+                                .GetSlot(itemEnhancement.slotIndex);
 
                             if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                             {
@@ -732,7 +730,7 @@ namespace NineChronicles.DataProvider
                             foreach (var purchaseInfo in buy.purchaseInfos)
                             {
                                 var state = outputState.GetLegacyState(
-                                Addresses.GetItemAddress(purchaseInfo.TradableId));
+                                    Addresses.GetItemAddress(purchaseInfo.TradableId));
                                 ITradableItem orderItem =
                                     (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
                                 Order order =
@@ -1592,7 +1590,7 @@ namespace NineChronicles.DataProvider
                                 auraSummon.Id,
                                 ev.BlockIndex,
                                 _blockTimeOffset
-                                ));
+                            ));
                         }
                         else
                         {

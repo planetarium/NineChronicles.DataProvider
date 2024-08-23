@@ -44,8 +44,8 @@ namespace NineChronicles.DataProvider.DataRendering.CustomCraft
 
             foreach (var craft in craftData.CraftList)
             {
-                var equipment = (Equipment)outputStates
-                    .GetCombinationSlotState(craftData.AvatarAddress, craft.SlotIndex).Result!.itemUsable!;
+                var equipment = (Equipment)outputStates.GetAllCombinationSlotState(craftData.AvatarAddress)
+                    .GetSlot(craft.SlotIndex).Result!.itemUsable!;
 
                 var relationship = prevStates.GetRelationship(craftData.AvatarAddress);
                 var recipeSheet = sheets.GetSheet<CustomEquipmentCraftRecipeSheet>();
