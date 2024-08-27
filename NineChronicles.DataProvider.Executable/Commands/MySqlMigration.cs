@@ -197,7 +197,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             Block genesis = _baseStore.GetBlock(gHash);
             var blockChainStates = new BlockChainStates(_baseStore, baseStateStore);
             var actionEvaluator = new ActionEvaluator(
-                _ => blockPolicy.BlockAction,
+                blockPolicy.PolicyActionsRegistry,
                 baseStateStore,
                 new NCActionLoader());
             _baseChain = new BlockChain(
@@ -598,9 +598,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
 
-                                var slotState = outputState.GetCombinationSlotState(
-                                    combinationEquipment.avatarAddress,
-                                    combinationEquipment.slotIndex);
+                                var slotState = outputState
+                                    .GetAllCombinationSlotState(combinationEquipment.avatarAddress)
+                                    .GetSlot(combinationEquipment.slotIndex);
 
                                 int optionCount = 0;
                                 bool skillContains = false;
@@ -672,9 +672,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
 
-                                var slotState = outputState.GetCombinationSlotState(
-                                    itemEnhancement.avatarAddress,
-                                    itemEnhancement.slotIndex);
+                                var slotState = outputState
+                                    .GetAllCombinationSlotState(itemEnhancement.avatarAddress)
+                                    .GetSlot(itemEnhancement.slotIndex);
 
                                 if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                                 {

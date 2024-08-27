@@ -21,7 +21,7 @@ namespace NineChronicles.DataProvider.DataRendering
         )
         {
             var states = previousStates;
-            var slotState = states.GetCombinationSlotState(avatarAddress, slotIndex);
+            var slotState = states.GetAllCombinationSlotState(avatarAddress).GetSlot(slotIndex);
             var diff = slotState.Result.itemUsable.RequiredBlockIndex - blockIndex;
             var gameConfigState = states.GetGameConfigState();
             var count = RapidCombination0.CalculateHourglassCount(gameConfigState, diff);

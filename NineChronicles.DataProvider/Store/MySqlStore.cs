@@ -9,6 +9,7 @@ namespace NineChronicles.DataProvider.Store
     using Nekoyume.Model.Item;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
+    using NineChronicles.DataProvider.Store.Models.CustomCraft;
     using Serilog;
 
     public partial class MySqlStore
@@ -1955,6 +1956,12 @@ namespace NineChronicles.DataProvider.Store
 
         public partial Task StoreAdventureBossClaimRewardList(List<AdventureBossClaimRewardModel> claimList);
         /* Adventure Boss */
+
+        // CustomCraft
+        public partial Task StoreCustomEquipmentCraftList(List<CustomEquipmentCraftModel> customEquipmentCraftList);
+
+        public partial List<CustomEquipmentCraftCountModel> GetCustomEquipmentCraftCount(string? itemSubType);
+        /* CustomCraft */
 
         public List<RaiderModel> GetRaiderList()
         {
