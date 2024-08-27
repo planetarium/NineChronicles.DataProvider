@@ -1,3 +1,6 @@
+using System.Net.Http;
+using System.Threading.Tasks;
+
 namespace NineChronicles.DataProvider.Executable.Commands
 {
     using System;
@@ -133,7 +136,19 @@ namespace NineChronicles.DataProvider.Executable.Commands
             [Option(
                 "mysql-database",
                 Description = "The name of MySQL database to use.")]
-            string mysqlDatabase
+            string mysqlDatabase,
+            [Option(
+                "slack-token",
+                Description = "slack token to send the migration data.")]
+            string slackToken,
+            [Option(
+                "slack-channel",
+                Description = "slack channel that receives the migration data.")]
+            string slackChannel,
+            [Option(
+                "network",
+                Description = "Name of network(e.g., Odin or Heimdall)")]
+            string network
         )
         {
             DateTimeOffset start = DateTimeOffset.UtcNow;
@@ -1001,6 +1016,16 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     connection.Close();
                     Console.WriteLine($"Delete {fbBARDbName}_Dump Complete!");
                     Console.WriteLine($"Finalize {fbBARDbName} & {fbUSDbName} Tables Complete!");
+
+                    if (slackToken is not null && slackChannel is not null)
+                    {
+                        var slackMessage = $"@here {network} arena season(Championship Id: {prevArenaData.ChampionshipId}/Round: {prevArenaData.Round}) ranking finalized! Check tables {fbBARDbName} & {fbUSDbName}.";
+                        SendMessageAsync(
+                            slackToken,
+                            slackChannel,
+                            slackMessage
+                        ).Wait();
+                    }
                 }
 
                 bARDbName = $"{bARDbName}_{arenaData.ChampionshipId}_{arenaData.Round}";
@@ -1653,6 +1678,25 @@ namespace NineChronicles.DataProvider.Executable.Commands
             DateTimeOffset end = DateTimeOffset.UtcNow;
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
             Console.WriteLine("Shop Count for {0} avatars: {1}", avatars.Count, shopOrderCount);
+        }
+
+        private async Task SendMessageAsync(string token, string channel, string message)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var content = new FormUrlEncodedContent(new[]
+                {
+                    new KeyValuePair<string, string>("channel", channel),
+                    new KeyValuePair<string, string>("text", message)
+                });
+
+                var url = "https://slack.com/api/chat.postMessage";
+                var response = await client.PostAsync(url, content);
+                var responseJson = await response.Content.ReadAsStringAsync();
+                Console.WriteLine(responseJson);
+            }
         }
 
         private void FlushBulkFiles()
