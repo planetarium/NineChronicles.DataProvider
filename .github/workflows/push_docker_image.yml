@@ -5,8 +5,8 @@ on:
     branches:
       - main
       - development
+      - preview
       - rc-*
-      - 2023q1-previewnet
       - release/*
     tags:
         - "*"
