@@ -80,7 +80,6 @@ namespace NineChronicles.DataProvider
         private readonly List<RuneEnhancementModel> _runeEnhancementList = new List<RuneEnhancementModel>();
         private readonly List<RunesAcquiredModel> _runesAcquiredList = new List<RunesAcquiredModel>();
         private readonly List<UnlockRuneSlotModel> _unlockRuneSlotList = new List<UnlockRuneSlotModel>();
-        private readonly List<RapidCombinationModel> _rapidCombinationList = new List<RapidCombinationModel>();
         private readonly List<PetEnhancementModel> _petEnhancementList = new List<PetEnhancementModel>();
         private readonly List<TransferAssetModel> _transferAssetList = new List<TransferAssetModel>();
         private readonly List<RequestPledgeModel> _requestPledgeList = new List<RequestPledgeModel>();
@@ -92,10 +91,12 @@ namespace NineChronicles.DataProvider
         private readonly List<Address> _agents;
         private readonly List<Address> _avatars;
         private readonly bool _render;
+
         private int _renderedBlockCount;
         private DateTimeOffset _blockTimeOffset;
         private Address _miner;
         private string? _blockHash;
+        private List<RapidCombinationModel> _rapidCombinationList = new List<RapidCombinationModel>();
 
         public RenderSubscriber(
             NineChroniclesNodeService nodeService,
@@ -576,9 +577,8 @@ namespace NineChronicles.DataProvider
                                 (end - start).Milliseconds);
                             start = DateTimeOffset.UtcNow;
 
-                            var slotState = outputState.GetCombinationSlotState(
-                                combinationEquipment.avatarAddress,
-                                combinationEquipment.slotIndex);
+                            var slotState = outputState.GetAllCombinationSlotState(combinationEquipment.avatarAddress)
+                                .GetSlot(combinationEquipment.slotIndex);
 
                             int optionCount = 0;
                             bool skillContains = false;
@@ -683,9 +683,8 @@ namespace NineChronicles.DataProvider
                             Log.Debug("[DataProvider] Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             start = DateTimeOffset.UtcNow;
 
-                            var slotState = outputState.GetCombinationSlotState(
-                                itemEnhancement.avatarAddress,
-                                itemEnhancement.slotIndex);
+                            var slotState = outputState.GetAllCombinationSlotState(itemEnhancement.avatarAddress)
+                                .GetSlot(itemEnhancement.slotIndex);
 
                             if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                             {
@@ -1424,15 +1423,16 @@ namespace NineChronicles.DataProvider
                                 _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
                             }
 
-                            _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
+                            _rapidCombinationList = _rapidCombinationList.Concat(
+                                RapidCombinationData.GetRapidCombinationInfo(
                                 inputState,
-                                outputState,
                                 ev.Signer,
                                 rapidCombination.avatarAddress,
-                                rapidCombination.slotIndex,
+                                rapidCombination.slotIndexList,
                                 rapidCombination.Id,
                                 ev.BlockIndex,
-                                _blockTimeOffset));
+                                _blockTimeOffset)
+                            ).ToList();
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("[DataProvider] Stored RapidCombination action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
