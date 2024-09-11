@@ -1,7 +1,8 @@
-namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering.Grinding
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Bencodex.Types;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
@@ -15,13 +16,12 @@ namespace NineChronicles.DataProvider.DataRendering
     using Nekoyume.Module;
     using Nekoyume.TableData;
     using Nekoyume.TableData.Crystal;
-    using NineChronicles.DataProvider.Store.Models;
+    using NineChronicles.DataProvider.Store.Models.Grinding;
 
     public static class GrindingData
     {
         public static List<GrindingModel> GetGrindingInfo(
             IWorld previousStates,
-            IWorld outputStates,
             Address signer,
             Address avatarAddress,
             List<Guid> equipmentIds,
@@ -83,6 +83,13 @@ namespace NineChronicles.DataProvider.DataRendering
                 sheets.GetSheet<StakeRegularRewardSheet>()
             );
 
+            var materials = Grinding.CalculateMaterialReward(
+                equipmentList,
+                sheets.GetSheet<CrystalEquipmentGrindingSheet>(),
+                sheets.GetSheet<MaterialItemSheet>()
+            );
+            var materialList = materials.Select(kv => $"{kv.Key.Id}:{kv.Value}").ToList();
+
             var grindList = new List<GrindingModel>();
             foreach (var equipment in equipmentList)
             {
@@ -95,6 +102,7 @@ namespace NineChronicles.DataProvider.DataRendering
                     EquipmentId = equipment.Id,
                     EquipmentLevel = equipment.level,
                     Crystal = Convert.ToDecimal(crystal.GetQuantityString()),
+                    Materials = string.Join(",", materialList),
                     BlockIndex = blockIndex,
                     Date = DateOnly.FromDateTime(blockTime.DateTime),
                     TimeStamp = blockTime,

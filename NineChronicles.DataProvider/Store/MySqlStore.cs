@@ -12,6 +12,7 @@ namespace NineChronicles.DataProvider.Store
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
     using NineChronicles.DataProvider.Store.Models.Crafting;
+    using NineChronicles.DataProvider.Store.Models.Grinding;
     using Serilog;
 
     public partial class MySqlStore
@@ -1138,41 +1139,6 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
-        public void StoreGrindList(List<GrindingModel> grindList)
-        {
-            try
-            {
-                var tasks = new List<Task>();
-                foreach (var grind in grindList)
-                {
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
-                        if (ctx.Grindings?.FindAsync(grind.Id).Result is null)
-                        {
-                            await ctx.Grindings!.AddRangeAsync(grind);
-                            await ctx.SaveChangesAsync();
-                            await ctx.DisposeAsync();
-                        }
-                        else
-                        {
-                            await ctx.DisposeAsync();
-                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
-                            updateCtx.Grindings!.UpdateRange(grind);
-                            await updateCtx.SaveChangesAsync();
-                            await updateCtx.DisposeAsync();
-                        }
-                    }));
-                }
-
-                Task.WaitAll(tasks.ToArray());
-            }
-            catch (Exception e)
-            {
-                Log.Debug(e.Message);
-            }
-        }
-
         public void StoreItemEnhancementFailList(List<ItemEnhancementFailModel> itemEnhancementFailList)
         {
             try
@@ -1925,6 +1891,8 @@ namespace NineChronicles.DataProvider.Store
         /* Adventure Boss */
 
         public partial Task StoreRapidCombinationList(List<RapidCombinationModel> rapidCombinationList);
+
+        public partial Task StoreGrindList(List<GrindingModel> grindingList);
 
         public List<RaiderModel> GetRaiderList()
         {

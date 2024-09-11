@@ -4,6 +4,7 @@ namespace NineChronicles.DataProvider.Store
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
     using NineChronicles.DataProvider.Store.Models.Crafting;
+    using NineChronicles.DataProvider.Store.Models.Grinding;
 
     public sealed class NineChroniclesContext : DbContext
     {
