@@ -444,28 +444,36 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         var inputState = new World(blockChainStates.GetWorldState(ae.InputContext.PreviousState));
                         var outputState = new World(blockChainStates.GetWorldState(ae.OutputState));
 
-                        if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase and EventDungeonBattle eventDungeonBattle)
+                        try
                         {
-                            var start = DateTimeOffset.UtcNow;
-                            var actionType = eventDungeonBattle.ToString()!.Split('.').LastOrDefault()
-                                ?.Replace(">", string.Empty);
-                            _eventDungeonBattleList.Add(EventDungeonBattleData.GetEventDungeonBattleInfo(
-                                inputState,
-                                outputState,
-                                ae.InputContext.Signer,
-                                eventDungeonBattle.AvatarAddress,
-                                eventDungeonBattle.EventScheduleId,
-                                eventDungeonBattle.EventDungeonId,
-                                eventDungeonBattle.EventDungeonStageId,
-                                eventDungeonBattle.Foods.Count,
-                                eventDungeonBattle.Costumes.Count,
-                                eventDungeonBattle.Equipments.Count,
-                                eventDungeonBattle.Id,
-                                actionType!,
-                                ae.InputContext.BlockIndex,
-                                _blockTimeOffset));
-                            var end = DateTimeOffset.UtcNow;
-                            Console.WriteLine("Writing EventDungeonBattle action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                            if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase and EventDungeonBattle eventDungeonBattle)
+                            {
+                                var start = DateTimeOffset.UtcNow;
+                                var actionType = eventDungeonBattle.ToString()!.Split('.').LastOrDefault()
+                                    ?.Replace(">", string.Empty);
+                                _eventDungeonBattleList.Add(EventDungeonBattleData.GetEventDungeonBattleInfo(
+                                    inputState,
+                                    outputState,
+                                    ae.InputContext.Signer,
+                                    eventDungeonBattle.AvatarAddress,
+                                    eventDungeonBattle.EventScheduleId,
+                                    eventDungeonBattle.EventDungeonId,
+                                    eventDungeonBattle.EventDungeonStageId,
+                                    eventDungeonBattle.Foods.Count,
+                                    eventDungeonBattle.Costumes.Count,
+                                    eventDungeonBattle.Equipments.Count,
+                                    eventDungeonBattle.Id,
+                                    actionType!,
+                                    ae.InputContext.BlockIndex,
+                                    _blockTimeOffset));
+                                var end = DateTimeOffset.UtcNow;
+                                Console.WriteLine("Writing EventDungeonBattle action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                            Console.WriteLine(e.StackTrace);
                         }
                     }
                 }
