@@ -1406,43 +1406,6 @@ namespace NineChronicles.DataProvider
                     }
                 });
 
-            _actionRenderer.EveryRender<RapidCombination>()
-                .Subscribe(ev =>
-                {
-                    try
-                    {
-                        if (ev.Exception == null && ev.Action is { } rapidCombination)
-                        {
-                            var start = DateTimeOffset.UtcNow;
-                            var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
-                            var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            var avatarAddress = rapidCombination.avatarAddress;
-                            if (!_avatars.Contains(avatarAddress))
-                            {
-                                _avatars.Add(avatarAddress);
-                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
-                            }
-
-                            _rapidCombinationList = _rapidCombinationList.Concat(
-                                RapidCombinationData.GetRapidCombinationInfo(
-                                inputState,
-                                ev.Signer,
-                                rapidCombination.avatarAddress,
-                                rapidCombination.slotIndexList,
-                                rapidCombination.Id,
-                                ev.BlockIndex,
-                                _blockTimeOffset)
-                            ).ToList();
-                            var end = DateTimeOffset.UtcNow;
-                            Log.Debug("[DataProvider] Stored RapidCombination action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
-                    }
-                });
-
             _actionRenderer.EveryRender<Raid>()
                 .Subscribe(ev =>
                 {
@@ -1726,6 +1689,9 @@ namespace NineChronicles.DataProvider
             _actionRenderer.EveryRender<ClaimAdventureBossReward>().Subscribe(SubscribeAdventureBossClaim);
             /* Adventure Boss */
 
+            // Crafting
+            _actionRenderer.EveryRender<RapidCombination>().Subscribe(SubscribeRapidCombination);
+
             return Task.CompletedTask;
         }
 
@@ -1740,7 +1706,10 @@ namespace NineChronicles.DataProvider
         partial void SubscribeAdventureBossUnlockFloor(ActionEvaluation<UnlockFloor> evt);
 
         partial void SubscribeAdventureBossClaim(ActionEvaluation<ClaimAdventureBossReward> evt);
+
         /** Adventure Boss **/
+        //// Cafting
+        partial void SubscribeRapidCombination(ActionEvaluation<RapidCombination> ev);
         /* Partial Methods */
 
         private void AddShopHistoryItem(ITradableItem orderItem, Address buyerAvatarAddress, PurchaseInfo purchaseInfo, int itemCount, long blockIndex)
