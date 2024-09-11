@@ -1,6 +1,7 @@
 using Nekoyume.Action.AdventureBoss;
 using Nekoyume.Model.EnumType;
 using NineChronicles.DataProvider.DataRendering.AdventureBoss;
+using NineChronicles.DataProvider.DataRendering.Crafting;
 using NineChronicles.DataProvider.Store.Models.AdventureBoss;
 
 namespace NineChronicles.DataProvider.Executable.Commands
@@ -41,7 +42,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using NineChronicles.DataProvider.DataRendering;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
-    using Serilog;
     using static Lib9c.SerializeKeys;
 
     public class MySqlMigration
@@ -381,7 +381,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _mySqlStore.StoreRuneEnhancementList(_runeEnhancementList);
                 _mySqlStore.StoreRunesAcquiredList(_runesAcquiredList);
                 _mySqlStore.StoreUnlockRuneSlotList(_unlockRuneSlotList);
-                _mySqlStore.StoreRapidCombinationList(_rapidCombinationList);
                 _mySqlStore.StorePetEnhancementList(_petEnhancementList);
                 _mySqlStore.StoreTransferAssetList(_transferAssetList);
                 _mySqlStore.StoreRequestPledgeList(_requestPledgeList);
@@ -419,6 +418,12 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 {
                     Console.WriteLine($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
                     await _mySqlStore.StoreAdventureBossClaimRewardList(_adventureBossClaimRewardList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[RapidCombination] {_rapidCombinationList.Count}");
+                    await _mySqlStore.StoreRapidCombinationList(_rapidCombinationList);
                 });
             }
             catch (Exception e)

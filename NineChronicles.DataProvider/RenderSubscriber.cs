@@ -29,6 +29,7 @@ namespace NineChronicles.DataProvider
     using Nekoyume.TableData.Rune;
     using Nekoyume.TableData.Summon;
     using NineChronicles.DataProvider.DataRendering;
+    using NineChronicles.DataProvider.DataRendering.Crafting;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless;
@@ -96,7 +97,6 @@ namespace NineChronicles.DataProvider
         private DateTimeOffset _blockTimeOffset;
         private Address _miner;
         private string? _blockHash;
-        private List<RapidCombinationModel> _rapidCombinationList = new List<RapidCombinationModel>();
 
         public RenderSubscriber(
             NineChroniclesNodeService nodeService,
@@ -1867,7 +1867,6 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreRuneEnhancementList(_runeEnhancementList);
                     MySqlStore.StoreRunesAcquiredList(_runesAcquiredList);
                     MySqlStore.StoreUnlockRuneSlotList(_unlockRuneSlotList);
-                    MySqlStore.StoreRapidCombinationList(_rapidCombinationList);
                     MySqlStore.StorePetEnhancementList(_petEnhancementList);
                     MySqlStore.StoreTransferAssetList(_transferAssetList);
                     MySqlStore.StoreRequestPledgeList(_requestPledgeList);
@@ -1877,6 +1876,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreRuneSummonList(_runeSummonList);
                     MySqlStore.StoreRuneSummonFailList(_runeSummonFailList);
                     StoreAdventureBossList();
+                    StoreRapidCombinationList();
                 }),
             };
 
@@ -1919,7 +1919,6 @@ namespace NineChronicles.DataProvider
             _runeEnhancementList.Clear();
             _runesAcquiredList.Clear();
             _unlockRuneSlotList.Clear();
-            _rapidCombinationList.Clear();
             _petEnhancementList.Clear();
             _transferAssetList.Clear();
             _requestPledgeList.Clear();
@@ -1927,6 +1926,7 @@ namespace NineChronicles.DataProvider
             _auraSummonList.Clear();
             _auraSummonFailList.Clear();
             ClearAdventureBossList();
+            ClearRapidCombinationList();
 
             var end = DateTimeOffset.Now;
             long blockIndex = b.OldTip.Index;

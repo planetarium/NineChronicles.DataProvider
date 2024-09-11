@@ -1,4 +1,4 @@
-namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering.Crafting
 {
     using System;
     using System.Collections.Generic;
