@@ -3,6 +3,7 @@ using Nekoyume.Model.EnumType;
 using NineChronicles.DataProvider.DataRendering.AdventureBoss;
 using NineChronicles.DataProvider.DataRendering.Crafting;
 using NineChronicles.DataProvider.Store.Models.AdventureBoss;
+using NineChronicles.DataProvider.Store.Models.Crafting;
 
 namespace NineChronicles.DataProvider.Executable.Commands
 {

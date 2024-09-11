@@ -9,6 +9,7 @@ namespace NineChronicles.DataProvider.Store
     using Nekoyume.Model.Item;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
+    using NineChronicles.DataProvider.Store.Models.Crafting;
     using Serilog;
 
     public partial class MySqlStore

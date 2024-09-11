@@ -6,7 +6,7 @@ namespace NineChronicles.DataProvider.DataRendering.Crafting
     using Libplanet.Crypto;
     using Nekoyume.Action;
     using Nekoyume.Module;
-    using NineChronicles.DataProvider.Store.Models;
+    using NineChronicles.DataProvider.Store.Models.Crafting;
 
     public static class RapidCombinationData
     {

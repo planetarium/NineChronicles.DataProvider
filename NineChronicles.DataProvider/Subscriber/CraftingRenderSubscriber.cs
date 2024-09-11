@@ -3,7 +3,7 @@ namespace NineChronicles.DataProvider
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using NineChronicles.DataProvider.Store.Models;
+    using NineChronicles.DataProvider.Store.Models.Crafting;
     using Serilog;
 
     public partial class RenderSubscriber

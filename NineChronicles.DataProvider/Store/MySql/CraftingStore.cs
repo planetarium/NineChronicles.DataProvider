@@ -4,7 +4,7 @@ namespace NineChronicles.DataProvider.Store
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
-    using NineChronicles.DataProvider.Store.Models;
+    using NineChronicles.DataProvider.Store.Models.Crafting;
     using Serilog;
 
     /// <summary>
