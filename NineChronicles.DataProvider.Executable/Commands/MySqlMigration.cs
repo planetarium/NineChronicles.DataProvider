@@ -2,8 +2,10 @@ using Nekoyume.Action.AdventureBoss;
 using Nekoyume.Model.EnumType;
 using NineChronicles.DataProvider.DataRendering.AdventureBoss;
 using NineChronicles.DataProvider.DataRendering.Crafting;
+using NineChronicles.DataProvider.DataRendering.Grinding;
 using NineChronicles.DataProvider.Store.Models.AdventureBoss;
 using NineChronicles.DataProvider.Store.Models.Crafting;
+using NineChronicles.DataProvider.Store.Models.Grinding;
 
 namespace NineChronicles.DataProvider.Executable.Commands
 {
@@ -364,7 +366,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _mySqlStore.StoreStakingList(_stakeList);
                 _mySqlStore.StoreClaimStakeRewardList(_claimStakeList);
                 _mySqlStore.StoreMigrateMonsterCollectionList(_migrateMonsterCollectionList);
-                _mySqlStore.StoreGrindList(_grindList);
                 _mySqlStore.StoreItemEnhancementFailList(_itemEnhancementFailList);
                 _mySqlStore.StoreUnlockEquipmentRecipeList(_unlockEquipmentRecipeList);
                 _mySqlStore.StoreUnlockWorldList(_unlockWorldList);
@@ -425,6 +426,12 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 {
                     Console.WriteLine($"[RapidCombination] {_rapidCombinationList.Count}");
                     await _mySqlStore.StoreRapidCombinationList(_rapidCombinationList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Grinding] {_grindList.Count} grinding");
+                    await _mySqlStore.StoreGrindList(_grindList);
                 });
             }
             catch (Exception e)
@@ -828,7 +835,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             {
                                 var start = DateTimeOffset.UtcNow;
 
-                                var grindList = GrindingData.GetGrindingInfo(inputState, outputState, ae.InputContext.Signer, grinding.AvatarAddress, grinding.EquipmentIds, grinding.Id, ae.InputContext.BlockIndex, _blockTimeOffset);
+                                var grindList = GrindingData.GetGrindingInfo(inputState, ae.InputContext.Signer, grinding.AvatarAddress, grinding.EquipmentIds, grinding.Id, ae.InputContext.BlockIndex, _blockTimeOffset);
 
                                 foreach (var grind in grindList)
                                 {

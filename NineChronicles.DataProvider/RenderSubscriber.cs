@@ -61,7 +61,6 @@ namespace NineChronicles.DataProvider
         private readonly List<StakeModel> _stakeList = new List<StakeModel>();
         private readonly List<ClaimStakeRewardModel> _claimStakeList = new List<ClaimStakeRewardModel>();
         private readonly List<MigrateMonsterCollectionModel> _mmcList = new List<MigrateMonsterCollectionModel>();
-        private readonly List<GrindingModel> _grindList = new List<GrindingModel>();
         private readonly List<ItemEnhancementFailModel> _itemEnhancementFailList = new List<ItemEnhancementFailModel>();
         private readonly List<UnlockEquipmentRecipeModel> _unlockEquipmentRecipeList = new List<UnlockEquipmentRecipeModel>();
         private readonly List<UnlockWorldModel> _unlockWorldList = new List<UnlockWorldModel>();
@@ -949,40 +948,6 @@ namespace NineChronicles.DataProvider
                     }
                 });
 
-            _actionRenderer.EveryRender<Grinding>()
-                .Subscribe(ev =>
-                {
-                    try
-                    {
-                        if (ev.Action is { } grinding)
-                        {
-                            var start = DateTimeOffset.UtcNow;
-                            var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
-                            var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            var avatarAddress = grinding.AvatarAddress;
-                            if (!_avatars.Contains(avatarAddress))
-                            {
-                                _avatars.Add(avatarAddress);
-                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
-                            }
-
-                            var grindList = GrindingData.GetGrindingInfo(inputState, outputState, ev.Signer, grinding.AvatarAddress, grinding.EquipmentIds, grinding.Id, ev.BlockIndex, _blockTimeOffset);
-
-                            foreach (var grind in grindList)
-                            {
-                                _grindList.Add(grind);
-                            }
-
-                            var end = DateTimeOffset.UtcNow;
-                            Log.Debug("[DataProvider] Stored Grinding action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
-                    }
-                });
-
             _actionRenderer.EveryRender<UnlockEquipmentRecipe>()
                 .Subscribe(ev =>
                 {
@@ -1692,6 +1657,9 @@ namespace NineChronicles.DataProvider
             // Crafting
             _actionRenderer.EveryRender<RapidCombination>().Subscribe(SubscribeRapidCombination);
 
+            // Grinding
+            _actionRenderer.EveryRender<Grinding>().Subscribe(SubscribeGrinding);
+
             return Task.CompletedTask;
         }
 
@@ -1710,6 +1678,9 @@ namespace NineChronicles.DataProvider
         /** Adventure Boss **/
         //// Cafting
         partial void SubscribeRapidCombination(ActionEvaluation<RapidCombination> ev);
+
+        //// Grinding
+        partial void SubscribeGrinding(ActionEvaluation<Grinding> ev);
         /* Partial Methods */
 
         private void AddShopHistoryItem(ITradableItem orderItem, Address buyerAvatarAddress, PurchaseInfo purchaseInfo, int itemCount, long blockIndex)
@@ -1816,7 +1787,6 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreStakingList(_stakeList);
                     MySqlStore.StoreClaimStakeRewardList(_claimStakeList);
                     MySqlStore.StoreMigrateMonsterCollectionList(_mmcList);
-                    MySqlStore.StoreGrindList(_grindList);
                     MySqlStore.StoreItemEnhancementFailList(_itemEnhancementFailList);
                     MySqlStore.StoreUnlockEquipmentRecipeList(_unlockEquipmentRecipeList);
                     MySqlStore.StoreUnlockWorldList(_unlockWorldList);
@@ -1846,6 +1816,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreRuneSummonFailList(_runeSummonFailList);
                     StoreAdventureBossList();
                     StoreRapidCombinationList();
+                    StoreGrindList();
                 }),
             };
 
@@ -1868,7 +1839,6 @@ namespace NineChronicles.DataProvider
             _stakeList.Clear();
             _claimStakeList.Clear();
             _mmcList.Clear();
-            _grindList.Clear();
             _itemEnhancementFailList.Clear();
             _unlockEquipmentRecipeList.Clear();
             _unlockWorldList.Clear();
@@ -1896,6 +1866,7 @@ namespace NineChronicles.DataProvider
             _auraSummonFailList.Clear();
             ClearAdventureBossList();
             ClearRapidCombinationList();
+            ClearGrindList();
 
             var end = DateTimeOffset.Now;
             long blockIndex = b.OldTip.Index;
