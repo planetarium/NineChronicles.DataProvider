@@ -18,6 +18,7 @@ namespace NineChronicles.DataProvider
     {
         private List<RapidCombinationModel> _rapidCombinationList = new ();
         private List<CustomEquipmentCraftModel> _customEquipmentCraftList = new ();
+        private List<UnlockCombinationSlotModel> _unlockCombinationSlotList = new ();
 
         // Store
         private void StoreCraftingData()
@@ -42,6 +43,14 @@ namespace NineChronicles.DataProvider
                     await MySqlStore.StoreCustomEquipmentCraftList(_customEquipmentCraftList);
                 }));
 
+                // UnlockCombinationSlot
+                Log.Debug("[Crafting] Store UnlockCombinationSlot list");
+                tasks.Add(Task.Run(async () =>
+                {
+                    Log.Debug($"[UnlockCombinationSlot] {_unlockCombinationSlotList.Count}");
+                    await MySqlStore.StoreUnlockCombinationSlotList(_unlockCombinationSlotList);
+                }));
+
                 Task.WaitAll(tasks.ToArray());
             }
             catch (Exception e)
@@ -56,6 +65,7 @@ namespace NineChronicles.DataProvider
             Log.Debug("[Crafting] Clear crafting related action data");
             _rapidCombinationList.Clear();
             _customEquipmentCraftList.Clear();
+            _unlockCombinationSlotList.Clear();
         }
 
         // Subscribe
@@ -142,6 +152,39 @@ namespace NineChronicles.DataProvider
                             _blockTimeOffset
                         )
                     ).ToList();
+                    Log.Debug(
+                        "[DataProvider] Stored RapidCombination action in block #{index}. Time Taken: {time} ms.",
+                        evt.BlockIndex,
+                        (DateTimeOffset.UtcNow - start).Milliseconds
+                    );
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(
+                    e,
+                    "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}",
+                    e.Message,
+                    e.StackTrace
+                );
+            }
+        }
+
+        partial void SubscribeUnlockCombinationSlot(ActionEvaluation<UnlockCombinationSlot> evt)
+        {
+            try
+            {
+                if (evt.Exception is null && evt.Action is { } unlockCombinationSlot)
+                {
+                    var start = DateTimeOffset.UtcNow;
+                    _unlockCombinationSlotList.Add(UnlockCombinationSlotData.GetUnlockCombinationSlotInfo(
+                        new World(_blockChainStates.GetWorldState(evt.PreviousState)),
+                        evt.Signer,
+                        evt.Action,
+                        evt.BlockIndex,
+                        _blockTimeOffset
+                    ));
+
                     Log.Debug(
                         "[DataProvider] Stored RapidCombination action in block #{index}. Time Taken: {time} ms.",
                         evt.BlockIndex,
