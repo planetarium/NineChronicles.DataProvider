@@ -1,5 +1,3 @@
-using NineChronicles.DataProvider.Store.Models.Crafting;
-
 namespace NineChronicles.DataProvider.Store
 {
     using System;
