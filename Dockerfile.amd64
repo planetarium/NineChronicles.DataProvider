@@ -35,7 +35,7 @@ RUN dotnet publish NineChronicles.Headless/NineChronicles.Headless.Executable/Ni
     --version-suffix $COMMIT
 
 # Build runtime image
-FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/sdk:6.0-bullseye-slim
+FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim
 WORKDIR /app
 RUN dotnet tool install --global dotnet-ef --version 7.0.14
 ENV PATH="${PATH}:/${HOME}/.dotnet/tools"
