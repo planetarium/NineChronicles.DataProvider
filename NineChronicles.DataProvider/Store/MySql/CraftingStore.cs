@@ -26,7 +26,7 @@ namespace NineChronicles.DataProvider.Store
 
                 foreach (var rc in rapidCombinationList)
                 {
-                    if (await ctx.RapidCombinations.FirstOrDefaultAsync(r => r.Id == rc.Id) is null)
+                    if (!await ctx.RapidCombinations.AnyAsync(r => r.Id == rc.Id))
                     {
                         await ctx.RapidCombinations.AddAsync(rc);
                     }
@@ -65,7 +65,7 @@ namespace NineChronicles.DataProvider.Store
                 // Add new CustomCraft data
                 foreach (var craftData in customEquipmentCraftList)
                 {
-                    if (await ctx.CustomEquipmentCraft.FirstOrDefaultAsync(c => c.Id == craftData.Id) is null)
+                    if (!await ctx.CustomEquipmentCraft.AnyAsync(c => c.Id == craftData.Id))
                     {
                         if (iconCraftCountDict.ContainsKey((craftData.ItemSubType!, craftData.IconId)))
                         {

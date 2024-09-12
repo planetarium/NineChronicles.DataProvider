@@ -143,7 +143,7 @@ namespace NineChronicles.DataProvider
                         )
                     ).ToList();
                     Log.Debug(
-                        "[DataProvider] Stored RapidCombination action in block #{index}. Time Taken: {time} ms.",
+                        "[DataProvider] Stored CustomEquipmentCraft action in block #{index}. Time Taken: {time} ms.",
                         evt.BlockIndex,
                         (DateTimeOffset.UtcNow - start).Milliseconds
                     );

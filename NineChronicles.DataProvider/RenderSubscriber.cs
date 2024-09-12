@@ -1662,8 +1662,6 @@ namespace NineChronicles.DataProvider
             // Grinding
             _actionRenderer.EveryRender<Grinding>().Subscribe(SubscribeGrinding);
 
-            _actionRenderer.EveryRender<CustomEquipmentCraft>().Subscribe(SubscribeCustomEquipmentCraft);
-
             return Task.CompletedTask;
         }
 
