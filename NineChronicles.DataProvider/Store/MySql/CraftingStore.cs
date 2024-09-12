@@ -9,9 +9,8 @@ namespace NineChronicles.DataProvider.Store
 
     /// <summary>
     /// Store functions related to crafting.
-    /// - ItemEnhancement
-    /// - CombinationEquipment
     /// - RapidCombination
+    /// - CustomEquipmentCraft
     /// and so on.
     /// </summary>
     public partial class MySqlStore
@@ -34,6 +33,39 @@ namespace NineChronicles.DataProvider.Store
 
                 await ctx.SaveChangesAsync();
                 Log.Debug($"[RapidCombination] {rapidCombinationList.Count} RapidCombinations saved.");
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+                Log.Debug(e.StackTrace);
+            }
+            finally
+            {
+                if (ctx is not null)
+                {
+                    await ctx.DisposeAsync();
+                }
+            }
+        }
+
+        // CustomEquipmentCraft
+        public async partial Task StoreCustomEquipmentCraftList(
+            List<CustomEquipmentCraftModel> customEquipmentCraftList)
+        {
+            NineChroniclesContext? ctx = null;
+            try
+            {
+                ctx = await _dbContextFactory.CreateDbContextAsync();
+                foreach (var cec in customEquipmentCraftList)
+                {
+                    if (await ctx.CustomEquipmentCraft.FirstOrDefaultAsync(c => c.Id == cec.Id) is null)
+                    {
+                        await ctx.CustomEquipmentCraft.AddAsync(cec);
+                    }
+                }
+
+                await ctx.SaveChangesAsync();
+                Log.Debug($"[CustomEquipmentCraft] {customEquipmentCraftList.Count} CustomEquipmentCraft saved.");
             }
             catch (Exception e)
             {

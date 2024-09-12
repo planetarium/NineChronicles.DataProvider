@@ -1890,6 +1890,8 @@ namespace NineChronicles.DataProvider.Store
 
         public partial Task StoreRapidCombinationList(List<RapidCombinationModel> rapidCombinationList);
 
+        public partial Task StoreCustomEquipmentCraftList(List<CustomEquipmentCraftModel> customEquipmentCraftList);
+
         public partial Task StoreGrindList(List<GrindingModel> grindingList);
 
         public List<RaiderModel> GetRaiderList()

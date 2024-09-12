@@ -18,6 +18,7 @@ namespace NineChronicles.DataProvider
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Action.AdventureBoss;
+    using Nekoyume.Action.CustomEquipmentCraft;
     using Nekoyume.Extensions;
     using Nekoyume.Helper;
     using Nekoyume.Model.EnumType;
@@ -1660,6 +1661,8 @@ namespace NineChronicles.DataProvider
             // Grinding
             _actionRenderer.EveryRender<Grinding>().Subscribe(SubscribeGrinding);
 
+            _actionRenderer.EveryRender<CustomEquipmentCraft>().Subscribe(SubscribeCustomEquipmentCraft);
+
             return Task.CompletedTask;
         }
 
@@ -1681,6 +1684,8 @@ namespace NineChronicles.DataProvider
 
         //// Grinding
         partial void SubscribeGrinding(ActionEvaluation<Grinding> ev);
+
+        partial void SubscribeCustomEquipmentCraft(ActionEvaluation<CustomEquipmentCraft> evt);
         /* Partial Methods */
 
         private void AddShopHistoryItem(ITradableItem orderItem, Address buyerAvatarAddress, PurchaseInfo purchaseInfo, int itemCount, long blockIndex)
@@ -1815,7 +1820,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreRuneSummonList(_runeSummonList);
                     MySqlStore.StoreRuneSummonFailList(_runeSummonFailList);
                     StoreAdventureBossList();
-                    StoreRapidCombinationList();
+                    StoreCraftingData();
                     StoreGrindList();
                 }),
             };

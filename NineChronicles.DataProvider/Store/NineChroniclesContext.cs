@@ -221,6 +221,8 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<AdventureBossClaimRewardModel> AdventureBossClaimReward => Set<AdventureBossClaimRewardModel>();
         /* Adventure Boss */
 
+        public DbSet<CustomEquipmentCraftModel> CustomEquipmentCraft => Set<CustomEquipmentCraftModel>();
+
         // Table for daily metrics data
         public DbSet<DailyMetricModel> DailyMetrics => Set<DailyMetricModel>();
 
