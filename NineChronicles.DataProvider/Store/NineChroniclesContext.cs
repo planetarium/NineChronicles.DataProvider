@@ -227,6 +227,9 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<CustomEquipmentCraftCountModel> CustomEquipmentCraftCount => Set<CustomEquipmentCraftCountModel>();
         /* CustomCraft */
 
+        // UnlockCombinationSlot
+        public DbSet<UnlockCombinationSlotModel> UnlockCombinationSlot => Set<UnlockCombinationSlotModel>();
+
         // Table for daily metrics data
         public DbSet<DailyMetricModel> DailyMetrics => Set<DailyMetricModel>();
 

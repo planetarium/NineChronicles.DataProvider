@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
@@ -10,9 +11,10 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20240912163112_UnlockCombinationSlot")]
+    partial class UnlockCombinationSlot
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -835,10 +837,30 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.ToTable("CombinationEquipments");
                 });
 
+            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.Crafting.CustomEquipmentCraftCountModel", b =>
+                {
+                    b.Property<int>("IconId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<long>("Count")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ItemSubType")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("IconId");
+
+                    b.ToTable("CustomEquipmentCraftCount");
+                });
+
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.Crafting.CustomEquipmentCraftModel", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("varchar(255)");
+
+                    b.Property<string>("AdditionalCost")
+                        .HasColumnType("longtext");
 
                     b.Property<string>("AdditionalMaterials")
                         .HasColumnType("longtext");
@@ -864,7 +886,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<string>("ElementalType")
                         .HasColumnType("longtext");
 
-                    b.Property<int>("EquipmentId")
+                    b.Property<int>("EquipmentItemId")
                         .HasColumnType("int");
 
                     b.Property<bool>("HasRandomOnlyIcon")
@@ -872,6 +894,12 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
                     b.Property<int>("IconId")
                         .HasColumnType("int");
+
+                    b.Property<string>("ItemSubType")
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal>("NcgCost")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<int>("OptionId")
                         .HasColumnType("int");
