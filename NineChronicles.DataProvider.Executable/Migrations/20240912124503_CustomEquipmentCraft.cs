@@ -9,66 +9,121 @@ namespace NineChronicles.DataProvider.Executable.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "CustomEquipmentCraft",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "varchar(255)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    BlockIndex = table.Column<long>(type: "bigint", nullable: false),
-                    AgentAddress = table.Column<string>(type: "varchar(255)", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    AvatarAddress = table.Column<string>(type: "varchar(255)", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    SlotIndex = table.Column<int>(type: "int", nullable: false),
-                    RecipeId = table.Column<int>(type: "int", nullable: false),
-                    Relationship = table.Column<int>(type: "int", nullable: false),
-                    Scroll = table.Column<int>(type: "int", nullable: false),
-                    Circle = table.Column<int>(type: "int", nullable: false),
-                    AdditionalMaterials = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    EquipmentId = table.Column<int>(type: "int", nullable: false),
-                    ElementalType = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    IconId = table.Column<int>(type: "int", nullable: false),
-                    TotalCP = table.Column<long>(type: "bigint", nullable: false),
-                    OptionId = table.Column<int>(type: "int", nullable: false),
-                    CraftWithRandom = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    HasRandomOnlyIcon = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    Date = table.Column<DateOnly>(type: "date", nullable: false),
-                    TimeStamp = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CustomEquipmentCraft", x => x.Id);
-                    table.ForeignKey(
+            migrationBuilder.AddColumn<string>(
+                name: "AgentAddress",
+                table: "CustomEquipmentCraft",
+                type: "string",
+                nullable: false,
+                defaultValue: string.Empty
+            ).Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.AddColumn<int>(
+                name: "Relationship",
+                table: "CustomEquipmentCraft",
+                type: "int",
+                nullable: false
+                );
+
+            migrationBuilder.AddColumn<int>(
+                name: "TotalCP",
+                table: "CustomEquipmentCraft",
+                type: "int",
+                nullable: false
+            );
+
+            migrationBuilder.AddColumn<int>(
+                name: "OptionId",
+                table: "CustomEquipmentCraft",
+                type: "int",
+                nullable: false
+                );
+
+            migrationBuilder.AddColumn<bool>(
+                name: "CraftWithRandom",
+                table: "CustomEquipmentCraft",
+                type: "tinyint(1)",
+                nullable: false
+                );
+
+            migrationBuilder.AddColumn<bool>(
+                name: "HasRandomOnlyIcon",
+                table: "CustomEquipmentCraft",
+                type: "tinyint(1)",
+                nullable: false
+                );
+
+            migrationBuilder.RenameColumn(
+                name: "DrawingAmount",
+                table: "CustomEquipmentCraft",
+                newName: "Scroll"
+                );
+            migrationBuilder.RenameColumn(
+                name: "DrawingToolAmount",
+                table: "CustomEquipmentCraft",
+                newName: "Circle"
+                );
+
+            migrationBuilder.AddForeignKey(
                         name: "FK_CustomEquipmentCraft_Agents_AgentAddress",
-                        column: x => x.AgentAddress,
+                        table: "CustomEquipmentCraft",
+                        column: "AgentAddress",
                         principalTable: "Agents",
-                        principalColumn: "Address");
-                    table.ForeignKey(
-                        name: "FK_CustomEquipmentCraft_Avatars_AvatarAddress",
-                        column: x => x.AvatarAddress,
-                        principalTable: "Avatars",
-                        principalColumn: "Address");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                        principalColumn: "Address"
+                );
 
             migrationBuilder.CreateIndex(
                 name: "IX_CustomEquipmentCraft_AgentAddress",
                 table: "CustomEquipmentCraft",
                 column: "AgentAddress");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CustomEquipmentCraft_AvatarAddress",
-                table: "CustomEquipmentCraft",
-                column: "AvatarAddress");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "CustomEquipmentCraft");
+            migrationBuilder.DropIndex(
+                name: "IX_CustomEquipmentCraft_AgentAddress",
+                table: "CustomEquipmentCraft"
+            );
+
+            migrationBuilder.DropForeignKey(
+                        name: "FK_CustomEquipmentCraft_Agents_AgentAddress",
+                        table: "CustomEquipmentCraft"
+            );
+
+            migrationBuilder.RenameColumn(
+                name: "Circle",
+                table: "CustomEquipmentCraft",
+                newName: "DrawingToolAmount"
+            );
+            migrationBuilder.RenameColumn(
+                name: "Scroll",
+                table: "CustomEquipmentCraft",
+                newName: "DrawingAmount"
+            );
+
+            migrationBuilder.DropColumn(
+                name: "HasRandomOnlyIcon",
+                table: "CustomEquipmentCraft"
+            );
+            migrationBuilder.DropColumn(
+                name: "CraftWithRandom",
+                table: "CustomEquipmentCraft"
+            );
+            migrationBuilder.DropColumn(
+                name: "OptionId",
+                table: "CustomEquipmentCraft"
+            );
+            migrationBuilder.DropColumn(
+                name: "TotalCP",
+                table: "CustomEquipmentCraft"
+            );
+            migrationBuilder.DropColumn(
+                name: "relationship",
+                table: "CustomEquipmentCraft"
+            );
+            migrationBuilder.DropColumn(
+                name: "AgentAddress",
+                table: "CustomEquipmentCraft"
+            );
         }
     }
 }

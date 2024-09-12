@@ -30,10 +30,14 @@ namespace NineChronicles.DataProvider.Store.Models.Crafting
 
         public int Circle { get; set; }
 
+        public decimal NcgCost { get; set; }
+
         public string? AdditionalMaterials { get; set; }
 
         // Result
-        public int EquipmentId { get; set; }
+        public int EquipmentItemId { get; set; }
+
+        public string? ItemSubType { get; set; }
 
         public string? ElementalType { get; set; }
 
@@ -48,6 +52,8 @@ namespace NineChronicles.DataProvider.Store.Models.Crafting
         public bool HasRandomOnlyIcon { get; set; }
 
         // Time
+        public string? AdditionalCost { get; set; }
+
         public DateOnly Date { get; set; }
 
         public DateTimeOffset TimeStamp { get; set; }

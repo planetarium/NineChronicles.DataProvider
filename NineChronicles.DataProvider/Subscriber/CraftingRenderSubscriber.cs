@@ -51,7 +51,7 @@ namespace NineChronicles.DataProvider
         }
 
         // Clear
-        private void ClearRapidCombinationList()
+        private void ClearCraftingList()
         {
             Log.Debug("[Crafting] Clear crafting related action data");
             _rapidCombinationList.Clear();

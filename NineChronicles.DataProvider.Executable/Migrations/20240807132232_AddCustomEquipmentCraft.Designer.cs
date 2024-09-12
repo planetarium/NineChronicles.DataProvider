@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
@@ -10,9 +11,10 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20240807132232_AddCustomEquipmentCraft")]
+    partial class AddCustomEquipmentCraft
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -835,111 +837,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.ToTable("CombinationEquipments");
                 });
 
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.Crafting.CustomEquipmentCraftModel", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("AdditionalMaterials")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("AgentAddress")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("AvatarAddress")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<long>("BlockIndex")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Circle")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("CraftWithRandom")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<string>("ElementalType")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("EquipmentId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("HasRandomOnlyIcon")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<int>("IconId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OptionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RecipeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Relationship")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Scroll")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SlotIndex")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("TimeStamp")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long>("TotalCP")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgentAddress");
-
-                    b.HasIndex("AvatarAddress");
-
-                    b.ToTable("CustomEquipmentCraft");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.Crafting.RapidCombinationModel", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("AgentAddress")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("AvatarAddress")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<long>("BlockIndex")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<int>("HourglassCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SlotIndex")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("TimeStamp")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgentAddress");
-
-                    b.HasIndex("AvatarAddress");
-
-                    b.HasIndex("Date");
-
-                    b.ToTable("RapidCombinations");
-                });
-
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.CraftRankingModel", b =>
                 {
                     b.Property<string>("AgentAddress")
@@ -1709,7 +1606,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.ToTable("EventMaterialItemCrafts");
                 });
 
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.Grinding.GrindingModel", b =>
+            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.GrindingModel", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("varchar(255)");
@@ -1737,9 +1634,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
                     b.Property<int>("EquipmentLevel")
                         .HasColumnType("int");
-
-                    b.Property<string>("Materials")
-                        .HasColumnType("longtext");
 
                     b.Property<DateTimeOffset>("TimeStamp")
                         .HasColumnType("datetime(6)");
@@ -2212,6 +2106,43 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                         .IsUnique();
 
                     b.ToTable("Raiders");
+                });
+
+            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.RapidCombinationModel", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("AgentAddress")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("AvatarAddress")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<long>("BlockIndex")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("HourglassCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SlotIndex")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("TimeStamp")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgentAddress");
+
+                    b.HasIndex("AvatarAddress");
+
+                    b.HasIndex("Date");
+
+                    b.ToTable("RapidCombinations");
                 });
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.ReplaceCombinationEquipmentMaterialModel", b =>
@@ -3944,32 +3875,11 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Navigation("Avatar");
                 });
 
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.Crafting.CustomEquipmentCraftModel", b =>
+            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.CustomCraft.CustomEquipmentCraftModel", b =>
                 {
-                    b.HasOne("NineChronicles.DataProvider.Store.Models.AgentModel", "Agent")
-                        .WithMany()
-                        .HasForeignKey("AgentAddress");
-
                     b.HasOne("NineChronicles.DataProvider.Store.Models.AvatarModel", "Avatar")
                         .WithMany()
                         .HasForeignKey("AvatarAddress");
-
-                    b.Navigation("Agent");
-
-                    b.Navigation("Avatar");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.Crafting.RapidCombinationModel", b =>
-                {
-                    b.HasOne("NineChronicles.DataProvider.Store.Models.AgentModel", "Agent")
-                        .WithMany()
-                        .HasForeignKey("AgentAddress");
-
-                    b.HasOne("NineChronicles.DataProvider.Store.Models.AvatarModel", "Avatar")
-                        .WithMany()
-                        .HasForeignKey("AvatarAddress");
-
-                    b.Navigation("Agent");
 
                     b.Navigation("Avatar");
                 });
@@ -4023,7 +3933,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Navigation("Avatar");
                 });
 
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.Grinding.GrindingModel", b =>
+            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.GrindingModel", b =>
                 {
                     b.HasOne("NineChronicles.DataProvider.Store.Models.AgentModel", "Agent")
                         .WithMany()
@@ -4153,6 +4063,21 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                 });
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.PetEnhancementModel", b =>
+                {
+                    b.HasOne("NineChronicles.DataProvider.Store.Models.AgentModel", "Agent")
+                        .WithMany()
+                        .HasForeignKey("AgentAddress");
+
+                    b.HasOne("NineChronicles.DataProvider.Store.Models.AvatarModel", "Avatar")
+                        .WithMany()
+                        .HasForeignKey("AvatarAddress");
+
+                    b.Navigation("Agent");
+
+                    b.Navigation("Avatar");
+                });
+
+            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.RapidCombinationModel", b =>
                 {
                     b.HasOne("NineChronicles.DataProvider.Store.Models.AgentModel", "Agent")
                         .WithMany()

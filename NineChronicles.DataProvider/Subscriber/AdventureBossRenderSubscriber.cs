@@ -9,9 +9,7 @@ namespace NineChronicles.DataProvider
     using Lib9c.Renderers;
     using Libplanet.Action.State;
     using Nekoyume.Action.AdventureBoss;
-    using Nekoyume.Model.EnumType;
     using Nekoyume.Module;
-    using NineChronicles.DataProvider.DataRendering;
     using NineChronicles.DataProvider.DataRendering.AdventureBoss;
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
     using Serilog;

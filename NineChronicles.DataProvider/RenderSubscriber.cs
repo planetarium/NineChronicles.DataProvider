@@ -730,7 +730,7 @@ namespace NineChronicles.DataProvider
                             foreach (var purchaseInfo in buy.purchaseInfos)
                             {
                                 var state = outputState.GetLegacyState(
-                                Addresses.GetItemAddress(purchaseInfo.TradableId));
+                                    Addresses.GetItemAddress(purchaseInfo.TradableId));
                                 ITradableItem orderItem =
                                     (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
                                 Order order =
@@ -1520,7 +1520,7 @@ namespace NineChronicles.DataProvider
                                 auraSummon.Id,
                                 ev.BlockIndex,
                                 _blockTimeOffset
-                                ));
+                            ));
                         }
                         else
                         {
@@ -1657,6 +1657,7 @@ namespace NineChronicles.DataProvider
 
             // Crafting
             _actionRenderer.EveryRender<RapidCombination>().Subscribe(SubscribeRapidCombination);
+            _actionRenderer.EveryRender<CustomEquipmentCraft>().Subscribe(SubscribeCustomEquipmentCraft);
 
             // Grinding
             _actionRenderer.EveryRender<Grinding>().Subscribe(SubscribeGrinding);
@@ -1682,10 +1683,10 @@ namespace NineChronicles.DataProvider
         //// Cafting
         partial void SubscribeRapidCombination(ActionEvaluation<RapidCombination> ev);
 
+        partial void SubscribeCustomEquipmentCraft(ActionEvaluation<CustomEquipmentCraft> evt);
+
         //// Grinding
         partial void SubscribeGrinding(ActionEvaluation<Grinding> ev);
-
-        partial void SubscribeCustomEquipmentCraft(ActionEvaluation<CustomEquipmentCraft> evt);
         /* Partial Methods */
 
         private void AddShopHistoryItem(ITradableItem orderItem, Address buyerAvatarAddress, PurchaseInfo purchaseInfo, int itemCount, long blockIndex)
@@ -1870,7 +1871,7 @@ namespace NineChronicles.DataProvider
             _auraSummonList.Clear();
             _auraSummonFailList.Clear();
             ClearAdventureBossList();
-            ClearRapidCombinationList();
+            ClearCraftingList();
             ClearGrindList();
 
             var end = DateTimeOffset.Now;

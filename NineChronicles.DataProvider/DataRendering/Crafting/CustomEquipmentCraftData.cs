@@ -8,8 +8,10 @@ namespace NineChronicles.DataProvider.DataRendering.Crafting
     using Libplanet.Crypto;
     using Nekoyume.Action.CustomEquipmentCraft;
     using Nekoyume.Extensions;
+    using Nekoyume.Helper;
     using Nekoyume.Model.Item;
     using Nekoyume.Module;
+    using Nekoyume.TableData;
     using Nekoyume.TableData.CustomEquipmentCraft;
     using NineChronicles.DataProvider.Store.Models.Crafting;
 
@@ -34,26 +36,52 @@ namespace NineChronicles.DataProvider.DataRendering.Crafting
                 typeof(CustomEquipmentCraftRecipeSheet),
                 typeof(CustomEquipmentCraftRelationshipSheet),
                 typeof(CustomEquipmentCraftOptionSheet),
+                typeof(MaterialItemSheet),
             });
             var recipeSheet = sheets.GetSheet<CustomEquipmentCraftRecipeSheet>();
             var relationshipSheet = sheets.GetSheet<CustomEquipmentCraftRelationshipSheet>();
             var optionSheet = sheets.GetSheet<CustomEquipmentCraftOptionSheet>();
+            var materialSheet = sheets.GetSheet<MaterialItemSheet>();
+            var gameConfig = prevState.GetGameConfigState();
 
             for (var i = 0; i < action.CraftList.Count; i++)
             {
                 var craftData = action.CraftList[i];
-                var gameConfig = prevState.GetGameConfigState();
                 var recipeRow = recipeSheet.OrderedList!.First(row => row.Id == craftData.RecipeId);
                 var relationshipRow = relationshipSheet.OrderedList!.Reverse()
                     .First(row => row.Relationship <= relationship);
                 var slot = outputCombinationSlots.GetSlot(craftData.SlotIndex);
                 var equipment = (Equipment)slot.Result.itemUsable;
+                var (ncgCost, materialCosts) = CustomCraftHelper.CalculateCraftCost(
+                    craftData.IconId,
+                    sheets.GetSheet<MaterialItemSheet>(),
+                    recipeRow,
+                    relationshipRow,
+                    sheets.GetSheet<CustomEquipmentCraftCostSheet>().Values
+                        .FirstOrDefault(r => r.Relationship == relationship),
+                    gameConfig.CustomEquipmentCraftIconCostMultiplier
+                );
 
-                var circleCost = (decimal)recipeRow.CircleAmount * relationshipRow.CostMultiplier / 10000m;
-                if (craftData.RecipeId == 0)
+                var scrollId = materialSheet.Values.First(row => row.ItemSubType == ItemSubType.Scroll).Id;
+                var circleId = materialSheet.Values.First(row => row.ItemSubType == ItemSubType.Circle).Id;
+                var scrollCost = 0;
+                var circleCost = 0;
+                var additional = new List<string>();
+
+                foreach (var cost in materialCosts)
                 {
-                    // Random
-                    circleCost = circleCost * gameConfig.CustomEquipmentCraftIconCostMultiplier / 10000m;
+                    if (cost.Key == scrollId)
+                    {
+                        scrollCost = cost.Value;
+                    }
+                    else if (cost.Key == circleId)
+                    {
+                        circleCost = cost.Value;
+                    }
+                    else
+                    {
+                        additional.Add($"{cost.Key}:{cost.Value}");
+                    }
                 }
 
                 info.Add(new CustomEquipmentCraftModel
@@ -63,11 +91,12 @@ namespace NineChronicles.DataProvider.DataRendering.Crafting
                         AvatarAddress = action.AvatarAddress.ToString(),
                         RecipeId = craftData.RecipeId,
                         SlotIndex = craftData.SlotIndex,
-                        Scroll = (int)Math.Floor(recipeRow.ScrollAmount * relationshipRow.CostMultiplier / 10000m),
-                        Circle = (int)Math.Floor(circleCost),
-                        AdditionalMaterials = string.Empty,
+                        Scroll = scrollCost,
+                        Circle = circleCost,
+                        NcgCost = (decimal)ncgCost,
+                        AdditionalMaterials = string.Join(",", additional),
                         Relationship = relationship,
-                        EquipmentId = equipment.Id,
+                        EquipmentItemId = equipment.Id,
                         IconId = equipment.IconId,
                         ElementalType = equipment.ElementalType.ToString(),
                         OptionId = ItemFactory.SelectOption(recipeRow.ItemSubType, optionSheet, random).Id,
