@@ -1,7 +1,9 @@
 using Nekoyume.Action.AdventureBoss;
 using Nekoyume.Model.EnumType;
 using NineChronicles.DataProvider.DataRendering.AdventureBoss;
+using NineChronicles.DataProvider.DataRendering.Crafting;
 using NineChronicles.DataProvider.Store.Models.AdventureBoss;
+using NineChronicles.DataProvider.Store.Models.Crafting;
 
 namespace NineChronicles.DataProvider.Executable.Commands
 {
@@ -41,7 +43,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using NineChronicles.DataProvider.DataRendering;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
-    using Serilog;
     using static Lib9c.SerializeKeys;
 
     public class MySqlMigration
@@ -381,7 +382,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _mySqlStore.StoreRuneEnhancementList(_runeEnhancementList);
                 _mySqlStore.StoreRunesAcquiredList(_runesAcquiredList);
                 _mySqlStore.StoreUnlockRuneSlotList(_unlockRuneSlotList);
-                _mySqlStore.StoreRapidCombinationList(_rapidCombinationList);
                 _mySqlStore.StorePetEnhancementList(_petEnhancementList);
                 _mySqlStore.StoreTransferAssetList(_transferAssetList);
                 _mySqlStore.StoreRequestPledgeList(_requestPledgeList);
@@ -419,6 +419,12 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 {
                     Console.WriteLine($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
                     await _mySqlStore.StoreAdventureBossClaimRewardList(_adventureBossClaimRewardList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[RapidCombination] {_rapidCombinationList.Count}");
+                    await _mySqlStore.StoreRapidCombinationList(_rapidCombinationList);
                 });
             }
             catch (Exception e)
@@ -598,9 +604,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
 
-                                var slotState = outputState.GetCombinationSlotState(
-                                    combinationEquipment.avatarAddress,
-                                    combinationEquipment.slotIndex);
+                                var slotState = outputState.GetAllCombinationSlotState(combinationEquipment.avatarAddress)
+                                    .GetSlot(combinationEquipment.slotIndex);
 
                                 int optionCount = 0;
                                 bool skillContains = false;
@@ -672,9 +677,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
 
-                                var slotState = outputState.GetCombinationSlotState(
-                                    itemEnhancement.avatarAddress,
-                                    itemEnhancement.slotIndex);
+                                var slotState = outputState.GetAllCombinationSlotState(itemEnhancement.avatarAddress)
+                                    .GetSlot(itemEnhancement.slotIndex);
 
                                 if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                                 {
@@ -1058,15 +1062,16 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             if (action is RapidCombination rapidCombination)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
+                                _rapidCombinationList = _rapidCombinationList.Concat(
+                                    RapidCombinationData.GetRapidCombinationInfo(
                                     inputState,
-                                    outputState,
                                     ae.InputContext.Signer,
                                     rapidCombination.avatarAddress,
-                                    rapidCombination.slotIndex,
+                                    rapidCombination.slotIndexList,
                                     rapidCombination.Id,
                                     ae.InputContext.BlockIndex,
-                                    _blockTimeOffset));
+                                    _blockTimeOffset)
+                                ).ToList();
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing RapidCombination action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }

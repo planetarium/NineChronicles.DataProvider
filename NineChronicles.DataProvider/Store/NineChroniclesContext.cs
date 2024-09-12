@@ -3,6 +3,7 @@ namespace NineChronicles.DataProvider.Store
     using Microsoft.EntityFrameworkCore;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
+    using NineChronicles.DataProvider.Store.Models.Crafting;
 
     public sealed class NineChroniclesContext : DbContext
     {
