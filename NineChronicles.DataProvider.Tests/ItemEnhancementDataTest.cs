@@ -9,7 +9,9 @@ using Libplanet.Types.Assets;
 using Microsoft.Extensions.DependencyInjection;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Model;
 using Nekoyume.Model.Item;
+using Nekoyume.Model.Quest;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
 using Nekoyume.TableData;
@@ -94,14 +96,16 @@ public class ItemEnhancementDataTest : TestBase
         Assert.Equal(totalHammerCount, model.HammerCount);
         Assert.Equal(totalHammerExp, model.HammerExp);
     }
+
     protected override IWorldState GetMockState()
     {
         var mockWorldState = MockWorldState.CreateModern();
         var goldCurrencyState = new GoldCurrencyState(_currency);
-        mockWorldState = mockWorldState.SetAccount(ReservedAddresses.LegacyAccount,
+        mockWorldState = mockWorldState.SetAccount(
+            ReservedAddresses.LegacyAccount,
             new Account(mockWorldState.GetAccountState(ReservedAddresses.LegacyAccount))
-                .SetState(Addresses.GoldCurrency, goldCurrencyState.Serialize()))
-            .SetBalance(_signer, 1 * _currency);
+                .SetState(Addresses.GoldCurrency, goldCurrencyState.Serialize())
+        ).SetBalance(_signer, 1 * _currency);
         return mockWorldState;
     }
 }

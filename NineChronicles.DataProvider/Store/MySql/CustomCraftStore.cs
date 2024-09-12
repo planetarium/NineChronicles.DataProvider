@@ -5,7 +5,7 @@ namespace NineChronicles.DataProvider.Store
     using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
-    using NineChronicles.DataProvider.Store.Models.CustomCraft;
+    using NineChronicles.DataProvider.Store.Models.Crafting;
     using Serilog;
 
     public partial class MySqlStore

@@ -1,7 +1,7 @@
 namespace NineChronicles.DataProvider.GraphTypes
 {
     using GraphQL.Types;
-    using NineChronicles.DataProvider.Store.Models.CustomCraft;
+    using NineChronicles.DataProvider.Store.Models.Crafting;
 
     public class CustomEquipmentCraftIconCountType : ObjectGraphType<CustomEquipmentCraftCountModel>
     {

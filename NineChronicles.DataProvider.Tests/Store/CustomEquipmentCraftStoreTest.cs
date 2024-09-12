@@ -7,7 +7,7 @@ using Libplanet.Crypto;
 using Libplanet.Mocks;
 using Microsoft.Extensions.DependencyInjection;
 using NineChronicles.DataProvider.Store;
-using NineChronicles.DataProvider.Store.Models.CustomCraft;
+using NineChronicles.DataProvider.Store.Models.Crafting;
 using Xunit;
 
 namespace NineChronicles.DataProvider.Tests.Store;

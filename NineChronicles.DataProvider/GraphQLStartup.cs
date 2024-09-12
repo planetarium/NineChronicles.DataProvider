@@ -12,7 +12,6 @@
     using NineChronicles.DataProvider.GraphTypes;
     using NineChronicles.Headless;
     using NineChronicles.Headless.GraphTypes;
-    using Sentry;
 
     public class GraphQLStartup
     {
@@ -48,7 +47,6 @@
             services.AddGraphTypes();
             services.AddSingleton<NineChroniclesSummarySchema>();
             services.AddSingleton<StandaloneSchema>();
-            services.AddSingleton<ConcurrentDictionary<string, ITransaction>>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

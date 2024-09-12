@@ -6,8 +6,8 @@ namespace NineChronicles.DataProvider
     using Lib9c.Renderers;
     using Libplanet.Action.State;
     using Nekoyume.Action.CustomEquipmentCraft;
-    using NineChronicles.DataProvider.DataRendering.CustomCraft;
-    using NineChronicles.DataProvider.Store.Models.CustomCraft;
+    using NineChronicles.DataProvider.DataRendering.Crafting;
+    using NineChronicles.DataProvider.Store.Models.Crafting;
     using Serilog;
 
     public partial class RenderSubscriber

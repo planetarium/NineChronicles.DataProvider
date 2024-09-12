@@ -1,4 +1,4 @@
-namespace NineChronicles.DataProvider.Store.Models.CustomCraft
+namespace NineChronicles.DataProvider.Store.Models.Crafting
 {
     using System.ComponentModel.DataAnnotations;
 

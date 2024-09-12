@@ -1,9 +1,8 @@
-namespace NineChronicles.DataProvider.DataRendering.CustomCraft
+namespace NineChronicles.DataProvider.DataRendering.Crafting
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Libplanet.Action;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Nekoyume.Action.CustomEquipmentCraft;
@@ -13,7 +12,7 @@ namespace NineChronicles.DataProvider.DataRendering.CustomCraft
     using Nekoyume.Module;
     using Nekoyume.TableData;
     using Nekoyume.TableData.CustomEquipmentCraft;
-    using NineChronicles.DataProvider.Store.Models.CustomCraft;
+    using NineChronicles.DataProvider.Store.Models.Crafting;
     using Serilog;
 
     public static class CustomEquipmentCraftData
@@ -67,9 +66,9 @@ namespace NineChronicles.DataProvider.DataRendering.CustomCraft
                 var sb = new List<string>();
                 var materialItemSheet = sheets.GetSheet<MaterialItemSheet>();
                 var drawingItemId = materialItemSheet.OrderedList!
-                    .First(row => row.ItemSubType == ItemSubType.Drawing).Id;
+                    .First(row => row.ItemSubType == ItemSubType.Scroll).Id;
                 var drawingToolItemId = materialItemSheet.OrderedList!
-                    .First(row => row.ItemSubType == ItemSubType.DrawingTool).Id;
+                    .First(row => row.ItemSubType == ItemSubType.Circle).Id;
 
                 foreach (var (itemId, amount) in materialCosts)
                 {

@@ -8,6 +8,7 @@ using System.Net.Http;
 using Libplanet.Headless.Hosting;
 using Microsoft.Extensions.Logging;
 using Nekoyume.Action.Loader;
+using Sentry;
 using IPAddress = System.Net.IPAddress;
 
 namespace NineChronicles.DataProvider.Executable
@@ -189,7 +190,7 @@ namespace NineChronicles.DataProvider.Executable
                 {
                     RpcRemoteSever = false
                 },
-                new ConcurrentDictionary<string, Sentry.ITransaction>(),
+                new ConcurrentDictionary<string, ITransaction>(),
                 new StateMemoryCache()
             );
 
