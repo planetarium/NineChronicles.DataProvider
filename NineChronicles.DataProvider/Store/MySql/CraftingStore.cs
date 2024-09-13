@@ -124,5 +124,40 @@ namespace NineChronicles.DataProvider.Store
                 ? ctx.CustomEquipmentCraftCount.ToList()
                 : ctx.CustomEquipmentCraftCount.Where(c => c.ItemSubType == itemSubType).ToList();
         }
+
+        // UnlockCombinationSlot
+        public async partial Task StoreUnlockCombinationSlotList(
+            List<UnlockCombinationSlotModel> unlockCombinationSlotList
+        )
+        {
+            NineChroniclesContext? ctx = null;
+            try
+            {
+                ctx = await _dbContextFactory.CreateDbContextAsync();
+
+                foreach (var ucs in unlockCombinationSlotList)
+                {
+                    if (!await ctx.UnlockCombinationSlot.AnyAsync(u => u.Id == ucs.Id))
+                    {
+                        await ctx.UnlockCombinationSlot.AddAsync(ucs);
+                    }
+                }
+
+                await ctx.SaveChangesAsync();
+                Log.Debug($"[UnlockCombinationSlot] {unlockCombinationSlotList.Count} UnlockCombinationSlot saved.");
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+                Log.Debug(e.StackTrace);
+            }
+            finally
+            {
+                if (ctx is not null)
+                {
+                    await ctx.DisposeAsync();
+                }
+            }
+        }
     }
 }

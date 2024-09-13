@@ -1898,6 +1898,8 @@ namespace NineChronicles.DataProvider.Store
 
         public partial Task StoreGrindList(List<GrindingModel> grindingList);
 
+        public partial Task StoreUnlockCombinationSlotList(List<UnlockCombinationSlotModel> unlockCombinationSlotList);
+
         public List<RaiderModel> GetRaiderList()
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
