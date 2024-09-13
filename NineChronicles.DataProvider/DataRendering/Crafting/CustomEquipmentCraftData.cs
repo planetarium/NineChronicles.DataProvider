@@ -54,11 +54,10 @@ namespace NineChronicles.DataProvider.DataRendering.Crafting
                 var equipment = (Equipment)slot.Result.itemUsable;
                 var (ncgCost, materialCosts) = CustomCraftHelper.CalculateCraftCost(
                     craftData.IconId,
+                    relationship,
                     sheets.GetSheet<MaterialItemSheet>(),
                     recipeRow,
                     relationshipRow,
-                    sheets.GetSheet<CustomEquipmentCraftCostSheet>().Values
-                        .FirstOrDefault(r => r.Relationship == relationship),
                     gameConfig.CustomEquipmentCraftIconCostMultiplier
                 );
 
