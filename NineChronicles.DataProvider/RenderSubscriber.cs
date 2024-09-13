@@ -18,6 +18,7 @@ namespace NineChronicles.DataProvider
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Action.AdventureBoss;
+    using Nekoyume.Action.CustomEquipmentCraft;
     using Nekoyume.Extensions;
     using Nekoyume.Helper;
     using Nekoyume.Model.EnumType;
@@ -729,7 +730,7 @@ namespace NineChronicles.DataProvider
                             foreach (var purchaseInfo in buy.purchaseInfos)
                             {
                                 var state = outputState.GetLegacyState(
-                                Addresses.GetItemAddress(purchaseInfo.TradableId));
+                                    Addresses.GetItemAddress(purchaseInfo.TradableId));
                                 ITradableItem orderItem =
                                     (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
                                 Order order =
@@ -1519,7 +1520,7 @@ namespace NineChronicles.DataProvider
                                 auraSummon.Id,
                                 ev.BlockIndex,
                                 _blockTimeOffset
-                                ));
+                            ));
                         }
                         else
                         {
@@ -1656,6 +1657,7 @@ namespace NineChronicles.DataProvider
 
             // Crafting
             _actionRenderer.EveryRender<RapidCombination>().Subscribe(SubscribeRapidCombination);
+            _actionRenderer.EveryRender<CustomEquipmentCraft>().Subscribe(SubscribeCustomEquipmentCraft);
 
             // Grinding
             _actionRenderer.EveryRender<Grinding>().Subscribe(SubscribeGrinding);
@@ -1678,6 +1680,8 @@ namespace NineChronicles.DataProvider
         /** Adventure Boss **/
         //// Cafting
         partial void SubscribeRapidCombination(ActionEvaluation<RapidCombination> ev);
+
+        partial void SubscribeCustomEquipmentCraft(ActionEvaluation<CustomEquipmentCraft> evt);
 
         //// Grinding
         partial void SubscribeGrinding(ActionEvaluation<Grinding> ev);
@@ -1815,7 +1819,7 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreRuneSummonList(_runeSummonList);
                     MySqlStore.StoreRuneSummonFailList(_runeSummonFailList);
                     StoreAdventureBossList();
-                    StoreRapidCombinationList();
+                    StoreCraftingData();
                     StoreGrindList();
                 }),
             };
@@ -1865,7 +1869,7 @@ namespace NineChronicles.DataProvider
             _auraSummonList.Clear();
             _auraSummonFailList.Clear();
             ClearAdventureBossList();
-            ClearRapidCombinationList();
+            ClearCraftingList();
             ClearGrindList();
 
             var end = DateTimeOffset.Now;

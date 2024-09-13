@@ -7,6 +7,7 @@ namespace NineChronicles.DataProvider
     using Lib9c.Renderers;
     using Libplanet.Action.State;
     using Nekoyume.Action;
+    using Nekoyume.Action.CustomEquipmentCraft;
     using Nekoyume.Model.EnumType;
     using NineChronicles.DataProvider.DataRendering;
     using NineChronicles.DataProvider.DataRendering.Crafting;
@@ -16,19 +17,29 @@ namespace NineChronicles.DataProvider
     public partial class RenderSubscriber
     {
         private List<RapidCombinationModel> _rapidCombinationList = new ();
+        private List<CustomEquipmentCraftModel> _customEquipmentCraftList = new ();
 
-        // RapidCombination
-        private void StoreRapidCombinationList()
+        // Store
+        private void StoreCraftingData()
         {
             try
             {
                 var tasks = new List<Task>();
-                Log.Debug("[Crafting] Store RapidCombination list");
 
+                // RapidCombination
+                Log.Debug("[Crafting] Store RapidCombination list");
                 tasks.Add(Task.Run(async () =>
                 {
                     Log.Debug($"[RapidCombination] {_rapidCombinationList.Count}");
                     await MySqlStore.StoreRapidCombinationList(_rapidCombinationList);
+                }));
+
+                // CustomEquipmentCraft
+                Log.Debug("[Crafting] Store CustomEquipmentCraft list");
+                tasks.Add(Task.Run(async () =>
+                {
+                    Log.Debug($"[CustomEquipmentCraft] {_customEquipmentCraftList.Count}");
+                    await MySqlStore.StoreCustomEquipmentCraftList(_customEquipmentCraftList);
                 }));
 
                 Task.WaitAll(tasks.ToArray());
@@ -39,12 +50,15 @@ namespace NineChronicles.DataProvider
             }
         }
 
-        private void ClearRapidCombinationList()
+        // Clear
+        private void ClearCraftingList()
         {
             Log.Debug("[Crafting] Clear crafting related action data");
             _rapidCombinationList.Clear();
+            _customEquipmentCraftList.Clear();
         }
 
+        // Subscribe
         partial void SubscribeRapidCombination(ActionEvaluation<RapidCombination> ev)
         {
             try
@@ -90,6 +104,58 @@ namespace NineChronicles.DataProvider
                     "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}",
                     ex.Message,
                     ex.StackTrace
+                );
+            }
+        }
+
+        partial void SubscribeCustomEquipmentCraft(ActionEvaluation<CustomEquipmentCraft> evt)
+        {
+            try
+            {
+                if (evt.Exception == null && evt.Action is { } customEquipmentCraft)
+                {
+                    var start = DateTimeOffset.UtcNow;
+                    var prevState = new World(_blockChainStates.GetWorldState(evt.PreviousState));
+                    var outputState = new World(_blockChainStates.GetWorldState(evt.OutputState));
+                    var avatarAddress = customEquipmentCraft.AvatarAddress;
+
+                    if (!_avatars.Contains(avatarAddress))
+                    {
+                        _avatars.Add(avatarAddress);
+                        _avatarList.Add(
+                            AvatarData.GetAvatarInfo(
+                                outputState, evt.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure
+                            )
+                        );
+                    }
+
+                    var actionId = Guid.NewGuid();
+                    _customEquipmentCraftList = _customEquipmentCraftList.Concat(
+                        CustomEquipmentCraftData.GetCustomEquipmentCraftInfo(
+                            prevState,
+                            outputState,
+                            new ReplayRandom(evt.RandomSeed),
+                            evt.Signer,
+                            actionId,
+                            customEquipmentCraft,
+                            evt.BlockIndex,
+                            _blockTimeOffset
+                        )
+                    ).ToList();
+                    Log.Debug(
+                        "[DataProvider] Stored CustomEquipmentCraft action in block #{index}. Time Taken: {time} ms.",
+                        evt.BlockIndex,
+                        (DateTimeOffset.UtcNow - start).Milliseconds
+                    );
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(
+                    e,
+                    "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}",
+                    e.Message,
+                    e.StackTrace
                 );
             }
         }

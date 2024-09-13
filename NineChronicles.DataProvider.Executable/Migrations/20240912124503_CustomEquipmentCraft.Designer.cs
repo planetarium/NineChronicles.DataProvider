@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
@@ -10,9 +11,10 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20240912124503_CustomEquipmentCraft")]
+    partial class CustomEquipmentCraft
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -973,77 +975,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                         .HasColumnType("int");
 
                     b.ToTable("CraftRankings");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.CustomCraft.CustomEquipmentCraftCountModel", b =>
-                {
-                    b.Property<int>("IconId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<long>("Count")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ItemSubType")
-                        .HasColumnType("longtext");
-
-                    b.HasKey("IconId");
-
-                    b.ToTable("CustomEquipmentCraftCount");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.CustomCraft.CustomEquipmentCraftModel", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("AdditionalCost")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("AvatarAddress")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<long>("BlockIndex")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<int>("DrawingAmount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DrawingToolAmount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ElementalType")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("EquipmentItemId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IconId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ItemSubType")
-                        .HasColumnType("longtext");
-
-                    b.Property<decimal>("NcgCost")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.Property<int>("RecipeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SlotIndex")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("TimeStamp")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AvatarAddress");
-
-                    b.ToTable("CustomEquipmentCraft");
                 });
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.DailyMetricModel", b =>

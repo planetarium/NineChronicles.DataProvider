@@ -1888,6 +1888,12 @@ namespace NineChronicles.DataProvider.Store
         public partial Task StoreAdventureBossClaimRewardList(List<AdventureBossClaimRewardModel> claimList);
         /* Adventure Boss */
 
+        // CustomCraft
+        public partial Task StoreCustomEquipmentCraftList(List<CustomEquipmentCraftModel> customEquipmentCraftList);
+
+        public partial List<CustomEquipmentCraftCountModel> GetCustomEquipmentCraftCount(string? itemSubType);
+
+        /* CustomCraft */
         public partial Task StoreRapidCombinationList(List<RapidCombinationModel> rapidCombinationList);
 
         public partial Task StoreGrindList(List<GrindingModel> grindingList);
