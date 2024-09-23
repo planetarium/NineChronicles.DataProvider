@@ -862,7 +862,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<string>("AdditionalCost")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("AdditionalMaterials")
+                    b.Property<string>("AdditionalCost")
                         .HasColumnType("longtext");
 
                     b.Property<string>("AgentAddress")

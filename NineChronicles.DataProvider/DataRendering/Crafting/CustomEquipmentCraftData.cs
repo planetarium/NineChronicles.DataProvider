@@ -93,7 +93,7 @@ namespace NineChronicles.DataProvider.DataRendering.Crafting
                         Scroll = scrollCost,
                         Circle = circleCost,
                         NcgCost = (decimal)ncgCost,
-                        AdditionalMaterials = string.Join(",", additional),
+                        AdditionalCost = string.Join(",", additional),
                         Relationship = relationship,
                         EquipmentItemId = equipment.Id,
                         IconId = equipment.IconId,

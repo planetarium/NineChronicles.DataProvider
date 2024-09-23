@@ -12,7 +12,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "AgentAddress",
                 table: "CustomEquipmentCraft",
-                type: "string",
+                type: "varchar(255)",
                 nullable: false,
                 defaultValue: string.Empty
             ).Annotation("MySql:CharSet", "utf8mb4");
