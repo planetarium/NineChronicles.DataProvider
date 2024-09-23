@@ -840,7 +840,7 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("varchar(255)");
 
-                    b.Property<string>("AdditionalMaterials")
+                    b.Property<string>("AdditionalCost")
                         .HasColumnType("longtext");
 
                     b.Property<string>("AgentAddress")

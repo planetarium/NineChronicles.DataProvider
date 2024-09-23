@@ -32,7 +32,7 @@ namespace NineChronicles.DataProvider.Store.Models.Crafting
 
         public decimal NcgCost { get; set; }
 
-        public string? AdditionalMaterials { get; set; }
+        public string? AdditionalCost { get; set; }
 
         // Result
         public int EquipmentItemId { get; set; }
@@ -52,8 +52,6 @@ namespace NineChronicles.DataProvider.Store.Models.Crafting
         public bool HasRandomOnlyIcon { get; set; }
 
         // Time
-        public string? AdditionalCost { get; set; }
-
         public DateOnly Date { get; set; }
 
         public DateTimeOffset TimeStamp { get; set; }
