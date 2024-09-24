@@ -95,6 +95,7 @@ namespace NineChronicles.DataProvider.DataRendering.Crafting
                         NcgCost = (decimal)ncgCost,
                         AdditionalCost = string.Join(",", additional),
                         Relationship = relationship,
+                        ItemSubType = equipment.ItemSubType.ToString(),
                         EquipmentItemId = equipment.Id,
                         IconId = equipment.IconId,
                         ElementalType = equipment.ElementalType.ToString(),
