@@ -100,7 +100,7 @@ namespace NineChronicles.DataProvider.DataRendering.Crafting
                         IconId = equipment.IconId,
                         ElementalType = equipment.ElementalType.ToString(),
                         OptionId = ItemFactory.SelectOption(recipeRow.ItemSubType, optionSheet, random).Id,
-                        TotalCP = random.Next(relationshipRow.MinCp, relationshipRow.MaxCp + 1),
+                        TotalCP = CustomCraftHelper.SelectCp(relationshipRow, random),
                         CraftWithRandom = equipment.CraftWithRandom,
                         HasRandomOnlyIcon = equipment.HasRandomOnlyIcon,
                         BlockIndex = blockIndex,
