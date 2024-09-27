@@ -42,7 +42,7 @@ namespace NineChronicles.DataProvider
         {
             try
             {
-                if (ev.Action is { } grinding)
+                if (ev.Exception is null && ev.Action is { } grinding)
                 {
                     var start = DateTimeOffset.UtcNow;
                     var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));

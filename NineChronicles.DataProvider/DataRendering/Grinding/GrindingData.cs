@@ -6,7 +6,6 @@ namespace NineChronicles.DataProvider.DataRendering.Grinding
     using Bencodex.Types;
     using Libplanet.Action.State;
     using Libplanet.Crypto;
-    using Libplanet.Types.Assets;
     using Nekoyume.Action;
     using Nekoyume.Extensions;
     using Nekoyume.Helper;
@@ -17,6 +16,7 @@ namespace NineChronicles.DataProvider.DataRendering.Grinding
     using Nekoyume.TableData;
     using Nekoyume.TableData.Crystal;
     using NineChronicles.DataProvider.Store.Models.Grinding;
+    using Serilog;
 
     public static class GrindingData
     {
@@ -30,14 +30,20 @@ namespace NineChronicles.DataProvider.DataRendering.Grinding
             DateTimeOffset blockTime
         )
         {
-            AvatarState prevAvatarState = previousStates.GetAvatarState(avatarAddress);
-            AgentState? agentState = previousStates.GetAgentState(signer);
+            var prevAvatarState = previousStates.GetAvatarState(
+                avatarAddress,
+                getInventory: true,
+                getQuestList: false,
+                getWorldInformation: false
+            );
+
+            var agentState = previousStates.GetAgentState(signer);
             if (agentState is null)
             {
                 throw new FailedLoadStateException("Aborted as the agent state failed to load.");
             }
 
-            Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
+            var monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
                 signer,
                 agentState.MonsterCollectionRound
             );
@@ -49,7 +55,7 @@ namespace NineChronicles.DataProvider.DataRendering.Grinding
                 typeof(StakeRegularRewardSheet),
             });
 
-            List<Equipment> equipmentList = new List<Equipment>();
+            var equipmentList = new List<Equipment>();
             foreach (var equipmentId in equipmentIds)
             {
                 if (prevAvatarState.inventory.TryGetNonFungibleItem(equipmentId, out Equipment equipment))
@@ -58,8 +64,8 @@ namespace NineChronicles.DataProvider.DataRendering.Grinding
                 }
             }
 
-            Currency currency = previousStates.GetGoldCurrency();
-            FungibleAssetValue stakedAmount = 0 * currency;
+            var currency = previousStates.GetGoldCurrency();
+            var stakedAmount = 0 * currency;
             if (previousStates.TryGetStakeStateV2(signer, out _))
             {
                 var stakeAddr = StakeStateV2.DeriveAddress(signer);
@@ -73,29 +79,30 @@ namespace NineChronicles.DataProvider.DataRendering.Grinding
                 }
             }
 
-            FungibleAssetValue crystal = CrystalCalculator.CalculateCrystal(
-                signer,
-                equipmentList,
-                stakedAmount,
-                false,
-                sheets.GetSheet<CrystalEquipmentGrindingSheet>(),
-                sheets.GetSheet<CrystalMonsterCollectionMultiplierSheet>(),
-                sheets.GetSheet<StakeRegularRewardSheet>()
-            );
-
-            var materials = Grinding.CalculateMaterialReward(
-                equipmentList,
-                sheets.GetSheet<CrystalEquipmentGrindingSheet>(),
-                sheets.GetSheet<MaterialItemSheet>()
-            );
-            var materialList = materials.Select(kv => $"{kv.Key.Id}:{kv.Value}").ToList();
-
             var grindList = new List<GrindingModel>();
-            foreach (var equipment in equipmentList)
+            for (var i = 0; i < equipmentList.Count; i++)
             {
+                var equipment = equipmentList[i];
+                var crystal = CrystalCalculator.CalculateCrystal(
+                    signer,
+                    new List<Equipment> { equipment },
+                    stakedAmount,
+                    false,
+                    sheets.GetSheet<CrystalEquipmentGrindingSheet>(),
+                    sheets.GetSheet<CrystalMonsterCollectionMultiplierSheet>(),
+                    sheets.GetSheet<StakeRegularRewardSheet>()
+                );
+
+                var materials = Grinding.CalculateMaterialReward(
+                    new List<Equipment> { equipment },
+                    sheets.GetSheet<CrystalEquipmentGrindingSheet>(),
+                    sheets.GetSheet<MaterialItemSheet>()
+                );
+                var materialList = materials.Select(kv => $"{kv.Key.Id}:{kv.Value}").ToList();
+
                 grindList.Add(new GrindingModel()
                 {
-                    Id = actionId.ToString(),
+                    Id = $"{actionId}_{i:D3}",
                     AgentAddress = signer.ToString(),
                     AvatarAddress = avatarAddress.ToString(),
                     EquipmentItemId = equipment.ItemId.ToString(),
@@ -109,6 +116,7 @@ namespace NineChronicles.DataProvider.DataRendering.Grinding
                 });
             }
 
+            Log.Debug($"{grindList.Count} grinding collected from {signer}");
             return grindList;
         }
     }
