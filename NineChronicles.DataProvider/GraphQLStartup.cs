@@ -12,6 +12,10 @@
     using NineChronicles.DataProvider.GraphTypes;
     using NineChronicles.Headless;
     using NineChronicles.Headless.GraphTypes;
+    using NineChronicles.Headless.Repositories.BlockChain;
+    using NineChronicles.Headless.Repositories.StateTrie;
+    using NineChronicles.Headless.Repositories.Transaction;
+    using NineChronicles.Headless.Repositories.WorldState;
 
     public class GraphQLStartup
     {
@@ -45,6 +49,10 @@
                 .AddLibplanetExplorer();
             services.AddSingleton<StateMemoryCache>();
             services.AddGraphTypes();
+            services.AddSingleton<IWorldStateRepository, WorldStateRepository>();
+            services.AddSingleton<ITransactionRepository, TransactionRepository>();
+            services.AddSingleton<IBlockChainRepository, BlockChainRepository>();
+            services.AddSingleton<IStateTrieRepository, StateTrieRepository>();
             services.AddSingleton<NineChroniclesSummarySchema>();
             services.AddSingleton<StandaloneSchema>();
         }
