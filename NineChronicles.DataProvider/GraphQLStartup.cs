@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Concurrent;
     using GraphQL.Server;
+    using GraphQL.Server.Transports.AspNetCore;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
