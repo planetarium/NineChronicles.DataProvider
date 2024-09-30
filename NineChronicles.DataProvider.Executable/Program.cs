@@ -199,6 +199,7 @@ namespace NineChronicles.DataProvider.Executable
             hostBuilder.ConfigureServices(services =>
             {
                 services.AddSingleton(_ => context);
+                services.AddSingleton<IKeyStore>(_ => context.KeyStore);
             });
 
             hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, context, publisher, service);
