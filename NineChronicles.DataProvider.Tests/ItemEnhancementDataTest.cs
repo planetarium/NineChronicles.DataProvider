@@ -9,7 +9,9 @@ using Libplanet.Types.Assets;
 using Microsoft.Extensions.DependencyInjection;
 using Nekoyume;
 using Nekoyume.Action;
+using Nekoyume.Model;
 using Nekoyume.Model.Item;
+using Nekoyume.Model.Quest;
 using Nekoyume.Model.State;
 using Nekoyume.Module;
 using Nekoyume.TableData;
@@ -44,10 +46,20 @@ public class ItemEnhancementDataTest : TestBase
 6,Jotunheim,251,300
 7,Niflheim,301,350
 8,Hel,351,400");
+        var avatarName = "test";
         var avatarSheets = new AvatarSheets(worldSheet, new QuestSheet(), new QuestRewardSheet(),
             new QuestItemRewardSheet(), new EquipmentItemRecipeSheet(), new EquipmentItemSubRecipeSheet());
         var avatarAddress = new PrivateKey().Address;
-        var avatarState = new AvatarState(avatarAddress, _signer, 1L, avatarSheets, default, "test");
+        var worldInformation = new WorldInformation(blockIndex, avatarSheets.WorldSheet,
+            GameConfig.IsEditor, avatarName);
+        var questList = new QuestList(
+            avatarSheets.QuestSheet,
+            avatarSheets.QuestRewardSheet,
+            avatarSheets.QuestItemRewardSheet,
+            avatarSheets.EquipmentItemRecipeSheet,
+            avatarSheets.EquipmentItemSubRecipeSheet
+        );
+        var avatarState = new AvatarState(avatarAddress, _signer, 1L, questList, worldInformation, default, avatarName);
         var equipmentRow = new EquipmentItemSheet.Row();
         equipmentRow.Set("10100000,Weapon,0,Normal,0,ATK,1,2,10100000,10".Split(","));
         var itemId = Guid.NewGuid();
@@ -94,14 +106,16 @@ public class ItemEnhancementDataTest : TestBase
         Assert.Equal(totalHammerCount, model.HammerCount);
         Assert.Equal(totalHammerExp, model.HammerExp);
     }
+
     protected override IWorldState GetMockState()
     {
         var mockWorldState = MockWorldState.CreateModern();
         var goldCurrencyState = new GoldCurrencyState(_currency);
-        mockWorldState = mockWorldState.SetAccount(ReservedAddresses.LegacyAccount,
+        mockWorldState = mockWorldState.SetAccount(
+            ReservedAddresses.LegacyAccount,
             new Account(mockWorldState.GetAccountState(ReservedAddresses.LegacyAccount))
-                .SetState(Addresses.GoldCurrency, goldCurrencyState.Serialize()))
-            .SetBalance(_signer, 1 * _currency);
+                .SetState(Addresses.GoldCurrency, goldCurrencyState.Serialize())
+        ).SetBalance(_signer, 1 * _currency);
         return mockWorldState;
     }
 }

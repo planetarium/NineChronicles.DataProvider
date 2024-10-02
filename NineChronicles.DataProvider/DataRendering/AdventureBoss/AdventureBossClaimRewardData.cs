@@ -32,8 +32,8 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
             var gameConfig = states.GetGameConfigState();
             var ncgRewardRatioSheet = states.GetSheet<AdventureBossNcgRewardRatioSheet>();
 
-            var continueInv = true;
-            var continueExp = true;
+            bool continueInv;
+            bool continueExp;
 
             var claimedSeasonList = new List<long>();
 
@@ -59,6 +59,12 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
                     break;
                 }
 
+                // Skip not participated season
+                if (investor is null && explorer is null)
+                {
+                    continue;
+                }
+
                 if (investor is not null)
                 {
                     continueInv = AdventureBossHelper.CollectWantedReward(
@@ -74,6 +80,10 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
                     );
                     investor.Claimed = true;
                     states = states.SetBountyBoard(szn, bountyBoard);
+                }
+                else
+                {
+                    continueInv = false;
                 }
 
                 if (explorer is not null)
@@ -94,7 +104,12 @@ namespace NineChronicles.DataProvider.DataRendering.AdventureBoss
                     explorer.Claimed = true;
                     states = states.SetExplorer(szn, explorer);
                 }
+                else
+                {
+                    continueExp = false;
+                }
 
+                // Stop if stop both investor and explorer
                 if (!continueInv && !continueExp)
                 {
                     break;

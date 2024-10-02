@@ -18,6 +18,7 @@ namespace NineChronicles.DataProvider
     using Nekoyume;
     using Nekoyume.Action;
     using Nekoyume.Action.AdventureBoss;
+    using Nekoyume.Action.CustomEquipmentCraft;
     using Nekoyume.Extensions;
     using Nekoyume.Helper;
     using Nekoyume.Model.EnumType;
@@ -29,6 +30,7 @@ namespace NineChronicles.DataProvider
     using Nekoyume.TableData.Rune;
     using Nekoyume.TableData.Summon;
     using NineChronicles.DataProvider.DataRendering;
+    using NineChronicles.DataProvider.DataRendering.Crafting;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless;
@@ -60,7 +62,6 @@ namespace NineChronicles.DataProvider
         private readonly List<StakeModel> _stakeList = new List<StakeModel>();
         private readonly List<ClaimStakeRewardModel> _claimStakeList = new List<ClaimStakeRewardModel>();
         private readonly List<MigrateMonsterCollectionModel> _mmcList = new List<MigrateMonsterCollectionModel>();
-        private readonly List<GrindingModel> _grindList = new List<GrindingModel>();
         private readonly List<ItemEnhancementFailModel> _itemEnhancementFailList = new List<ItemEnhancementFailModel>();
         private readonly List<UnlockEquipmentRecipeModel> _unlockEquipmentRecipeList = new List<UnlockEquipmentRecipeModel>();
         private readonly List<UnlockWorldModel> _unlockWorldList = new List<UnlockWorldModel>();
@@ -80,7 +81,6 @@ namespace NineChronicles.DataProvider
         private readonly List<RuneEnhancementModel> _runeEnhancementList = new List<RuneEnhancementModel>();
         private readonly List<RunesAcquiredModel> _runesAcquiredList = new List<RunesAcquiredModel>();
         private readonly List<UnlockRuneSlotModel> _unlockRuneSlotList = new List<UnlockRuneSlotModel>();
-        private readonly List<RapidCombinationModel> _rapidCombinationList = new List<RapidCombinationModel>();
         private readonly List<PetEnhancementModel> _petEnhancementList = new List<PetEnhancementModel>();
         private readonly List<TransferAssetModel> _transferAssetList = new List<TransferAssetModel>();
         private readonly List<RequestPledgeModel> _requestPledgeList = new List<RequestPledgeModel>();
@@ -92,6 +92,7 @@ namespace NineChronicles.DataProvider
         private readonly List<Address> _agents;
         private readonly List<Address> _avatars;
         private readonly bool _render;
+
         private int _renderedBlockCount;
         private DateTimeOffset _blockTimeOffset;
         private Address _miner;
@@ -576,9 +577,8 @@ namespace NineChronicles.DataProvider
                                 (end - start).Milliseconds);
                             start = DateTimeOffset.UtcNow;
 
-                            var slotState = outputState.GetCombinationSlotState(
-                                combinationEquipment.avatarAddress,
-                                combinationEquipment.slotIndex);
+                            var slotState = outputState.GetAllCombinationSlotState(combinationEquipment.avatarAddress)
+                                .GetSlot(combinationEquipment.slotIndex);
 
                             int optionCount = 0;
                             bool skillContains = false;
@@ -683,9 +683,8 @@ namespace NineChronicles.DataProvider
                             Log.Debug("[DataProvider] Stored ItemEnhancement action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                             start = DateTimeOffset.UtcNow;
 
-                            var slotState = outputState.GetCombinationSlotState(
-                                itemEnhancement.avatarAddress,
-                                itemEnhancement.slotIndex);
+                            var slotState = outputState.GetAllCombinationSlotState(itemEnhancement.avatarAddress)
+                                .GetSlot(itemEnhancement.slotIndex);
 
                             if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                             {
@@ -731,7 +730,7 @@ namespace NineChronicles.DataProvider
                             foreach (var purchaseInfo in buy.purchaseInfos)
                             {
                                 var state = outputState.GetLegacyState(
-                                Addresses.GetItemAddress(purchaseInfo.TradableId));
+                                    Addresses.GetItemAddress(purchaseInfo.TradableId));
                                 ITradableItem orderItem =
                                     (ITradableItem)ItemFactory.Deserialize((Dictionary)state!);
                                 Order order =
@@ -942,40 +941,6 @@ namespace NineChronicles.DataProvider
                             _mmcList.Add(MigrateMonsterCollectionData.GetMigrateMonsterCollectionInfo(inputState, outputState, ev.Signer, ev.BlockIndex, _blockTimeOffset));
                             var end = DateTimeOffset.UtcNow;
                             Log.Debug("[DataProvider] Stored MigrateMonsterCollection action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
-                    }
-                });
-
-            _actionRenderer.EveryRender<Grinding>()
-                .Subscribe(ev =>
-                {
-                    try
-                    {
-                        if (ev.Action is { } grinding)
-                        {
-                            var start = DateTimeOffset.UtcNow;
-                            var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
-                            var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            var avatarAddress = grinding.AvatarAddress;
-                            if (!_avatars.Contains(avatarAddress))
-                            {
-                                _avatars.Add(avatarAddress);
-                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
-                            }
-
-                            var grindList = GrindingData.GetGrindingInfo(inputState, outputState, ev.Signer, grinding.AvatarAddress, grinding.EquipmentIds, grinding.Id, ev.BlockIndex, _blockTimeOffset);
-
-                            foreach (var grind in grindList)
-                            {
-                                _grindList.Add(grind);
-                            }
-
-                            var end = DateTimeOffset.UtcNow;
-                            Log.Debug("[DataProvider] Stored Grinding action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
                         }
                     }
                     catch (Exception ex)
@@ -1407,42 +1372,6 @@ namespace NineChronicles.DataProvider
                     }
                 });
 
-            _actionRenderer.EveryRender<RapidCombination>()
-                .Subscribe(ev =>
-                {
-                    try
-                    {
-                        if (ev.Exception == null && ev.Action is { } rapidCombination)
-                        {
-                            var start = DateTimeOffset.UtcNow;
-                            var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
-                            var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                            var avatarAddress = rapidCombination.avatarAddress;
-                            if (!_avatars.Contains(avatarAddress))
-                            {
-                                _avatars.Add(avatarAddress);
-                                _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
-                            }
-
-                            _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
-                                inputState,
-                                outputState,
-                                ev.Signer,
-                                rapidCombination.avatarAddress,
-                                rapidCombination.slotIndex,
-                                rapidCombination.Id,
-                                ev.BlockIndex,
-                                _blockTimeOffset));
-                            var end = DateTimeOffset.UtcNow;
-                            Log.Debug("[DataProvider] Stored RapidCombination action in block #{index}. Time Taken: {time} ms.", ev.BlockIndex, (end - start).Milliseconds);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
-                    }
-                });
-
             _actionRenderer.EveryRender<Raid>()
                 .Subscribe(ev =>
                 {
@@ -1591,7 +1520,7 @@ namespace NineChronicles.DataProvider
                                 auraSummon.Id,
                                 ev.BlockIndex,
                                 _blockTimeOffset
-                                ));
+                            ));
                         }
                         else
                         {
@@ -1726,6 +1655,14 @@ namespace NineChronicles.DataProvider
             _actionRenderer.EveryRender<ClaimAdventureBossReward>().Subscribe(SubscribeAdventureBossClaim);
             /* Adventure Boss */
 
+            // Crafting
+            _actionRenderer.EveryRender<RapidCombination>().Subscribe(SubscribeRapidCombination);
+            _actionRenderer.EveryRender<CustomEquipmentCraft>().Subscribe(SubscribeCustomEquipmentCraft);
+            _actionRenderer.EveryRender<UnlockCombinationSlot>().Subscribe(SubscribeUnlockCombinationSlot);
+
+            // Grinding
+            _actionRenderer.EveryRender<Grinding>().Subscribe(SubscribeGrinding);
+
             return Task.CompletedTask;
         }
 
@@ -1740,7 +1677,17 @@ namespace NineChronicles.DataProvider
         partial void SubscribeAdventureBossUnlockFloor(ActionEvaluation<UnlockFloor> evt);
 
         partial void SubscribeAdventureBossClaim(ActionEvaluation<ClaimAdventureBossReward> evt);
+
         /** Adventure Boss **/
+        //// Cafting
+        partial void SubscribeRapidCombination(ActionEvaluation<RapidCombination> ev);
+
+        partial void SubscribeCustomEquipmentCraft(ActionEvaluation<CustomEquipmentCraft> evt);
+
+        partial void SubscribeUnlockCombinationSlot(ActionEvaluation<UnlockCombinationSlot> evt);
+
+        //// Grinding
+        partial void SubscribeGrinding(ActionEvaluation<Grinding> ev);
         /* Partial Methods */
 
         private void AddShopHistoryItem(ITradableItem orderItem, Address buyerAvatarAddress, PurchaseInfo purchaseInfo, int itemCount, long blockIndex)
@@ -1847,7 +1794,6 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreStakingList(_stakeList);
                     MySqlStore.StoreClaimStakeRewardList(_claimStakeList);
                     MySqlStore.StoreMigrateMonsterCollectionList(_mmcList);
-                    MySqlStore.StoreGrindList(_grindList);
                     MySqlStore.StoreItemEnhancementFailList(_itemEnhancementFailList);
                     MySqlStore.StoreUnlockEquipmentRecipeList(_unlockEquipmentRecipeList);
                     MySqlStore.StoreUnlockWorldList(_unlockWorldList);
@@ -1867,7 +1813,6 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreRuneEnhancementList(_runeEnhancementList);
                     MySqlStore.StoreRunesAcquiredList(_runesAcquiredList);
                     MySqlStore.StoreUnlockRuneSlotList(_unlockRuneSlotList);
-                    MySqlStore.StoreRapidCombinationList(_rapidCombinationList);
                     MySqlStore.StorePetEnhancementList(_petEnhancementList);
                     MySqlStore.StoreTransferAssetList(_transferAssetList);
                     MySqlStore.StoreRequestPledgeList(_requestPledgeList);
@@ -1877,6 +1822,8 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreRuneSummonList(_runeSummonList);
                     MySqlStore.StoreRuneSummonFailList(_runeSummonFailList);
                     StoreAdventureBossList();
+                    StoreCraftingData();
+                    StoreGrindList();
                 }),
             };
 
@@ -1899,7 +1846,6 @@ namespace NineChronicles.DataProvider
             _stakeList.Clear();
             _claimStakeList.Clear();
             _mmcList.Clear();
-            _grindList.Clear();
             _itemEnhancementFailList.Clear();
             _unlockEquipmentRecipeList.Clear();
             _unlockWorldList.Clear();
@@ -1919,7 +1865,6 @@ namespace NineChronicles.DataProvider
             _runeEnhancementList.Clear();
             _runesAcquiredList.Clear();
             _unlockRuneSlotList.Clear();
-            _rapidCombinationList.Clear();
             _petEnhancementList.Clear();
             _transferAssetList.Clear();
             _requestPledgeList.Clear();
@@ -1927,6 +1872,8 @@ namespace NineChronicles.DataProvider
             _auraSummonList.Clear();
             _auraSummonFailList.Clear();
             ClearAdventureBossList();
+            ClearCraftingList();
+            ClearGrindList();
 
             var end = DateTimeOffset.Now;
             long blockIndex = b.OldTip.Index;

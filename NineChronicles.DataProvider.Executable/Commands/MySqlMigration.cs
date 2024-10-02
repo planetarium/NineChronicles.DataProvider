@@ -1,7 +1,11 @@
 using Nekoyume.Action.AdventureBoss;
 using Nekoyume.Model.EnumType;
 using NineChronicles.DataProvider.DataRendering.AdventureBoss;
+using NineChronicles.DataProvider.DataRendering.Crafting;
+using NineChronicles.DataProvider.DataRendering.Grinding;
 using NineChronicles.DataProvider.Store.Models.AdventureBoss;
+using NineChronicles.DataProvider.Store.Models.Crafting;
+using NineChronicles.DataProvider.Store.Models.Grinding;
 
 namespace NineChronicles.DataProvider.Executable.Commands
 {
@@ -41,7 +45,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using NineChronicles.DataProvider.DataRendering;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
-    using Serilog;
     using static Lib9c.SerializeKeys;
 
     public class MySqlMigration
@@ -363,7 +366,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _mySqlStore.StoreStakingList(_stakeList);
                 _mySqlStore.StoreClaimStakeRewardList(_claimStakeList);
                 _mySqlStore.StoreMigrateMonsterCollectionList(_migrateMonsterCollectionList);
-                _mySqlStore.StoreGrindList(_grindList);
                 _mySqlStore.StoreItemEnhancementFailList(_itemEnhancementFailList);
                 _mySqlStore.StoreUnlockEquipmentRecipeList(_unlockEquipmentRecipeList);
                 _mySqlStore.StoreUnlockWorldList(_unlockWorldList);
@@ -381,7 +383,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _mySqlStore.StoreRuneEnhancementList(_runeEnhancementList);
                 _mySqlStore.StoreRunesAcquiredList(_runesAcquiredList);
                 _mySqlStore.StoreUnlockRuneSlotList(_unlockRuneSlotList);
-                _mySqlStore.StoreRapidCombinationList(_rapidCombinationList);
                 _mySqlStore.StorePetEnhancementList(_petEnhancementList);
                 _mySqlStore.StoreTransferAssetList(_transferAssetList);
                 _mySqlStore.StoreRequestPledgeList(_requestPledgeList);
@@ -419,6 +420,18 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 {
                     Console.WriteLine($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
                     await _mySqlStore.StoreAdventureBossClaimRewardList(_adventureBossClaimRewardList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[RapidCombination] {_rapidCombinationList.Count}");
+                    await _mySqlStore.StoreRapidCombinationList(_rapidCombinationList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Grinding] {_grindList.Count} grinding");
+                    await _mySqlStore.StoreGrindList(_grindList);
                 });
             }
             catch (Exception e)
@@ -598,9 +611,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
 
-                                var slotState = outputState.GetCombinationSlotState(
-                                    combinationEquipment.avatarAddress,
-                                    combinationEquipment.slotIndex);
+                                var slotState = outputState.GetAllCombinationSlotState(combinationEquipment.avatarAddress)
+                                    .GetSlot(combinationEquipment.slotIndex);
 
                                 int optionCount = 0;
                                 bool skillContains = false;
@@ -672,9 +684,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing ItemEnhancement action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                                 start = DateTimeOffset.UtcNow;
 
-                                var slotState = outputState.GetCombinationSlotState(
-                                    itemEnhancement.avatarAddress,
-                                    itemEnhancement.slotIndex);
+                                var slotState = outputState.GetAllCombinationSlotState(itemEnhancement.avatarAddress)
+                                    .GetSlot(itemEnhancement.slotIndex);
 
                                 if (slotState?.Result.itemUsable.ItemType is ItemType.Equipment)
                                 {
@@ -804,14 +815,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 Console.WriteLine("Writing Stake action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
 
-                            if (action is Stake0 stake0)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                _stakeList.Add(StakeData.GetStakeInfo(inputState, outputState, ae.InputContext.Signer, ae.InputContext.BlockIndex, _blockTimeOffset, Guid.Empty));
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Writing Stake action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
                             if (action is MigrateMonsterCollection migrateMonsterCollection)
                             {
                                 var start = DateTimeOffset.UtcNow;
@@ -824,7 +827,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             {
                                 var start = DateTimeOffset.UtcNow;
 
-                                var grindList = GrindingData.GetGrindingInfo(inputState, outputState, ae.InputContext.Signer, grinding.AvatarAddress, grinding.EquipmentIds, grinding.Id, ae.InputContext.BlockIndex, _blockTimeOffset);
+                                var grindList = GrindingData.GetGrindingInfo(inputState, ae.InputContext.Signer, grinding.AvatarAddress, grinding.EquipmentIds, grinding.Id, ae.InputContext.BlockIndex, _blockTimeOffset);
 
                                 foreach (var grind in grindList)
                                 {
@@ -1058,15 +1061,16 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             if (action is RapidCombination rapidCombination)
                             {
                                 var start = DateTimeOffset.UtcNow;
-                                _rapidCombinationList.Add(RapidCombinationData.GetRapidCombinationInfo(
+                                _rapidCombinationList = _rapidCombinationList.Concat(
+                                    RapidCombinationData.GetRapidCombinationInfo(
                                     inputState,
-                                    outputState,
                                     ae.InputContext.Signer,
                                     rapidCombination.avatarAddress,
-                                    rapidCombination.slotIndex,
+                                    rapidCombination.slotIndexList,
                                     rapidCombination.Id,
                                     ae.InputContext.BlockIndex,
-                                    _blockTimeOffset));
+                                    _blockTimeOffset)
+                                ).ToList();
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing RapidCombination action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
                             }
@@ -1157,27 +1161,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     transferAsset.Recipient,
                                     transferAsset.Amount.Currency.Ticker,
                                     transferAsset.Amount,
-                                    _blockTimeOffset));
-
-                                var end = DateTimeOffset.UtcNow;
-                                Console.WriteLine("Stored TransferAsset action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
-                            }
-
-                            if (action is TransferAsset0 transferAsset0)
-                            {
-                                var start = DateTimeOffset.UtcNow;
-                                var actionString = ae.InputContext.TxId.ToString();
-                                var actionByteArray = Encoding.UTF8.GetBytes(actionString!).Take(16).ToArray();
-                                var id = new Guid(actionByteArray);
-                                _transferAssetList.Add(TransferAssetData.GetTransferAssetInfo(
-                                    id,
-                                    (TxId)ae.InputContext.TxId!,
-                                    ae.InputContext.BlockIndex,
-                                    _blockHash!.ToString(),
-                                    transferAsset0.Sender,
-                                    transferAsset0.Recipient,
-                                    transferAsset0.Amount.Currency.Ticker,
-                                    transferAsset0.Amount,
                                     _blockTimeOffset));
 
                                 var end = DateTimeOffset.UtcNow;
