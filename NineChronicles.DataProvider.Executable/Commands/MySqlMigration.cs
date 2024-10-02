@@ -1,4 +1,5 @@
 using Nekoyume.Action.AdventureBoss;
+using Nekoyume.Action.CustomEquipmentCraft;
 using Nekoyume.Model.EnumType;
 using NineChronicles.DataProvider.DataRendering.AdventureBoss;
 using NineChronicles.DataProvider.DataRendering.Crafting;
@@ -55,6 +56,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private readonly List<AdventureBossRushModel> _adventureBossRushList = new ();
         private readonly List<AdventureBossUnlockFloorModel> _adventureBossUnlockFloorList = new ();
         private readonly List<AdventureBossClaimRewardModel> _adventureBossClaimRewardList = new ();
+        private readonly List<UnlockCombinationSlotModel> _unlockCombinationSlotList = new ();
+        private List<CustomEquipmentCraftModel> _customEquipmentCraftList = new ();
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain _baseChain;
@@ -432,6 +435,18 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 {
                     Console.WriteLine($"[Grinding] {_grindList.Count} grinding");
                     await _mySqlStore.StoreGrindList(_grindList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[CustomEquipmentCraft] {_customEquipmentCraftList} Custom Equipment Craft");
+                    await _mySqlStore.StoreCustomEquipmentCraftList(_customEquipmentCraftList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[UnlockCombinationSlot] {_unlockCombinationSlotList} unlock combination slot");
+                    await _mySqlStore.StoreUnlockCombinationSlotList(_unlockCombinationSlotList);
                 });
             }
             catch (Exception e)
@@ -1063,13 +1078,13 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 var start = DateTimeOffset.UtcNow;
                                 _rapidCombinationList = _rapidCombinationList.Concat(
                                     RapidCombinationData.GetRapidCombinationInfo(
-                                    inputState,
-                                    ae.InputContext.Signer,
-                                    rapidCombination.avatarAddress,
-                                    rapidCombination.slotIndexList,
-                                    rapidCombination.Id,
-                                    ae.InputContext.BlockIndex,
-                                    _blockTimeOffset)
+                                        inputState,
+                                        ae.InputContext.Signer,
+                                        rapidCombination.avatarAddress,
+                                        rapidCombination.slotIndexList,
+                                        rapidCombination.Id,
+                                        ae.InputContext.BlockIndex,
+                                        _blockTimeOffset)
                                 ).ToList();
                                 var end = DateTimeOffset.UtcNow;
                                 Console.WriteLine("Writing RapidCombination action in block #{0}. Time Taken: {1} ms.", ae.InputContext.BlockIndex, (end - start).Milliseconds);
@@ -1277,6 +1292,34 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         );
                                     Console.WriteLine(
                                         $"[Adventure Boss] Season updated : {_adventureBossSeasonDict.Count}");
+                                    break;
+                                }
+
+                                case CustomEquipmentCraft cec:
+                                {
+                                    var cecList = CustomEquipmentCraftData.GetCustomEquipmentCraftInfo(
+                                        inputState,
+                                        outputState,
+                                        new ReplayRandom(ae.InputContext.RandomSeed),
+                                        ae.InputContext.Signer,
+                                        Guid.NewGuid(),
+                                        cec,
+                                        ae.InputContext.BlockIndex,
+                                        _blockTimeOffset
+                                    );
+                                    _customEquipmentCraftList = _customEquipmentCraftList.Concat(cecList).ToList();
+                                    break;
+                                }
+
+                                case UnlockCombinationSlot ucs:
+                                {
+                                    _unlockCombinationSlotList.Add(UnlockCombinationSlotData.GetUnlockCombinationSlotInfo(
+                                        inputState,
+                                        ae.InputContext.Signer,
+                                        ucs,
+                                        ae.InputContext.BlockIndex,
+                                        _blockTimeOffset
+                                    ));
                                     break;
                                 }
                             }
