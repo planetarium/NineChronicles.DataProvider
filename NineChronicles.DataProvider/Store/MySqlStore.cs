@@ -2257,7 +2257,7 @@ namespace NineChronicles.DataProvider.Store
 
             // Call ToList for convert query result from IQueryable
             IEnumerable<WorldBossRankingModel> query = ctx.Set<WorldBossRankingModel>()
-                .FromSqlRaw("SET @prev_score = (SELECT max(`TotalScore`) FROM `Raiders` WHERE `RaidId` = {0}); SET @rank = (SELECT count(*) FROM `Raiders` WHERE `RaidId` = {0} AND `TotalScore` = @prev_score); SELECT `AvatarName`, `HighScore`, `TotalScore`, `Cp`, `Level`, `Address`, `IconId`, @rank := IF(@prev_score = TotalScore, @rank, @rank + 1) as `Ranking` FROM `Raiders` WHERE `RaidId` = {0} ORDER BY `TotalScore` DESC", raidId).ToList();
+                .FromSqlRaw("SET @prev_score = (SELECT max(`TotalScore`) FROM `Raiders` WHERE `RaidId` = {0}); SET @rank = (SELECT count(*) FROM `Raiders` WHERE `RaidId` = {0} AND `TotalScore` = @prev_score); SELECT `AvatarName`, `HighScore`, `TotalScore`, `Cp`, `Level`, `Address`, `IconId`, @rank := IF(@prev_score = TotalScore, @rank, @rank + 1) as `Ranking`, @prev_score := `TotalScore` FROM `Raiders` WHERE `RaidId` = {0} ORDER BY `TotalScore` DESC", raidId).ToList();
             if (queryOffset.HasValue)
             {
                 query = query.Skip(queryOffset.Value);
