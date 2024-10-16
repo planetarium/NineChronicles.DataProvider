@@ -189,10 +189,10 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
         {
             [0] = 2,
             [1] = 2,
-            [2] = 3,
-            [3] = 3,
-            [4] = 4,
-            [5] = 5,
+            [2] = 4,
+            [3] = 4,
+            [4] = 5,
+            [5] = 6,
         };
         for (int j = 0; j < 6; j++)
         {

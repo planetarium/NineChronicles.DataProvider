@@ -2254,21 +2254,86 @@ namespace NineChronicles.DataProvider.Store
         public List<WorldBossRankingModel> GetWorldBossRanking(int raidId, int? queryOffset, int? queryLimit)
         {
             using NineChroniclesContext? ctx = _dbContextFactory.CreateDbContext();
+            List<WorldBossRankingModel> query = ctx
+                .Raiders
+                .Where(i => i.RaidId == raidId)
+                .OrderByDescending(i => i.TotalScore)
+                .Select(i => new WorldBossRankingModel
+                {
+                    Ranking = 0,
+                    AvatarName = i.AvatarName,
+                    HighScore = (int)i.HighScore,
+                    TotalScore = (int)i.TotalScore,
+                    Cp = i.Cp,
+                    Level = i.Level,
+                    Address = i.Address,
+                    IconId = i.IconId,
+                })
+                .ToList();
+            int? currentScore = null;
+            var currentRank = 1;
+            var trunk = new List<WorldBossRankingModel>();
+            var result = new List<WorldBossRankingModel>();
+            for (int i = 0; i < query.Count; i++)
+            {
+                var model = query[i];
+                if (!currentScore.HasValue)
+                {
+                    currentScore = model.TotalScore;
+                    trunk.Add(model);
+                    continue;
+                }
 
-            // Call ToList for convert query result from IQueryable
-            IEnumerable<WorldBossRankingModel> query = ctx.Set<WorldBossRankingModel>()
-                .FromSqlRaw("SET @prev_score = (SELECT max(`TotalScore`) FROM `Raiders` WHERE `RaidId` = {0}); SET @rank = (SELECT count(*) FROM `Raiders` WHERE `RaidId` = {0} AND `TotalScore` = @prev_score); SELECT `AvatarName`, `HighScore`, `TotalScore`, `Cp`, `Level`, `Address`, `IconId`, @rank := IF(@prev_score = TotalScore, @rank, @rank + 1) as `Ranking`, @prev_score := `TotalScore` FROM `Raiders` WHERE `RaidId` = {0} ORDER BY `TotalScore` DESC", raidId).ToList();
+                if (currentScore.Value == model.TotalScore)
+                {
+                    trunk.Add(model);
+                    currentRank++;
+                    if (i < query.Count - 1)
+                    {
+                        continue;
+                    }
+
+                    foreach (var modelInTrunk in trunk)
+                    {
+                        modelInTrunk.Ranking = currentRank;
+                        result.Add(modelInTrunk);
+                    }
+
+                    trunk.Clear();
+
+                    continue;
+                }
+
+                foreach (var modelInTrunk in trunk)
+                {
+                    modelInTrunk.Ranking = currentRank;
+                    result.Add(modelInTrunk);
+                }
+
+                trunk.Clear();
+                if (i < query.Count - 1)
+                {
+                    trunk.Add(model);
+                    currentScore = model.TotalScore;
+                    currentRank++;
+                    continue;
+                }
+
+                model.Ranking = currentRank + 1;
+                result.Add(model);
+            }
+
             if (queryOffset.HasValue)
             {
-                query = query.Skip(queryOffset.Value);
+                result = result.Skip(queryOffset.Value).ToList();
             }
 
             if (queryLimit.HasValue)
             {
-                query = query.Take(queryLimit.Value);
+                result = result.Take(queryLimit.Value).ToList();
             }
 
-            return query.OrderBy(i => i.Ranking).ToList();
+            return result.OrderBy(i => i.Ranking).ToList();
         }
 
         public int GetTotalRaiders(int raidId)
