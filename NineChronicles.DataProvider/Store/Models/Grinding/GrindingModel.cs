@@ -1,11 +1,10 @@
-﻿namespace NineChronicles.DataProvider.Store.Models
+﻿namespace NineChronicles.DataProvider.Store.Models.Grinding
 {
     using System;
     using System.ComponentModel.DataAnnotations;
     using Microsoft.EntityFrameworkCore;
 
     [Index(nameof(Date))]
-
     public class GrindingModel
     {
         [Key]
@@ -28,6 +27,8 @@
         public int EquipmentLevel { get; set; }
 
         public decimal Crystal { get; set; }
+
+        public string? Materials { get; set; }
 
         public DateOnly Date { get; set; }
 
