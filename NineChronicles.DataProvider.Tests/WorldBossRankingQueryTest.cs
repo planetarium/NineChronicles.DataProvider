@@ -117,6 +117,18 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
             new PrivateKey().Address,
             new PrivateKey().Address,
             new PrivateKey().Address,
+            new PrivateKey().Address,
+            new PrivateKey().Address,
+            new PrivateKey().Address,
+        };
+        var totalScores = new List<int>
+        {
+            100,
+            100,
+            90,
+            90,
+            80,
+            70,
         };
         var targetAvatarAddress = avatarAddresses[0];
         var queryAddress = targetAvatarAddress.ToString();
@@ -130,24 +142,21 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
                 }}
             }}
         }}";
-        for (int idx = 0; idx < 2; idx++)
+        for (int i = 0; i < 6; i++)
         {
-            for (int i = 0; i < 3; i++)
-            {
-                var avatarAddress = avatarAddresses[i];
-                var model = new RaiderModel(
-                    idx + 1,
-                    i.ToString(),
-                    idx,
-                    idx + 1,
-                    i + 2,
-                    GameConfig.DefaultAvatarArmorId,
-                    i,
-                    avatarAddress.ToHex(),
-                    0
-                );
-                Context.Raiders.Add(model);
-            }
+            var avatarAddress = avatarAddresses[i];
+            var model = new RaiderModel(
+                1,
+                i.ToString(),
+                i + 1,
+                totalScores[i],
+                i + 2,
+                GameConfig.DefaultAvatarArmorId,
+                i,
+                avatarAddress.ToHex(),
+                0
+            );
+            Context.Raiders.Add(model);
         }
 
         var block = new BlockModel
@@ -169,15 +178,26 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
         Context.Blocks.Add(block);
 
         await Context.SaveChangesAsync();
+        Assert.Equal(6, Context.Raiders.Count());
         var result = await ExecuteAsync(query);
         var data = (Dictionary<string, object>)((Dictionary<string, object>)((ExecutionNode)result.Data).ToValue())["worldBossRanking"];
         Assert.Equal(1L, data["blockIndex"]);
         var models = (object[]) data["rankingInfo"];
-        Assert.Equal(3, models.Length);
-        for (int j = 0; j < 3; j++)
+        // season 1
+        Assert.Equal(6, models.Length);
+        var expectedRanking = new Dictionary<int, int>()
+        {
+            [0] = 2,
+            [1] = 2,
+            [2] = 4,
+            [3] = 4,
+            [4] = 5,
+            [5] = 6,
+        };
+        for (int j = 0; j < 6; j++)
         {
             var model = (Dictionary<string, object>)models[j];
-            Assert.Equal(3, model["ranking"]);
+            Assert.Equal(expectedRanking[j], model["ranking"]);
             Assert.Contains(new Address((string)model["address"]), avatarAddresses);
         }
     }

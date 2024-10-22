@@ -6,6 +6,7 @@ namespace NineChronicles.DataProvider.DataRendering
     using Libplanet.Types.Assets;
     using Nekoyume.Model.Arena;
     using Nekoyume.Model.EnumType;
+    using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
     using Nekoyume.Module;
     using Nekoyume.TableData;
@@ -51,6 +52,12 @@ namespace NineChronicles.DataProvider.DataRendering
             if (arenaData.ArenaType != ArenaType.OffSeason && winCount > 0)
             {
                 medalCount += winCount;
+                var materialSheet = outputStates.GetSheet<MaterialItemSheet>();
+                var medal = ItemFactory.CreateMaterial(materialSheet, arenaData.MedalId);
+                if (medal != null)
+                {
+                    medalCount += winCount;
+                }
             }
 
             var battleArenaModel = new BattleArenaModel()

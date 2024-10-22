@@ -288,7 +288,7 @@ namespace NineChronicles.DataProvider.Queries
                     var avatarAddress = context.GetArgument<Address>("avatarAddress");
 
                     // Use database block tip because sync db & store delay.
-                    var (sheet, runeSheet, rankingRewardSheet) = GetWorldBossSheets(Store, stateContext, raidId);
+                    var (sheet, runeSheet, rankingRewardSheet, materialItemSheet) = GetWorldBossSheets(Store, stateContext, raidId);
                     var blockIndex = Store.GetTip();
                     var bossRow = sheet.OrderedList!.First(r => r.Id == raidId);
                     if (bossRow.EndedBlockIndex <= blockIndex)
@@ -299,7 +299,7 @@ namespace NineChronicles.DataProvider.Queries
                         var raider = raiders.First(r => r.Address == avatarAddress.ToHex());
 
                         // calculate rewards.
-                        return GetWorldBossRankingReward(raidId, totalCount, raider, rankingRewardSheet, bossRow, runeSheet);
+                        return GetWorldBossRankingReward(raidId, totalCount, raider, rankingRewardSheet, bossRow, runeSheet, materialItemSheet);
                     }
 
                     throw new ExecutionError("can't receive");
@@ -333,7 +333,7 @@ namespace NineChronicles.DataProvider.Queries
 
                     // Check calculate state end.
                     // Use database block tip because sync db & store delay.
-                    var (sheet, runeSheet, rankingRewardSheet) = GetWorldBossSheets(Store, stateContext, raidId);
+                    var (sheet, runeSheet, rankingRewardSheet, materialItemSheet) = GetWorldBossSheets(Store, stateContext, raidId);
                     var blockIndex = Store.GetTip();
                     var bossRow = sheet.OrderedList!.First(r => r.Id == raidId);
                     if (bossRow.EndedBlockIndex <= blockIndex)
@@ -344,7 +344,7 @@ namespace NineChronicles.DataProvider.Queries
                         var result = new List<(WorldBossRankingModel, List<FungibleAssetValue>)>();
                         foreach (var raider in raiders)
                         {
-                            result.Add(GetWorldBossRankingReward(raidId, totalCount, raider, rankingRewardSheet, bossRow, runeSheet));
+                            result.Add(GetWorldBossRankingReward(raidId, totalCount, raider, rankingRewardSheet, bossRow, runeSheet, materialItemSheet));
                         }
 
                         return result;
@@ -390,15 +390,16 @@ namespace NineChronicles.DataProvider.Queries
                     ?? sheet.OrderedList?.LastOrDefault(r => r.BossId == bossId && r.RateMin <= rate && rate <= r.RateMax))!;
         }
 
-        private static (WorldBossListSheet, RuneSheet, WorldBossRankingRewardSheet) GetWorldBossSheets(MySqlStore store, StateContext stateContext, int raidId)
+        private static (WorldBossListSheet, RuneSheet, WorldBossRankingRewardSheet, MaterialItemSheet) GetWorldBossSheets(MySqlStore store, StateContext stateContext, int raidId)
         {
             if (store.MigrationExists(raidId))
             {
                 var worldBossListSheetAddress = Addresses.GetSheetAddress<WorldBossListSheet>();
                 var runeSheetAddress = Addresses.GetSheetAddress<RuneSheet>();
                 var rewardSheetAddress = Addresses.GetSheetAddress<WorldBossRankingRewardSheet>();
-                var values = stateContext.WorldState.GetLegacyStates(new[] { worldBossListSheetAddress, runeSheetAddress, rewardSheetAddress });
-                if (values[0] is Text wbs && values[1] is Text rs && values[2] is Text wrs)
+                var materialItemSheetAddress = Addresses.GetSheetAddress<MaterialItemSheet>();
+                var values = stateContext.WorldState.GetLegacyStates(new[] { worldBossListSheetAddress, runeSheetAddress, rewardSheetAddress, materialItemSheetAddress });
+                if (values[0] is Text wbs && values[1] is Text rs && values[2] is Text wrs && values[3] is Text ms)
                 {
                     var sheet = new WorldBossListSheet();
                     sheet.Set(wbs);
@@ -406,7 +407,9 @@ namespace NineChronicles.DataProvider.Queries
                     runeSheet.Set(rs);
                     var rankingRewardSheet = new WorldBossRankingRewardSheet();
                     rankingRewardSheet.Set(wrs);
-                    return (sheet, runeSheet, rankingRewardSheet);
+                    var materialItemSheet = new MaterialItemSheet();
+                    materialItemSheet.Set(ms);
+                    return (sheet, runeSheet, rankingRewardSheet, materialItemSheet);
                 }
             }
 
@@ -422,12 +425,12 @@ namespace NineChronicles.DataProvider.Queries
             return rate;
         }
 
-        private static (WorldBossRankingModel, List<FungibleAssetValue>) GetWorldBossRankingReward(int raidId, int totalCount, WorldBossRankingModel raider, WorldBossRankingRewardSheet rankingRewardSheet, WorldBossListSheet.Row bossRow, RuneSheet runeSheet)
+        private static (WorldBossRankingModel, List<FungibleAssetValue>) GetWorldBossRankingReward(int raidId, int totalCount, WorldBossRankingModel raider, WorldBossRankingRewardSheet rankingRewardSheet, WorldBossListSheet.Row bossRow, RuneSheet runeSheet, MaterialItemSheet materialItemSheet)
         {
             var ranking = raider.Ranking;
             var rate = GetRankingRate(raidId, ranking, totalCount);
             var row = FindRow(rankingRewardSheet, bossRow.BossId, ranking, rate);
-            return (raider, row.GetRewards(runeSheet));
+            return (raider, row.GetRewards(runeSheet, materialItemSheet));
         }
     }
 }
