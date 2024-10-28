@@ -4,15 +4,12 @@ namespace NineChronicles.DataProvider.DataRendering
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Libplanet.Types.Assets;
-    using Nekoyume.Arena;
-    using Nekoyume.Extensions;
     using Nekoyume.Model.Arena;
     using Nekoyume.Model.EnumType;
     using Nekoyume.Model.Item;
     using Nekoyume.Model.State;
     using Nekoyume.Module;
     using Nekoyume.TableData;
-    using Nekoyume.TableData.Rune;
     using NineChronicles.DataProvider.Store.Models;
 
     public static class BattleArenaData
@@ -44,21 +41,6 @@ namespace NineChronicles.DataProvider.DataRendering
                 signer,
                 ncgCurrency);
             var burntNCG = prevNCGBalance - outputNCGBalance;
-            int ticketCount = ticket;
-            var sheets = previousStates.GetSheets(
-                sheetTypes: new[]
-                {
-                    typeof(ArenaSheet),
-                    typeof(ItemRequirementSheet),
-                    typeof(EquipmentItemRecipeSheet),
-                    typeof(EquipmentItemSubRecipeSheetV2),
-                    typeof(EquipmentItemOptionSheet),
-                    typeof(MaterialItemSheet),
-                    typeof(CharacterSheet),
-                    typeof(CostumeStatSheet),
-                    typeof(RuneListSheet),
-                    typeof(RuneOptionSheet),
-                });
             var arenaSheet = outputStates.GetSheet<ArenaSheet>();
             var arenaData = arenaSheet.GetRoundByBlockIndex(blockIndex);
             var arenaInformationAdr =
@@ -67,10 +49,10 @@ namespace NineChronicles.DataProvider.DataRendering
             outputStates.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
             var winCount = currentArenaInformation.Win - previousArenaInformation.Win;
             var medalCount = 0;
-            if (arenaData.ArenaType != ArenaType.OffSeason &&
-                winCount > 0)
+            if (arenaData.ArenaType != ArenaType.OffSeason && winCount > 0)
             {
-                var materialSheet = sheets.GetSheet<MaterialItemSheet>();
+                medalCount += winCount;
+                var materialSheet = outputStates.GetSheet<MaterialItemSheet>();
                 var medal = ItemFactory.CreateMaterial(materialSheet, arenaData.MedalId);
                 if (medal != null)
                 {
@@ -88,7 +70,7 @@ namespace NineChronicles.DataProvider.DataRendering
                 EnemyAvatarAddress = enemyAvatarAddress.ToString(),
                 ChampionshipId = championshipId,
                 Round = round,
-                TicketCount = ticketCount,
+                TicketCount = ticket,
                 BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
                 Victory = currentArenaScore.Score > previousArenaScore.Score,
                 MedalCount = medalCount,
