@@ -163,7 +163,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             [Option(
                 "config-path",
                 Description = "The path of the appsettings JSON file.")]
-            string configPath = null
+            string configPath
         )
         {
             DateTimeOffset start = DateTimeOffset.UtcNow;
