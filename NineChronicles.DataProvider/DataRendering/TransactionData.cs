@@ -7,6 +7,7 @@
     using Libplanet.Types.Blocks;
     using Libplanet.Types.Tx;
     using Nekoyume.Action;
+    using Nekoyume.Action.Loader;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless;
 
@@ -17,7 +18,8 @@
             Transaction transaction
         )
         {
-            var actionType = NCActionUtils.ToAction(transaction.Actions.FirstOrDefault()!)
+            var actionLoader = new NCActionLoader();
+            var actionType = actionLoader.LoadAction(block.Index, transaction.Actions.FirstOrDefault()!)
                 .ToString()!.Split('.').LastOrDefault()!.Replace(">", string.Empty);
             var transactionModel = new TransactionModel
             {
