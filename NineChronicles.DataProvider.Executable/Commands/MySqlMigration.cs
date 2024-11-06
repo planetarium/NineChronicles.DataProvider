@@ -231,19 +231,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
             TrieStateStore baseStateStore =
                 new TrieStateStore(baseStateKeyValueStore);
 
-            // Setup block policy
-            IStagePolicy stagePolicy = new VolatileStagePolicy();
-            var blockPolicySource = new BlockPolicySource();
-            IBlockPolicy blockPolicy = blockPolicySource.GetPolicy();
-
-            // Setup base chain & new chain
-            Block genesis = _baseStore.GetBlock(gHash);
-            var blockChainStates = new BlockChainStates(_baseStore, baseStateStore);
-
-            // var actionEvaluator = new ActionEvaluator(
-            //     blockPolicy.PolicyActionsRegistry,
-            //     baseStateStore,
-            //     new NCActionLoader());
             IActionEvaluatorConfiguration GetActionEvaluatorConfiguration(IConfiguration configuration)
             {
                 if (!(configuration.GetValue<ActionEvaluatorType>("Type") is { } actionEvaluatorType))
@@ -328,6 +315,20 @@ namespace NineChronicles.DataProvider.Executable.Commands
             (_baseStore, iBaseStateStore, IKeyValueStore keyValueStore) = LoadStore(
                 storePath,
                 "rocksdb");
+
+            // Setup block policy
+            IStagePolicy stagePolicy = new VolatileStagePolicy();
+            var blockPolicySource = new BlockPolicySource();
+            IBlockPolicy blockPolicy = blockPolicySource.GetPolicy();
+
+            // Setup base chain & new chain
+            Block genesis = _baseStore.GetBlock(gHash);
+            var blockChainStates = new BlockChainStates(_baseStore, baseStateStore);
+
+            // var actionEvaluator = new ActionEvaluator(
+            //     blockPolicy.PolicyActionsRegistry,
+            //     baseStateStore,
+            //     new NCActionLoader());
             IActionEvaluator ae = BuildActionEvaluator(actionEvaluatorConfiguration, keyValueStore, new NCActionLoader(), blockPolicy, iBaseStateStore);
             _baseChain = new BlockChain(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, ae);
 
