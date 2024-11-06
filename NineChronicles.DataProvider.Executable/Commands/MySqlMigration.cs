@@ -262,59 +262,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 };
             }
 
-            (IStore, IStateStore, IKeyValueStore) LoadStore(string path, string type)
-            {
-                IStore store = null;
-                if (type == "rocksdb")
-                {
-                    try
-                    {
-                        Log.Debug("Migrating RocksDB.");
-                        var chainPath = Path.Combine(path, "chain");
-                        if (Directory.Exists(chainPath) &&
-                            RocksDBStore.MigrateChainDBFromColumnFamilies(chainPath))
-                        {
-                            Log.Debug("RocksDB is migrated.");
-                        }
-
-                        store = new RocksDBStore(
-                            path,
-                            maxTotalWalSize: 16 * 1024 * 1024,
-                            maxLogFileSize: 16 * 1024 * 1024,
-                            keepLogFileNum: 1
-                        );
-                        Log.Debug("RocksDB is initialized.");
-                    }
-                    catch (TypeInitializationException e)
-                    {
-                        Log.Error("RocksDB is not available. DefaultStore will be used. {0}", e);
-                    }
-                }
-                else if (type == "memory")
-                {
-                    store = new MemoryStore();
-                }
-                else
-                {
-                    var message = type is null
-                        ? "Storage Type is not specified"
-                        : $"Storage Type {type} is not supported";
-                    Log.Debug($"{message}. DefaultStore will be used.");
-                }
-
-                store ??= new DefaultStore(path, flush: false);
-
-                IKeyValueStore stateKeyValueStore = new RocksDBKeyValueStore(Path.Combine(path, "states"));
-                IStateStore stateStore = new TrieStateStore(stateKeyValueStore);
-                return (store, stateStore, stateKeyValueStore);
-            }
-
             var actionEvaluatorConfiguration =
                 GetActionEvaluatorConfiguration(config.GetSection("Headless").GetSection("ActionEvaluator"));
-            var iBaseStateStore = (IStateStore)baseStateStore;
-            (_baseStore, iBaseStateStore, IKeyValueStore keyValueStore) = LoadStore(
-                storePath,
-                "rocksdb");
 
             // Setup block policy
             IStagePolicy stagePolicy = new VolatileStagePolicy();
@@ -329,7 +278,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             //     blockPolicy.PolicyActionsRegistry,
             //     baseStateStore,
             //     new NCActionLoader());
-            IActionEvaluator ae = BuildActionEvaluator(actionEvaluatorConfiguration, keyValueStore, new NCActionLoader(), blockPolicy, iBaseStateStore);
+            IActionEvaluator ae = BuildActionEvaluator(actionEvaluatorConfiguration, baseStateKeyValueStore, new NCActionLoader(), blockPolicy, baseStateStore);
             _baseChain = new BlockChain(blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, ae);
 
             // Check offset and limit value based on chain height
