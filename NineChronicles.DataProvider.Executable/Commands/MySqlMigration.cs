@@ -374,7 +374,15 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         _blockTimeOffset = block.Timestamp;
                         foreach (var tx in block.Transactions)
                         {
-                            _txList.Add(TransactionData.GetTransactionInfo(block, tx));
+                            try
+                            {
+                                _txList.Add(TransactionData.GetTransactionInfo(block, tx));
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e.Message);
+                                Console.WriteLine(e.StackTrace);
+                            }
 
                             // check if address is already in _agentCheck
                             if (!_agentCheck.Contains(tx.Signer.ToString()))
