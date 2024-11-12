@@ -11,6 +11,7 @@ namespace NineChronicles.DataProvider.Store
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
     using NineChronicles.DataProvider.Store.Models.Crafting;
     using NineChronicles.DataProvider.Store.Models.Grinding;
+    using NineChronicles.DataProvider.Store.Models.Ranking;
     using Serilog;
 
     public partial class MySqlStore
