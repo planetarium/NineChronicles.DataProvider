@@ -5,6 +5,7 @@ namespace NineChronicles.DataProvider.Store
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
     using NineChronicles.DataProvider.Store.Models.Crafting;
     using NineChronicles.DataProvider.Store.Models.Grinding;
+    using NineChronicles.DataProvider.Store.Models.Ranking;
 
     public sealed class NineChroniclesContext : DbContext
     {
@@ -57,6 +58,9 @@ namespace NineChronicles.DataProvider.Store
 
         // Table for ranking avatars' weapon combat points
         public DbSet<EquipmentRankingWeaponModel>? EquipmentRankingWeapon { get; set; }
+
+        // Table for ranking avatars' aura combat points
+        public DbSet<EquipmentRankingAuraModel>? EquipmentRankingAura { get; set; }
 
         // Table for ranking avatars' total combat points
         public DbSet<AbilityRankingModel>? AbilityRanking { get; set; }
@@ -247,6 +251,7 @@ namespace NineChronicles.DataProvider.Store
             modelBuilder.Entity<EquipmentRankingNecklaceModel>().HasNoKey();
             modelBuilder.Entity<EquipmentRankingRingModel>().HasNoKey();
             modelBuilder.Entity<EquipmentRankingWeaponModel>().HasNoKey();
+            modelBuilder.Entity<EquipmentRankingAuraModel>().HasNoKey();
             modelBuilder.Entity<AbilityRankingModel>().HasNoKey();
             modelBuilder.Entity<BattleArenaRankingModel>().HasNoKey();
             modelBuilder.Entity<ShopMaterialModel>().HasNoKey();
