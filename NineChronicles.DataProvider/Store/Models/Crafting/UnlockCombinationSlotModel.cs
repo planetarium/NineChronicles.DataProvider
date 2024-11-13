@@ -1,5 +1,7 @@
 namespace NineChronicles.DataProvider.Store.Models.Crafting
 {
+    using NineChronicles.DataProvider.Store.Models.Base;
+
     public class UnlockCombinationSlotModel : BaseModel, IAvatar
     {
         public string? AvatarAddress { get; set; }
