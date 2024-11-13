@@ -1,4 +1,4 @@
-namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering.Summon
 {
     using System;
     using System.Linq;
@@ -6,7 +6,7 @@ namespace NineChronicles.DataProvider.DataRendering
     using Libplanet.Crypto;
     using Nekoyume.Model.Item;
     using Nekoyume.Module;
-    using NineChronicles.DataProvider.Store.Models;
+    using NineChronicles.DataProvider.Store.Models.Summon;
 
     public static class AuraSummonData
     {

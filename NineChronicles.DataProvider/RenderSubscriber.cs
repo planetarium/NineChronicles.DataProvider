@@ -28,7 +28,6 @@ namespace NineChronicles.DataProvider
     using Nekoyume.Module;
     using Nekoyume.TableData;
     using Nekoyume.TableData.Rune;
-    using Nekoyume.TableData.Summon;
     using NineChronicles.DataProvider.DataRendering;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
@@ -84,10 +83,6 @@ namespace NineChronicles.DataProvider
         private readonly List<TransferAssetModel> _transferAssetList = new List<TransferAssetModel>();
         private readonly List<RequestPledgeModel> _requestPledgeList = new List<RequestPledgeModel>();
         private readonly List<ApprovePledgeModel> _approvePledgeList = new List<ApprovePledgeModel>();
-        private readonly List<AuraSummonModel> _auraSummonList = new List<AuraSummonModel>();
-        private readonly List<AuraSummonFailModel> _auraSummonFailList = new List<AuraSummonFailModel>();
-        private readonly List<RuneSummonModel> _runeSummonList = new List<RuneSummonModel>();
-        private readonly List<RuneSummonFailModel> _runeSummonFailList = new List<RuneSummonFailModel>();
         private readonly List<Address> _agents;
         private readonly List<Address> _avatars;
         private readonly bool _render;
@@ -1491,124 +1486,6 @@ namespace NineChronicles.DataProvider
                 }
             });
 
-            _actionRenderer.EveryRender<AuraSummon>().Subscribe(ev =>
-            {
-                try
-                {
-                    if (ev.Action is { } auraSummon)
-                    {
-                        var start = DateTimeOffset.UtcNow;
-                        var inputState = new World(_blockChainStates.GetWorldState(ev.PreviousState));
-                        var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                        var avatarAddress = auraSummon.AvatarAddress;
-                        if (!_avatars.Contains(avatarAddress))
-                        {
-                            _avatars.Add(avatarAddress);
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
-                        }
-
-                        if (ev.Exception is null)
-                        {
-                            _auraSummonList.Add(AuraSummonData.GetAuraSummonInfo(
-                                inputState,
-                                outputState,
-                                ev.Signer,
-                                auraSummon.AvatarAddress,
-                                auraSummon.GroupId,
-                                auraSummon.SummonCount,
-                                auraSummon.Id,
-                                ev.BlockIndex,
-                                _blockTimeOffset
-                            ));
-                        }
-                        else
-                        {
-                            _auraSummonFailList.Add(AuraSummonData.GetAuraSummonFailInfo(
-                                inputState,
-                                outputState,
-                                ev.Signer,
-                                auraSummon.AvatarAddress,
-                                auraSummon.GroupId,
-                                auraSummon.SummonCount,
-                                auraSummon.Id,
-                                ev.BlockIndex,
-                                ev.Exception,
-                                _blockTimeOffset
-                            ));
-                        }
-
-                        var end = DateTimeOffset.UtcNow;
-                        Log.Debug("[DataProvider] Stored AuraSummon action in block #{BlockIndex}. Time taken: {Time} ms", ev.BlockIndex, (end - start).Milliseconds);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
-                }
-            });
-
-            _actionRenderer.EveryRender<RuneSummon>().Subscribe(ev =>
-            {
-                try
-                {
-                    if (ev.Action is { } runeSummon)
-                    {
-                        var start = DateTimeOffset.UtcNow;
-                        var outputState = new World(_blockChainStates.GetWorldState(ev.OutputState));
-                        var avatarAddress = runeSummon.AvatarAddress;
-                        if (!_avatars.Contains(avatarAddress))
-                        {
-                            _avatars.Add(avatarAddress);
-                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ev.Signer, avatarAddress, _blockTimeOffset, BattleType.Adventure));
-                        }
-
-                        if (ev.Exception is null)
-                        {
-                            var sheets = outputState.GetSheets(
-                                sheetTypes: new[]
-                                {
-                                    typeof(RuneSheet),
-                                    typeof(SummonSheet),
-                                });
-                            var runeSheet = sheets.GetSheet<RuneSheet>();
-                            var summonSheet = sheets.GetSheet<RuneSummonSheet>();
-                            _runeSummonList.Add(RuneSummonData.GetRuneSummonInfo(
-                                ev.Signer,
-                                runeSummon.AvatarAddress,
-                                runeSummon.GroupId,
-                                runeSummon.SummonCount,
-                                runeSummon.Id,
-                                ev.BlockIndex,
-                                runeSheet,
-                                summonSheet,
-                                new ReplayRandom(ev.RandomSeed),
-                                _blockTimeOffset
-                            ));
-                        }
-                        else
-                        {
-                            _runeSummonFailList.Add(RuneSummonData.GetRuneSummonFailInfo(
-                                ev.Signer,
-                                runeSummon.AvatarAddress,
-                                runeSummon.GroupId,
-                                runeSummon.SummonCount,
-                                runeSummon.Id,
-                                ev.BlockIndex,
-                                ev.Exception,
-                                _blockTimeOffset
-                            ));
-                        }
-
-                        var end = DateTimeOffset.UtcNow;
-                        Log.Debug("[DataProvider] Stored RuneSummon action in block #{BlockIndex}. Time taken: {Time} ms", ev.BlockIndex, (end - start).Milliseconds);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}", ex.Message, ex.StackTrace);
-                }
-            });
-
             _actionRenderer.EveryRender<ActivateCollection>().Subscribe(ev =>
             {
                 try
@@ -1666,6 +1543,8 @@ namespace NineChronicles.DataProvider
             _actionRenderer.EveryRender<ClaimGifts>().Subscribe(SubscribeClaimGifts);
 
             // Summon
+            _actionRenderer.EveryRender<AuraSummon>().Subscribe(SubscribeAuraSummon);
+            _actionRenderer.EveryRender<RuneSummon>().Subscribe(SubscribeRuneSummon);
             _actionRenderer.EveryRender<CostumeSummon>().Subscribe(SubscribeCostumeSummon);
 
             return Task.CompletedTask;
@@ -1698,6 +1577,10 @@ namespace NineChronicles.DataProvider
         partial void SubscribeClaimGifts(ActionEvaluation<ClaimGifts> evt);
 
         //// Summon
+        partial void SubscribeAuraSummon(ActionEvaluation<AuraSummon> evt);
+
+        partial void SubscribeRuneSummon(ActionEvaluation<RuneSummon> evt);
+
         partial void SubscribeCostumeSummon(ActionEvaluation<CostumeSummon> evt);
         /* Partial Methods */
 
