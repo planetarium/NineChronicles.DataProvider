@@ -3,6 +3,7 @@ namespace NineChronicles.DataProvider.Store
     using Microsoft.EntityFrameworkCore;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
+    using NineChronicles.DataProvider.Store.Models.Claim;
     using NineChronicles.DataProvider.Store.Models.Crafting;
     using NineChronicles.DataProvider.Store.Models.Grinding;
     using NineChronicles.DataProvider.Store.Models.Ranking;
@@ -224,6 +225,10 @@ namespace NineChronicles.DataProvider.Store
 
         public DbSet<AdventureBossClaimRewardModel> AdventureBossClaimReward => Set<AdventureBossClaimRewardModel>();
         /* Adventure Boss */
+
+        // Claim
+        public DbSet<ClaimGiftsModel> ClaimGifts => Set<ClaimGiftsModel>();
+        /* Claim */
 
         // CustomCraft
         public DbSet<CustomEquipmentCraftModel> CustomEquipmentCraft => Set<CustomEquipmentCraftModel>();

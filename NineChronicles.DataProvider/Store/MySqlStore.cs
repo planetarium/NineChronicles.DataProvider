@@ -9,6 +9,7 @@ namespace NineChronicles.DataProvider.Store
     using Nekoyume.Model.Item;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
+    using NineChronicles.DataProvider.Store.Models.Claim;
     using NineChronicles.DataProvider.Store.Models.Crafting;
     using NineChronicles.DataProvider.Store.Models.Grinding;
     using NineChronicles.DataProvider.Store.Models.Ranking;
@@ -1900,6 +1901,9 @@ namespace NineChronicles.DataProvider.Store
         public partial Task StoreGrindList(List<GrindingModel> grindingList);
 
         public partial Task StoreUnlockCombinationSlotList(List<UnlockCombinationSlotModel> unlockCombinationSlotList);
+
+        /* Claim */
+        public partial Task StoreClaimGiftList(List<ClaimGiftsModel> claimGiftList);
 
         public List<RaiderModel> GetRaiderList()
         {

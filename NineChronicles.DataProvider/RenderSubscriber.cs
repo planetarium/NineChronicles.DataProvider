@@ -30,7 +30,6 @@ namespace NineChronicles.DataProvider
     using Nekoyume.TableData.Rune;
     using Nekoyume.TableData.Summon;
     using NineChronicles.DataProvider.DataRendering;
-    using NineChronicles.DataProvider.DataRendering.Crafting;
     using NineChronicles.DataProvider.Store;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.Headless;
@@ -1663,6 +1662,9 @@ namespace NineChronicles.DataProvider
             // Grinding
             _actionRenderer.EveryRender<Grinding>().Subscribe(SubscribeGrinding);
 
+            // Claim
+            _actionRenderer.EveryRender<ClaimGifts>().Subscribe(SubscribeClaimGifts);
+
             return Task.CompletedTask;
         }
 
@@ -1679,7 +1681,7 @@ namespace NineChronicles.DataProvider
         partial void SubscribeAdventureBossClaim(ActionEvaluation<ClaimAdventureBossReward> evt);
 
         /** Adventure Boss **/
-        //// Cafting
+        //// Crafting
         partial void SubscribeRapidCombination(ActionEvaluation<RapidCombination> ev);
 
         partial void SubscribeCustomEquipmentCraft(ActionEvaluation<CustomEquipmentCraft> evt);
@@ -1688,6 +1690,9 @@ namespace NineChronicles.DataProvider
 
         //// Grinding
         partial void SubscribeGrinding(ActionEvaluation<Grinding> ev);
+
+        //// Claim
+        partial void SubscribeClaimGifts(ActionEvaluation<ClaimGifts> evt);
         /* Partial Methods */
 
         private void AddShopHistoryItem(ITradableItem orderItem, Address buyerAvatarAddress, PurchaseInfo purchaseInfo, int itemCount, long blockIndex)
@@ -1824,6 +1829,7 @@ namespace NineChronicles.DataProvider
                     StoreAdventureBossList();
                     StoreCraftingData();
                     StoreGrindList();
+                    StoreClaimGiftsList();
                 }),
             };
 
@@ -1874,6 +1880,7 @@ namespace NineChronicles.DataProvider
             ClearAdventureBossList();
             ClearCraftingList();
             ClearGrindList();
+            ClearClaimList();
 
             var end = DateTimeOffset.Now;
             long blockIndex = b.OldTip.Index;
