@@ -1571,7 +1571,7 @@ namespace NineChronicles.DataProvider
                                     typeof(SummonSheet),
                                 });
                             var runeSheet = sheets.GetSheet<RuneSheet>();
-                            var summonSheet = sheets.GetSheet<SummonSheet>();
+                            var summonSheet = sheets.GetSheet<RuneSummonSheet>();
                             _runeSummonList.Add(RuneSummonData.GetRuneSummonInfo(
                                 ev.Signer,
                                 runeSummon.AvatarAddress,
