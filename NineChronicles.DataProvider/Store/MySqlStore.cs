@@ -13,6 +13,7 @@ namespace NineChronicles.DataProvider.Store
     using NineChronicles.DataProvider.Store.Models.Crafting;
     using NineChronicles.DataProvider.Store.Models.Grinding;
     using NineChronicles.DataProvider.Store.Models.Ranking;
+    using NineChronicles.DataProvider.Store.Models.Summon;
     using Serilog;
 
     public partial class MySqlStore
@@ -1904,6 +1905,9 @@ namespace NineChronicles.DataProvider.Store
 
         /* Claim */
         public partial Task StoreClaimGiftList(List<ClaimGiftsModel> claimGiftList);
+
+        /* Summon */
+        public partial Task StoreCostumeSummonList(List<CostumeSummonModel> costumeSummonList);
 
         public List<RaiderModel> GetRaiderList()
         {

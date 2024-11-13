@@ -1665,6 +1665,9 @@ namespace NineChronicles.DataProvider
             // Claim
             _actionRenderer.EveryRender<ClaimGifts>().Subscribe(SubscribeClaimGifts);
 
+            // Summon
+            _actionRenderer.EveryRender<CostumeSummon>().Subscribe(SubscribeCostumeSummon);
+
             return Task.CompletedTask;
         }
 
@@ -1693,6 +1696,9 @@ namespace NineChronicles.DataProvider
 
         //// Claim
         partial void SubscribeClaimGifts(ActionEvaluation<ClaimGifts> evt);
+
+        //// Summon
+        partial void SubscribeCostumeSummon(ActionEvaluation<CostumeSummon> evt);
         /* Partial Methods */
 
         private void AddShopHistoryItem(ITradableItem orderItem, Address buyerAvatarAddress, PurchaseInfo purchaseInfo, int itemCount, long blockIndex)
@@ -1830,6 +1836,7 @@ namespace NineChronicles.DataProvider
                     StoreCraftingData();
                     StoreGrindList();
                     StoreClaimGiftsList();
+                    StoreSummonList();
                 }),
             };
 
@@ -1881,6 +1888,7 @@ namespace NineChronicles.DataProvider
             ClearCraftingList();
             ClearGrindList();
             ClearClaimList();
+            ClearSummonList();
 
             var end = DateTimeOffset.Now;
             long blockIndex = b.OldTip.Index;
