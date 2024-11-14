@@ -7,6 +7,7 @@ COPY ./NineChronicles.Headless/Lib9c/Directory.Build.props ./NineChronicles.Head
 COPY ./NineChronicles.Headless/Lib9c/Lib9c/Lib9c.csproj ./NineChronicles.Headless/Lib9c/Lib9c/
 COPY ./NineChronicles.Headless/Libplanet.Headless/Libplanet.Headless.csproj ./NineChronicles.Headless/Libplanet.Headless/
 COPY ./NineChronicles.Headless/NineChronicles.RPC.Shared/NineChronicles.RPC.Shared/NineChronicles.RPC.Shared.csproj ./NineChronicles.Headless/NineChronicles.RPC.Shared/NineChronicles.RPC.Shared/
+COPY ./NineChronicles.Headless/Directory.Build.props ./NineChronicles.Headless/
 COPY ./NineChronicles.Headless/NineChronicles.Headless/NineChronicles.Headless.csproj ./NineChronicles.Headless/NineChronicles.Headless/
 COPY ./NineChronicles.Headless/NineChronicles.Headless.Executable/NineChronicles.Headless.Executable.csproj ./NineChronicles.Headless/NineChronicles.Headless.Executable/
 COPY ./NineChronicles.DataProvider/NineChronicles.DataProvider.csproj ./NineChronicles.DataProvider/
