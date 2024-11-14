@@ -13,6 +13,7 @@ namespace NineChronicles.DataProvider.Store
     using NineChronicles.DataProvider.Store.Models.Crafting;
     using NineChronicles.DataProvider.Store.Models.Grinding;
     using NineChronicles.DataProvider.Store.Models.Ranking;
+    using NineChronicles.DataProvider.Store.Models.Summon;
     using Serilog;
 
     public partial class MySqlStore
@@ -1736,146 +1737,6 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
-        public void StoreAuraSummonList(List<AuraSummonModel> auraSummonList)
-        {
-            try
-            {
-                var tasks = new List<Task>();
-                foreach (var auraSummon in auraSummonList)
-                {
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
-                        if (ctx.AuraSummons.FindAsync(auraSummon.Id).Result is null)
-                        {
-                            await ctx.AuraSummons.AddRangeAsync(auraSummon);
-                            await ctx.SaveChangesAsync();
-                            await ctx.DisposeAsync();
-                        }
-                        else
-                        {
-                            await ctx.DisposeAsync();
-                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
-                            updateCtx.AuraSummons.UpdateRange(auraSummon);
-                            await updateCtx.SaveChangesAsync();
-                            await updateCtx.DisposeAsync();
-                        }
-                    }));
-                }
-
-                Task.WaitAll(tasks.ToArray());
-            }
-            catch (Exception e)
-            {
-                Log.Debug(e.Message);
-            }
-        }
-
-        public void StoreAuraSummonFailList(List<AuraSummonFailModel> auraSummonFailList)
-        {
-            try
-            {
-                var tasks = new List<Task>();
-                foreach (var auraSummonFail in auraSummonFailList)
-                {
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
-                        if (ctx.AuraSummonFails.FindAsync(auraSummonFail.Id).Result is null)
-                        {
-                            await ctx.AuraSummonFails.AddRangeAsync(auraSummonFail);
-                            await ctx.SaveChangesAsync();
-                            await ctx.DisposeAsync();
-                        }
-                        else
-                        {
-                            await ctx.DisposeAsync();
-                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
-                            updateCtx.AuraSummonFails.UpdateRange(auraSummonFail);
-                            await updateCtx.SaveChangesAsync();
-                            await updateCtx.DisposeAsync();
-                        }
-                    }));
-                }
-
-                Task.WaitAll(tasks.ToArray());
-            }
-            catch (Exception e)
-            {
-                Log.Debug(e.Message);
-            }
-        }
-
-        public void StoreRuneSummonList(List<RuneSummonModel> runeSummonList)
-        {
-            try
-            {
-                var tasks = new List<Task>();
-                foreach (var runeSummon in runeSummonList)
-                {
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
-                        if (ctx.AuraSummons.FindAsync(runeSummon.Id).Result is null)
-                        {
-                            await ctx.RuneSummons.AddRangeAsync(runeSummon);
-                            await ctx.SaveChangesAsync();
-                            await ctx.DisposeAsync();
-                        }
-                        else
-                        {
-                            await ctx.DisposeAsync();
-                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
-                            updateCtx.RuneSummons.UpdateRange(runeSummon);
-                            await updateCtx.SaveChangesAsync();
-                            await updateCtx.DisposeAsync();
-                        }
-                    }));
-                }
-
-                Task.WaitAll(tasks.ToArray());
-            }
-            catch (Exception e)
-            {
-                Log.Debug(e.Message);
-            }
-        }
-
-        public void StoreRuneSummonFailList(List<RuneSummonFailModel> runeSummonFailList)
-        {
-            try
-            {
-                var tasks = new List<Task>();
-                foreach (var runeSummonFail in runeSummonFailList)
-                {
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        await using NineChroniclesContext ctx = await _dbContextFactory.CreateDbContextAsync();
-                        if (ctx.RuneSummonFails.FindAsync(runeSummonFail.Id).Result is null)
-                        {
-                            await ctx.RuneSummonFails.AddRangeAsync(runeSummonFail);
-                            await ctx.SaveChangesAsync();
-                            await ctx.DisposeAsync();
-                        }
-                        else
-                        {
-                            await ctx.DisposeAsync();
-                            await using NineChroniclesContext updateCtx = await _dbContextFactory.CreateDbContextAsync();
-                            updateCtx.RuneSummonFails.UpdateRange(runeSummonFail);
-                            await updateCtx.SaveChangesAsync();
-                            await updateCtx.DisposeAsync();
-                        }
-                    }));
-                }
-
-                Task.WaitAll(tasks.ToArray());
-            }
-            catch (Exception e)
-            {
-                Log.Debug(e.Message);
-            }
-        }
-
         // Adventure Boss
         public partial Task StoreAdventureBossSeasonList(List<AdventureBossSeasonModel> seasonList);
 
@@ -1904,6 +1765,17 @@ namespace NineChronicles.DataProvider.Store
 
         /* Claim */
         public partial Task StoreClaimGiftList(List<ClaimGiftsModel> claimGiftList);
+
+        /* Summon */
+        public partial Task StoreAuraSummonList(List<AuraSummonModel> auraSummonList);
+
+        public partial Task StoreRuneSummonList(List<RuneSummonModel> runeSummonList);
+
+        public partial Task StoreAuraSummonFailList(List<AuraSummonFailModel> auraSummonFailList);
+
+        public partial Task StoreRuneSummonFailList(List<RuneSummonFailModel> runeSummonFailList);
+
+        public partial Task StoreCostumeSummonList(List<CostumeSummonModel> costumeSummonList);
 
         public List<RaiderModel> GetRaiderList()
         {

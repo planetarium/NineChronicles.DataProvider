@@ -1,14 +1,10 @@
-namespace NineChronicles.DataProvider.Store.Models
+namespace NineChronicles.DataProvider.Store.Models.Summon
 {
-    using System;
-    using System.ComponentModel.DataAnnotations;
-    using Microsoft.EntityFrameworkCore;
+    [Microsoft.EntityFrameworkCore.IndexAttribute(nameof(Date))]
 
-    [Index(nameof(Date))]
-
-    public class AuraSummonFailModel
+    public class RuneSummonFailModel
     {
-        [Key]
+        [System.ComponentModel.DataAnnotations.KeyAttribute]
         public string? Id { get; set; }
 
         public string? AgentAddress { get; set; }
@@ -27,8 +23,8 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public string? Exception { get; set; }
 
-        public DateOnly Date { get; set; }
+        public System.DateOnly Date { get; set; }
 
-        public DateTimeOffset TimeStamp { get; set; }
+        public System.DateTimeOffset TimeStamp { get; set; }
     }
 }
