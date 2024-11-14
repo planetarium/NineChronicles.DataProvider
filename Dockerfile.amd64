@@ -3,6 +3,7 @@ WORKDIR /app
 ARG COMMIT
 
 # Copy csproj and restore as distinct layers
+COPY ./NineChronicles.Headless/Lib9c/Directory.Build.props ./NineChronicles.Headless/Lib9c/
 COPY ./NineChronicles.Headless/Lib9c/Lib9c/Lib9c.csproj ./NineChronicles.Headless/Lib9c/Lib9c/
 COPY ./NineChronicles.Headless/Libplanet.Headless/Libplanet.Headless.csproj ./NineChronicles.Headless/Libplanet.Headless/
 COPY ./NineChronicles.Headless/NineChronicles.RPC.Shared/NineChronicles.RPC.Shared/NineChronicles.RPC.Shared.csproj ./NineChronicles.Headless/NineChronicles.RPC.Shared/NineChronicles.RPC.Shared/
