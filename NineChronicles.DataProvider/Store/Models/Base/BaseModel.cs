@@ -1,4 +1,4 @@
-namespace NineChronicles.DataProvider.Store.Models
+namespace NineChronicles.DataProvider.Store.Models.Base
 {
     using System;
     using System.ComponentModel.DataAnnotations;
