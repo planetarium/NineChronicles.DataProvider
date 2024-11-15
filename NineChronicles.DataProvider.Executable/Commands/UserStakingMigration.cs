@@ -227,11 +227,11 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         if (!agents.Contains(avatarState.agentAddress.ToString()))
                         {
                             agents.Add(avatarState.agentAddress.ToString());
-                            if (outputState.TryGetStakeStateV2(
+                            if (outputState.TryGetStakeState(
                                     avatarState.agentAddress,
                                     out var stakeStateV2))
                             {
-                                var stakeAddress = StakeStateV2.DeriveAddress(avatarState.agentAddress);
+                                var stakeAddress = StakeState.DeriveAddress(avatarState.agentAddress);
                                 var currency = outputState.GetGoldCurrency();
                                 var stakedBalance = outputState.GetBalance(stakeAddress, currency);
                                 _usBulkFile.WriteLine(

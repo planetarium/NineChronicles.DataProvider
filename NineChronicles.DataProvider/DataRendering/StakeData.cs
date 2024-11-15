@@ -20,12 +20,12 @@ namespace NineChronicles.DataProvider.DataRendering
         )
         {
             var currency = outputStates.GetGoldCurrency();
-            var stakeAddress = StakeStateV2.DeriveAddress(signer);
+            var stakeAddress = StakeState.DeriveAddress(signer);
             FungibleAssetValue previousAmount;
             FungibleAssetValue newAmount;
             long prevStakeStartBlockIndex;
             long newStakeStartBlockIndex;
-            if (previousStates.TryGetStakeStateV2(signer, out var prevStakeStateV2))
+            if (previousStates.TryGetStakeState(signer, out var prevStakeStateV2))
             {
                 previousAmount = previousStates.GetBalance(stakeAddress, currency);
                 prevStakeStartBlockIndex = prevStakeStateV2.StartedBlockIndex;
@@ -36,7 +36,7 @@ namespace NineChronicles.DataProvider.DataRendering
                 prevStakeStartBlockIndex = 0;
             }
 
-            if (outputStates.TryGetStakeStateV2(signer, out var stakeStateV2))
+            if (outputStates.TryGetStakeState(signer, out var stakeStateV2))
             {
                 newAmount = outputStates.GetBalance(stakeAddress, currency);
                 newStakeStartBlockIndex = stakeStateV2.StartedBlockIndex;

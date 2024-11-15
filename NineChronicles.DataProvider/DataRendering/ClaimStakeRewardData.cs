@@ -25,7 +25,7 @@ namespace NineChronicles.DataProvider.DataRendering
         {
             long claimStakeStartBlockIndex;
             long claimStakeEndBlockIndex;
-            if (previousStates.TryGetStakeStateV2(signer, out var prevStakeStateV2))
+            if (previousStates.TryGetStakeState(signer, out var prevStakeStateV2))
             {
                 claimStakeStartBlockIndex = prevStakeStateV2.StartedBlockIndex;
                 claimStakeEndBlockIndex = prevStakeStateV2.ReceivedBlockIndex;

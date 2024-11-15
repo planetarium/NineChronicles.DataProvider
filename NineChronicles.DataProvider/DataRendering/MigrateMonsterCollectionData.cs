@@ -19,7 +19,7 @@ namespace NineChronicles.DataProvider.DataRendering
             DateTimeOffset blockTime
         )
         {
-            outputStates.TryGetStakeState(signer, out StakeState stakeState);
+            outputStates.TryGetStakeState(signer, out Nekoyume.Model.Stake.StakeState stakeState);
             var agentState = previousStates.GetAgentState(signer);
             if (agentState is null)
             {

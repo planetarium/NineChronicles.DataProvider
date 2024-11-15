@@ -66,9 +66,9 @@ namespace NineChronicles.DataProvider.DataRendering.Grinding
 
             var currency = previousStates.GetGoldCurrency();
             var stakedAmount = 0 * currency;
-            if (previousStates.TryGetStakeStateV2(signer, out _))
+            if (previousStates.TryGetStakeState(signer, out _))
             {
-                var stakeAddr = StakeStateV2.DeriveAddress(signer);
+                var stakeAddr = StakeState.DeriveAddress(signer);
                 stakedAmount = previousStates.GetBalance(stakeAddr, currency);
             }
             else
