@@ -5,6 +5,7 @@ namespace NineChronicles.DataProvider.DataRendering
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Nekoyume.Action;
+    using Nekoyume.Model.Stake;
     using Nekoyume.Model.State;
     using Nekoyume.Module;
     using NineChronicles.DataProvider.Store.Models;
