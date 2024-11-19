@@ -2262,15 +2262,15 @@ namespace NineChronicles.DataProvider.Store
                 {
                     Ranking = 0,
                     AvatarName = i.AvatarName,
-                    HighScore = (int)i.HighScore,
-                    TotalScore = (int)i.TotalScore,
+                    HighScore = i.HighScore,
+                    TotalScore = i.TotalScore,
                     Cp = i.Cp,
                     Level = i.Level,
                     Address = i.Address,
                     IconId = i.IconId,
                 })
                 .ToList();
-            int? currentScore = null;
+            long? currentScore = null;
             var currentRank = 1;
             var trunk = new List<WorldBossRankingModel>();
             var result = new List<WorldBossRankingModel>();
