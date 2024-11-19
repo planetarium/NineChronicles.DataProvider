@@ -547,12 +547,12 @@ namespace NineChronicles.DataProvider.Store
             if (!isMimisbrunnr)
             {
                 query = ctx.Set<StageRankingModel>()
-                    .FromSqlRaw("SELECT * FROM data_provider.StageRanking ORDER BY Ranking ");
+                    .FromSqlRaw("SELECT * FROM StageRanking ORDER BY Ranking ");
             }
             else
             {
                 query = ctx.Set<StageRankingModel>()
-                    .FromSqlRaw("SELECT * FROM data_provider.StageRankingMimisbrunnr ORDER BY Ranking ");
+                    .FromSqlRaw("SELECT * FROM StageRankingMimisbrunnr ORDER BY Ranking ");
             }
 
             if (avatarAddress is { } avatarAddressNotNull)
