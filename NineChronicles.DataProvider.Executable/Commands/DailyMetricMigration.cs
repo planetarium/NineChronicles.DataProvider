@@ -726,6 +726,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     FieldTerminator = ";",
                     Local = true,
                     ConflictOption = MySqlBulkLoaderConflictOption.Ignore,
+                    NumberOfLinesToSkip = linesToSkip ?? 0,
                 };
 
                 loader.Load();
@@ -768,7 +769,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 }
 
                 // Step 2: Use BulkInsert method to load data into the database
-                await Task.Run(() => BulkInsert(tableName, tempFilePath));
+                await Task.Run(() => BulkInsertWithSwapAsync(tableName, tempFilePath, null));
             }
             catch (Exception ex)
             {
@@ -820,7 +821,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 }
 
                 // Step 2: Use BulkInsert method to load data into the database
-                await Task.Run(() => BulkInsert(tableName, tempFilePath, 1));
+                await Task.Run(() => BulkInsertWithSwapAsync(tableName, tempFilePath, 1));
             }
             catch (Exception ex)
             {
@@ -845,6 +846,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                 try
                 {
+                    DateTimeOffset start = DateTimeOffset.UtcNow;
                     Console.WriteLine("Fetching Ability Rankings data...");
 
                     // Fetch data without ordering
@@ -890,6 +892,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     // Perform bulk insert into AbilityRanking table
                     Console.WriteLine("Inserting Ability Rankings into the database...");
                     await InsertAbilityRankingsBulkAsync(rankings, "AbilityRanking");
+                    DateTimeOffset end = DateTimeOffset.UtcNow;
+                    Console.WriteLine("Inserting Ability Rankings into the database completed. Time Elapsed: {0}", end - start);
                 }
                 catch (Exception ex)
                 {
@@ -907,6 +911,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
             try
             {
+                DateTimeOffset start = DateTimeOffset.UtcNow;
+
                 // Use separate connections for each query
                 var consumablesTask = Task.Run(async () =>
                 {
@@ -970,7 +976,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     })
                     .ToList();
 
+                Console.WriteLine("Inserting Craft Rankings into the database...");
                 await InsertCraftRankingsBulkAsync(rankings, "CraftRankings");
+                DateTimeOffset end = DateTimeOffset.UtcNow;
+                Console.WriteLine("Inserting Craft Rankings into the database completed. Time Elapsed: {0}", end - start);
             }
             catch (Exception ex)
             {
@@ -983,6 +992,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
         {
             using (var newConnection = new MySqlConnection(_connectionString))
             {
+                DateTimeOffset start = DateTimeOffset.UtcNow;
                 await newConnection.OpenAsync();
 
                 // Fetch raw data
@@ -1011,7 +1021,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     })
                     .ToList();
 
+                Console.WriteLine("Inserting Stage Rankings into the database...");
                 await InsertStageRankingsBulkAsync(rankings, "StageRanking");
+                DateTimeOffset end = DateTimeOffset.UtcNow;
+                Console.WriteLine("Inserting Stage Rankings into the database completed. Time Elapsed: {0}", end - start);
             }
         }
 
@@ -1019,6 +1032,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
         {
             using (var newConnection = new MySqlConnection(_connectionString))
             {
+                DateTimeOffset start = DateTimeOffset.UtcNow;
                 await newConnection.OpenAsync();
 
                 var equipmentData = (await newConnection.QueryAsync<EquipmentData>(@"
@@ -1042,7 +1056,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Grimoire").ToList(), "EquipmentRankingGrimoire"))
                 };
 
+                Console.WriteLine("Inserting Equipment Rankings into the database...");
                 await Task.WhenAll(tasks);
+                DateTimeOffset end = DateTimeOffset.UtcNow;
+                Console.WriteLine("Inserting Equipment Rankings into the database completed. Time Elapsed: {0}", end - start);
             }
         }
 
@@ -1113,7 +1130,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 }
 
                 // Perform the bulk insert
-                await Task.Run(() => BulkInsert(tableName, tempFilePath));
+                await Task.Run(() => BulkInsertWithSwapAsync(tableName, tempFilePath, null));
             }
             catch (Exception ex)
             {
@@ -1158,7 +1175,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 }
 
                 // Perform the bulk insert
-                await Task.Run(() => BulkInsert(tableName, tempFilePath, 1));
+                await Task.Run(() => BulkInsertWithSwapAsync(tableName, tempFilePath, 1));
             }
             catch (Exception ex)
             {
@@ -1171,6 +1188,69 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 if (File.Exists(tempFilePath))
                 {
                     File.Delete(tempFilePath);
+                }
+            }
+        }
+
+        private async Task BulkInsertWithSwapAsync(string originalTableName, string filePath, int? linesToSkip)
+        {
+            string tempTableName = $"{originalTableName}_Temp";
+            string backupTableName = $"{originalTableName}_Backup";
+
+            using (MySqlConnection connection = new MySqlConnection(_connectionString))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+
+                    // Step 1: Create a temporary table
+                    string createTempTable = $"CREATE TABLE IF NOT EXISTS `{tempTableName}` LIKE `{originalTableName}`;";
+                    using (var cmd = new MySqlCommand(createTempTable, connection))
+                    {
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    // Step 2: Bulk load data into the temporary table
+                    Console.WriteLine($"Start bulk insert to {tempTableName}.");
+                    MySqlBulkLoader loader = new MySqlBulkLoader(connection)
+                    {
+                        TableName = tempTableName,
+                        FileName = filePath,
+                        Timeout = 0,
+                        LineTerminator = "\n",
+                        FieldTerminator = ";",
+                        Local = true,
+                        ConflictOption = MySqlBulkLoaderConflictOption.Ignore,
+                        NumberOfLinesToSkip = linesToSkip ?? 0,
+                    };
+                    await Task.Run(() => loader.Load());
+                    Console.WriteLine($"Bulk load to {tempTableName} complete.");
+
+                    // Step 3: Rename tables to swap
+                    string swapTables = $@"
+                        RENAME TABLE `{originalTableName}` TO `{backupTableName}`,
+                                     `{tempTableName}` TO `{originalTableName}`;
+                    ";
+                    using (var cmd = new MySqlCommand(swapTables, connection))
+                    {
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    Console.WriteLine($"Swapped {originalTableName} with {tempTableName}.");
+
+                    // Step 4: Drop the backup table
+                    string dropBackupTable = $"DROP TABLE `{backupTableName}`;";
+                    using (var cmd = new MySqlCommand(dropBackupTable, connection))
+                    {
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    Console.WriteLine($"Dropped backup table {backupTableName}.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error during BulkInsertWithSwapAsync: {ex.Message}");
+                    throw;
                 }
             }
         }
