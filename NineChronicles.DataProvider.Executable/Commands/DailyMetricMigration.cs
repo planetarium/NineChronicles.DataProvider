@@ -759,6 +759,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 DateTimeOffset end = DateTimeOffset.Now;
                 Console.WriteLine("Time elapsed: {0}", end - start);
 
+                // Truncate the target table asynchronously
+                using (var newConnection = new MySqlConnection(_connectionString))
+                {
+                    await newConnection.OpenAsync();
+                    var truncateQuery = $"TRUNCATE TABLE {tableName};";
+                    await newConnection.ExecuteAsync(truncateQuery);
+                }
+
                 // Step 2: Use BulkInsert method to load data into the database
                 await Task.Run(() => BulkInsert(tableName, tempFilePath));
             }
@@ -790,6 +798,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 // Step 1: Write rankings to the temporary file
                 using (var writer = new StreamWriter(tempFilePath, false, Encoding.UTF8))
                 {
+                    await writer.WriteLineAsync(string.Empty);
                     foreach (var ranking in rankings)
                     {
                         await writer.WriteLineAsync($"{ranking.Ranking.ToString()};{ranking.ClearedStageId};{ranking.AvatarAddress};{ranking.AgentAddress};" +
@@ -801,6 +810,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 Console.WriteLine("Write stage rankings to the temporary file complete.");
                 DateTimeOffset end = DateTimeOffset.Now;
                 Console.WriteLine("Time elapsed: {0}", end - start);
+
+                // Truncate the target table asynchronously
+                using (var newConnection = new MySqlConnection(_connectionString))
+                {
+                    await newConnection.OpenAsync();
+                    var truncateQuery = $"TRUNCATE TABLE {tableName};";
+                    await newConnection.ExecuteAsync(truncateQuery);
+                }
 
                 // Step 2: Use BulkInsert method to load data into the database
                 await Task.Run(() => BulkInsert(tableName, tempFilePath, 1));
@@ -833,7 +850,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     // Fetch data without ordering
                     var abilityData = (await connection.QueryAsync<AbilityRankingData>(@"
                         SELECT 
-                            Address AS AvatarAddress,
+                            Address,
                             AgentAddress,
                             Name,
                             TitleId,
@@ -844,6 +861,12 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                     Console.WriteLine($"Fetched {abilityData.Count} records for Ability Rankings.");
 
+                    // Sanitize data: Remove ZWNBSP and trim strings
+                    foreach (var item in abilityData)
+                    {
+                        item.Address = RemoveZeroWidthSpaces(item.Address?.Trim());
+                    }
+
                     // Perform in-memory sorting by Cp descending
                     var sortedData = abilityData
                         .OrderByDescending(item => item.Cp) // Sort by Cp in descending order
@@ -853,7 +876,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     var rankings = sortedData
                         .Select((item, index) => new AbilityRankingModel
                         {
-                            AvatarAddress = item.AvatarAddress,
+                            AvatarAddress = item.Address,
                             AgentAddress = item.AgentAddress,
                             Name = item.Name,
                             TitleId = item.TitleId,
@@ -867,7 +890,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     // Perform bulk insert into AbilityRanking table
                     Console.WriteLine("Inserting Ability Rankings into the database...");
                     await InsertAbilityRankingsBulkAsync(rankings, "AbilityRanking");
-                    Console.WriteLine("Ability Rankings processed successfully.");
                 }
                 catch (Exception ex)
                 {
@@ -1118,6 +1140,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 // Write rankings to the temporary file
                 using (var writer = new StreamWriter(tempFilePath, false, Encoding.UTF8))
                 {
+                    await writer.WriteLineAsync(string.Empty);
                     foreach (var ranking in rankings)
                     {
                         await writer.WriteLineAsync($"{ranking.AvatarAddress};{ranking.AgentAddress};{ranking.Name};" +
@@ -1126,8 +1149,16 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     }
                 }
 
+                // Truncate the target table asynchronously
+                using (var newConnection = new MySqlConnection(_connectionString))
+                {
+                    await newConnection.OpenAsync();
+                    var truncateQuery = $"TRUNCATE TABLE {tableName};";
+                    await newConnection.ExecuteAsync(truncateQuery);
+                }
+
                 // Perform the bulk insert
-                await Task.Run(() => BulkInsert(tableName, tempFilePath));
+                await Task.Run(() => BulkInsert(tableName, tempFilePath, 1));
             }
             catch (Exception ex)
             {
@@ -1142,6 +1173,22 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     File.Delete(tempFilePath);
                 }
             }
+        }
+
+        private string RemoveZeroWidthSpaces(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return input;
+            }
+
+            var bom = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
+            if (input.StartsWith(bom, StringComparison.Ordinal))
+            {
+                input = input.Substring(bom.Length);
+            }
+
+            return input;
         }
 
         // Data class for raw stage data
@@ -1216,7 +1263,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
         private class AbilityRankingData
         {
-            public string AvatarAddress { get; set; } = string.Empty;
+            public string Address { get; set; } = string.Empty;
 
             public string AgentAddress { get; set; } = string.Empty;
 
