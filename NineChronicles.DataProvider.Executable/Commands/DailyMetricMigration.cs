@@ -636,6 +636,13 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 Console.WriteLine("Starting all ranking computations asynchronously...");
 
                 // Define tasks for each ranking computation
+                var abilityRankingTask = Task.Run(async () =>
+                {
+                    Console.WriteLine("Fetching and processing Ability Rankings...");
+                    await ProcessAbilityRankingsAsync();
+                    Console.WriteLine("Ability Rankings processed successfully.");
+                });
+
                 var craftRankingTask = Task.Run(async () =>
                 {
                     Console.WriteLine("Fetching and processing Craft Rankings...");
@@ -658,7 +665,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 });
 
                 // Await all tasks to run in parallel
-                await Task.WhenAll(craftRankingTask, stageRankingTask, equipmentRankingTask);
+                await Task.WhenAll(craftRankingTask, stageRankingTask, equipmentRankingTask, abilityRankingTask);
 
                 var end = DateTimeOffset.Now;
                 Console.WriteLine("All rankings processed successfully. Time Elapsed: {0}", end - start);
@@ -809,6 +816,63 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 if (File.Exists(tempFilePath))
                 {
                     File.Delete(tempFilePath);
+                }
+            }
+        }
+
+        private async Task ProcessAbilityRankingsAsync()
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+
+                try
+                {
+                    Console.WriteLine("Fetching Ability Rankings data...");
+
+                    // Fetch data without ordering
+                    var abilityData = (await connection.QueryAsync<AbilityRankingData>(@"
+                        SELECT 
+                            Address AS AvatarAddress,
+                            AgentAddress,
+                            Name,
+                            TitleId,
+                            AvatarLevel,
+                            ArmorId,
+                            Cp
+                        FROM Avatars")).ToList();
+
+                    Console.WriteLine($"Fetched {abilityData.Count} records for Ability Rankings.");
+
+                    // Perform in-memory sorting by Cp descending
+                    var sortedData = abilityData
+                        .OrderByDescending(item => item.Cp) // Sort by Cp in descending order
+                        .ToList();
+
+                    // Compute rankings based on sorted order
+                    var rankings = sortedData
+                        .Select((item, index) => new AbilityRankingModel
+                        {
+                            AvatarAddress = item.AvatarAddress,
+                            AgentAddress = item.AgentAddress,
+                            Name = item.Name,
+                            TitleId = item.TitleId,
+                            AvatarLevel = item.AvatarLevel,
+                            ArmorId = item.ArmorId,
+                            Cp = item.Cp,
+                            Ranking = index + 1 // Assign rank based on descending order of Cp
+                        })
+                        .ToList();
+
+                    // Perform bulk insert into AbilityRanking table
+                    Console.WriteLine("Inserting Ability Rankings into the database...");
+                    await InsertAbilityRankingsBulkAsync(rankings, "AbilityRanking");
+                    Console.WriteLine("Ability Rankings processed successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error processing Ability Rankings: {ex.Message}");
+                    Console.WriteLine(ex.StackTrace);
                 }
             }
         }
@@ -1044,6 +1108,42 @@ namespace NineChronicles.DataProvider.Executable.Commands
             }
         }
 
+        // Method to perform bulk insert for Ability Rankings
+        private async Task InsertAbilityRankingsBulkAsync(List<AbilityRankingModel> rankings, string tableName)
+        {
+            string tempFilePath = Path.GetTempFileName();
+
+            try
+            {
+                // Write rankings to the temporary file
+                using (var writer = new StreamWriter(tempFilePath, false, Encoding.UTF8))
+                {
+                    foreach (var ranking in rankings)
+                    {
+                        await writer.WriteLineAsync($"{ranking.AvatarAddress};{ranking.AgentAddress};{ranking.Name};" +
+                                                    $"{ranking.AvatarLevel};{ranking.TitleId};{ranking.ArmorId};" +
+                                                    $"{ranking.Cp};{ranking.Ranking}");
+                    }
+                }
+
+                // Perform the bulk insert
+                await Task.Run(() => BulkInsert(tableName, tempFilePath));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during bulk insert into {tableName}: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+            }
+            finally
+            {
+                // Clean up temporary file
+                if (File.Exists(tempFilePath))
+                {
+                    File.Delete(tempFilePath);
+                }
+            }
+        }
+
         // Data class for raw stage data
         private class StageData
         {
@@ -1112,6 +1212,42 @@ namespace NineChronicles.DataProvider.Executable.Commands
             public int TitleId { get; set; } = 0;
 
             public int ArmorId { get; set; } = 0;
+        }
+
+        private class AbilityRankingData
+        {
+            public string AvatarAddress { get; set; } = string.Empty;
+
+            public string AgentAddress { get; set; } = string.Empty;
+
+            public string Name { get; set; } = string.Empty;
+
+            public int TitleId { get; set; } = 0;
+
+            public int AvatarLevel { get; set; } = 0;
+
+            public int ArmorId { get; set; } = 0;
+
+            public int Cp { get; set; } = 0;
+        }
+
+        private class AbilityRankingModel
+        {
+            public string AvatarAddress { get; set; } = string.Empty;
+
+            public string AgentAddress { get; set; } = string.Empty;
+
+            public string Name { get; set; } = string.Empty;
+
+            public int TitleId { get; set; } = 0;
+
+            public int AvatarLevel { get; set; } = 0;
+
+            public int ArmorId { get; set; } = 0;
+
+            public int Cp { get; set; } = 0;
+
+            public int Ranking { get; set; } = 0;
         }
     }
 }
