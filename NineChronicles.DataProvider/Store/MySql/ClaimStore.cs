@@ -28,6 +28,9 @@ namespace NineChronicles.DataProvider.Store
                         await ctx.ClaimGifts.AddAsync(claim);
                     }
                 }
+
+                await ctx.SaveChangesAsync();
+                Log.Debug($"[ClaimGifts] {claimGiftList.Count} ClaimGifts saved.");
             }
             catch (Exception e)
             {
