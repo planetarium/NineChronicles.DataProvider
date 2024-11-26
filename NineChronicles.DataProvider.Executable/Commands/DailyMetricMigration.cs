@@ -5,6 +5,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using System.IO;
     using System.Linq;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using Cocona;
     using Dapper;
@@ -633,42 +634,62 @@ namespace NineChronicles.DataProvider.Executable.Commands
             try
             {
                 start = DateTimeOffset.Now;
-                Console.WriteLine("Starting all ranking computations asynchronously...");
+                Console.WriteLine("Starting all ranking computations with limited concurrency...");
 
                 // Define tasks for each ranking computation
-                var abilityRankingTask = Task.Run(async () =>
+                var rankingTasks = new List<Func<Task>>
                 {
-                    Console.WriteLine("Fetching and processing Ability Rankings...");
-                    await ProcessAbilityRankingsAsync();
-                    Console.WriteLine("Ability Rankings processed successfully.");
-                });
+                    async () =>
+                    {
+                        Console.WriteLine("Fetching and processing Ability Rankings...");
+                        await ProcessAbilityRankingsAsync();
+                        Console.WriteLine("Ability Rankings processed successfully.");
+                    },
+                    async () =>
+                    {
+                        Console.WriteLine("Fetching and processing Craft Rankings...");
+                        await ProcessCraftRankingsAsync();
+                        Console.WriteLine("Craft Rankings processed successfully.");
+                    },
+                    async () =>
+                    {
+                        Console.WriteLine("Fetching and processing Stage Rankings...");
+                        await ProcessStageRankingsAsync();
+                        Console.WriteLine("Stage Rankings processed successfully.");
+                    },
+                    async () =>
+                    {
+                        Console.WriteLine("Fetching and processing Equipment Rankings...");
+                        await ProcessAllEquipmentRankingsAsync();
+                        Console.WriteLine("Equipment Rankings processed successfully.");
+                    }
+                };
 
-                var craftRankingTask = Task.Run(async () =>
+                // Limit concurrency to 2 tasks at a time
+                var semaphore = new SemaphoreSlim(2); // Allow 2 tasks at a time
+                var tasks = new List<Task>();
+
+                foreach (var rankingTask in rankingTasks)
                 {
-                    Console.WriteLine("Fetching and processing Craft Rankings...");
-                    await ProcessCraftRankingsAsync();
-                    Console.WriteLine("Craft Rankings processed successfully.");
-                });
+                    await semaphore.WaitAsync(); // Acquire the semaphore
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await rankingTask();
+                        }
+                        finally
+                        {
+                            semaphore.Release(); // Release the semaphore
+                        }
+                    }));
+                }
 
-                var stageRankingTask = Task.Run(async () =>
-                {
-                    Console.WriteLine("Fetching and processing Stage Rankings...");
-                    await ProcessStageRankingsAsync();
-                    Console.WriteLine("Stage Rankings processed successfully.");
-                });
+                // Await all tasks
+                await Task.WhenAll(tasks);
 
-                var equipmentRankingTask = Task.Run(async () =>
-                {
-                    Console.WriteLine("Fetching and processing Equipment Rankings...");
-                    await ProcessAllEquipmentRankingsAsync();
-                    Console.WriteLine("Equipment Rankings processed successfully.");
-                });
-
-                // Await all tasks to run in parallel
-                await Task.WhenAll(craftRankingTask, stageRankingTask, equipmentRankingTask, abilityRankingTask);
-
-                var end = DateTimeOffset.Now;
-                Console.WriteLine("All rankings processed successfully. Time Elapsed: {0}", end - start);
+                DateTimeOffset end = DateTimeOffset.Now;
+                Console.WriteLine("All rankings processed successfully with limited concurrency. Time Elapsed: {0}", end - start);
             }
             catch (Exception ex)
             {
