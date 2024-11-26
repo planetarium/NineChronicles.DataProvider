@@ -1064,21 +1064,18 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     LEFT JOIN Avatars a ON e.AvatarAddress = a.Address
                     ORDER BY e.Cp DESC, e.Level DESC")).ToList();
 
-                // Process rankings asynchronously for all subtypes
-                var tasks = new List<Task>
-                {
-                    Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData, "EquipmentRanking")),
-                    Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Armor").ToList(), "EquipmentRankingArmor")),
-                    Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Ring").ToList(), "EquipmentRankingRing")),
-                    Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Belt").ToList(), "EquipmentRankingBelt")),
-                    Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Necklace").ToList(), "EquipmentRankingNecklace")),
-                    Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Weapon").ToList(), "EquipmentRankingWeapon")),
-                    Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Aura").ToList(), "EquipmentRankingAura")),
-                    Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Grimoire").ToList(), "EquipmentRankingGrimoire"))
-                };
-
                 Console.WriteLine("Inserting Equipment Rankings into the database...");
-                await Task.WhenAll(tasks);
+
+                // Process each equipment ranking type sequentially
+                await ProcessEquipmentRankingsAsync(equipmentData, "EquipmentRanking"); // All Equipment
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Armor").ToList(), "EquipmentRankingArmor");
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Ring").ToList(), "EquipmentRankingRing");
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Belt").ToList(), "EquipmentRankingBelt");
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Necklace").ToList(), "EquipmentRankingNecklace");
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Weapon").ToList(), "EquipmentRankingWeapon");
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Aura").ToList(), "EquipmentRankingAura");
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Grimoire").ToList(), "EquipmentRankingGrimoire");
+
                 DateTimeOffset end = DateTimeOffset.UtcNow;
                 Console.WriteLine("Inserting Equipment Rankings into the database completed. Time Elapsed: {0}", end - start);
             }
