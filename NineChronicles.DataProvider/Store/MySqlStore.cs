@@ -2195,16 +2195,20 @@ namespace NineChronicles.DataProvider.Store
             int? limit = null)
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-            var query = ctx.Set<AbilityRankingModel>()
-                .FromSqlRaw("SELECT `Address` as `AvatarAddress`, `AgentAddress`, `Name`, `TitleId`, `AvatarLevel`, `ArmorId`, `Cp`, " +
-                            "row_number() over(ORDER BY `Cp` DESC) `Ranking` " +
-                            "FROM `Avatars` ");
 
+            // Query the AbilityRanking table ordered by Ranking in ascending order
+            var query = ctx.Set<AbilityRankingModel>()
+                .FromSqlRaw("SELECT `AvatarAddress`, `AgentAddress`, `Name`, `TitleId`, `AvatarLevel`, `ArmorId`, `Cp`, `Ranking` " +
+                            "FROM `AbilityRanking` " +
+                            "ORDER BY `Ranking` ASC");
+
+            // Apply filter for a specific AvatarAddress if provided
             if (avatarAddress is { } avatarAddressNotNull)
             {
                 query = query.Where(s => s.AvatarAddress == avatarAddressNotNull.ToString());
             }
 
+            // Apply limit if specified
             if (limit is { } limitNotNull)
             {
                 query = query.Take(limitNotNull);
