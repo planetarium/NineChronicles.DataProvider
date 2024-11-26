@@ -666,7 +666,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 };
 
                 // Limit concurrency to 2 tasks at a time
-                var semaphore = new SemaphoreSlim(2); // Allow 2 tasks at a time
+                var semaphore = new SemaphoreSlim(1); // Allow 2 tasks at a time
                 var tasks = new List<Task>();
 
                 foreach (var rankingTask in rankingTasks)
