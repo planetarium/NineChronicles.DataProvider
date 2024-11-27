@@ -1,7 +1,7 @@
 ﻿namespace NineChronicles.DataProvider.GraphTypes
 {
     using GraphQL.Types;
-    using NineChronicles.DataProvider.Store.Models;
+    using NineChronicles.DataProvider.Store.Models.Ranking;
 
     public class EquipmentRankingType : ObjectGraphType<EquipmentRankingModel>
     {

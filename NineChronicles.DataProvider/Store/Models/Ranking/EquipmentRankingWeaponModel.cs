@@ -1,8 +1,8 @@
-﻿namespace NineChronicles.DataProvider.Store.Models
+﻿namespace NineChronicles.DataProvider.Store.Models.Ranking
 {
     using System.ComponentModel.DataAnnotations;
 
-    public class EquipmentRankingNecklaceModel
+    public class EquipmentRankingWeaponModel
     {
         [Key]
         public string? ItemId { get; set; }

@@ -9,8 +9,10 @@ namespace NineChronicles.DataProvider.Store
     using Nekoyume.Model.Item;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
+    using NineChronicles.DataProvider.Store.Models.Claim;
     using NineChronicles.DataProvider.Store.Models.Crafting;
     using NineChronicles.DataProvider.Store.Models.Grinding;
+    using NineChronicles.DataProvider.Store.Models.Ranking;
     using Serilog;
 
     public partial class MySqlStore
@@ -545,12 +547,12 @@ namespace NineChronicles.DataProvider.Store
             if (!isMimisbrunnr)
             {
                 query = ctx.Set<StageRankingModel>()
-                    .FromSqlRaw("SELECT * FROM data_provider.StageRanking ORDER BY Ranking ");
+                    .FromSqlRaw("SELECT * FROM StageRanking ORDER BY Ranking ");
             }
             else
             {
                 query = ctx.Set<StageRankingModel>()
-                    .FromSqlRaw("SELECT * FROM data_provider.StageRankingMimisbrunnr ORDER BY Ranking ");
+                    .FromSqlRaw("SELECT * FROM StageRankingMimisbrunnr ORDER BY Ranking ");
             }
 
             if (avatarAddress is { } avatarAddressNotNull)
@@ -1900,6 +1902,9 @@ namespace NineChronicles.DataProvider.Store
 
         public partial Task StoreUnlockCombinationSlotList(List<UnlockCombinationSlotModel> unlockCombinationSlotList);
 
+        /* Claim */
+        public partial Task StoreClaimGiftList(List<ClaimGiftsModel> claimGiftList);
+
         public List<RaiderModel> GetRaiderList()
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
@@ -2190,16 +2195,20 @@ namespace NineChronicles.DataProvider.Store
             int? limit = null)
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-            var query = ctx.Set<AbilityRankingModel>()
-                .FromSqlRaw("SELECT `Address` as `AvatarAddress`, `AgentAddress`, `Name`, `TitleId`, `AvatarLevel`, `ArmorId`, `Cp`, " +
-                            "row_number() over(ORDER BY `Cp` DESC) `Ranking` " +
-                            "FROM `Avatars` ");
 
+            // Query the AbilityRanking table ordered by Ranking in ascending order
+            var query = ctx.Set<AbilityRankingModel>()
+                .FromSqlRaw("SELECT `AvatarAddress`, `AgentAddress`, `Name`, `TitleId`, `AvatarLevel`, `ArmorId`, `Cp`, `Ranking` " +
+                            "FROM `AbilityRanking` " +
+                            "ORDER BY `Ranking` ASC");
+
+            // Apply filter for a specific AvatarAddress if provided
             if (avatarAddress is { } avatarAddressNotNull)
             {
                 query = query.Where(s => s.AvatarAddress == avatarAddressNotNull.ToString());
             }
 
+            // Apply limit if specified
             if (limit is { } limitNotNull)
             {
                 query = query.Take(limitNotNull);

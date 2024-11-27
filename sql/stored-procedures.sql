@@ -371,6 +371,95 @@ ON DUPLICATE KEY UPDATE AvatarAddress = er.`AvatarAddress`, AgentAddress = er.`A
 END$$
 DELIMITER ;
 
+DELIMITER $$
+CREATE DEFINER=`admin`@`%` PROCEDURE `Equipment_Ranking_Aura_Procedure`()
+BEGIN
+DELETE FROM data_provider.EquipmentRankingAura;
+INSERT INTO data_provider.EquipmentRankingAura (
+    `ItemId`,
+    `AgentAddress`,
+    `AvatarAddress`,
+    `EquipmentId`,
+    `Cp`,
+    `Level`,
+    `ItemSubType`,
+    `Name`,
+    `AvatarLevel`,
+    `TitleId`,
+    `ArmorId`,
+    `Ranking`
+)
+SELECT
+    er.`ItemId`,
+    er.`AgentAddress`,
+    er.`AvatarAddress`,
+    er.`EquipmentId`,
+    er.`Cp`,
+    er.`Level`,
+    er.`ItemSubType`,
+    er.`Name`,
+    er.`AvatarLevel`,
+    er.`TitleId`,
+    er.`ArmorId`,
+    er.`Ranking`
+FROM
+    (SELECT
+         `ItemId`, `AgentAddress`, `AvatarAddress`, `EquipmentId`, `Cp`, `Level`, `ItemSubType`,
+         (SELECT `a`.`Name` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Name`,
+    (SELECT `a`.`AvatarLevel` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `AvatarLevel`,
+    (SELECT `a`.`TitleId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `TitleId`,
+    (SELECT `a`.`ArmorId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `ArmorId`,
+    ROW_NUMBER() OVER(ORDER BY `Cp` DESC, `Level` DESC) Ranking
+FROM `Equipments` where `ItemSubType` = "Aura"
+    ) as er
+ON DUPLICATE KEY UPDATE AvatarAddress = er.`AvatarAddress`, AgentAddress = er.`AgentAddress`, EquipmentId = er.`EquipmentId`, Cp = er.`Cp`, Level = er.`Level`, ItemSubType = er.`ItemSubType`, Name = er.`Name`, AvatarLevel = er.`AvatarLevel`, TitleId = er.`TitleId`, ArmorId = er.`ArmorId`, Ranking = er.`Ranking`;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE DEFINER=`admin`@`%` PROCEDURE `Equipment_Ranking_Grimoire_Procedure`()
+BEGIN
+DELETE FROM data_provider.EquipmentRankingGrimoire;
+INSERT INTO data_provider.EquipmentRankingGrimoire (
+    `ItemId`,
+    `AgentAddress`,
+    `AvatarAddress`,
+    `EquipmentId`,
+    `Cp`,
+    `Level`,
+    `ItemSubType`,
+    `Name`,
+    `AvatarLevel`,
+    `TitleId`,
+    `ArmorId`,
+    `Ranking`
+)
+SELECT
+    er.`ItemId`,
+    er.`AgentAddress`,
+    er.`AvatarAddress`,
+    er.`EquipmentId`,
+    er.`Cp`,
+    er.`Level`,
+    er.`ItemSubType`,
+    er.`Name`,
+    er.`AvatarLevel`,
+    er.`TitleId`,
+    er.`ArmorId`,
+    er.`Ranking`
+FROM
+    (SELECT
+         `ItemId`, `AgentAddress`, `AvatarAddress`, `EquipmentId`, `Cp`, `Level`, `ItemSubType`,
+         (SELECT `a`.`Name` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `Name`,
+    (SELECT `a`.`AvatarLevel` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `AvatarLevel`,
+    (SELECT `a`.`TitleId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `TitleId`,
+    (SELECT `a`.`ArmorId` FROM `Avatars` AS `a` WHERE `a`.`Address` = `AvatarAddress` LIMIT 1) AS `ArmorId`,
+    ROW_NUMBER() OVER(ORDER BY `Cp` DESC, `Level` DESC) Ranking
+FROM `Equipments` where `ItemSubType` = "Grimoire"
+    ) as er
+ON DUPLICATE KEY UPDATE AvatarAddress = er.`AvatarAddress`, AgentAddress = er.`AgentAddress`, EquipmentId = er.`EquipmentId`, Cp = er.`Cp`, Level = er.`Level`, ItemSubType = er.`ItemSubType`, Name = er.`Name`, AvatarLevel = er.`AvatarLevel`, TitleId = er.`TitleId`, ArmorId = er.`ArmorId`, Ranking = er.`Ranking`;
+END$$
+DELIMITER ;
 
 // EVENT SCHEDULERS
 CREATE DEFINER=`admin`@`%` EVENT `CraftRankings` ON SCHEDULE EVERY 1 HOUR STARTS NOW() ON COMPLETION NOT PRESERVE ENABLE DO CALL Craft_Rankings_Procedure();
@@ -380,4 +469,6 @@ CREATE DEFINER=`admin`@`%` EVENT `EquipmentRankingBelt` ON SCHEDULE EVERY 1 HOUR
 CREATE DEFINER=`admin`@`%` EVENT `EquipmentRankingNecklace` ON SCHEDULE EVERY 1 HOUR STARTS NOW() ON COMPLETION NOT PRESERVE ENABLE DO CALL Equipment_Ranking_Necklace_Procedure();
 CREATE DEFINER=`admin`@`%` EVENT `EquipmentRankingRing` ON SCHEDULE EVERY 1 HOUR STARTS NOW() ON COMPLETION NOT PRESERVE ENABLE DO CALL Equipment_Ranking_Ring_Procedure();
 CREATE DEFINER=`admin`@`%` EVENT `EquipmentRankingWeapon` ON SCHEDULE EVERY 1 HOUR STARTS NOW() ON COMPLETION NOT PRESERVE ENABLE DO CALL Equipment_Ranking_Weapon_Procedure();
+CREATE DEFINER=`admin`@`%` EVENT `EquipmentRankingAura` ON SCHEDULE EVERY 1 HOUR STARTS NOW() ON COMPLETION NOT PRESERVE ENABLE DO CALL Equipment_Ranking_Aura_Procedure();
+CREATE DEFINER=`admin`@`%` EVENT `EquipmentRankingGrimore` ON SCHEDULE EVERY 1 HOUR STARTS NOW() ON COMPLETION NOT PRESERVE ENABLE DO CALL Equipment_Ranking_Grimore_Procedure();
 CREATE DEFINER=`admin`@`%` EVENT `StageRanking` ON SCHEDULE EVERY 1 HOUR STARTS NOW() ON COMPLETION NOT PRESERVE ENABLE DO CALL Stage_Ranking_Procedure();

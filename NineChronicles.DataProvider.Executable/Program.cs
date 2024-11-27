@@ -34,6 +34,7 @@ namespace NineChronicles.DataProvider.Executable
     [HasSubCommands(typeof(BattleArenaRankingMigration), "battle-arena-ranking-migration")]
     [HasSubCommands(typeof(UserStakingMigration), "user-staking-migration")]
     [HasSubCommands(typeof(UserDataMigration), "user-data-migration")]
+    [HasSubCommands(typeof(DailyMetricMigration), "daily-metric-migration")]
     public class Program : CoconaLiteConsoleAppBase
     {
         public static async Task Main(string[] args)
