@@ -26,12 +26,12 @@ namespace NineChronicles.DataProvider.GraphTypes
                 description: "Name of avatar.",
                 resolve: context => context.Source.AvatarName
             );
-            Field<NonNullGraphType<IntGraphType>>(
+            Field<NonNullGraphType<LongGraphType>>(
                 nameof(WorldBossRankingModel.HighScore),
                 description: "Season high score.",
                 resolve: context => context.Source.HighScore
             );
-            Field<NonNullGraphType<IntGraphType>>(
+            Field<NonNullGraphType<LongGraphType>>(
                 nameof(WorldBossRankingModel.TotalScore),
                 description: "Season total score.",
                 resolve: context => context.Source.TotalScore

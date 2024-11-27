@@ -6,9 +6,9 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public string? AvatarName { get; set; }
 
-        public int HighScore { get; set; }
+        public long HighScore { get; set; }
 
-        public int TotalScore { get; set; }
+        public long TotalScore { get; set; }
 
         public int Cp { get; set; }
 
