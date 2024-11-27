@@ -677,6 +677,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         try
                         {
                             await rankingTask();
+                            Console.WriteLine("Waiting 5 minutes before starting the next process...");
+                            await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
                         }
                         finally
                         {
@@ -1068,12 +1070,19 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                 // Process each equipment ranking type sequentially
                 await ProcessEquipmentRankingsAsync(equipmentData, "EquipmentRanking"); // All Equipment
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
                 await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Armor").ToList(), "EquipmentRankingArmor");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
                 await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Ring").ToList(), "EquipmentRankingRing");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
                 await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Belt").ToList(), "EquipmentRankingBelt");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
                 await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Necklace").ToList(), "EquipmentRankingNecklace");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
                 await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Weapon").ToList(), "EquipmentRankingWeapon");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
                 await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Aura").ToList(), "EquipmentRankingAura");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
                 await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Grimoire").ToList(), "EquipmentRankingGrimoire");
 
                 DateTimeOffset end = DateTimeOffset.UtcNow;
