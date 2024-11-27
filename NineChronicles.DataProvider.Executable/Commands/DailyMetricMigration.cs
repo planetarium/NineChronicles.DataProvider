@@ -5,6 +5,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
     using System.IO;
     using System.Linq;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using Cocona;
     using Dapper;
@@ -632,42 +633,64 @@ namespace NineChronicles.DataProvider.Executable.Commands
             try
             {
                 start = DateTimeOffset.Now;
-                Console.WriteLine("Starting all ranking computations asynchronously...");
+                Console.WriteLine("Starting all ranking computations with limited concurrency...");
 
                 // Define tasks for each ranking computation
-                var abilityRankingTask = Task.Run(async () =>
+                var rankingTasks = new List<Func<Task>>
                 {
-                    Console.WriteLine("Fetching and processing Ability Rankings...");
-                    await ProcessAbilityRankingsAsync();
-                    Console.WriteLine("Ability Rankings processed successfully.");
-                });
+                    async () =>
+                    {
+                        Console.WriteLine("Fetching and processing Ability Rankings...");
+                        await ProcessAbilityRankingsAsync();
+                        Console.WriteLine("Ability Rankings processed successfully.");
+                    },
+                    async () =>
+                    {
+                        Console.WriteLine("Fetching and processing Craft Rankings...");
+                        await ProcessCraftRankingsAsync();
+                        Console.WriteLine("Craft Rankings processed successfully.");
+                    },
+                    async () =>
+                    {
+                        Console.WriteLine("Fetching and processing Stage Rankings...");
+                        await ProcessStageRankingsAsync();
+                        Console.WriteLine("Stage Rankings processed successfully.");
+                    },
+                    async () =>
+                    {
+                        Console.WriteLine("Fetching and processing Equipment Rankings...");
+                        await ProcessAllEquipmentRankingsAsync();
+                        Console.WriteLine("Equipment Rankings processed successfully.");
+                    }
+                };
 
-                var craftRankingTask = Task.Run(async () =>
+                // Limit concurrency to 2 tasks at a time
+                var semaphore = new SemaphoreSlim(1); // Allow 2 tasks at a time
+                var tasks = new List<Task>();
+
+                foreach (var rankingTask in rankingTasks)
                 {
-                    Console.WriteLine("Fetching and processing Craft Rankings...");
-                    await ProcessCraftRankingsAsync();
-                    Console.WriteLine("Craft Rankings processed successfully.");
-                });
+                    await semaphore.WaitAsync(); // Acquire the semaphore
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await rankingTask();
+                            Console.WriteLine("Waiting 5 minutes before starting the next process...");
+                            await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
+                        }
+                        finally
+                        {
+                            semaphore.Release(); // Release the semaphore
+                        }
+                    }));
+                }
 
-                var stageRankingTask = Task.Run(async () =>
-                {
-                    Console.WriteLine("Fetching and processing Stage Rankings...");
-                    await ProcessStageRankingsAsync();
-                    Console.WriteLine("Stage Rankings processed successfully.");
-                });
+                // Await all tasks
+                await Task.WhenAll(tasks);
 
-                var equipmentRankingTask = Task.Run(async () =>
-                {
-                    Console.WriteLine("Fetching and processing Equipment Rankings...");
-                    await ProcessAllEquipmentRankingsAsync();
-                    Console.WriteLine("Equipment Rankings processed successfully.");
-                });
-
-                // Await all tasks to run in parallel
-                await Task.WhenAll(craftRankingTask, stageRankingTask, equipmentRankingTask, abilityRankingTask);
-
-                var end = DateTimeOffset.Now;
-                Console.WriteLine("All rankings processed successfully. Time Elapsed: {0}", end - start);
+                DateTimeOffset end = DateTimeOffset.Now;
+                Console.WriteLine("All rankings processed successfully with limited concurrency. Time Elapsed: {0}", end - start);
             }
             catch (Exception ex)
             {
@@ -893,6 +916,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     await InsertAbilityRankingsBulkAsync(rankings, "AbilityRanking");
                     DateTimeOffset end = DateTimeOffset.UtcNow;
                     Console.WriteLine("Inserting Ability Rankings into the database completed. Time Elapsed: {0}", end - start);
+                    Console.WriteLine("Ability Rankings processed successfully.");
                 }
                 catch (Exception ex)
                 {
@@ -1042,21 +1066,25 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     LEFT JOIN Avatars a ON e.AvatarAddress = a.Address
                     ORDER BY e.Cp DESC, e.Level DESC")).ToList();
 
-                // Process rankings asynchronously for all subtypes
-                var tasks = new List<Task>
-                {
-                    Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData, "EquipmentRanking")),
-                    Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Armor").ToList(), "EquipmentRankingArmor")),
-                    Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Ring").ToList(), "EquipmentRankingRing")),
-                    Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Belt").ToList(), "EquipmentRankingBelt")),
-                    Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Necklace").ToList(), "EquipmentRankingNecklace")),
-                    Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Weapon").ToList(), "EquipmentRankingWeapon")),
-                    Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Aura").ToList(), "EquipmentRankingAura")),
-                    Task.Run(() => ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Grimoire").ToList(), "EquipmentRankingGrimoire"))
-                };
-
                 Console.WriteLine("Inserting Equipment Rankings into the database...");
-                await Task.WhenAll(tasks);
+
+                // Process each equipment ranking type sequentially
+                await ProcessEquipmentRankingsAsync(equipmentData, "EquipmentRanking"); // All Equipment
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Armor").ToList(), "EquipmentRankingArmor");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Ring").ToList(), "EquipmentRankingRing");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Belt").ToList(), "EquipmentRankingBelt");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Necklace").ToList(), "EquipmentRankingNecklace");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Weapon").ToList(), "EquipmentRankingWeapon");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Aura").ToList(), "EquipmentRankingAura");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Grimoire").ToList(), "EquipmentRankingGrimoire");
+
                 DateTimeOffset end = DateTimeOffset.UtcNow;
                 Console.WriteLine("Inserting Equipment Rankings into the database completed. Time Elapsed: {0}", end - start);
             }
