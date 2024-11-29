@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	<NoWarn>$(NoWarn),1573,1591,1712,MEN002,MEN003,MEN005,S1450,SA1009,SA1101,SA1111,SA1116,S1134,SA1200,SA1309,SA1413,SA1600,SA1601,SA1633,EF1001,S1075</NoWarn>
+	<NoWarn>$(NoWarn),1573,1591,1712,MEN002,MEN003,MEN005,S1450,SA1009,SA1101,SA1111,SA1116,S1134,SA1200,SA1309,SA1413,SA1600,SA1601,SA1633,EF1001,S1075,S125</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Cocona.Lite" Version="2.1.0" />

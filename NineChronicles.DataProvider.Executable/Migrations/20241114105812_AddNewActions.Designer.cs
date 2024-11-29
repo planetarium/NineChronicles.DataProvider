@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
@@ -10,9 +11,10 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20241114105812_AddNewActions")]
+    partial class AddNewActions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2116,49 +2118,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                         .HasColumnType("int");
 
                     b.ToTable("EquipmentRankingBelt");
-                });
-
-            modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.Ranking.EquipmentRankingGrimoireModel", b =>
-                {
-                    b.Property<string>("ItemId")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("AgentAddress")
-                        .HasColumnType("longtext");
-
-                    b.Property<int?>("ArmorId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("AvatarAddress")
-                        .HasColumnType("longtext");
-
-                    b.Property<int?>("AvatarLevel")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Cp")
-                        .HasColumnType("int");
-
-                    b.Property<int>("EquipmentId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ItemSubType")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("Ranking")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("TitleId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ItemId");
-
-                    b.ToTable("EquipmentRankingGrimoire");
                 });
 
             modelBuilder.Entity("NineChronicles.DataProvider.Store.Models.Ranking.EquipmentRankingModel", b =>

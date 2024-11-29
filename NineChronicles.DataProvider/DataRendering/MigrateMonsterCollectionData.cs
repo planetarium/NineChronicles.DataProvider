@@ -5,6 +5,7 @@ namespace NineChronicles.DataProvider.DataRendering
     using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Nekoyume.Action;
+    using Nekoyume.Model.Stake;
     using Nekoyume.Model.State;
     using Nekoyume.Module;
     using NineChronicles.DataProvider.Store.Models;
@@ -19,7 +20,7 @@ namespace NineChronicles.DataProvider.DataRendering
             DateTimeOffset blockTime
         )
         {
-            outputStates.TryGetStakeState(signer, out StakeState stakeState);
+            outputStates.TryGetStakeState(signer, out Nekoyume.Model.Stake.StakeState stakeState);
             var agentState = previousStates.GetAgentState(signer);
             if (agentState is null)
             {

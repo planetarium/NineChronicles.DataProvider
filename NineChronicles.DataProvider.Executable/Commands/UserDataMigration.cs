@@ -913,9 +913,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 {
                                     fbAgents.Add(fbAvatarState.agentAddress.ToString());
 
-                                    if (fbOutputState.TryGetStakeStateV2(fbAvatarState.agentAddress, out StakeStateV2 fbStakeState2))
+                                    if (fbOutputState.TryGetStakeState(fbAvatarState.agentAddress, out StakeState fbStakeState2))
                                     {
-                                        var fbStakeStateAddress = StakeStateV2.DeriveAddress(fbAvatarState.agentAddress);
+                                        var fbStakeStateAddress = StakeState.DeriveAddress(fbAvatarState.agentAddress);
                                         var fbCurrency = fbOutputState.GetGoldCurrency();
                                         var fbStakedBalance = fbOutputState.GetBalance(fbStakeStateAddress, fbCurrency);
                                         _fbUsBulkFile.WriteLine(
@@ -1388,9 +1388,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             }
                             else
                             {
-                                if (outputState.TryGetStakeStateV2(avatarState.agentAddress, out StakeStateV2 stakeState2))
+                                if (outputState.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState2))
                                 {
-                                    var stakeStateAddress = StakeStateV2.DeriveAddress(avatarState.agentAddress);
+                                    var stakeStateAddress = StakeState.DeriveAddress(avatarState.agentAddress);
                                     var currency = outputState.GetGoldCurrency();
                                     var stakedBalance = outputState.GetBalance(stakeStateAddress, currency);
                                     _usBulkFile.WriteLine(

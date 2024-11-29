@@ -548,12 +548,12 @@ namespace NineChronicles.DataProvider.Store
             if (!isMimisbrunnr)
             {
                 query = ctx.Set<StageRankingModel>()
-                    .FromSqlRaw("SELECT * FROM data_provider.StageRanking ORDER BY Ranking ");
+                    .FromSqlRaw("SELECT * FROM StageRanking ORDER BY Ranking ");
             }
             else
             {
                 query = ctx.Set<StageRankingModel>()
-                    .FromSqlRaw("SELECT * FROM data_provider.StageRankingMimisbrunnr ORDER BY Ranking ");
+                    .FromSqlRaw("SELECT * FROM StageRankingMimisbrunnr ORDER BY Ranking ");
             }
 
             if (avatarAddress is { } avatarAddressNotNull)
@@ -2067,16 +2067,20 @@ namespace NineChronicles.DataProvider.Store
             int? limit = null)
         {
             using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-            var query = ctx.Set<AbilityRankingModel>()
-                .FromSqlRaw("SELECT `Address` as `AvatarAddress`, `AgentAddress`, `Name`, `TitleId`, `AvatarLevel`, `ArmorId`, `Cp`, " +
-                            "row_number() over(ORDER BY `Cp` DESC) `Ranking` " +
-                            "FROM `Avatars` ");
 
+            // Query the AbilityRanking table ordered by Ranking in ascending order
+            var query = ctx.Set<AbilityRankingModel>()
+                .FromSqlRaw("SELECT `AvatarAddress`, `AgentAddress`, `Name`, `TitleId`, `AvatarLevel`, `ArmorId`, `Cp`, `Ranking` " +
+                            "FROM `AbilityRanking` " +
+                            "ORDER BY `Ranking` ASC");
+
+            // Apply filter for a specific AvatarAddress if provided
             if (avatarAddress is { } avatarAddressNotNull)
             {
                 query = query.Where(s => s.AvatarAddress == avatarAddressNotNull.ToString());
             }
 
+            // Apply limit if specified
             if (limit is { } limitNotNull)
             {
                 query = query.Take(limitNotNull);
@@ -2139,15 +2143,15 @@ namespace NineChronicles.DataProvider.Store
                 {
                     Ranking = 0,
                     AvatarName = i.AvatarName,
-                    HighScore = (int)i.HighScore,
-                    TotalScore = (int)i.TotalScore,
+                    HighScore = i.HighScore,
+                    TotalScore = i.TotalScore,
                     Cp = i.Cp,
                     Level = i.Level,
                     Address = i.Address,
                     IconId = i.IconId,
                 })
                 .ToList();
-            int? currentScore = null;
+            long? currentScore = null;
             var currentRank = 1;
             var trunk = new List<WorldBossRankingModel>();
             var result = new List<WorldBossRankingModel>();

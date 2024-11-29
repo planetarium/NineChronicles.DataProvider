@@ -64,6 +64,9 @@ namespace NineChronicles.DataProvider.Store
         // Table for ranking avatars' aura combat points
         public DbSet<EquipmentRankingAuraModel>? EquipmentRankingAura { get; set; }
 
+        // Table for ranking avatars' grimoire combat points
+        public DbSet<EquipmentRankingGrimoireModel>? EquipmentRankingGrimoire { get; set; }
+
         // Table for ranking avatars' total combat points
         public DbSet<AbilityRankingModel>? AbilityRanking { get; set; }
 

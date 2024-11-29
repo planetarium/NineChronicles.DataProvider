@@ -1,48 +1,27 @@
-using System.Net.Http;
-using System.Threading.Tasks;
-
 namespace NineChronicles.DataProvider.Executable.Commands
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using Bencodex.Types;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Cocona;
-    using Lib9c.Model.Order;
-    using Libplanet.Action;
-    using Libplanet.Action.State;
-    using Libplanet.Blockchain;
-    using Libplanet.Blockchain.Policies;
-    using Libplanet.Crypto;
-    using Libplanet.RocksDBStore;
-    using Libplanet.Store;
-    using Libplanet.Types.Assets;
-    using Libplanet.Types.Blocks;
+    using Dapper;
     using MySqlConnector;
-    using Nekoyume;
-    using Nekoyume.Action.Loader;
-    using Nekoyume.Battle;
-    using Nekoyume.Blockchain.Policy;
-    using Nekoyume.Extensions;
-    using Nekoyume.Helper;
-    using Nekoyume.Model.Arena;
-    using Nekoyume.Model.Item;
-    using Nekoyume.Model.Stake;
-    using Nekoyume.Model.State;
-    using Nekoyume.Module;
-    using Nekoyume.TableData;
+    using NineChronicles.DataProvider.Store.Models;
+    using NineChronicles.DataProvider.Store.Models.Ranking;
 
     public class DailyMetricMigration
     {
         private readonly string dailyMetricDbName = "DailyMetrics";
-
         private string _connectionString;
         private StreamWriter _dailyMetricsBulkFile;
         private List<string> _dailyMetricFiles;
 
         [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
-        public void Migration(
+        public async Task Migration(
             [Option(
                 "mysql-server",
                 Description = "A hostname of MySQL server.")]
@@ -78,6 +57,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 Server = mysqlServer,
                 Port = mysqlPort,
                 AllowLoadLocalInfile = true,
+                AllowUserVariables = true,
+                ConnectionTimeout = 3600,
+                DefaultCommandTimeout = 3600,
             };
 
             _connectionString = builder.ConnectionString;
@@ -96,10 +78,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                 var dau = 0;
                 var dauQuery =
-                    $"SELECT COUNT(DISTINCT Signer) as 'Unique Address' FROM data_provider.Transactions WHERE Date = '{date}'";
+                    $"SELECT COUNT(DISTINCT Signer) as 'Unique Address' FROM Transactions WHERE Date = '{date}'";
                 connection.Open();
                 var dauCommand = new MySqlCommand(dauQuery, connection);
-                dauCommand.CommandTimeout = 600;
+                dauCommand.CommandTimeout = 3600;
                 var dauReader = dauCommand.ExecuteReader();
                 while (dauReader.Read())
                 {
@@ -118,10 +100,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                 var txCount = 0;
                 var txCountQuery =
-                    $"SELECT COUNT(TxId) as 'Transactions' FROM data_provider.Transactions WHERE Date = '{date}'";
+                    $"SELECT COUNT(TxId) as 'Transactions' FROM Transactions WHERE Date = '{date}'";
                 connection.Open();
                 var txCountCommand = new MySqlCommand(txCountQuery, connection);
-                txCountCommand.CommandTimeout = 600;
+                txCountCommand.CommandTimeout = 3600;
                 var txCountReader = txCountCommand.ExecuteReader();
                 while (txCountReader.Read())
                 {
@@ -143,7 +125,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     $"select count(Signer) from Transactions WHERE ActionType = 'ApprovePledge' AND Date = '{date}'";
                 connection.Open();
                 var newDauCommand = new MySqlCommand(newDauQuery, connection);
-                newDauCommand.CommandTimeout = 600;
+                newDauCommand.CommandTimeout = 3600;
                 var newDauReader = newDauCommand.ExecuteReader();
                 while (newDauReader.Read())
                 {
@@ -164,7 +146,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var hasCountQuery = $"select count(Id) as 'Count' from HackAndSlashes where Date = '{date}'";
                 connection.Open();
                 var hasCountCommand = new MySqlCommand(hasCountQuery, connection);
-                hasCountCommand.CommandTimeout = 600;
+                hasCountCommand.CommandTimeout = 3600;
                 var hasCountReader = hasCountCommand.ExecuteReader();
                 while (hasCountReader.Read())
                 {
@@ -186,7 +168,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from HackAndSlashes where Date = '{date}'";
                 connection.Open();
                 var hasUsersCommand = new MySqlCommand(hasUsersQuery, connection);
-                hasUsersCommand.CommandTimeout = 600;
+                hasUsersCommand.CommandTimeout = 3600;
                 var hasUsersReader = hasUsersCommand.ExecuteReader();
                 while (hasUsersReader.Read())
                 {
@@ -207,7 +189,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var sweepCountQuery = $"select count(Id) as 'Count' from HackAndSlashSweeps where Date = '{date}'";
                 connection.Open();
                 var sweepCountCommand = new MySqlCommand(sweepCountQuery, connection);
-                sweepCountCommand.CommandTimeout = 600;
+                sweepCountCommand.CommandTimeout = 3600;
                 var sweepCountReader = sweepCountCommand.ExecuteReader();
                 while (sweepCountReader.Read())
                 {
@@ -229,7 +211,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from HackAndSlashSweeps where Date =  '{date}'";
                 connection.Open();
                 var sweepUsersCommand = new MySqlCommand(sweepUsersQuery, connection);
-                sweepUsersCommand.CommandTimeout = 600;
+                sweepUsersCommand.CommandTimeout = 3600;
                 var sweepUsersReader = sweepUsersCommand.ExecuteReader();
                 while (sweepUsersReader.Read())
                 {
@@ -251,7 +233,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     $"select count(Id) as 'Count' from CombinationEquipments where Date = '{date}'";
                 connection.Open();
                 var combinationEquipmentCountCommand = new MySqlCommand(combinationEquipmentCountQuery, connection);
-                combinationEquipmentCountCommand.CommandTimeout = 600;
+                combinationEquipmentCountCommand.CommandTimeout = 3600;
                 var combinationEquipmentCountReader = combinationEquipmentCountCommand.ExecuteReader();
                 while (combinationEquipmentCountReader.Read())
                 {
@@ -274,7 +256,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from CombinationConsumables where Date = '{date}'";
                 connection.Open();
                 var combinationEquipmentUsersCommand = new MySqlCommand(combinationEquipmentUsersQuery, connection);
-                combinationEquipmentUsersCommand.CommandTimeout = 600;
+                combinationEquipmentUsersCommand.CommandTimeout = 3600;
                 var combinationEquipmentUsersReader = combinationEquipmentUsersCommand.ExecuteReader();
                 while (combinationEquipmentUsersReader.Read())
                 {
@@ -297,7 +279,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     $"select count(Id) as 'Count' from CombinationConsumables where Date = '{date}'";
                 connection.Open();
                 var combinationConsumableCountCommand = new MySqlCommand(combinationConsumableCountQuery, connection);
-                combinationConsumableCountCommand.CommandTimeout = 600;
+                combinationConsumableCountCommand.CommandTimeout = 3600;
                 var combinationConsumableCountReader = combinationConsumableCountCommand.ExecuteReader();
                 while (combinationConsumableCountReader.Read())
                 {
@@ -320,7 +302,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from CombinationEquipments where Date = '{date}'";
                 connection.Open();
                 var combinationConsumableUsersCommand = new MySqlCommand(combinationConsumableUsersQuery, connection);
-                combinationConsumableUsersCommand.CommandTimeout = 600;
+                combinationConsumableUsersCommand.CommandTimeout = 3600;
                 var combinationConsumableUsersReader = combinationConsumableUsersCommand.ExecuteReader();
                 while (combinationConsumableUsersReader.Read())
                 {
@@ -343,7 +325,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     $"select count(Id) as 'Count' from ItemEnhancements where Date = '{date}'";
                 connection.Open();
                 var itemEnhancementCountCommand = new MySqlCommand(itemEnhancementCountQuery, connection);
-                itemEnhancementCountCommand.CommandTimeout = 600;
+                itemEnhancementCountCommand.CommandTimeout = 3600;
                 var itemEnhancementCountReader = itemEnhancementCountCommand.ExecuteReader();
                 while (itemEnhancementCountReader.Read())
                 {
@@ -365,7 +347,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     $"select COUNT(DISTINCT AgentAddress) as 'Player Count' from ItemEnhancements where Date = '{date}'";
                 connection.Open();
                 var itemEnhancementUsersCommand = new MySqlCommand(itemEnhancementUsersQuery, connection);
-                itemEnhancementUsersCommand.CommandTimeout = 600;
+                itemEnhancementUsersCommand.CommandTimeout = 3600;
                 var itemEnhancementUsersReader = itemEnhancementUsersCommand.ExecuteReader();
                 while (itemEnhancementUsersReader.Read())
                 {
@@ -387,7 +369,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     $"select SUM(SummonCount) from AuraSummons where GroupId = '10002' AND Date = '{date}'";
                 connection.Open();
                 var auraSummonCommand = new MySqlCommand(auraSummonQuery, connection);
-                auraSummonCommand.CommandTimeout = 600;
+                auraSummonCommand.CommandTimeout = 3600;
                 var auraSummonReader = auraSummonCommand.ExecuteReader();
                 while (auraSummonReader.Read())
                 {
@@ -408,7 +390,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var runeSummonQuery = $"select SUM(SummonCount) from RuneSummons where Date = '{date}'";
                 connection.Open();
                 var runeSummonCommand = new MySqlCommand(runeSummonQuery, connection);
-                runeSummonCommand.CommandTimeout = 600;
+                runeSummonCommand.CommandTimeout = 3600;
                 var runeSummonReader = runeSummonCommand.ExecuteReader();
                 while (runeSummonReader.Read())
                 {
@@ -429,7 +411,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var apUsageQuery = $"select SUM(ApStoneCount) from HackAndSlashSweeps where Date = '{date}'";
                 connection.Open();
                 var apUsageCommand = new MySqlCommand(apUsageQuery, connection);
-                apUsageCommand.CommandTimeout = 600;
+                apUsageCommand.CommandTimeout = 3600;
                 var apUsageReader = apUsageCommand.ExecuteReader();
                 while (apUsageReader.Read())
                 {
@@ -450,7 +432,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var hourglassUsageQuery = $"SELECT SUM(HourglassCount) FROM RapidCombinations WHERE Date = '{date}'";
                 connection.Open();
                 var hourglassUsageCommand = new MySqlCommand(hourglassUsageQuery, connection);
-                hourglassUsageCommand.CommandTimeout = 600;
+                hourglassUsageCommand.CommandTimeout = 3600;
                 var hourglassUsageReader = hourglassUsageCommand.ExecuteReader();
                 while (hourglassUsageReader.Read())
                 {
@@ -477,7 +459,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     ) a";
                 connection.Open();
                 var ncgTradeCommand = new MySqlCommand(ncgTradeQuery, connection);
-                ncgTradeCommand.CommandTimeout = 600;
+                ncgTradeCommand.CommandTimeout = 3600;
                 var ncgTradeReader = ncgTradeCommand.ExecuteReader();
                 while (ncgTradeReader.Read())
                 {
@@ -496,10 +478,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                 var enhanceNcg = 0m;
                 var enhanceNcgQuery =
-                    $"SELECT sum(BurntNCG) as 'Enhance NCG(Amount)' from data_provider.ItemEnhancements  where Date = '{date}'";
+                    $"SELECT sum(BurntNCG) as 'Enhance NCG(Amount)' from ItemEnhancements  where Date = '{date}'";
                 connection.Open();
                 var enhanceNcgCommand = new MySqlCommand(enhanceNcgQuery, connection);
-                enhanceNcgCommand.CommandTimeout = 600;
+                enhanceNcgCommand.CommandTimeout = 3600;
                 var enhanceNcgReader = enhanceNcgCommand.ExecuteReader();
                 while (enhanceNcgReader.Read())
                 {
@@ -518,10 +500,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                 var runeNcg = 0m;
                 var runeNcgQuery =
-                    $"SELECT sum(BurntNCG) as 'Rune NCG(Amount)' from data_provider.RuneEnhancements   where Date = '{date}'";
+                    $"SELECT sum(BurntNCG) as 'Rune NCG(Amount)' from RuneEnhancements   where Date = '{date}'";
                 connection.Open();
                 var runeNcgCommand = new MySqlCommand(runeNcgQuery, connection);
-                runeNcgCommand.CommandTimeout = 600;
+                runeNcgCommand.CommandTimeout = 3600;
                 var runeNcgReader = runeNcgCommand.ExecuteReader();
                 while (runeNcgReader.Read())
                 {
@@ -540,10 +522,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                 var runeSlotNcg = 0m;
                 var runeSlotNcgQuery =
-                    $"SELECT sum(BurntNCG) as 'RuneSlot NCG(Amount)' from data_provider.UnlockRuneSlots  where Date = '{date}'";
+                    $"SELECT sum(BurntNCG) as 'RuneSlot NCG(Amount)' from UnlockRuneSlots  where Date = '{date}'";
                 connection.Open();
                 var runeSlotNcgCommand = new MySqlCommand(runeSlotNcgQuery, connection);
-                runeSlotNcgCommand.CommandTimeout = 600;
+                runeSlotNcgCommand.CommandTimeout = 3600;
                 var runeSlotNcgReader = runeSlotNcgCommand.ExecuteReader();
                 while (runeSlotNcgReader.Read())
                 {
@@ -562,10 +544,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                 var arenaNcg = 0m;
                 var arenaNcgQuery =
-                    $"SELECT sum(BurntNCG) as 'Arena NCG(Amount)' from data_provider.BattleArenas where Date = '{date}'";
+                    $"SELECT sum(BurntNCG) as 'Arena NCG(Amount)' from BattleArenas where Date = '{date}'";
                 connection.Open();
                 var arenaNcgCommand = new MySqlCommand(arenaNcgQuery, connection);
-                arenaNcgCommand.CommandTimeout = 600;
+                arenaNcgCommand.CommandTimeout = 3600;
                 var arenaNcgReader = arenaNcgCommand.ExecuteReader();
                 while (arenaNcgReader.Read())
                 {
@@ -587,7 +569,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     $"SELECT sum(BurntNCG) as 'EventTicket NCG' from EventDungeonBattles where Date = '{date}'";
                 connection.Open();
                 var eventTicketNcgCommand = new MySqlCommand(eventTicketNcgQuery, connection);
-                eventTicketNcgCommand.CommandTimeout = 600;
+                eventTicketNcgCommand.CommandTimeout = 3600;
                 var eventTicketNcgReader = eventTicketNcgCommand.ExecuteReader();
                 while (eventTicketNcgReader.Read())
                 {
@@ -647,6 +629,74 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.StackTrace);
             }
+
+            try
+            {
+                start = DateTimeOffset.Now;
+                Console.WriteLine("Starting all ranking computations with limited concurrency...");
+
+                // Define tasks for each ranking computation
+                var rankingTasks = new List<Func<Task>>
+                {
+                    async () =>
+                    {
+                        Console.WriteLine("Fetching and processing Ability Rankings...");
+                        await ProcessAbilityRankingsAsync();
+                        Console.WriteLine("Ability Rankings processed successfully.");
+                    },
+                    async () =>
+                    {
+                        Console.WriteLine("Fetching and processing Craft Rankings...");
+                        await ProcessCraftRankingsAsync();
+                        Console.WriteLine("Craft Rankings processed successfully.");
+                    },
+                    async () =>
+                    {
+                        Console.WriteLine("Fetching and processing Stage Rankings...");
+                        await ProcessStageRankingsAsync();
+                        Console.WriteLine("Stage Rankings processed successfully.");
+                    },
+                    async () =>
+                    {
+                        Console.WriteLine("Fetching and processing Equipment Rankings...");
+                        await ProcessAllEquipmentRankingsAsync();
+                        Console.WriteLine("Equipment Rankings processed successfully.");
+                    }
+                };
+
+                // Limit concurrency to 2 tasks at a time
+                var semaphore = new SemaphoreSlim(1); // Allow 1 task at a time
+                var tasks = new List<Task>();
+
+                foreach (var rankingTask in rankingTasks)
+                {
+                    await semaphore.WaitAsync(); // Acquire the semaphore
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await rankingTask();
+                            Console.WriteLine("Waiting 5 minutes before starting the next process...");
+                            await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
+                        }
+                        finally
+                        {
+                            semaphore.Release(); // Release the semaphore
+                        }
+                    }));
+                }
+
+                // Await all tasks
+                await Task.WhenAll(tasks);
+
+                DateTimeOffset end = DateTimeOffset.Now;
+                Console.WriteLine("All rankings processed successfully with limited concurrency. Time Elapsed: {0}", end - start);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error executing rankings procedures: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+            }
         }
 
         private void CreateBulkFiles()
@@ -658,7 +708,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
         private void BulkInsert(
             string tableName,
-            string filePath)
+            string filePath,
+            int? linesToSkip = 0)
         {
             using MySqlConnection connection = new MySqlConnection(_connectionString);
             try
@@ -674,6 +725,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     FieldTerminator = ";",
                     Local = true,
                     ConflictOption = MySqlBulkLoaderConflictOption.Ignore,
+                    NumberOfLinesToSkip = linesToSkip ?? 0,
                 };
 
                 loader.Load();
@@ -696,6 +748,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     FieldTerminator = ";",
                     Local = true,
                     ConflictOption = MySqlBulkLoaderConflictOption.Ignore,
+                    NumberOfLinesToSkip = linesToSkip ?? 0,
                 };
 
                 loader.Load();
@@ -703,6 +756,652 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 DateTimeOffset end = DateTimeOffset.Now;
                 Console.WriteLine("Time elapsed: {0}", end - start);
             }
+        }
+
+        private async Task InsertCraftRankingsBulkAsync(List<CraftRankingModel> rankings, string tableName)
+        {
+            // Temporary file to store data for bulk insert
+            string tempFilePath = Path.GetTempFileName();
+
+            try
+            {
+                DateTimeOffset start = DateTimeOffset.Now;
+                Console.WriteLine("Write rankings to the temporary file asynchronously.");
+
+                // Step 1: Write rankings to the temporary file
+                using (var writer = new StreamWriter(tempFilePath, false, Encoding.UTF8))
+                {
+                    foreach (var ranking in rankings)
+                    {
+                        await writer.WriteLineAsync($"{ranking.AvatarAddress};{ranking.AgentAddress};{ranking.BlockIndex};{ranking.CraftCount};{ranking.Ranking};" +
+                                                    $"{ranking.ArmorId};{ranking.AvatarLevel};{ranking.Cp};{ranking.Name};{ranking.TitleId}");
+                    }
+                }
+
+                Console.WriteLine("Write rankings to the temporary file complete.");
+                DateTimeOffset end = DateTimeOffset.Now;
+                Console.WriteLine("Time elapsed: {0}", end - start);
+
+                // Truncate the target table asynchronously
+                using (var newConnection = new MySqlConnection(_connectionString))
+                {
+                    await newConnection.OpenAsync();
+                    var truncateQuery = $"TRUNCATE TABLE {tableName};";
+                    await newConnection.ExecuteAsync(truncateQuery);
+                }
+
+                // Step 2: Use BulkInsert method to load data into the database
+                await Task.Run(() => BulkInsertWithSwapAsync(tableName, tempFilePath, null));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during bulk insert: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+            }
+            finally
+            {
+                // Cleanup: Delete the temporary file
+                if (File.Exists(tempFilePath))
+                {
+                    File.Delete(tempFilePath);
+                }
+            }
+        }
+
+        private async Task InsertStageRankingsBulkAsync(List<StageRankingModel> rankings, string tableName)
+        {
+            // Temporary file to store data for bulk insert
+            string tempFilePath = Path.GetTempFileName();
+
+            try
+            {
+                DateTimeOffset start = DateTimeOffset.Now;
+                Console.WriteLine("Write stage rankings to the temporary file asynchronously.");
+
+                // Step 1: Write rankings to the temporary file
+                using (var writer = new StreamWriter(tempFilePath, false, Encoding.UTF8))
+                {
+                    await writer.WriteLineAsync(string.Empty);
+                    foreach (var ranking in rankings)
+                    {
+                        await writer.WriteLineAsync($"{ranking.Ranking.ToString()};{ranking.ClearedStageId};{ranking.AvatarAddress};{ranking.AgentAddress};" +
+                                                    $"{ranking.Name};{ranking.AvatarLevel};{ranking.TitleId};{ranking.ArmorId};" +
+                                                    $"{ranking.Cp};{ranking.BlockIndex}");
+                    }
+                }
+
+                Console.WriteLine("Write stage rankings to the temporary file complete.");
+                DateTimeOffset end = DateTimeOffset.Now;
+                Console.WriteLine("Time elapsed: {0}", end - start);
+
+                // Truncate the target table asynchronously
+                using (var newConnection = new MySqlConnection(_connectionString))
+                {
+                    await newConnection.OpenAsync();
+                    var truncateQuery = $"TRUNCATE TABLE {tableName};";
+                    await newConnection.ExecuteAsync(truncateQuery);
+                }
+
+                // Step 2: Use BulkInsert method to load data into the database
+                await Task.Run(() => BulkInsertWithSwapAsync(tableName, tempFilePath, 1));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during bulk insert: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+            }
+            finally
+            {
+                // Cleanup: Delete the temporary file
+                if (File.Exists(tempFilePath))
+                {
+                    File.Delete(tempFilePath);
+                }
+            }
+        }
+
+        private async Task ProcessAbilityRankingsAsync()
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+
+                try
+                {
+                    DateTimeOffset start = DateTimeOffset.UtcNow;
+                    Console.WriteLine("Fetching Ability Rankings data...");
+
+                    // Fetch data without ordering
+                    var abilityData = (await connection.QueryAsync<AbilityRankingData>(@"
+                        SELECT 
+                            Address,
+                            AgentAddress,
+                            Name,
+                            TitleId,
+                            AvatarLevel,
+                            ArmorId,
+                            Cp
+                        FROM Avatars")).ToList();
+
+                    Console.WriteLine($"Fetched {abilityData.Count} records for Ability Rankings.");
+
+                    // Sanitize data: Remove ZWNBSP and trim strings
+                    foreach (var item in abilityData)
+                    {
+                        item.Address = RemoveZeroWidthSpaces(item.Address?.Trim());
+                    }
+
+                    // Perform in-memory sorting by Cp descending
+                    var sortedData = abilityData
+                        .OrderByDescending(item => item.Cp) // Sort by Cp in descending order
+                        .ToList();
+
+                    // Compute rankings based on sorted order
+                    var rankings = sortedData
+                        .Select((item, index) => new AbilityRankingModel
+                        {
+                            AvatarAddress = item.Address,
+                            AgentAddress = item.AgentAddress,
+                            Name = item.Name,
+                            TitleId = item.TitleId,
+                            AvatarLevel = item.AvatarLevel,
+                            ArmorId = item.ArmorId,
+                            Cp = item.Cp,
+                            Ranking = index + 1 // Assign rank based on descending order of Cp
+                        })
+                        .ToList();
+
+                    // Perform bulk insert into AbilityRanking table
+                    Console.WriteLine("Inserting Ability Rankings into the database...");
+                    await InsertAbilityRankingsBulkAsync(rankings, "AbilityRanking");
+                    DateTimeOffset end = DateTimeOffset.UtcNow;
+                    Console.WriteLine("Inserting Ability Rankings into the database completed. Time Elapsed: {0}", end - start);
+                    Console.WriteLine("Ability Rankings processed successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error processing Ability Rankings: {ex.Message}");
+                    Console.WriteLine(ex.StackTrace);
+                }
+            }
+        }
+
+        private async Task ProcessCraftRankingsAsync()
+        {
+            var consumablesData = new List<CraftData>();
+            var equipmentsData = new List<CraftData>();
+            var enhancementsData = new List<CraftData>();
+
+            try
+            {
+                DateTimeOffset start = DateTimeOffset.UtcNow;
+
+                // Use separate connections for each query
+                var consumablesTask = Task.Run(async () =>
+                {
+                    using (var connection = new MySqlConnection(_connectionString))
+                    {
+                        await connection.OpenAsync();
+                        consumablesData = (await connection.QueryAsync<CraftData>(@"
+                            SELECT c.AvatarAddress, c.AgentAddress, c.BlockIndex, 1 AS CraftCount,
+                                   a.ArmorId, a.AvatarLevel, a.Cp, a.Name, a.TitleId
+                            FROM CombinationConsumables c
+                            LEFT JOIN Avatars a ON c.AvatarAddress = a.Address")).ToList();
+                    }
+                });
+
+                var equipmentsTask = Task.Run(async () =>
+                {
+                    using (var connection = new MySqlConnection(_connectionString))
+                    {
+                        await connection.OpenAsync();
+                        equipmentsData = (await connection.QueryAsync<CraftData>(@"
+                            SELECT c.AvatarAddress, c.AgentAddress, c.BlockIndex, 1 AS CraftCount,
+                                   a.ArmorId, a.AvatarLevel, a.Cp, a.Name, a.TitleId
+                            FROM CombinationEquipments c
+                            LEFT JOIN Avatars a ON c.AvatarAddress = a.Address")).ToList();
+                    }
+                });
+
+                var enhancementsTask = Task.Run(async () =>
+                {
+                    using (var connection = new MySqlConnection(_connectionString))
+                    {
+                        await connection.OpenAsync();
+                        enhancementsData = (await connection.QueryAsync<CraftData>(@"
+                            SELECT c.AvatarAddress, c.AgentAddress, c.BlockIndex, 1 AS CraftCount,
+                                   a.ArmorId, a.AvatarLevel, a.Cp, a.Name, a.TitleId
+                            FROM ItemEnhancements c
+                            LEFT JOIN Avatars a ON c.AvatarAddress = a.Address")).ToList();
+                    }
+                });
+
+                // Wait for all tasks to complete
+                await Task.WhenAll(consumablesTask, equipmentsTask, enhancementsTask);
+
+                var combinedData = consumablesData.Concat(equipmentsData).Concat(enhancementsData);
+
+                // Process rankings
+                var rankings = combinedData
+                    .GroupBy(data => data.AvatarAddress)
+                    .Select((group, index) => new CraftRankingModel
+                    {
+                        AvatarAddress = group.Key,
+                        AgentAddress = group.First().AgentAddress,
+                        ArmorId = group.First().ArmorId,
+                        AvatarLevel = group.First().AvatarLevel,
+                        Cp = group.First().Cp,
+                        Name = group.First().Name,
+                        TitleId = group.First().TitleId,
+                        BlockIndex = group.Max(x => x.BlockIndex),
+                        CraftCount = group.Count(),
+                        Ranking = index + 1
+                    })
+                    .ToList();
+
+                Console.WriteLine("Inserting Craft Rankings into the database...");
+                await InsertCraftRankingsBulkAsync(rankings, "CraftRankings");
+                DateTimeOffset end = DateTimeOffset.UtcNow;
+                Console.WriteLine("Inserting Craft Rankings into the database completed. Time Elapsed: {0}", end - start);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error processing Craft Rankings: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+            }
+        }
+
+        private async Task ProcessStageRankingsAsync()
+        {
+            using (var newConnection = new MySqlConnection(_connectionString))
+            {
+                DateTimeOffset start = DateTimeOffset.UtcNow;
+                await newConnection.OpenAsync();
+
+                // Fetch raw data
+                var stageData = (await newConnection.QueryAsync<StageData>(@"
+                    SELECT hs.AvatarAddress, hs.AgentAddress, hs.StageId, hs.BlockIndex,
+                           a.Name, a.AvatarLevel, a.TitleId, a.ArmorId, a.Cp
+                    FROM HackAndSlashes hs
+                    LEFT JOIN Avatars a ON hs.AvatarAddress = a.Address
+                    WHERE hs.Mimisbrunnr = 0 AND hs.Cleared = 1")).ToList();
+
+                // Process rankings
+                var rankings = stageData
+                    .GroupBy(data => data.AvatarAddress)
+                    .Select((group, index) => new StageRankingModel
+                    {
+                        AvatarAddress = group.Key,
+                        AgentAddress = group.First().AgentAddress,
+                        Name = group.First().Name,
+                        AvatarLevel = group.First().AvatarLevel,
+                        TitleId = group.First().TitleId,
+                        ArmorId = group.First().ArmorId,
+                        Cp = group.First().Cp,
+                        ClearedStageId = group.Max(x => x.StageId),
+                        BlockIndex = group.Min(x => x.BlockIndex),
+                        Ranking = index + 1
+                    })
+                    .ToList();
+
+                Console.WriteLine("Inserting Stage Rankings into the database...");
+                await InsertStageRankingsBulkAsync(rankings, "StageRanking");
+                DateTimeOffset end = DateTimeOffset.UtcNow;
+                Console.WriteLine("Inserting Stage Rankings into the database completed. Time Elapsed: {0}", end - start);
+            }
+        }
+
+        private async Task ProcessAllEquipmentRankingsAsync()
+        {
+            using (var newConnection = new MySqlConnection(_connectionString))
+            {
+                DateTimeOffset start = DateTimeOffset.UtcNow;
+                await newConnection.OpenAsync();
+
+                var equipmentData = (await newConnection.QueryAsync<EquipmentData>(@"
+                    SELECT e.ItemId, e.AvatarAddress, e.AgentAddress, e.EquipmentId, e.Cp,
+                           e.Level AS Level, e.ItemSubType, 
+                           a.Name, a.AvatarLevel, a.TitleId, a.ArmorId
+                    FROM Equipments e
+                    LEFT JOIN Avatars a ON e.AvatarAddress = a.Address
+                    ORDER BY e.Cp DESC, e.Level DESC")).ToList();
+
+                Console.WriteLine("Inserting Equipment Rankings into the database...");
+
+                // Process each equipment ranking type sequentially
+                await ProcessEquipmentRankingsAsync(equipmentData, "EquipmentRanking"); // All Equipment
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Armor").ToList(), "EquipmentRankingArmor");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Ring").ToList(), "EquipmentRankingRing");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Belt").ToList(), "EquipmentRankingBelt");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Necklace").ToList(), "EquipmentRankingNecklace");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Weapon").ToList(), "EquipmentRankingWeapon");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Aura").ToList(), "EquipmentRankingAura");
+                await Task.Delay(TimeSpan.FromMinutes(5)); // Wait 5 minutes
+                await ProcessEquipmentRankingsAsync(equipmentData.Where(e => e.ItemSubType == "Grimoire").ToList(), "EquipmentRankingGrimoire");
+
+                DateTimeOffset end = DateTimeOffset.UtcNow;
+                Console.WriteLine("Inserting Equipment Rankings into the database completed. Time Elapsed: {0}", end - start);
+            }
+        }
+
+        // Updated method to process rankings asynchronously
+        private async Task ProcessEquipmentRankingsAsync(List<EquipmentData> equipmentData, string tableName)
+        {
+            if (equipmentData.Count == 0)
+            {
+                Console.WriteLine($"No data to process for {tableName}.");
+                return;
+            }
+
+            try
+            {
+                // Compute rankings
+                var rankings = equipmentData
+                    .Select((item, index) => new EquipmentRankingModel
+                    {
+                        AvatarAddress = item.AvatarAddress,
+                        AgentAddress = item.AgentAddress,
+                        EquipmentId = item.EquipmentId,
+                        ItemId = item.ItemId,
+                        Cp = item.Cp,
+                        Level = item.Level,
+                        ItemSubType = item.ItemSubType,
+                        Name = item.Name,
+                        AvatarLevel = item.AvatarLevel,
+                        TitleId = item.TitleId,
+                        ArmorId = item.ArmorId,
+                        Ranking = index + 1
+                    })
+                    .ToList();
+
+                // Truncate the target table asynchronously
+                using (var newConnection = new MySqlConnection(_connectionString))
+                {
+                    await newConnection.OpenAsync();
+                    var truncateQuery = $"TRUNCATE TABLE {tableName};";
+                    await newConnection.ExecuteAsync(truncateQuery);
+                }
+
+                Console.WriteLine($"Inserting rankings into {tableName}...");
+                await InsertEquipmentRankingsBulkAsync(rankings, tableName);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error processing rankings for {tableName}: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+            }
+        }
+
+        // Updated method to handle asynchronous bulk insertion
+        private async Task InsertEquipmentRankingsBulkAsync(List<EquipmentRankingModel> rankings, string tableName)
+        {
+            string tempFilePath = Path.GetTempFileName();
+
+            try
+            {
+                // Write rankings to the temporary file
+                using (var writer = new StreamWriter(tempFilePath, false, Encoding.UTF8))
+                {
+                    foreach (var ranking in rankings)
+                    {
+                        writer.WriteLine($"{ranking.ItemId};{ranking.AgentAddress};{ranking.AvatarAddress};{ranking.EquipmentId};" +
+                                         $"{ranking.Cp};{ranking.Level};{ranking.ItemSubType};{ranking.Name};" +
+                                         $"{ranking.AvatarLevel};{ranking.TitleId};{ranking.ArmorId};{ranking.Ranking}");
+                    }
+                }
+
+                // Perform the bulk insert
+                await Task.Run(() => BulkInsertWithSwapAsync(tableName, tempFilePath, null));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during bulk insert into {tableName}: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+            }
+            finally
+            {
+                // Clean up temporary file
+                if (File.Exists(tempFilePath))
+                {
+                    File.Delete(tempFilePath);
+                }
+            }
+        }
+
+        // Method to perform bulk insert for Ability Rankings
+        private async Task InsertAbilityRankingsBulkAsync(List<AbilityRankingModel> rankings, string tableName)
+        {
+            string tempFilePath = Path.GetTempFileName();
+
+            try
+            {
+                // Write rankings to the temporary file
+                using (var writer = new StreamWriter(tempFilePath, false, Encoding.UTF8))
+                {
+                    await writer.WriteLineAsync(string.Empty);
+                    foreach (var ranking in rankings)
+                    {
+                        await writer.WriteLineAsync($"{ranking.AvatarAddress};{ranking.AgentAddress};{ranking.Name};" +
+                                                    $"{ranking.AvatarLevel};{ranking.TitleId};{ranking.ArmorId};" +
+                                                    $"{ranking.Cp};{ranking.Ranking}");
+                    }
+                }
+
+                // Truncate the target table asynchronously
+                using (var newConnection = new MySqlConnection(_connectionString))
+                {
+                    await newConnection.OpenAsync();
+                    var truncateQuery = $"TRUNCATE TABLE {tableName};";
+                    await newConnection.ExecuteAsync(truncateQuery);
+                }
+
+                // Perform the bulk insert
+                await Task.Run(() => BulkInsertWithSwapAsync(tableName, tempFilePath, 1));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during bulk insert into {tableName}: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+            }
+            finally
+            {
+                // Clean up temporary file
+                if (File.Exists(tempFilePath))
+                {
+                    File.Delete(tempFilePath);
+                }
+            }
+        }
+
+        private async Task BulkInsertWithSwapAsync(string originalTableName, string filePath, int? linesToSkip)
+        {
+            string tempTableName = $"{originalTableName}_Temp";
+            string backupTableName = $"{originalTableName}_Backup";
+
+            using (MySqlConnection connection = new MySqlConnection(_connectionString))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+
+                    // Step 1: Create a temporary table
+                    string createTempTable = $"CREATE TABLE IF NOT EXISTS `{tempTableName}` LIKE `{originalTableName}`;";
+                    using (var cmd = new MySqlCommand(createTempTable, connection))
+                    {
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    // Step 2: Bulk load data into the temporary table
+                    Console.WriteLine($"Start bulk insert to {tempTableName}.");
+                    MySqlBulkLoader loader = new MySqlBulkLoader(connection)
+                    {
+                        TableName = tempTableName,
+                        FileName = filePath,
+                        Timeout = 0,
+                        LineTerminator = "\n",
+                        FieldTerminator = ";",
+                        Local = true,
+                        ConflictOption = MySqlBulkLoaderConflictOption.Ignore,
+                        NumberOfLinesToSkip = linesToSkip ?? 0,
+                    };
+                    await Task.Run(() => loader.Load());
+                    Console.WriteLine($"Bulk load to {tempTableName} complete.");
+
+                    // Step 3: Rename tables to swap
+                    string swapTables = $@"
+                        RENAME TABLE `{originalTableName}` TO `{backupTableName}`,
+                                     `{tempTableName}` TO `{originalTableName}`;
+                    ";
+                    using (var cmd = new MySqlCommand(swapTables, connection))
+                    {
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    Console.WriteLine($"Swapped {originalTableName} with {tempTableName}.");
+
+                    // Step 4: Drop the backup table
+                    string dropBackupTable = $"DROP TABLE `{backupTableName}`;";
+                    using (var cmd = new MySqlCommand(dropBackupTable, connection))
+                    {
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    Console.WriteLine($"Dropped backup table {backupTableName}.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error during BulkInsertWithSwapAsync: {ex.Message}");
+                    throw;
+                }
+            }
+        }
+
+        private string RemoveZeroWidthSpaces(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return input;
+            }
+
+            var bom = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
+            if (input.StartsWith(bom, StringComparison.Ordinal))
+            {
+                input = input.Substring(bom.Length);
+            }
+
+            return input;
+        }
+
+        // Data class for raw stage data
+        private class StageData
+        {
+            public string AvatarAddress { get; set; } = string.Empty;
+
+            public string AgentAddress { get; set; } = string.Empty;
+
+            public int StageId { get; set; } = 0;
+
+            public int BlockIndex { get; set; } = 0;
+
+            public string Name { get; set; } = string.Empty;
+
+            public int AvatarLevel { get; set; } = 0;
+
+            public int TitleId { get; set; } = 0;
+
+            public int ArmorId { get; set; } = 0;
+
+            public int Cp { get; set; } = 0;
+        }
+
+        // Data class for craft data
+        private class CraftData
+        {
+            public string AvatarAddress { get; set; } = string.Empty;
+
+            public string AgentAddress { get; set; } = string.Empty;
+
+            public int BlockIndex { get; set; } = 0;
+
+            public int CraftCount { get; set; } = 0;
+
+            public int ArmorId { get; set; } = 0;
+
+            public int AvatarLevel { get; set; } = 0;
+
+            public int Cp { get; set; } = 0;
+
+            public int TitleId { get; set; } = 0;
+
+            public string Name { get; set; } = string.Empty;
+        }
+
+        // Data class for equipment data
+        private class EquipmentData
+        {
+            public string ItemId { get; set; } = string.Empty;
+
+            public string AgentAddress { get; set; } = string.Empty;
+
+            public string AvatarAddress { get; set; } = string.Empty;
+
+            public int EquipmentId { get; set; } = 0;
+
+            public int Cp { get; set; } = 0;
+
+            public int Level { get; set; } = 0;
+
+            public string ItemSubType { get; set; } = string.Empty;
+
+            public string Name { get; set; } = string.Empty;
+
+            public int AvatarLevel { get; set; } = 0;
+
+            public int TitleId { get; set; } = 0;
+
+            public int ArmorId { get; set; } = 0;
+        }
+
+        private class AbilityRankingData
+        {
+            public string Address { get; set; } = string.Empty;
+
+            public string AgentAddress { get; set; } = string.Empty;
+
+            public string Name { get; set; } = string.Empty;
+
+            public int TitleId { get; set; } = 0;
+
+            public int AvatarLevel { get; set; } = 0;
+
+            public int ArmorId { get; set; } = 0;
+
+            public int Cp { get; set; } = 0;
+        }
+
+        private class AbilityRankingModel
+        {
+            public string AvatarAddress { get; set; } = string.Empty;
+
+            public string AgentAddress { get; set; } = string.Empty;
+
+            public string Name { get; set; } = string.Empty;
+
+            public int TitleId { get; set; } = 0;
+
+            public int AvatarLevel { get; set; } = 0;
+
+            public int ArmorId { get; set; } = 0;
+
+            public int Cp { get; set; } = 0;
+
+            public int Ranking { get; set; } = 0;
         }
     }
 }
