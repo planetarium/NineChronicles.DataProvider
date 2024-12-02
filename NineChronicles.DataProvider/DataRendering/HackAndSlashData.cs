@@ -20,7 +20,7 @@ namespace NineChronicles.DataProvider.DataRendering
             DateTimeOffset blockTime
         )
         {
-            AvatarState avatarState = outputStates.GetAvatarState(avatarAddress);
+            AvatarState avatarState = outputStates.GetAvatarState(avatarAddress, false, false, false);
             bool isClear = avatarState.stageMap.ContainsKey(stageId);
 
             var hasModel = new HackAndSlashModel()
