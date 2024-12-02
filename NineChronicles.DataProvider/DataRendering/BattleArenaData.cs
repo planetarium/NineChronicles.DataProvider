@@ -34,6 +34,7 @@ namespace NineChronicles.DataProvider.DataRendering
                 ArenaScore.DeriveAddress(myAvatarAddress, championshipId, round);
             previousStates.TryGetArenaScore(myArenaScoreAdr, out var previousArenaScore);
             var arenaParticipant = outputStates.GetArenaParticipant(championshipId, round, myAvatarAddress);
+            var enemyArenaParticipant = outputStates.GetArenaParticipant(championshipId, round, enemyAvatarAddress);
             Currency ncgCurrency = outputStates.GetGoldCurrency();
             var prevNCGBalance = previousStates.GetBalance(
                 signer,
@@ -76,6 +77,8 @@ namespace NineChronicles.DataProvider.DataRendering
                 MedalCount = medalCount,
                 Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
+                Cp = arenaParticipant.Cp,
+                EnemyCp = enemyArenaParticipant.Cp,
             };
 
             return battleArenaModel;
