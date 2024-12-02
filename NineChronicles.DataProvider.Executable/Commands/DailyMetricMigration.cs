@@ -984,7 +984,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 // Process rankings
                 var rankings = combinedData
                     .GroupBy(data => data.AvatarAddress)
-                    .Select((group, index) => new CraftRankingModel
+                    .Select(group => new CraftRankingModel
                     {
                         AvatarAddress = group.Key,
                         AgentAddress = group.First().AgentAddress,
@@ -994,8 +994,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         Name = group.First().Name,
                         TitleId = group.First().TitleId,
                         BlockIndex = group.Max(x => x.BlockIndex),
-                        CraftCount = group.Count(),
-                        Ranking = index + 1
+                        CraftCount = group.Count()
+                    })
+                    .OrderByDescending(ranking => ranking.CraftCount) // Order by CraftCount in descending order
+                    .ThenBy(ranking => ranking.BlockIndex) // Optional: Secondary sorting, if needed
+                    .Select((ranking, index) =>
+                    {
+                        ranking.Ranking = index + 1;                 // Assign ranking after ordering
+                        return ranking;
                     })
                     .ToList();
 
@@ -1024,7 +1030,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
                            a.Name, a.AvatarLevel, a.TitleId, a.ArmorId, a.Cp
                     FROM HackAndSlashes hs
                     LEFT JOIN Avatars a ON hs.AvatarAddress = a.Address
-                    WHERE hs.Mimisbrunnr = 0 AND hs.Cleared = 1")).ToList();
+                    WHERE hs.Mimisbrunnr = 0 AND hs.Cleared = 1"))
+                    .OrderByDescending(data => data.StageId) // Sort stageData by ClearedStageId (StageId) in descending order
+                    .ThenBy(data => data.BlockIndex) // Optional: Secondary sort by BlockIndex
+                    .ToList();
 
                 // Process rankings
                 var rankings = stageData
