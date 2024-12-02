@@ -1030,9 +1030,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
                            a.Name, a.AvatarLevel, a.TitleId, a.ArmorId, a.Cp
                     FROM HackAndSlashes hs
                     LEFT JOIN Avatars a ON hs.AvatarAddress = a.Address
-                    WHERE hs.Mimisbrunnr = 0 AND hs.Cleared = 1"))
-                    .OrderByDescending(data => data.StageId) // Sort stageData by ClearedStageId (StageId) in descending order
-                    .ThenBy(data => data.BlockIndex) // Optional: Secondary sort by BlockIndex
+                    WHERE hs.Mimisbrunnr = 0 AND hs.Cleared = 1")).ToList(); // Fetch all data first
+
+                stageData = stageData.OrderByDescending(data => data.StageId) // Sort by StageId in descending order
+                    .ThenBy(data => data.BlockIndex) // Then sort by BlockIndex in ascending order
                     .ToList();
 
                 // Process rankings
