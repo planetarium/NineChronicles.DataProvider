@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
@@ -10,9 +11,10 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20241202131743_AddHackAndSlashAvatarLevel")]
+    partial class AddHackAndSlashAvatarLevel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -494,17 +496,11 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<int>("ChampionshipId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Cp")
-                        .HasColumnType("int");
-
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
                     b.Property<string>("EnemyAvatarAddress")
                         .HasColumnType("longtext");
-
-                    b.Property<int>("EnemyCp")
-                        .HasColumnType("int");
 
                     b.Property<int>("MedalCount")
                         .HasColumnType("int");

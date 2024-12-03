@@ -30,5 +30,7 @@ namespace NineChronicles.DataProvider.Store.Models
         public DateOnly Date { get; set; }
 
         public DateTimeOffset Timestamp { get; set; }
+
+        public int CurrentLevel { get; set; }
     }
 }
