@@ -28,11 +28,13 @@ namespace NineChronicles.DataProvider.DataRendering
             DateTimeOffset blockTime
         )
         {
-            AvatarState avatarState = outputStates.GetAvatarState(myAvatarAddress);
+            // optimize avatar state just use level.
+            AvatarState avatarState = outputStates.GetAvatarState(myAvatarAddress, false, false, false);
             var myArenaScoreAdr =
                 ArenaScore.DeriveAddress(myAvatarAddress, championshipId, round);
             previousStates.TryGetArenaScore(myArenaScoreAdr, out var previousArenaScore);
-            outputStates.TryGetArenaScore(myArenaScoreAdr, out var currentArenaScore);
+            var arenaParticipant = outputStates.GetArenaParticipant(championshipId, round, myAvatarAddress);
+            var enemyArenaParticipant = outputStates.GetArenaParticipant(championshipId, round, enemyAvatarAddress);
             Currency ncgCurrency = outputStates.GetGoldCurrency();
             var prevNCGBalance = previousStates.GetBalance(
                 signer,
@@ -46,8 +48,7 @@ namespace NineChronicles.DataProvider.DataRendering
             var arenaInformationAdr =
                 ArenaInformation.DeriveAddress(myAvatarAddress, championshipId, round);
             previousStates.TryGetArenaInformation(arenaInformationAdr, out var previousArenaInformation);
-            outputStates.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
-            var winCount = currentArenaInformation.Win - previousArenaInformation.Win;
+            var winCount = arenaParticipant.Win - previousArenaInformation.Win;
             var medalCount = 0;
             if (arenaData.ArenaType != ArenaType.OffSeason && winCount > 0)
             {
@@ -72,10 +73,12 @@ namespace NineChronicles.DataProvider.DataRendering
                 Round = round,
                 TicketCount = ticket,
                 BurntNCG = Convert.ToDecimal(burntNCG.GetQuantityString()),
-                Victory = currentArenaScore.Score > previousArenaScore.Score,
+                Victory = arenaParticipant.Score > previousArenaScore.Score,
                 MedalCount = medalCount,
                 Date = DateOnly.FromDateTime(blockTime.DateTime),
                 TimeStamp = blockTime,
+                Cp = arenaParticipant.Cp,
+                EnemyCp = enemyArenaParticipant.Cp,
             };
 
             return battleArenaModel;
