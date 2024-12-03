@@ -20,7 +20,8 @@ namespace NineChronicles.DataProvider.DataRendering
             DateTimeOffset blockTime
         )
         {
-            AvatarState avatarState = outputStates.GetAvatarState(avatarAddress);
+            AvatarState avatarState = outputStates.GetAvatarState(avatarAddress, false, false, false);
+            var level = previousStates.GetAvatarState(avatarAddress, false, false, false).level;
             bool isClear = avatarState.stageMap.ContainsKey(stageId);
 
             var hasModel = new HackAndSlashModel()
@@ -34,6 +35,7 @@ namespace NineChronicles.DataProvider.DataRendering
                 BlockIndex = blockIndex,
                 Date = DateOnly.FromDateTime(blockTime.DateTime),
                 Timestamp = blockTime,
+                CurrentLevel = level,
             };
 
             return hasModel;

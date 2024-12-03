@@ -192,39 +192,6 @@ namespace NineChronicles.DataProvider.Store
             }
         }
 
-        public void StoreHackAndSlash(
-            Guid id,
-            Address agentAddress,
-            Address avatarAddress,
-            int stageId,
-            bool cleared,
-            bool isMimisbrunnr,
-            long blockIndex)
-        {
-            try
-            {
-                using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                ctx.HackAndSlashes!.AddRange(
-                    new HackAndSlashModel()
-                    {
-                        Id = id.ToString(),
-                        AgentAddress = agentAddress.ToString(),
-                        AvatarAddress = avatarAddress.ToString(),
-                        StageId = stageId,
-                        Cleared = cleared,
-                        Mimisbrunnr = isMimisbrunnr,
-                        BlockIndex = blockIndex,
-                    }
-                );
-                ctx.SaveChanges();
-                ctx.Dispose();
-            }
-            catch (Exception e)
-            {
-                Log.Debug(e.Message);
-            }
-        }
-
         public void StoreHackAndSlashList(List<HackAndSlashModel?> hasList)
         {
             try
