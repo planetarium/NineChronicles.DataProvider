@@ -1646,28 +1646,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     BulkInsert(uRDbName, path);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                var stm16 = $"DROP TABLE {EDbName}; RENAME TABLE {EDbName}_Dump TO {EDbName};";
-                var stm33 = $"DROP TABLE {bARDbName}; RENAME TABLE {bARDbName}_Dump TO {bARDbName};";
-                var cmd16 = new MySqlCommand(stm16, connection);
-                var cmd33 = new MySqlCommand(stm33, connection);
-                DateTimeOffset startRestore;
-                DateTimeOffset endRestore;
-                startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd16.CommandTimeout = 300;
-                cmd16.ExecuteScalar();
-                connection.Close();
-                endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore Equipments Complete! Time Elapsed: {0}", endRestore - startRestore);
-                startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd33.CommandTimeout = 300;
-                cmd33.ExecuteScalar();
-                connection.Close();
-                endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore BattleArenaRanking Complete! Time Elapsed: {0}", endRestore - startRestore);
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
 
             var stm11 = $"DROP TABLE {EDbName}_Dump;";
