@@ -296,7 +296,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 Console.WriteLine(date);
 
                 var dau = 0;
-                var dauQuery = $"SELECT COUNT(DISTINCT Signer) as 'Unique Address' FROM data_provider.Transactions WHERE Date = '{date}'";
+                var dauQuery = $"SELECT COUNT(DISTINCT Signer) as 'Unique Address' FROM Transactions WHERE Date = '{date}'";
                 connection.Open();
                 var dauCommand = new MySqlCommand(dauQuery, connection);
                 dauCommand.CommandTimeout = 600;
@@ -317,7 +317,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 connection.Close();
 
                 var txCount = 0;
-                var txCountQuery = $"SELECT COUNT(TxId) as 'Transactions' FROM data_provider.Transactions WHERE Date = '{date}'";
+                var txCountQuery = $"SELECT COUNT(TxId) as 'Transactions' FROM Transactions WHERE Date = '{date}'";
                 connection.Open();
                 var txCountCommand = new MySqlCommand(txCountQuery, connection);
                 txCountCommand.CommandTimeout = 600;
@@ -681,7 +681,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 connection.Close();
 
                 var enhanceNcg = 0m;
-                var enhanceNcgQuery = $"SELECT sum(BurntNCG) as 'Enhance NCG(Amount)' from data_provider.ItemEnhancements  where Date = '{date}'";
+                var enhanceNcgQuery = $"SELECT sum(BurntNCG) as 'Enhance NCG(Amount)' from ItemEnhancements  where Date = '{date}'";
                 connection.Open();
                 var enhanceNcgCommand = new MySqlCommand(enhanceNcgQuery, connection);
                 enhanceNcgCommand.CommandTimeout = 600;
@@ -702,7 +702,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 connection.Close();
 
                 var runeNcg = 0m;
-                var runeNcgQuery = $"SELECT sum(BurntNCG) as 'Rune NCG(Amount)' from data_provider.RuneEnhancements   where Date = '{date}'";
+                var runeNcgQuery = $"SELECT sum(BurntNCG) as 'Rune NCG(Amount)' from RuneEnhancements   where Date = '{date}'";
                 connection.Open();
                 var runeNcgCommand = new MySqlCommand(runeNcgQuery, connection);
                 runeNcgCommand.CommandTimeout = 600;
@@ -723,7 +723,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 connection.Close();
 
                 var runeSlotNcg = 0m;
-                var runeSlotNcgQuery = $"SELECT sum(BurntNCG) as 'RuneSlot NCG(Amount)' from data_provider.UnlockRuneSlots  where Date = '{date}'";
+                var runeSlotNcgQuery = $"SELECT sum(BurntNCG) as 'RuneSlot NCG(Amount)' from UnlockRuneSlots  where Date = '{date}'";
                 connection.Open();
                 var runeSlotNcgCommand = new MySqlCommand(runeSlotNcgQuery, connection);
                 runeSlotNcgCommand.CommandTimeout = 600;
@@ -744,7 +744,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 connection.Close();
 
                 var arenaNcg = 0m;
-                var arenaNcgQuery = $"SELECT sum(BurntNCG) as 'Arena NCG(Amount)' from data_provider.BattleArenas where Date = '{date}'";
+                var arenaNcgQuery = $"SELECT sum(BurntNCG) as 'Arena NCG(Amount)' from BattleArenas where Date = '{date}'";
                 connection.Open();
                 var arenaNcgCommand = new MySqlCommand(arenaNcgQuery, connection);
                 arenaNcgCommand.CommandTimeout = 600;
@@ -828,7 +828,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     fbBARDbName = $"{fbBARDbName}_{prevArenaData.ChampionshipId}_{prevArenaData.Round}";
 
                     connection.Open();
-                    var preBarQuery = $"SELECT `BlockIndex` FROM data_provider.{fbBARDbName} limit 1";
+                    var preBarQuery = $"SELECT `BlockIndex` FROM {fbBARDbName} limit 1";
                     var preBarCmd = new MySqlCommand(preBarQuery, connection);
 
                     var dataReader = preBarCmd.ExecuteReader();
@@ -980,7 +980,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                         connection.Open();
                         var s =
-                            $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{fbUSDbName}` (
+                            $@"CREATE TABLE IF NOT EXISTS `{fbUSDbName}` (
                                       `BlockIndex` bigint NOT NULL,
                                       `StakeVersion` varchar(100) NOT NULL,
                                       `AgentAddress` varchar(100) NOT NULL,
@@ -1041,7 +1041,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     Console.WriteLine("1");
                     connection.Open();
                     var stm33 =
-                        $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{bARDbName}` (
+                        $@"CREATE TABLE IF NOT EXISTS `{bARDbName}` (
                             `BlockIndex` bigint NOT NULL,
                             `AgentAddress` varchar(100) NOT NULL,
                             `AvatarAddress` varchar(100) NOT NULL,
