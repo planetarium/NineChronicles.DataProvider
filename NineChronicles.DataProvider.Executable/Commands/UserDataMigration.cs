@@ -980,7 +980,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                         connection.Open();
                         var s =
-                            $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{fbUSDbName}` (
+                            $@"CREATE TABLE IF NOT EXISTS `{fbUSDbName}` (
                                       `BlockIndex` bigint NOT NULL,
                                       `StakeVersion` varchar(100) NOT NULL,
                                       `AgentAddress` varchar(100) NOT NULL,
@@ -1041,7 +1041,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     Console.WriteLine("1");
                     connection.Open();
                     var stm33 =
-                        $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{bARDbName}` (
+                        $@"CREATE TABLE IF NOT EXISTS `{bARDbName}` (
                             `BlockIndex` bigint NOT NULL,
                             `AgentAddress` varchar(100) NOT NULL,
                             `AvatarAddress` varchar(100) NOT NULL,
