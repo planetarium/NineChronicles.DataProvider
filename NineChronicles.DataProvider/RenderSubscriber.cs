@@ -1711,10 +1711,6 @@ namespace NineChronicles.DataProvider
                     MySqlStore.StoreTransferAssetList(_transferAssetList);
                     MySqlStore.StoreRequestPledgeList(_requestPledgeList);
                     MySqlStore.StoreApprovePledgeList(_approvePledgeList);
-                    MySqlStore.StoreAuraSummonList(_auraSummonList);
-                    MySqlStore.StoreAuraSummonFailList(_auraSummonFailList);
-                    MySqlStore.StoreRuneSummonList(_runeSummonList);
-                    MySqlStore.StoreRuneSummonFailList(_runeSummonFailList);
                     StoreAdventureBossList();
                     StoreCraftingData();
                     StoreGrindList();
@@ -1765,8 +1761,6 @@ namespace NineChronicles.DataProvider
             _transferAssetList.Clear();
             _requestPledgeList.Clear();
             _approvePledgeList.Clear();
-            _auraSummonList.Clear();
-            _auraSummonFailList.Clear();
             ClearAdventureBossList();
             ClearCraftingList();
             ClearGrindList();
