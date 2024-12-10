@@ -9,8 +9,10 @@ namespace NineChronicles.DataProvider.Store
     using Nekoyume.Model.Item;
     using NineChronicles.DataProvider.Store.Models;
     using NineChronicles.DataProvider.Store.Models.AdventureBoss;
+    using NineChronicles.DataProvider.Store.Models.Claim;
     using NineChronicles.DataProvider.Store.Models.Crafting;
     using NineChronicles.DataProvider.Store.Models.Grinding;
+    using NineChronicles.DataProvider.Store.Models.Ranking;
     using Serilog;
 
     public partial class MySqlStore
@@ -183,39 +185,6 @@ namespace NineChronicles.DataProvider.Store
                 }
 
                 Task.WaitAll(tasks.ToArray());
-            }
-            catch (Exception e)
-            {
-                Log.Debug(e.Message);
-            }
-        }
-
-        public void StoreHackAndSlash(
-            Guid id,
-            Address agentAddress,
-            Address avatarAddress,
-            int stageId,
-            bool cleared,
-            bool isMimisbrunnr,
-            long blockIndex)
-        {
-            try
-            {
-                using NineChroniclesContext ctx = _dbContextFactory.CreateDbContext();
-                ctx.HackAndSlashes!.AddRange(
-                    new HackAndSlashModel()
-                    {
-                        Id = id.ToString(),
-                        AgentAddress = agentAddress.ToString(),
-                        AvatarAddress = avatarAddress.ToString(),
-                        StageId = stageId,
-                        Cleared = cleared,
-                        Mimisbrunnr = isMimisbrunnr,
-                        BlockIndex = blockIndex,
-                    }
-                );
-                ctx.SaveChanges();
-                ctx.Dispose();
             }
             catch (Exception e)
             {
@@ -545,12 +514,12 @@ namespace NineChronicles.DataProvider.Store
             if (!isMimisbrunnr)
             {
                 query = ctx.Set<StageRankingModel>()
-                    .FromSqlRaw("SELECT * FROM data_provider.StageRanking ORDER BY Ranking ");
+                    .FromSqlRaw("SELECT * FROM StageRanking ORDER BY Ranking ");
             }
             else
             {
                 query = ctx.Set<StageRankingModel>()
-                    .FromSqlRaw("SELECT * FROM data_provider.StageRankingMimisbrunnr ORDER BY Ranking ");
+                    .FromSqlRaw("SELECT * FROM StageRankingMimisbrunnr ORDER BY Ranking ");
             }
 
             if (avatarAddress is { } avatarAddressNotNull)
@@ -1899,6 +1868,9 @@ namespace NineChronicles.DataProvider.Store
         public partial Task StoreGrindList(List<GrindingModel> grindingList);
 
         public partial Task StoreUnlockCombinationSlotList(List<UnlockCombinationSlotModel> unlockCombinationSlotList);
+
+        /* Claim */
+        public partial Task StoreClaimGiftList(List<ClaimGiftsModel> claimGiftList);
 
         public List<RaiderModel> GetRaiderList()
         {

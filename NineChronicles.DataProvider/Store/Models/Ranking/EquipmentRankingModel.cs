@@ -1,4 +1,4 @@
-﻿namespace NineChronicles.DataProvider.Store.Models
+﻿namespace NineChronicles.DataProvider.Store.Models.Ranking
 {
     using System.ComponentModel.DataAnnotations;
 

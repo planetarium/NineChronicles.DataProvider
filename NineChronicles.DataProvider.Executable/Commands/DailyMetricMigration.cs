@@ -1,3 +1,5 @@
+using NineChronicles.DataProvider.Store.Models.Ranking;
+
 namespace NineChronicles.DataProvider.Executable.Commands
 {
     using System;

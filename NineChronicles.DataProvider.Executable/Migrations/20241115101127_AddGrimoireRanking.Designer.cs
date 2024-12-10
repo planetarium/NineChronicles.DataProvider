@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NineChronicles.DataProvider.Store;
 
@@ -10,9 +11,10 @@ using NineChronicles.DataProvider.Store;
 namespace NineChronicles.DataProvider.Executable.Migrations
 {
     [DbContext(typeof(NineChroniclesContext))]
-    partial class NineChroniclesContextModelSnapshot : ModelSnapshot
+    [Migration("20241115101127_AddGrimoireRanking")]
+    partial class AddGrimoireRanking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -494,17 +496,11 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<int>("ChampionshipId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Cp")
-                        .HasColumnType("int");
-
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
                     b.Property<string>("EnemyAvatarAddress")
                         .HasColumnType("longtext");
-
-                    b.Property<int>("EnemyCp")
-                        .HasColumnType("int");
 
                     b.Property<int>("MedalCount")
                         .HasColumnType("int");
@@ -1558,9 +1554,6 @@ namespace NineChronicles.DataProvider.Executable.Migrations
 
                     b.Property<bool>("Cleared")
                         .HasColumnType("tinyint(1)");
-
-                    b.Property<int>("CurrentLevel")
-                        .HasColumnType("int");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
@@ -3819,8 +3812,8 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<int>("Cp")
                         .HasColumnType("int");
 
-                    b.Property<long>("HighScore")
-                        .HasColumnType("bigint");
+                    b.Property<int>("HighScore")
+                        .HasColumnType("int");
 
                     b.Property<int>("IconId")
                         .HasColumnType("int");
@@ -3831,8 +3824,8 @@ namespace NineChronicles.DataProvider.Executable.Migrations
                     b.Property<int>("Ranking")
                         .HasColumnType("int");
 
-                    b.Property<long>("TotalScore")
-                        .HasColumnType("bigint");
+                    b.Property<int>("TotalScore")
+                        .HasColumnType("int");
 
                     b.ToTable("WorldBossRankings", null, t => t.ExcludeFromMigrations());
                 });
