@@ -40,5 +40,9 @@
         public DateOnly Date { get; set; }
 
         public DateTimeOffset TimeStamp { get; set; }
+
+        public int Cp { get; set; }
+
+        public int EnemyCp { get; set; }
     }
 }
