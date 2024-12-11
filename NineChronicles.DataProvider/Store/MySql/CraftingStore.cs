@@ -159,5 +159,39 @@ namespace NineChronicles.DataProvider.Store
                 }
             }
         }
+
+        // Synthesize
+        public async partial Task StoreSynthesizeList(List<SynthesizeModel> synthesizeList)
+        {
+            NineChroniclesContext? ctx = null;
+
+            try
+            {
+                ctx = await _dbContextFactory.CreateDbContextAsync();
+
+                foreach (var synth in synthesizeList)
+                {
+                    if (!await ctx.Synthesizes.AnyAsync(s => s.Id == synth.Id))
+                    {
+                        await ctx.Synthesizes.AddAsync(synth);
+                    }
+                }
+
+                await ctx.SaveChangesAsync();
+                Log.Debug($"[Synthesize] {synthesizeList.Count} Synthesize saved.");
+            }
+            catch (Exception e)
+            {
+                Log.Debug(e.Message);
+                Log.Debug(e.StackTrace);
+            }
+            finally
+            {
+                if (ctx is not null)
+                {
+                    await ctx.DisposeAsync();
+                }
+            }
+        }
     }
 }

@@ -19,6 +19,7 @@ namespace NineChronicles.DataProvider
         private List<RapidCombinationModel> _rapidCombinationList = new ();
         private List<CustomEquipmentCraftModel> _customEquipmentCraftList = new ();
         private List<UnlockCombinationSlotModel> _unlockCombinationSlotList = new ();
+        private List<SynthesizeModel> _synthesizeList = new ();
 
         // Store
         private void StoreCraftingData()
@@ -51,6 +52,14 @@ namespace NineChronicles.DataProvider
                     await MySqlStore.StoreUnlockCombinationSlotList(_unlockCombinationSlotList);
                 }));
 
+                // Synthesize
+                Log.Debug("[Crafting] Store Synthesize list");
+                tasks.Add(Task.Run(async () =>
+                {
+                    Log.Debug($"[Synthesize] {_synthesizeList.Count}");
+                    await MySqlStore.StoreSynthesizeList(_synthesizeList);
+                }));
+
                 Task.WaitAll(tasks.ToArray());
             }
             catch (Exception e)
@@ -66,6 +75,7 @@ namespace NineChronicles.DataProvider
             _rapidCombinationList.Clear();
             _customEquipmentCraftList.Clear();
             _unlockCombinationSlotList.Clear();
+            _synthesizeList.Clear();
         }
 
         // Subscribe
@@ -187,6 +197,40 @@ namespace NineChronicles.DataProvider
 
                     Log.Debug(
                         "[DataProvider] Stored RapidCombination action in block #{index}. Time Taken: {time} ms.",
+                        evt.BlockIndex,
+                        (DateTimeOffset.UtcNow - start).Milliseconds
+                    );
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(
+                    e,
+                    "[DataProvider] RenderSubscriber Error: {ErrorMessage}, StackTrace: {StackTrace}",
+                    e.Message,
+                    e.StackTrace
+                );
+            }
+        }
+
+        partial void SubscribeSynthesize(ActionEvaluation<Synthesize> evt)
+        {
+            try
+            {
+                if (evt.Exception is null && evt.Action is { } synthesize)
+                {
+                    var start = DateTimeOffset.UtcNow;
+                    _synthesizeList.Add(SynthesizeData.GetSynthesizeInfo(
+                        new World(_blockChainStates.GetWorldState(evt.PreviousState)),
+                        new ReplayRandom(evt.RandomSeed),
+                        evt.Signer,
+                        evt.Action,
+                        evt.BlockIndex,
+                        _blockTimeOffset
+                    ));
+
+                    Log.Debug(
+                        "[DataProvider] Stored Synthesize action in block #{index}. Time Taken: {time} ms.",
                         evt.BlockIndex,
                         (DateTimeOffset.UtcNow - start).Milliseconds
                     );

@@ -1535,6 +1535,7 @@ namespace NineChronicles.DataProvider
             _actionRenderer.EveryRender<RapidCombination>().Subscribe(SubscribeRapidCombination);
             _actionRenderer.EveryRender<CustomEquipmentCraft>().Subscribe(SubscribeCustomEquipmentCraft);
             _actionRenderer.EveryRender<UnlockCombinationSlot>().Subscribe(SubscribeUnlockCombinationSlot);
+            _actionRenderer.EveryRender<Synthesize>().Subscribe(SubscribeSynthesize);
 
             // Grinding
             _actionRenderer.EveryRender<Grinding>().Subscribe(SubscribeGrinding);
@@ -1569,6 +1570,8 @@ namespace NineChronicles.DataProvider
         partial void SubscribeCustomEquipmentCraft(ActionEvaluation<CustomEquipmentCraft> evt);
 
         partial void SubscribeUnlockCombinationSlot(ActionEvaluation<UnlockCombinationSlot> evt);
+
+        partial void SubscribeSynthesize(ActionEvaluation<Synthesize> evt);
 
         //// Grinding
         partial void SubscribeGrinding(ActionEvaluation<Grinding> ev);

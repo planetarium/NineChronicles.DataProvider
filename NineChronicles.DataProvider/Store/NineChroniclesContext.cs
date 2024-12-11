@@ -193,6 +193,8 @@ namespace NineChronicles.DataProvider.Store
         // Table for storing CostumeSummon actions
         public DbSet<CostumeSummonModel> CostumeSummons => Set<CostumeSummonModel>();
 
+        public DbSet<SynthesizeModel> Synthesizes => Set<SynthesizeModel>();
+
         public DbSet<UserConsumablesModel> UserConsumables => Set<UserConsumablesModel>();
 
         public DbSet<UserCostumesModel> UserCostumes => Set<UserCostumesModel>();
