@@ -1730,6 +1730,8 @@ namespace NineChronicles.DataProvider.Store
 
         public partial Task StoreUnlockCombinationSlotList(List<UnlockCombinationSlotModel> unlockCombinationSlotList);
 
+        public partial Task StoreSynthesizeList(List<SynthesizeModel> synthesizeList);
+
         /* Claim */
         public partial Task StoreClaimGiftList(List<ClaimGiftsModel> claimGiftList);
 
