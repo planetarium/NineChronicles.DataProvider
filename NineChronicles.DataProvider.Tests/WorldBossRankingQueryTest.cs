@@ -45,7 +45,7 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
                     i + 2,
                     GameConfig.DefaultAvatarArmorId,
                     i,
-                    avatarAddress.ToHex(),
+                    avatarAddress.ToString(),
                     0
                 );
                 Context.Raiders.Add(model);
@@ -78,7 +78,7 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
         Assert.Equal(101, models.Length);
         var raider = (Dictionary<string, object>)models.Last();
         // FIXME should be use AddressType
-        Assert.Equal(targetAvatarAddress.ToHex(), raider["address"]);
+        Assert.Equal(targetAvatarAddress.ToString(), raider["address"]);
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
                 i + 2,
                 GameConfig.DefaultAvatarArmorId,
                 i,
-                new PrivateKey().Address.ToHex(),
+                new PrivateKey().Address.ToString(),
                 0
             );
             Context.Raiders.Add(model);
@@ -153,7 +153,7 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
                 i + 2,
                 GameConfig.DefaultAvatarArmorId,
                 i,
-                avatarAddress.ToHex(),
+                avatarAddress.ToString(),
                 0
             );
             Context.Raiders.Add(model);
