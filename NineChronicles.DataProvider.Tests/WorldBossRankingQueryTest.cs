@@ -78,7 +78,7 @@ public class WorldBossRankingQueryTest : TestBase, IDisposable
         Assert.Equal(101, models.Length);
         var raider = (Dictionary<string, object>)models.Last();
         // FIXME should be use AddressType
-        Assert.Equal(targetAvatarAddress.ToString(), raider["address"]);
+        Assert.Equal(targetAvatarAddress.ToHex(), raider["address"]);
     }
 
     [Fact]
