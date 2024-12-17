@@ -60,7 +60,7 @@ public class WorldBossRankingRewardQueryTest : TestBase
                 i + 2,
                 GameConfig.DefaultAvatarArmorId,
                 i,
-                avatarAddress.ToHex(),
+                avatarAddress.ToString(),
                 0
             );
             Context.Raiders.Add(model);
@@ -144,7 +144,7 @@ public class WorldBossRankingRewardQueryTest : TestBase
                 i + 2,
                 GameConfig.DefaultAvatarArmorId,
                 i,
-                avatarAddress.ToHex(),
+                avatarAddress.ToString(),
                 0
             );
             Context.Raiders.Add(model);
@@ -221,7 +221,7 @@ public class WorldBossRankingRewardQueryTest : TestBase
                 i + 2,
                 GameConfig.DefaultAvatarArmorId,
                 i,
-                avatarAddress.ToHex(),
+                avatarAddress.ToString(),
                 0
             );
             Context.Raiders.Add(model);

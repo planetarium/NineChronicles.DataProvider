@@ -68,13 +68,13 @@ public class RaiderWorkerTest : TestBase
             RaiderState.Cp,
             RaiderState.IconId,
             RaiderState.Level,
-            RaiderState.AvatarAddress.ToHex(),
+            RaiderState.AvatarAddress.ToString(),
             RaiderState.PurchaseCount
         );
         Context.Raiders.Add(model);
         Assert.Equal(model.CreatedAt, model.UpdatedAt);
         Assert.False(Context.WorldBossSeasonMigrationModels.Any());
-        await Context.SaveChangesAsync(_cts.Token);        
+        await Context.SaveChangesAsync(_cts.Token);
         await worker.StartAsync(_cts.Token);
         _cts.Cancel();
         Assert.Equal(success, store.MigrationExists(1));
@@ -98,7 +98,7 @@ public class RaiderWorkerTest : TestBase
                 Addresses.GetSheetAddress<WorldBossListSheet>(),
                 @"id,boss_id,started_block_index,ended_block_index,fee,ticket_price,additional_ticket_price,max_purchase_count
                 1,900001,0,10,300,200,100,10".Serialize())
-                
+
         );
         return mockWorldState;
     }
