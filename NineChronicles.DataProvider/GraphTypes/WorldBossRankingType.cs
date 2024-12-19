@@ -19,8 +19,18 @@ namespace NineChronicles.DataProvider.GraphTypes
             Field<NonNullGraphType<StringGraphType>>(
                 nameof(WorldBossRankingModel.Address),
                 description: "Address of avatar.",
-                resolve: context => context.Source.Address
-            );
+                resolve: context =>
+                {
+                    var address = context.Source.Address!;
+
+                    // Return Address.ToHex for api backward compatibility
+                    if (address.StartsWith("0x"))
+                    {
+                        return address.Replace("0x", string.Empty);
+                    }
+
+                    return address;
+                });
             Field<NonNullGraphType<StringGraphType>>(
                 nameof(WorldBossRankingModel.AvatarName),
                 description: "Name of avatar.",

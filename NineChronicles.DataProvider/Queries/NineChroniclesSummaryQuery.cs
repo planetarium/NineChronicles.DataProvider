@@ -241,9 +241,9 @@ namespace NineChronicles.DataProvider.Queries
                     var result = raiders
                         .Take(limit)
                         .ToList();
-                    if (!(avatarAddress is null) && result.All(r => r.Address != avatarAddress.Value.ToHex()))
+                    if (!(avatarAddress is null) && result.All(r => r.Address != avatarAddress.Value.ToString()))
                     {
-                        var myAvatar = raiders.FirstOrDefault(r => r.Address == avatarAddress.Value.ToHex());
+                        var myAvatar = raiders.FirstOrDefault(r => r.Address == avatarAddress.Value.ToString());
                         if (!(myAvatar is null))
                         {
                             result.Add(myAvatar);
@@ -296,7 +296,7 @@ namespace NineChronicles.DataProvider.Queries
                         // Check ranking.
                         var raiders = Store.GetWorldBossRanking(raidId, null, null);
                         var totalCount = raiders.Count;
-                        var raider = raiders.First(r => r.Address == avatarAddress.ToHex());
+                        var raider = raiders.First(r => r.Address == avatarAddress.ToString());
 
                         // calculate rewards.
                         return GetWorldBossRankingReward(raidId, totalCount, raider, rankingRewardSheet, bossRow, runeSheet, materialItemSheet);
