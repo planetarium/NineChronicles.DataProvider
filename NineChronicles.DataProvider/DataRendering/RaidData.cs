@@ -18,7 +18,7 @@
                 raiderState.Cp,
                 raiderState.IconId,
                 raiderState.Level,
-                raiderState.AvatarAddress.ToHex(),
+                raiderState.AvatarAddress.ToString(),
                 raiderState.PurchaseCount);
 
             return raiderModel;

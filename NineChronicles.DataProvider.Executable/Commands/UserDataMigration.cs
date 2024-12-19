@@ -296,7 +296,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 Console.WriteLine(date);
 
                 var dau = 0;
-                var dauQuery = $"SELECT COUNT(DISTINCT Signer) as 'Unique Address' FROM data_provider.Transactions WHERE Date = '{date}'";
+                var dauQuery = $"SELECT COUNT(DISTINCT Signer) as 'Unique Address' FROM Transactions WHERE Date = '{date}'";
                 connection.Open();
                 var dauCommand = new MySqlCommand(dauQuery, connection);
                 dauCommand.CommandTimeout = 600;
@@ -317,7 +317,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 connection.Close();
 
                 var txCount = 0;
-                var txCountQuery = $"SELECT COUNT(TxId) as 'Transactions' FROM data_provider.Transactions WHERE Date = '{date}'";
+                var txCountQuery = $"SELECT COUNT(TxId) as 'Transactions' FROM Transactions WHERE Date = '{date}'";
                 connection.Open();
                 var txCountCommand = new MySqlCommand(txCountQuery, connection);
                 txCountCommand.CommandTimeout = 600;
@@ -681,7 +681,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 connection.Close();
 
                 var enhanceNcg = 0m;
-                var enhanceNcgQuery = $"SELECT sum(BurntNCG) as 'Enhance NCG(Amount)' from data_provider.ItemEnhancements  where Date = '{date}'";
+                var enhanceNcgQuery = $"SELECT sum(BurntNCG) as 'Enhance NCG(Amount)' from ItemEnhancements  where Date = '{date}'";
                 connection.Open();
                 var enhanceNcgCommand = new MySqlCommand(enhanceNcgQuery, connection);
                 enhanceNcgCommand.CommandTimeout = 600;
@@ -702,7 +702,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 connection.Close();
 
                 var runeNcg = 0m;
-                var runeNcgQuery = $"SELECT sum(BurntNCG) as 'Rune NCG(Amount)' from data_provider.RuneEnhancements   where Date = '{date}'";
+                var runeNcgQuery = $"SELECT sum(BurntNCG) as 'Rune NCG(Amount)' from RuneEnhancements   where Date = '{date}'";
                 connection.Open();
                 var runeNcgCommand = new MySqlCommand(runeNcgQuery, connection);
                 runeNcgCommand.CommandTimeout = 600;
@@ -723,7 +723,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 connection.Close();
 
                 var runeSlotNcg = 0m;
-                var runeSlotNcgQuery = $"SELECT sum(BurntNCG) as 'RuneSlot NCG(Amount)' from data_provider.UnlockRuneSlots  where Date = '{date}'";
+                var runeSlotNcgQuery = $"SELECT sum(BurntNCG) as 'RuneSlot NCG(Amount)' from UnlockRuneSlots  where Date = '{date}'";
                 connection.Open();
                 var runeSlotNcgCommand = new MySqlCommand(runeSlotNcgQuery, connection);
                 runeSlotNcgCommand.CommandTimeout = 600;
@@ -744,7 +744,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 connection.Close();
 
                 var arenaNcg = 0m;
-                var arenaNcgQuery = $"SELECT sum(BurntNCG) as 'Arena NCG(Amount)' from data_provider.BattleArenas where Date = '{date}'";
+                var arenaNcgQuery = $"SELECT sum(BurntNCG) as 'Arena NCG(Amount)' from BattleArenas where Date = '{date}'";
                 connection.Open();
                 var arenaNcgCommand = new MySqlCommand(arenaNcgQuery, connection);
                 arenaNcgCommand.CommandTimeout = 600;
@@ -820,249 +820,264 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     BulkInsert(dailyMetricDbName, path);
                 }
 
-                var prevArenaEndIndex = arenaData.StartBlockIndex - 1;
-                var prevArenaData = arenaSheet.GetRoundByBlockIndex(prevArenaEndIndex);
-                var finalizeBarankingTip = prevArenaEndIndex;
-                fbBARDbName = $"{fbBARDbName}_{prevArenaData.ChampionshipId}_{prevArenaData.Round}";
-
-                connection.Open();
-                var preBarQuery = $"SELECT `BlockIndex` FROM data_provider.{fbBARDbName} limit 1";
-                var preBarCmd = new MySqlCommand(preBarQuery, connection);
-
-                var dataReader = preBarCmd.ExecuteReader();
-                long prevBarDbTip = 0;
-                Console.WriteLine("3");
-                while (dataReader.Read())
+                try
                 {
-                    Console.WriteLine("{0}", dataReader.GetInt64(0));
-                    prevBarDbTip = dataReader.GetInt64(0);
-                }
+                    var prevArenaEndIndex = arenaData.StartBlockIndex - 1;
+                    var prevArenaData = arenaSheet.GetRoundByBlockIndex(prevArenaEndIndex);
+                    var finalizeBarankingTip = prevArenaEndIndex;
+                    fbBARDbName = $"{fbBARDbName}_{prevArenaData.ChampionshipId}_{prevArenaData.Round}";
 
-                connection.Close();
-                Console.WriteLine("4");
-                if (prevBarDbTip != 0 && prevBarDbTip < finalizeBarankingTip)
-                {
-                    finalizeBaranking = true;
-                }
+                    connection.Open();
+                    var preBarQuery = $"SELECT `BlockIndex` FROM {fbBARDbName} limit 1";
+                    var preBarCmd = new MySqlCommand(preBarQuery, connection);
 
-                if (finalizeBaranking)
-                {
-                    try
+                    var dataReader = preBarCmd.ExecuteReader();
+                    long prevBarDbTip = 0;
+                    Console.WriteLine("3");
+                    while (dataReader.Read())
                     {
-                        Console.WriteLine($"Finalize {fbBARDbName} Table!");
-                        var fbTipHash = _baseStore.IndexBlockHash(_baseChain.Id, finalizeBarankingTip);
-                        var fbTip = _baseStore.GetBlock((BlockHash)fbTipHash!);
-                        var fbExec = _baseChain.EvaluateBlock(fbTip);
-                        var fbEv = fbExec.Last();
-                        var fbOutputState = new World(blockChainStates.GetWorldState(fbEv.OutputState));
-                        var fbArenaSheet = fbOutputState.GetSheet<ArenaSheet>();
-                        var fbArenaData = fbArenaSheet.GetRoundByBlockIndex(fbTip.Index);
-                        List<string> fbAgents = new List<string>();
-                        var fbavatarCount = 0;
+                        Console.WriteLine("{0}", dataReader.GetInt64(0));
+                        prevBarDbTip = dataReader.GetInt64(0);
+                    }
 
-                        fbUSDbName = $"{fbUSDbName}_{fbTip.Index}";
-                        Console.WriteLine("5");
+                    connection.Close();
+                    Console.WriteLine("4");
+                    if (prevBarDbTip != 0 && prevBarDbTip < finalizeBarankingTip)
+                    {
+                        finalizeBaranking = true;
+                    }
 
-                        foreach (var fbAvatar in avatars)
+                    if (finalizeBaranking)
+                    {
+                        try
                         {
-                            try
+                            Console.WriteLine($"Finalize {fbBARDbName} Table!");
+                            var fbTipHash = _baseStore.IndexBlockHash(_baseChain.Id, finalizeBarankingTip);
+                            var fbTip = _baseStore.GetBlock((BlockHash)fbTipHash!);
+                            var fbExec = _baseChain.EvaluateBlock(fbTip);
+                            var fbEv = fbExec.Last();
+                            var fbOutputState = new World(blockChainStates.GetWorldState(fbEv.OutputState));
+                            var fbArenaSheet = fbOutputState.GetSheet<ArenaSheet>();
+                            var fbArenaData = fbArenaSheet.GetRoundByBlockIndex(fbTip.Index);
+                            List<string> fbAgents = new List<string>();
+                            var fbavatarCount = 0;
+
+                            fbUSDbName = $"{fbUSDbName}_{fbTip.Index}";
+                            Console.WriteLine("5");
+
+                            foreach (var fbAvatar in avatars)
                             {
-                                fbavatarCount++;
-                                Console.WriteLine("Migrating {0}/{1}", fbavatarCount, avatars.Count);
-                                AvatarState fbAvatarState;
-                                var fbAvatarAddress = new Address(fbAvatar);
-                                fbAvatarState = fbOutputState.GetAvatarState(fbAvatarAddress);
-
-                                var fbAvatarLevel = fbAvatarState.level;
-
-                                var fbArenaScoreAdr =
-                                ArenaScore.DeriveAddress(fbAvatarAddress, fbArenaData.ChampionshipId, fbArenaData.Round);
-                                var fbArenaInformationAdr =
-                                    ArenaInformation.DeriveAddress(fbAvatarAddress, fbArenaData.ChampionshipId, fbArenaData.Round);
-                                fbOutputState.TryGetArenaInformation(fbArenaInformationAdr, out var fbCurrentArenaInformation);
-                                fbOutputState.TryGetArenaScore(fbArenaScoreAdr, out var fbOutputArenaScore);
-                                if (fbCurrentArenaInformation != null && fbOutputArenaScore != null)
+                                try
                                 {
-                                    _fbBarBulkFile.WriteLine(
-                                        $"{fbTip.Index};" +
-                                        $"{fbAvatarState.agentAddress.ToString()};" +
-                                        $"{fbAvatarAddress.ToString()};" +
-                                        $"{fbAvatarLevel};" +
-                                        $"{fbArenaData.ChampionshipId};" +
-                                        $"{fbArenaData.Round};" +
-                                        $"{fbArenaData.ArenaType.ToString()};" +
-                                        $"{fbOutputArenaScore.Score};" +
-                                        $"{fbCurrentArenaInformation.Win};" +
-                                        $"{fbCurrentArenaInformation.Win};" +
-                                        $"{fbCurrentArenaInformation.Lose};" +
-                                        $"{fbCurrentArenaInformation.Ticket};" +
-                                        $"{fbCurrentArenaInformation.PurchasedTicketCount};" +
-                                        $"{fbCurrentArenaInformation.TicketResetCount};" +
-                                        $"{fbArenaData.EntranceFee};" +
-                                        $"{fbArenaData.TicketPrice};" +
-                                        $"{fbArenaData.AdditionalTicketPrice};" +
-                                        $"{fbArenaData.RequiredMedalCount};" +
-                                        $"{fbArenaData.StartBlockIndex};" +
-                                        $"{fbArenaData.EndBlockIndex};" +
-                                        $"{0};" +
-                                        $"{fbTip.Timestamp.UtcDateTime:yyyy-MM-dd}"
-                                    );
-                                }
+                                    fbavatarCount++;
+                                    Console.WriteLine("Migrating {0}/{1}", fbavatarCount, avatars.Count);
+                                    AvatarState fbAvatarState;
+                                    var fbAvatarAddress = new Address(fbAvatar);
+                                    fbAvatarState = fbOutputState.GetAvatarState(fbAvatarAddress);
 
-                                if (!fbAgents.Contains(fbAvatarState.agentAddress.ToString()))
-                                {
-                                    fbAgents.Add(fbAvatarState.agentAddress.ToString());
+                                    var fbAvatarLevel = fbAvatarState.level;
 
-                                    if (fbOutputState.TryGetStakeState(fbAvatarState.agentAddress, out StakeState fbStakeState2))
+                                    var fbArenaScoreAdr =
+                                        ArenaScore.DeriveAddress(fbAvatarAddress, fbArenaData.ChampionshipId, fbArenaData.Round);
+                                    var fbArenaInformationAdr =
+                                        ArenaInformation.DeriveAddress(fbAvatarAddress, fbArenaData.ChampionshipId, fbArenaData.Round);
+                                    fbOutputState.TryGetArenaInformation(fbArenaInformationAdr,
+                                        out var fbCurrentArenaInformation);
+                                    fbOutputState.TryGetArenaScore(fbArenaScoreAdr, out var fbOutputArenaScore);
+                                    if (fbCurrentArenaInformation != null && fbOutputArenaScore != null)
                                     {
-                                        var fbStakeStateAddress = StakeState.DeriveAddress(fbAvatarState.agentAddress);
-                                        var fbCurrency = fbOutputState.GetGoldCurrency();
-                                        var fbStakedBalance = fbOutputState.GetBalance(fbStakeStateAddress, fbCurrency);
-                                        _fbUsBulkFile.WriteLine(
+                                        _fbBarBulkFile.WriteLine(
                                             $"{fbTip.Index};" +
-                                            "V3;" +
                                             $"{fbAvatarState.agentAddress.ToString()};" +
-                                            $"{Convert.ToDecimal(fbStakedBalance.GetQuantityString())};" +
-                                            $"{fbStakeState2.StartedBlockIndex};" +
-                                            $"{fbStakeState2.ReceivedBlockIndex};" +
-                                            $"{fbStakeState2.CancellableBlockIndex}"
+                                            $"{fbAvatarAddress.ToString()};" +
+                                            $"{fbAvatarLevel};" +
+                                            $"{fbArenaData.ChampionshipId};" +
+                                            $"{fbArenaData.Round};" +
+                                            $"{fbArenaData.ArenaType.ToString()};" +
+                                            $"{fbOutputArenaScore.Score};" +
+                                            $"{fbCurrentArenaInformation.Win};" +
+                                            $"{fbCurrentArenaInformation.Win};" +
+                                            $"{fbCurrentArenaInformation.Lose};" +
+                                            $"{fbCurrentArenaInformation.Ticket};" +
+                                            $"{fbCurrentArenaInformation.PurchasedTicketCount};" +
+                                            $"{fbCurrentArenaInformation.TicketResetCount};" +
+                                            $"{fbArenaData.EntranceFee};" +
+                                            $"{fbArenaData.TicketPrice};" +
+                                            $"{fbArenaData.AdditionalTicketPrice};" +
+                                            $"{fbArenaData.RequiredMedalCount};" +
+                                            $"{fbArenaData.StartBlockIndex};" +
+                                            $"{fbArenaData.EndBlockIndex};" +
+                                            $"{0};" +
+                                            $"{fbTip.Timestamp.UtcDateTime:yyyy-MM-dd}"
                                         );
                                     }
 
-                                    var fbAgentState = fbOutputState.GetAgentState(fbAvatarState.agentAddress);
-                                    Address fbMonsterCollectionAddress = MonsterCollectionState.DeriveAddress(
-                                        fbAvatarState.agentAddress,
-                                        fbAgentState.MonsterCollectionRound
-                                    );
-                                    if (fbOutputState.TryGetLegacyState(fbMonsterCollectionAddress, out Dictionary fbStateDict))
+                                    if (!fbAgents.Contains(fbAvatarState.agentAddress.ToString()))
                                     {
-                                        var fbMonsterCollectionStates = new MonsterCollectionState(fbStateDict);
-                                        var fbCurrency = fbOutputState.GetGoldCurrency();
-                                        FungibleAssetValue fbMonsterCollectionBalance =
-                                            fbOutputState.GetBalance(fbMonsterCollectionAddress, fbCurrency);
-                                        _fbUsBulkFile.WriteLine(
-                                            $"{fbTip.Index};" +
-                                            "V1;" +
-                                            $"{fbAvatarState.agentAddress.ToString()};" +
-                                            $"{Convert.ToDecimal(fbMonsterCollectionBalance.GetQuantityString())};" +
-                                            $"{fbMonsterCollectionStates.StartedBlockIndex};" +
-                                            $"{fbMonsterCollectionStates.ReceivedBlockIndex};" +
-                                            $"{fbMonsterCollectionStates.ExpiredBlockIndex}"
+                                        fbAgents.Add(fbAvatarState.agentAddress.ToString());
+
+                                        if (fbOutputState.TryGetStakeState(fbAvatarState.agentAddress,
+                                                out StakeState fbStakeState2))
+                                        {
+                                            var fbStakeStateAddress =
+                                                StakeState.DeriveAddress(fbAvatarState.agentAddress);
+                                            var fbCurrency = fbOutputState.GetGoldCurrency();
+                                            var fbStakedBalance =
+                                                fbOutputState.GetBalance(fbStakeStateAddress, fbCurrency);
+                                            _fbUsBulkFile.WriteLine(
+                                                $"{fbTip.Index};" +
+                                                "V3;" +
+                                                $"{fbAvatarState.agentAddress.ToString()};" +
+                                                $"{Convert.ToDecimal(fbStakedBalance.GetQuantityString())};" +
+                                                $"{fbStakeState2.StartedBlockIndex};" +
+                                                $"{fbStakeState2.ReceivedBlockIndex};" +
+                                                $"{fbStakeState2.CancellableBlockIndex}"
+                                            );
+                                        }
+
+                                        var fbAgentState = fbOutputState.GetAgentState(fbAvatarState.agentAddress);
+                                        Address fbMonsterCollectionAddress = MonsterCollectionState.DeriveAddress(
+                                            fbAvatarState.agentAddress,
+                                            fbAgentState.MonsterCollectionRound
                                         );
+                                        if (fbOutputState.TryGetLegacyState(fbMonsterCollectionAddress,
+                                                out Dictionary fbStateDict))
+                                        {
+                                            var fbMonsterCollectionStates = new MonsterCollectionState(fbStateDict);
+                                            var fbCurrency = fbOutputState.GetGoldCurrency();
+                                            FungibleAssetValue fbMonsterCollectionBalance =
+                                                fbOutputState.GetBalance(fbMonsterCollectionAddress, fbCurrency);
+                                            _fbUsBulkFile.WriteLine(
+                                                $"{fbTip.Index};" +
+                                                "V1;" +
+                                                $"{fbAvatarState.agentAddress.ToString()};" +
+                                                $"{Convert.ToDecimal(fbMonsterCollectionBalance.GetQuantityString())};" +
+                                                $"{fbMonsterCollectionStates.StartedBlockIndex};" +
+                                                $"{fbMonsterCollectionStates.ReceivedBlockIndex};" +
+                                                $"{fbMonsterCollectionStates.ExpiredBlockIndex}"
+                                            );
+                                        }
                                     }
                                 }
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine(ex.Message);
-                                Console.WriteLine(ex.StackTrace);
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                    Console.WriteLine(ex.StackTrace);
+                                }
                             }
                         }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                            Console.WriteLine(ex.StackTrace);
+                        }
+
+                        _fbUsBulkFile.Flush();
+                        _fbUsBulkFile.Close();
+
+                        _fbBarBulkFile.Flush();
+                        _fbBarBulkFile.Close();
+
+                        connection.Open();
+                        var s =
+                            $@"CREATE TABLE IF NOT EXISTS `{fbUSDbName}` (
+                                      `BlockIndex` bigint NOT NULL,
+                                      `StakeVersion` varchar(100) NOT NULL,
+                                      `AgentAddress` varchar(100) NOT NULL,
+                                      `StakingAmount` decimal(13,2) NOT NULL,
+                                      `StartedBlockIndex` bigint NOT NULL,
+                                      `ReceivedBlockIndex` bigint NOT NULL,
+                                      `CancellableBlockIndex` bigint NOT NULL,
+                                      `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+                        var c = new MySqlCommand(s, connection);
+                        c.CommandTimeout = 300;
+                        c.ExecuteScalar();
+                        connection.Close();
+
+                        Console.WriteLine("6");
+
+                        var fbstm23 =
+                            $"RENAME TABLE {fbBARDbName} TO {fbBARDbName}_Dump; CREATE TABLE {fbBARDbName} LIKE {fbBARDbName}_Dump;";
+                        var fbcmd23 = new MySqlCommand(fbstm23, connection);
+                        connection.Open();
+                        fbcmd23.CommandTimeout = 300;
+                        fbcmd23.ExecuteScalar();
+                        connection.Close();
+                        Console.WriteLine($"Move {fbBARDbName} Complete!");
+
+                        foreach (var path in _fbUsFiles)
+                        {
+                            BulkInsert(fbUSDbName, path);
+                        }
+
+                        foreach (var path in _fbBarFiles)
+                        {
+                            BulkInsert(fbBARDbName, path);
+                        }
+
+                        var fbstm34 = $"DROP TABLE {fbBARDbName}_Dump;";
+                        var fbcmd34 = new MySqlCommand(fbstm34, connection);
+                        connection.Open();
+                        fbcmd34.CommandTimeout = 300;
+                        fbcmd34.ExecuteScalar();
+                        connection.Close();
+                        Console.WriteLine($"Delete {fbBARDbName}_Dump Complete!");
+                        Console.WriteLine($"Finalize {fbBARDbName} & {fbUSDbName} Tables Complete!");
+
+                        if (slackToken is not null && slackChannel is not null)
+                        {
+                            var slackMessage =
+                                $"@here {network} arena season(Championship Id: {prevArenaData.ChampionshipId}/Round: {prevArenaData.Round}) ranking finalized! Check tables {fbBARDbName} & {fbUSDbName}.";
+                            SendMessageAsync(
+                                slackToken,
+                                slackChannel,
+                                slackMessage
+                            ).Wait();
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                        Console.WriteLine(ex.StackTrace);
-                    }
 
-                    _fbUsBulkFile.Flush();
-                    _fbUsBulkFile.Close();
-
-                    _fbBarBulkFile.Flush();
-                    _fbBarBulkFile.Close();
-
+                    bARDbName = $"{bARDbName}_{arenaData.ChampionshipId}_{arenaData.Round}";
+                    Console.WriteLine("1");
                     connection.Open();
-                    var s =
-                        $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{fbUSDbName}` (
-                                  `BlockIndex` bigint NOT NULL,
-                                  `StakeVersion` varchar(100) NOT NULL,
-                                  `AgentAddress` varchar(100) NOT NULL,
-                                  `StakingAmount` decimal(13,2) NOT NULL,
-                                  `StartedBlockIndex` bigint NOT NULL,
-                                  `ReceivedBlockIndex` bigint NOT NULL,
-                                  `CancellableBlockIndex` bigint NOT NULL,
-                                  `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-                                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
-                    var c = new MySqlCommand(s, connection);
-                    c.CommandTimeout = 300;
-                    c.ExecuteScalar();
+                    var stm33 =
+                        $@"CREATE TABLE IF NOT EXISTS `{bARDbName}` (
+                            `BlockIndex` bigint NOT NULL,
+                            `AgentAddress` varchar(100) NOT NULL,
+                            `AvatarAddress` varchar(100) NOT NULL,
+                            `AvatarLevel` int NOT NULL,
+                            `ChampionshipId` int NOT NULL,
+                            `Round` int NOT NULL,
+                            `ArenaType` varchar(100) NOT NULL,
+                            `Score` int NOT NULL,
+                            `WinCount` int NOT NULL,
+                            `MedalCount` int NOT NULL,
+                            `LossCount` int NOT NULL,
+                            `Ticket` int NOT NULL,
+                            `PurchasedTicketCount` int NOT NULL,
+                            `TicketResetCount` int NOT NULL,
+                            `EntranceFee` bigint NOT NULL,
+                            `TicketPrice` bigint NOT NULL,
+                            `AdditionalTicketPrice` bigint NOT NULL,
+                            `RequiredMedalCount` int NOT NULL,
+                            `StartBlockIndex` bigint NOT NULL,
+                            `EndBlockIndex` bigint NOT NULL,
+                            `Ranking` int NOT NULL,
+                            `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            KEY `fk_BattleArenaRanking_Agent1_idx` (`AgentAddress`),
+                            KEY `fk_BattleArenaRanking_AvatarAddress1_idx` (`AvatarAddress`)
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+
+                    var cmd33 = new MySqlCommand(stm33, connection);
+                    cmd33.CommandTimeout = 300;
+                    cmd33.ExecuteScalar();
                     connection.Close();
-
-                    Console.WriteLine("6");
-
-                    var fbstm23 = $"RENAME TABLE {fbBARDbName} TO {fbBARDbName}_Dump; CREATE TABLE {fbBARDbName} LIKE {fbBARDbName}_Dump;";
-                    var fbcmd23 = new MySqlCommand(fbstm23, connection);
-                    connection.Open();
-                    fbcmd23.CommandTimeout = 300;
-                    fbcmd23.ExecuteScalar();
-                    connection.Close();
-                    Console.WriteLine($"Move {fbBARDbName} Complete!");
-
-                    foreach (var path in _fbUsFiles)
-                    {
-                        BulkInsert(fbUSDbName, path);
-                    }
-
-                    foreach (var path in _fbBarFiles)
-                    {
-                        BulkInsert(fbBARDbName, path);
-                    }
-
-                    var fbstm34 = $"DROP TABLE {fbBARDbName}_Dump;";
-                    var fbcmd34 = new MySqlCommand(fbstm34, connection);
-                    connection.Open();
-                    fbcmd34.CommandTimeout = 300;
-                    fbcmd34.ExecuteScalar();
-                    connection.Close();
-                    Console.WriteLine($"Delete {fbBARDbName}_Dump Complete!");
-                    Console.WriteLine($"Finalize {fbBARDbName} & {fbUSDbName} Tables Complete!");
-
-                    if (slackToken is not null && slackChannel is not null)
-                    {
-                        var slackMessage = $"@here {network} arena season(Championship Id: {prevArenaData.ChampionshipId}/Round: {prevArenaData.Round}) ranking finalized! Check tables {fbBARDbName} & {fbUSDbName}.";
-                        SendMessageAsync(
-                            slackToken,
-                            slackChannel,
-                            slackMessage
-                        ).Wait();
-                    }
                 }
-
-                bARDbName = $"{bARDbName}_{arenaData.ChampionshipId}_{arenaData.Round}";
-                Console.WriteLine("1");
-                connection.Open();
-                var stm33 =
-                    $@"CREATE TABLE IF NOT EXISTS `data_provider`.`{bARDbName}` (
-                        `BlockIndex` bigint NOT NULL,
-                        `AgentAddress` varchar(100) NOT NULL,
-                        `AvatarAddress` varchar(100) NOT NULL,
-                        `AvatarLevel` int NOT NULL,
-                        `ChampionshipId` int NOT NULL,
-                        `Round` int NOT NULL,
-                        `ArenaType` varchar(100) NOT NULL,
-                        `Score` int NOT NULL,
-                        `WinCount` int NOT NULL,
-                        `MedalCount` int NOT NULL,
-                        `LossCount` int NOT NULL,
-                        `Ticket` int NOT NULL,
-                        `PurchasedTicketCount` int NOT NULL,
-                        `TicketResetCount` int NOT NULL,
-                        `EntranceFee` bigint NOT NULL,
-                        `TicketPrice` bigint NOT NULL,
-                        `AdditionalTicketPrice` bigint NOT NULL,
-                        `RequiredMedalCount` int NOT NULL,
-                        `StartBlockIndex` bigint NOT NULL,
-                        `EndBlockIndex` bigint NOT NULL,
-                        `Ranking` int NOT NULL,
-                        `Timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        KEY `fk_BattleArenaRanking_Agent1_idx` (`AgentAddress`),
-                        KEY `fk_BattleArenaRanking_AvatarAddress1_idx` (`AvatarAddress`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
-
-                var cmd33 = new MySqlCommand(stm33, connection);
-                cmd33.CommandTimeout = 300;
-                cmd33.ExecuteScalar();
-                connection.Close();
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    Console.WriteLine(ex.StackTrace);
+                }
 
                 foreach (var avatar in avatars)
                 {
@@ -1631,28 +1646,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     BulkInsert(uRDbName, path);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                var stm16 = $"DROP TABLE {EDbName}; RENAME TABLE {EDbName}_Dump TO {EDbName};";
-                var stm33 = $"DROP TABLE {bARDbName}; RENAME TABLE {bARDbName}_Dump TO {bARDbName};";
-                var cmd16 = new MySqlCommand(stm16, connection);
-                var cmd33 = new MySqlCommand(stm33, connection);
-                DateTimeOffset startRestore;
-                DateTimeOffset endRestore;
-                startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd16.CommandTimeout = 300;
-                cmd16.ExecuteScalar();
-                connection.Close();
-                endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore Equipments Complete! Time Elapsed: {0}", endRestore - startRestore);
-                startRestore = DateTimeOffset.Now;
-                connection.Open();
-                cmd33.CommandTimeout = 300;
-                cmd33.ExecuteScalar();
-                connection.Close();
-                endRestore = DateTimeOffset.Now;
-                Console.WriteLine("Restore BattleArenaRanking Complete! Time Elapsed: {0}", endRestore - startRestore);
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
 
             var stm11 = $"DROP TABLE {EDbName}_Dump;";

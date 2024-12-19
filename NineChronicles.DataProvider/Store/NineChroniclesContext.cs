@@ -7,6 +7,7 @@ namespace NineChronicles.DataProvider.Store
     using NineChronicles.DataProvider.Store.Models.Crafting;
     using NineChronicles.DataProvider.Store.Models.Grinding;
     using NineChronicles.DataProvider.Store.Models.Ranking;
+    using NineChronicles.DataProvider.Store.Models.Summon;
 
     public sealed class NineChroniclesContext : DbContext
     {
@@ -188,6 +189,11 @@ namespace NineChronicles.DataProvider.Store
         public DbSet<AuraSummonModel> AuraSummons => Set<AuraSummonModel>();
 
         public DbSet<AuraSummonFailModel> AuraSummonFails => Set<AuraSummonFailModel>();
+
+        // Table for storing CostumeSummon actions
+        public DbSet<CostumeSummonModel> CostumeSummons => Set<CostumeSummonModel>();
+
+        public DbSet<SynthesizeModel> Synthesizes => Set<SynthesizeModel>();
 
         public DbSet<UserConsumablesModel> UserConsumables => Set<UserConsumablesModel>();
 

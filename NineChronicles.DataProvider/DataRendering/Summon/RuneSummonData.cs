@@ -1,18 +1,15 @@
-namespace NineChronicles.DataProvider.DataRendering
+namespace NineChronicles.DataProvider.DataRendering.Summon
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Lib9c;
     using Libplanet.Action;
-    using Libplanet.Action.State;
     using Libplanet.Crypto;
     using Libplanet.Types.Assets;
     using Nekoyume.Action;
-    using Nekoyume.Model.Item;
     using Nekoyume.TableData;
     using Nekoyume.TableData.Summon;
-    using NineChronicles.DataProvider.Store.Models;
+    using NineChronicles.DataProvider.Store.Models.Summon;
 
     public static class RuneSummonData
     {

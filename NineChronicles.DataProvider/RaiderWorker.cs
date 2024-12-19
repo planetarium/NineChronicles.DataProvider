@@ -90,7 +90,7 @@ namespace NineChronicles.DataProvider
                             raiderState.Cp,
                             raiderState.IconId,
                             raiderState.Level,
-                            raiderState.AvatarAddress.ToHex(),
+                            raiderState.AvatarAddress.ToString(),
                             raiderState.PurchaseCount);
                         raiderList.Add(model);
                     }
