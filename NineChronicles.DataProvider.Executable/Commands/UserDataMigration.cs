@@ -570,6 +570,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
             DateTimeOffset end = DateTimeOffset.UtcNow;
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
             Console.WriteLine("Shop Count for {0} avatars: {1}", avatars.Count, shopOrderCount);
+
+            // Delete files after migration
+            DeleteAllFiles();
         }
 
         private async Task SendMessageAsync(string token, string channel, string message)
@@ -659,98 +662,101 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
         private void CreateBulkFiles()
         {
-            string agentFilePath = Path.GetRandomFileName();
-            _agentBulkFile = new StreamWriter(agentFilePath);
+            string dataFolder = "/data";
+            Directory.CreateDirectory(dataFolder);
 
-            string avatarFilePath = Path.GetRandomFileName();
-            _avatarBulkFile = new StreamWriter(avatarFilePath);
+            _agentBulkFile = new StreamWriter(Path.Combine(dataFolder, "agentBulkFile.csv"));
+            _avatarBulkFile = new StreamWriter(Path.Combine(dataFolder, "avatarBulkFile.csv"));
+            _ccBulkFile = new StreamWriter(Path.Combine(dataFolder, "ccBulkFile.csv"));
+            _ceBulkFile = new StreamWriter(Path.Combine(dataFolder, "ceBulkFile.csv"));
+            _ieBulkFile = new StreamWriter(Path.Combine(dataFolder, "ieBulkFile.csv"));
+            _ueBulkFile = new StreamWriter(Path.Combine(dataFolder, "ueBulkFile.csv"));
+            _uctBulkFile = new StreamWriter(Path.Combine(dataFolder, "uctBulkFile.csv"));
+            _uiBulkFile = new StreamWriter(Path.Combine(dataFolder, "uiBulkFile.csv"));
+            _umBulkFile = new StreamWriter(Path.Combine(dataFolder, "umBulkFile.csv"));
+            _ucBulkFile = new StreamWriter(Path.Combine(dataFolder, "ucBulkFile.csv"));
+            _eBulkFile = new StreamWriter(Path.Combine(dataFolder, "eBulkFile.csv"));
+            _usBulkFile = new StreamWriter(Path.Combine(dataFolder, "usBulkFile.csv"));
+            _umcBulkFile = new StreamWriter(Path.Combine(dataFolder, "umcBulkFile.csv"));
+            _uncgBulkFile = new StreamWriter(Path.Combine(dataFolder, "uncgBulkFile.csv"));
+            _ucyBulkFile = new StreamWriter(Path.Combine(dataFolder, "ucyBulkFile.csv"));
+            _scBulkFile = new StreamWriter(Path.Combine(dataFolder, "scBulkFile.csv"));
+            _seBulkFile = new StreamWriter(Path.Combine(dataFolder, "seBulkFile.csv"));
+            _sctBulkFile = new StreamWriter(Path.Combine(dataFolder, "sctBulkFile.csv"));
+            _smBulkFile = new StreamWriter(Path.Combine(dataFolder, "smBulkFile.csv"));
+            _barBulkFile = new StreamWriter(Path.Combine(dataFolder, "barBulkFile.csv"));
+            _urBulkFile = new StreamWriter(Path.Combine(dataFolder, "urBulkFile.csv"));
+            _fbBarBulkFile = new StreamWriter(Path.Combine(dataFolder, "fbBarBulkFile.csv"));
+            _fbUsBulkFile = new StreamWriter(Path.Combine(dataFolder, "fbUsBulkFile.csv"));
 
-            string ccFilePath = Path.GetRandomFileName();
-            _ccBulkFile = new StreamWriter(ccFilePath);
+            // Add files to list for deletion
+            _agentFiles.Add(Path.Combine(dataFolder, "agentBulkFile.csv"));
+            _avatarFiles.Add(Path.Combine(dataFolder, "avatarBulkFile.csv"));
+            _ccFiles.Add(Path.Combine(dataFolder, "ccBulkFile.csv"));
+            _ceFiles.Add(Path.Combine(dataFolder, "ceBulkFile.csv"));
+            _ieFiles.Add(Path.Combine(dataFolder, "ieBulkFile.csv"));
+            _ueFiles.Add(Path.Combine(dataFolder, "ueBulkFile.csv"));
+            _uctFiles.Add(Path.Combine(dataFolder, "uctBulkFile.csv"));
+            _uiFiles.Add(Path.Combine(dataFolder, "uiBulkFile.csv"));
+            _umFiles.Add(Path.Combine(dataFolder, "umBulkFile.csv"));
+            _ucFiles.Add(Path.Combine(dataFolder, "ucBulkFile.csv"));
+            _eFiles.Add(Path.Combine(dataFolder, "eBulkFile.csv"));
+            _usFiles.Add(Path.Combine(dataFolder, "usBulkFile.csv"));
+            _umcFiles.Add(Path.Combine(dataFolder, "umcBulkFile.csv"));
+            _uncgFiles.Add(Path.Combine(dataFolder, "uncgBulkFile.csv"));
+            _ucyFiles.Add(Path.Combine(dataFolder, "ucyBulkFile.csv"));
+            _scFiles.Add(Path.Combine(dataFolder, "scBulkFile.csv"));
+            _seFiles.Add(Path.Combine(dataFolder, "seBulkFile.csv"));
+            _sctFiles.Add(Path.Combine(dataFolder, "sctBulkFile.csv"));
+            _smFiles.Add(Path.Combine(dataFolder, "smBulkFile.csv"));
+            _barFiles.Add(Path.Combine(dataFolder, "barBulkFile.csv"));
+            _urFiles.Add(Path.Combine(dataFolder, "urBulkFile.csv"));
+            _fbBarFiles.Add(Path.Combine(dataFolder, "fbBarBulkFile.csv"));
+            _fbUsFiles.Add(Path.Combine(dataFolder, "fbUsBulkFile.csv"));
+        }
 
-            string ceFilePath = Path.GetRandomFileName();
-            _ceBulkFile = new StreamWriter(ceFilePath);
+        private void DeleteAllFiles()
+        {
+            List<string> allFiles = _agentFiles
+                .Concat(_avatarFiles)
+                .Concat(_ccFiles)
+                .Concat(_ceFiles)
+                .Concat(_ieFiles)
+                .Concat(_ueFiles)
+                .Concat(_uctFiles)
+                .Concat(_uiFiles)
+                .Concat(_umFiles)
+                .Concat(_ucFiles)
+                .Concat(_eFiles)
+                .Concat(_usFiles)
+                .Concat(_umcFiles)
+                .Concat(_uncgFiles)
+                .Concat(_ucyFiles)
+                .Concat(_scFiles)
+                .Concat(_seFiles)
+                .Concat(_sctFiles)
+                .Concat(_smFiles)
+                .Concat(_barFiles)
+                .Concat(_urFiles)
+                .Concat(_fbBarFiles)
+                .Concat(_fbUsFiles)
+                .ToList();
 
-            string ieFilePath = Path.GetRandomFileName();
-            _ieBulkFile = new StreamWriter(ieFilePath);
-
-            string ueFilePath = Path.GetRandomFileName();
-            _ueBulkFile = new StreamWriter(ueFilePath);
-
-            string uctFilePath = Path.GetRandomFileName();
-            _uctBulkFile = new StreamWriter(uctFilePath);
-
-            string uiFilePath = Path.GetRandomFileName();
-            _uiBulkFile = new StreamWriter(uiFilePath);
-
-            string umFilePath = Path.GetRandomFileName();
-            _umBulkFile = new StreamWriter(umFilePath);
-
-            string ucFilePath = Path.GetRandomFileName();
-            _ucBulkFile = new StreamWriter(ucFilePath);
-
-            string eFilePath = Path.GetRandomFileName();
-            _eBulkFile = new StreamWriter(eFilePath);
-
-            string usFilePath = Path.GetRandomFileName();
-            _usBulkFile = new StreamWriter(usFilePath);
-
-            string umcFilePath = Path.GetRandomFileName();
-            _umcBulkFile = new StreamWriter(umcFilePath);
-
-            string uncgFilePath = Path.GetRandomFileName();
-            _uncgBulkFile = new StreamWriter(uncgFilePath);
-
-            string ucyFilePath = Path.GetRandomFileName();
-            _ucyBulkFile = new StreamWriter(ucyFilePath);
-
-            string scFilePath = Path.GetRandomFileName();
-            _scBulkFile = new StreamWriter(scFilePath);
-
-            string seFilePath = Path.GetRandomFileName();
-            _seBulkFile = new StreamWriter(seFilePath);
-
-            string sctFilePath = Path.GetRandomFileName();
-            _sctBulkFile = new StreamWriter(sctFilePath);
-
-            string smFilePath = Path.GetRandomFileName();
-            _smBulkFile = new StreamWriter(smFilePath);
-
-            string barFilePath = Path.GetRandomFileName();
-            _barBulkFile = new StreamWriter(barFilePath);
-
-            string urFilePath = Path.GetRandomFileName();
-            _urBulkFile = new StreamWriter(urFilePath);
-
-            string fbBarFilePath = Path.GetRandomFileName();
-            _fbBarBulkFile = new StreamWriter(fbBarFilePath);
-
-            string fbUsFilePath = Path.GetRandomFileName();
-            _fbUsBulkFile = new StreamWriter(fbUsFilePath);
-
-            _agentFiles.Add(agentFilePath);
-            _avatarFiles.Add(avatarFilePath);
-            _ccFiles.Add(ccFilePath);
-            _ceFiles.Add(ceFilePath);
-            _ieFiles.Add(ieFilePath);
-            _ueFiles.Add(ueFilePath);
-            _uctFiles.Add(uctFilePath);
-            _uiFiles.Add(uiFilePath);
-            _umFiles.Add(umFilePath);
-            _ucFiles.Add(ucFilePath);
-            _eFiles.Add(eFilePath);
-            _usFiles.Add(usFilePath);
-            _umcFiles.Add(umcFilePath);
-            _uncgFiles.Add(uncgFilePath);
-            _ucyFiles.Add(ucyFilePath);
-            _scFiles.Add(scFilePath);
-            _seFiles.Add(seFilePath);
-            _sctFiles.Add(sctFilePath);
-            _smFiles.Add(smFilePath);
-            _barFiles.Add(barFilePath);
-            _urFiles.Add(urFilePath);
-            _fbBarFiles.Add(fbBarFilePath);
-            _fbUsFiles.Add(fbUsFilePath);
+            foreach (var file in allFiles)
+            {
+                try
+                {
+                    if (File.Exists(file))
+                    {
+                        File.Delete(file);
+                        Console.WriteLine($"Deleted file: {file}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error deleting file {file}: {ex.Message}");
+                }
+            }
         }
 
         private void BulkInsert(
