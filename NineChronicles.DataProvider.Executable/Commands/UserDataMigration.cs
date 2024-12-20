@@ -247,50 +247,73 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
             CreateBulkFiles();
 
+            Console.WriteLine("0-1");
             using MySqlConnection connection = new MySqlConnection(_connectionString);
             connection.Open();
 
+            Console.WriteLine("0-2");
             var stm = "SELECT `Address` from Avatars";
             var cmd = new MySqlCommand(stm, connection);
 
+            Console.WriteLine("0-3");
             var rdr = cmd.ExecuteReader();
             List<string> avatars = new List<string>();
 
+            Console.WriteLine("0-4");
             while (rdr.Read())
             {
                 Console.WriteLine("{0}", rdr.GetString(0));
                 avatars.Add(rdr.GetString(0).Replace("0x", string.Empty));
             }
 
+            Console.WriteLine("0-5");
             connection.Close();
 
             int shopOrderCount = 0;
-            bool finalizeBaranking = false;
+            bool finalizeBaranking = true;
+            Console.WriteLine("1");
 
             try
             {
-                var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, 12803380);
+                Console.WriteLine("1-1");
+                var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, 12803379);
+                Console.WriteLine("1-2");
                 var tip = _baseStore.GetBlock((BlockHash)tipHash);
+                Console.WriteLine("1-3");
                 var exec = _baseChain.EvaluateBlock(tip);
+                Console.WriteLine("1-4");
                 var ev = exec.Last();
+                Console.WriteLine("1-5");
                 var outputState = new World(blockChainStates.GetWorldState(ev.OutputState));
+                Console.WriteLine("1-6");
                 var arenaSheet = outputState.GetSheet<ArenaSheet>();
+                Console.WriteLine("1-7");
                 var arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
+                Console.WriteLine("1-8");
 
                 Console.WriteLine("2");
 
                 try
                 {
+                    Console.WriteLine("2-1");
                     var prevArenaEndIndex = arenaData.StartBlockIndex - 1;
+                    Console.WriteLine("2-2");
                     var prevArenaData = arenaSheet.GetRoundByBlockIndex(prevArenaEndIndex);
+                    Console.WriteLine("2-3");
                     var finalizeBarankingTip = prevArenaEndIndex;
+                    Console.WriteLine("2-4");
                     fbBARDbName = $"{fbBARDbName}_{prevArenaData.ChampionshipId}_{prevArenaData.Round}";
+                    Console.WriteLine("2-5");
 
                     connection.Open();
+                    Console.WriteLine("2-6");
                     var preBarQuery = $"SELECT `BlockIndex` FROM {fbBARDbName} limit 1";
+                    Console.WriteLine("2-7");
                     var preBarCmd = new MySqlCommand(preBarQuery, connection);
+                    Console.WriteLine("2-8");
 
                     var dataReader = preBarCmd.ExecuteReader();
+                    Console.WriteLine("2-9");
                     long prevBarDbTip = 0;
                     Console.WriteLine("3");
                     while (dataReader.Read())
