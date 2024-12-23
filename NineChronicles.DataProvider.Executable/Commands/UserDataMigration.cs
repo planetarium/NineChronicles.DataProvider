@@ -139,16 +139,20 @@ namespace NineChronicles.DataProvider.Executable.Commands
             string mysqlDatabase,
             [Option(
                 "slack-token",
-                Description = "slack token to send the migration data.")]
+                Description = "Slack token to send the migration data.")]
             string slackToken,
             [Option(
                 "slack-channel",
-                Description = "slack channel that receives the migration data.")]
+                Description = "Slack channel that receives the migration data.")]
             string slackChannel,
             [Option(
                 "network",
                 Description = "Name of network(e.g., Odin or Heimdall)")]
-            string network
+            string network,
+            [Option(
+                "bulk-files-folder",
+                Description = "Folder to store bulk files. Defaults to a temporary path if not provided.")]
+            string bulkFilesFolder = null
         )
         {
             DateTimeOffset start = DateTimeOffset.UtcNow;
@@ -248,7 +252,20 @@ namespace NineChronicles.DataProvider.Executable.Commands
             _hourGlassAgentList = new List<string>();
             _apStoneAgentList = new List<string>();
 
-            CreateBulkFiles();
+            // Set up the bulk files folder
+            if (string.IsNullOrEmpty(bulkFilesFolder))
+            {
+                bulkFilesFolder = Path.Combine(Path.GetTempPath(), "BulkFiles");
+                Console.WriteLine($"No bulk files folder specified. Using default: {bulkFilesFolder}");
+            }
+
+            if (!Directory.Exists(bulkFilesFolder))
+            {
+                Directory.CreateDirectory(bulkFilesFolder);
+                Console.WriteLine($"Created bulk files folder: {bulkFilesFolder}");
+            }
+
+            CreateBulkFiles(bulkFilesFolder);
 
             using MySqlConnection connection = new MySqlConnection(_connectionString);
             connection.Open();
@@ -1533,7 +1550,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         _smFiles.RemoveAt(0);
                         _barFiles.RemoveAt(0);
                         _urFiles.RemoveAt(0);
-                        CreateBulkFiles();
+                        CreateBulkFiles(bulkFilesFolder);
                         intervalCount = 0;
                     }
                 }
@@ -1675,6 +1692,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             DateTimeOffset end = DateTimeOffset.UtcNow;
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
             Console.WriteLine("Shop Count for {0} avatars: {1}", avatars.Count, shopOrderCount);
+            DeleteAllFiles(bulkFilesFolder);
         }
 
         private async Task SendMessageAsync(string token, string channel, string message)
@@ -1762,104 +1780,60 @@ namespace NineChronicles.DataProvider.Executable.Commands
             _urBulkFile.Close();
         }
 
-        private void CreateBulkFiles()
+        private void CreateBulkFiles(string bulkFilesFolder)
         {
-            string agentFilePath = Path.GetRandomFileName();
-            _agentBulkFile = new StreamWriter(agentFilePath);
+            string GetFilePath(string fileName) => Path.Combine(bulkFilesFolder, fileName);
 
-            string avatarFilePath = Path.GetRandomFileName();
-            _avatarBulkFile = new StreamWriter(avatarFilePath);
+            _agentBulkFile = new StreamWriter(GetFilePath("AgentBulk.csv"));
+            _avatarBulkFile = new StreamWriter(GetFilePath("AvatarBulk.csv"));
+            _ccBulkFile = new StreamWriter(GetFilePath("CcBulk.csv"));
+            _ceBulkFile = new StreamWriter(GetFilePath("CeBulk.csv"));
+            _ieBulkFile = new StreamWriter(GetFilePath("IeBulk.csv"));
+            _ueBulkFile = new StreamWriter(GetFilePath("UeBulk.csv"));
+            _uctBulkFile = new StreamWriter(GetFilePath("UctBulk.csv"));
+            _uiBulkFile = new StreamWriter(GetFilePath("UiBulk.csv"));
+            _umBulkFile = new StreamWriter(GetFilePath("UmBulk.csv"));
+            _ucBulkFile = new StreamWriter(GetFilePath("UcBulk.csv"));
+            _eBulkFile = new StreamWriter(GetFilePath("EBulk.csv"));
+            _usBulkFile = new StreamWriter(GetFilePath("UsBulk.csv"));
+            _umcBulkFile = new StreamWriter(GetFilePath("UmcBulk.csv"));
+            _uncgBulkFile = new StreamWriter(GetFilePath("UncgBulk.csv"));
+            _ucyBulkFile = new StreamWriter(GetFilePath("UcyBulk.csv"));
+            _scBulkFile = new StreamWriter(GetFilePath("ScBulk.csv"));
+            _seBulkFile = new StreamWriter(GetFilePath("SeBulk.csv"));
+            _sctBulkFile = new StreamWriter(GetFilePath("SctBulk.csv"));
+            _smBulkFile = new StreamWriter(GetFilePath("SmBulk.csv"));
+            _barBulkFile = new StreamWriter(GetFilePath("BarBulk.csv"));
+            _urBulkFile = new StreamWriter(GetFilePath("UrBulk.csv"));
+            _fbBarBulkFile = new StreamWriter(GetFilePath("FbBarBulk.csv"));
+            _fbUsBulkFile = new StreamWriter(GetFilePath("FbUsBulk.csv"));
+            _dailyMetricsBulkFile = new StreamWriter(GetFilePath("DailyMetricsBulk.csv"));
 
-            string ccFilePath = Path.GetRandomFileName();
-            _ccBulkFile = new StreamWriter(ccFilePath);
-
-            string ceFilePath = Path.GetRandomFileName();
-            _ceBulkFile = new StreamWriter(ceFilePath);
-
-            string ieFilePath = Path.GetRandomFileName();
-            _ieBulkFile = new StreamWriter(ieFilePath);
-
-            string ueFilePath = Path.GetRandomFileName();
-            _ueBulkFile = new StreamWriter(ueFilePath);
-
-            string uctFilePath = Path.GetRandomFileName();
-            _uctBulkFile = new StreamWriter(uctFilePath);
-
-            string uiFilePath = Path.GetRandomFileName();
-            _uiBulkFile = new StreamWriter(uiFilePath);
-
-            string umFilePath = Path.GetRandomFileName();
-            _umBulkFile = new StreamWriter(umFilePath);
-
-            string ucFilePath = Path.GetRandomFileName();
-            _ucBulkFile = new StreamWriter(ucFilePath);
-
-            string eFilePath = Path.GetRandomFileName();
-            _eBulkFile = new StreamWriter(eFilePath);
-
-            string usFilePath = Path.GetRandomFileName();
-            _usBulkFile = new StreamWriter(usFilePath);
-
-            string umcFilePath = Path.GetRandomFileName();
-            _umcBulkFile = new StreamWriter(umcFilePath);
-
-            string uncgFilePath = Path.GetRandomFileName();
-            _uncgBulkFile = new StreamWriter(uncgFilePath);
-
-            string ucyFilePath = Path.GetRandomFileName();
-            _ucyBulkFile = new StreamWriter(ucyFilePath);
-
-            string scFilePath = Path.GetRandomFileName();
-            _scBulkFile = new StreamWriter(scFilePath);
-
-            string seFilePath = Path.GetRandomFileName();
-            _seBulkFile = new StreamWriter(seFilePath);
-
-            string sctFilePath = Path.GetRandomFileName();
-            _sctBulkFile = new StreamWriter(sctFilePath);
-
-            string smFilePath = Path.GetRandomFileName();
-            _smBulkFile = new StreamWriter(smFilePath);
-
-            string barFilePath = Path.GetRandomFileName();
-            _barBulkFile = new StreamWriter(barFilePath);
-
-            string urFilePath = Path.GetRandomFileName();
-            _urBulkFile = new StreamWriter(urFilePath);
-
-            string fbBarFilePath = Path.GetRandomFileName();
-            _fbBarBulkFile = new StreamWriter(fbBarFilePath);
-
-            string fbUsFilePath = Path.GetRandomFileName();
-            _fbUsBulkFile = new StreamWriter(fbUsFilePath);
-
-            string dailyMetricsFilePath = Path.GetRandomFileName();
-            _dailyMetricsBulkFile = new StreamWriter(dailyMetricsFilePath);
-
-            _agentFiles.Add(agentFilePath);
-            _avatarFiles.Add(avatarFilePath);
-            _ccFiles.Add(ccFilePath);
-            _ceFiles.Add(ceFilePath);
-            _ieFiles.Add(ieFilePath);
-            _ueFiles.Add(ueFilePath);
-            _uctFiles.Add(uctFilePath);
-            _uiFiles.Add(uiFilePath);
-            _umFiles.Add(umFilePath);
-            _ucFiles.Add(ucFilePath);
-            _eFiles.Add(eFilePath);
-            _usFiles.Add(usFilePath);
-            _umcFiles.Add(umcFilePath);
-            _uncgFiles.Add(uncgFilePath);
-            _ucyFiles.Add(ucyFilePath);
-            _scFiles.Add(scFilePath);
-            _seFiles.Add(seFilePath);
-            _sctFiles.Add(sctFilePath);
-            _smFiles.Add(smFilePath);
-            _barFiles.Add(barFilePath);
-            _urFiles.Add(urFilePath);
-            _fbBarFiles.Add(fbBarFilePath);
-            _fbUsFiles.Add(fbUsFilePath);
-            _dailyMetricFiles.Add(dailyMetricsFilePath);
+            // Update file paths in the tracking lists
+            _agentFiles.Add(GetFilePath("AgentBulk.csv"));
+            _avatarFiles.Add(GetFilePath("AvatarBulk.csv"));
+            _ccFiles.Add(GetFilePath("CcBulk.csv"));
+            _ceFiles.Add(GetFilePath("CeBulk.csv"));
+            _ieFiles.Add(GetFilePath("IeBulk.csv"));
+            _ueFiles.Add(GetFilePath("UeBulk.csv"));
+            _uctFiles.Add(GetFilePath("UctBulk.csv"));
+            _uiFiles.Add(GetFilePath("UiBulk.csv"));
+            _umFiles.Add(GetFilePath("UmBulk.csv"));
+            _ucFiles.Add(GetFilePath("UcBulk.csv"));
+            _eFiles.Add(GetFilePath("EBulk.csv"));
+            _usFiles.Add(GetFilePath("UsBulk.csv"));
+            _umcFiles.Add(GetFilePath("UmcBulk.csv"));
+            _uncgFiles.Add(GetFilePath("UncgBulk.csv"));
+            _ucyFiles.Add(GetFilePath("UcyBulk.csv"));
+            _scFiles.Add(GetFilePath("ScBulk.csv"));
+            _seFiles.Add(GetFilePath("SeBulk.csv"));
+            _sctFiles.Add(GetFilePath("SctBulk.csv"));
+            _smFiles.Add(GetFilePath("SmBulk.csv"));
+            _barFiles.Add(GetFilePath("BarBulk.csv"));
+            _urFiles.Add(GetFilePath("UrBulk.csv"));
+            _fbBarFiles.Add(GetFilePath("FbBarBulk.csv"));
+            _fbUsFiles.Add(GetFilePath("FbUsBulk.csv"));
+            _dailyMetricFiles.Add(GetFilePath("DailyMetricsBulk.csv"));
         }
 
         private void BulkInsert(
@@ -2030,6 +2004,22 @@ namespace NineChronicles.DataProvider.Executable.Commands
             {
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.StackTrace);
+            }
+        }
+
+        private void DeleteAllFiles(string dataFolder)
+        {
+            try
+            {
+                if (Directory.Exists(dataFolder))
+                {
+                    Directory.Delete(dataFolder, true);
+                    Console.WriteLine($"Deleted all files in {dataFolder}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting files in {dataFolder}: {ex.Message}");
             }
         }
 
