@@ -254,7 +254,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             try
             {
                 Console.WriteLine("1-1");
-                var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, 12803380);
+                var tipHash = _baseStore.IndexBlockHash(_baseChain.Id, 12845830);
                 Console.WriteLine("1-2");
                 var tip = _baseStore.GetBlock((BlockHash)tipHash);
                 Console.WriteLine("1-3");
