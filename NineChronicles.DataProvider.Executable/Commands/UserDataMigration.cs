@@ -108,44 +108,17 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
         [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
         public void Migration(
-            [Option('o', Description = "Rocksdb path to migrate.")]
-            string storePath,
-            [Option(
-                "rocksdb-storetype",
-                Description = "Store type of RocksDb (new or mono).")]
-            string rocksdbStoreType,
-            [Option(
-                "mysql-server",
-                Description = "A hostname of MySQL server.")]
-            string mysqlServer,
-            [Option(
-                "mysql-port",
-                Description = "A port of MySQL server.")]
-            uint mysqlPort,
-            [Option(
-                "mysql-username",
-                Description = "The name of MySQL user.")]
-            string mysqlUsername,
-            [Option(
-                "mysql-password",
-                Description = "The password of MySQL user.")]
-            string mysqlPassword,
-            [Option(
-                "mysql-database",
-                Description = "The name of MySQL database to use.")]
-            string mysqlDatabase,
-            [Option(
-                "slack-token",
-                Description = "slack token to send the migration data.")]
-            string slackToken,
-            [Option(
-                "slack-channel",
-                Description = "slack channel that receives the migration data.")]
-            string slackChannel,
-            [Option(
-                "network",
-                Description = "Name of network(e.g., Odin or Heimdall)")]
-            string network
+            [Option('o', Description = "Rocksdb path to migrate.")] string storePath,
+            [Option("rocksdb-storetype", Description = "Store type of RocksDb (new or mono).")] string rocksdbStoreType,
+            [Option("mysql-server", Description = "A hostname of MySQL server.")] string mysqlServer,
+            [Option("mysql-port", Description = "A port of MySQL server.")] uint mysqlPort,
+            [Option("mysql-username", Description = "The name of MySQL user.")] string mysqlUsername,
+            [Option("mysql-password", Description = "The password of MySQL user.")] string mysqlPassword,
+            [Option("mysql-database", Description = "The name of MySQL database to use.")] string mysqlDatabase,
+            [Option("slack-token", Description = "Slack token to send the migration data.")] string slackToken,
+            [Option("slack-channel", Description = "Slack channel that receives the migration data.")] string slackChannel,
+            [Option("network", Description = "Name of network (e.g., Odin or Heimdall)")] string network,
+            [Option("data-folder", Description = "Folder path to store bulk files. Defaults to a temporary path.")] string dataFolder = null
         )
         {
             DateTimeOffset start = DateTimeOffset.UtcNow;
@@ -244,6 +217,11 @@ namespace NineChronicles.DataProvider.Executable.Commands
             // lists to keep track of inserted addresses to minimize duplicates
             _hourGlassAgentList = new List<string>();
             _apStoneAgentList = new List<string>();
+
+            dataFolder ??= Path.GetTempPath();
+            Directory.CreateDirectory(dataFolder);
+
+            Console.WriteLine($"Using data folder: {dataFolder}");
 
             CreateBulkFiles();
 
