@@ -916,7 +916,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     await InsertAbilityRankingsBulkAsync(rankings, "AbilityRanking");
                     DateTimeOffset end = DateTimeOffset.UtcNow;
                     Console.WriteLine("Inserting Ability Rankings into the database completed. Time Elapsed: {0}", end - start);
-                    Console.WriteLine("Ability Rankings processed successfully.");
                 }
                 catch (Exception ex)
                 {
@@ -984,7 +983,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 // Process rankings
                 var rankings = combinedData
                     .GroupBy(data => data.AvatarAddress)
-                    .Select((group, index) => new CraftRankingModel
+                    .Select(group => new CraftRankingModel
                     {
                         AvatarAddress = group.Key,
                         AgentAddress = group.First().AgentAddress,
@@ -994,8 +993,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         Name = group.First().Name,
                         TitleId = group.First().TitleId,
                         BlockIndex = group.Max(x => x.BlockIndex),
-                        CraftCount = group.Count(),
-                        Ranking = index + 1
+                        CraftCount = group.Count()
+                    })
+                    .OrderByDescending(ranking => ranking.CraftCount) // Order by CraftCount in descending order
+                    .ThenBy(ranking => ranking.BlockIndex) // Optional: Secondary sorting, if needed
+                    .Select((ranking, index) =>
+                    {
+                        ranking.Ranking = index + 1;                 // Assign ranking after ordering
+                        return ranking;
                     })
                     .ToList();
 
@@ -1024,7 +1029,11 @@ namespace NineChronicles.DataProvider.Executable.Commands
                            a.Name, a.AvatarLevel, a.TitleId, a.ArmorId, a.Cp
                     FROM HackAndSlashes hs
                     LEFT JOIN Avatars a ON hs.AvatarAddress = a.Address
-                    WHERE hs.Mimisbrunnr = 0 AND hs.Cleared = 1")).ToList();
+                    WHERE hs.Mimisbrunnr = 0 AND hs.Cleared = 1")).ToList(); // Fetch all data first
+
+                stageData = stageData.OrderByDescending(data => data.StageId) // Sort by StageId in descending order
+                    .ThenBy(data => data.BlockIndex) // Then sort by BlockIndex in ascending order
+                    .ToList();
 
                 // Process rankings
                 var rankings = stageData
