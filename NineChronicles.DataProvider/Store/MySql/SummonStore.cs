@@ -18,7 +18,7 @@ namespace NineChronicles.DataProvider.Store
 
                 foreach (var summon in auraSummonList)
                 {
-                    if (await ctx.AuraSummons.AnyAsync(s => s.Id == summon.Id))
+                    if (!await ctx.AuraSummons.AnyAsync(s => s.Id == summon.Id))
                     {
                         await ctx.AddAsync(summon);
                     }
@@ -50,7 +50,7 @@ namespace NineChronicles.DataProvider.Store
 
                 foreach (var summon in auraSummonFailList)
                 {
-                    if (await ctx.AuraSummonFails.AnyAsync(s => s.Id == summon.Id))
+                    if (!await ctx.AuraSummonFails.AnyAsync(s => s.Id == summon.Id))
                     {
                         await ctx.AddAsync(summon);
                     }
@@ -82,7 +82,7 @@ namespace NineChronicles.DataProvider.Store
 
                 foreach (var summon in runeSummonList)
                 {
-                    if (await ctx.RuneSummons.AnyAsync(s => s.Id == summon.Id))
+                    if (!await ctx.RuneSummons.AnyAsync(s => s.Id == summon.Id))
                     {
                         await ctx.AddAsync(summon);
                     }
@@ -114,7 +114,7 @@ namespace NineChronicles.DataProvider.Store
 
                 foreach (var summon in runeSummonFailList)
                 {
-                    if (await ctx.RuneSummonFails.AnyAsync(s => s.Id == summon.Id))
+                    if (!await ctx.RuneSummonFails.AnyAsync(s => s.Id == summon.Id))
                     {
                         await ctx.AddAsync(summon);
                     }
@@ -146,7 +146,7 @@ namespace NineChronicles.DataProvider.Store
 
                 foreach (var summon in costumeSummonList)
                 {
-                    if (await ctx.CostumeSummons.AnyAsync(s => s.Id == summon.Id))
+                    if (!await ctx.CostumeSummons.AnyAsync(s => s.Id == summon.Id))
                     {
                         await ctx.AddAsync(summon);
                     }
