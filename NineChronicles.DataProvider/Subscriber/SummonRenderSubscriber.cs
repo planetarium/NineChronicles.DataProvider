@@ -2,6 +2,7 @@ namespace NineChronicles.DataProvider
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using Lib9c.Renderers;
     using Libplanet.Action.State;
@@ -166,7 +167,7 @@ namespace NineChronicles.DataProvider
                             sheetTypes: new[]
                             {
                                 typeof(RuneSheet),
-                                typeof(SummonSheet),
+                                typeof(RuneSummonSheet),
                             });
                         var runeSheet = sheets.GetSheet<RuneSheet>();
                         var summonSheet = sheets.GetSheet<RuneSummonSheet>();
@@ -225,7 +226,6 @@ namespace NineChronicles.DataProvider
                 if (evt.Exception is null && evt.Action is { } costumeSummon)
                 {
                     var start = System.DateTimeOffset.UtcNow;
-                    var inputState = new World(_blockChainStates.GetWorldState(evt.PreviousState));
                     var outputState = new World(_blockChainStates.GetWorldState(evt.OutputState));
                     var avatarAddress = costumeSummon.AvatarAddress;
 
@@ -241,8 +241,24 @@ namespace NineChronicles.DataProvider
                         ));
                     }
 
+                    var sheets = outputState.GetSheets(
+                        sheetTypes: new[]
+                        {
+                            typeof(CostumeItemSheet),
+                            typeof(CostumeSummonSheet),
+                        });
+                    var costumeSheet = sheets.GetSheet<CostumeItemSheet>();
+                    var summonSheet = sheets.GetSheet<CostumeSummonSheet>();
+                    var summonRow = summonSheet.OrderedList!.FirstOrDefault(row => row.GroupId == evt.Action.GroupId);
+
                     _costumeSummonList.Add(CostumeSummonData.GetSummonInfo(
-                        inputState, outputState, evt.Signer, evt.BlockIndex, _blockTimeOffset, costumeSummon
+                        evt.Signer,
+                        evt.BlockIndex,
+                        _blockTimeOffset,
+                        costumeSheet,
+                        summonRow!,
+                        new ReplayRandom(evt.RandomSeed),
+                        costumeSummon
                     ));
 
                     Log.Debug(
