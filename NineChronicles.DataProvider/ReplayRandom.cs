@@ -1,7 +1,7 @@
 namespace NineChronicles.DataProvider
 {
+    using Lib9c.ActionEvaluatorCommonComponents;
     using Libplanet.Action;
-    using Libplanet.Extensions.ActionEvaluatorCommonComponents;
 
     public class ReplayRandom : IRandom
     {
