@@ -274,13 +274,29 @@ namespace NineChronicles.DataProvider.Executable.Commands
             var cmd = new MySqlCommand(stm, connection);
 
             var rdr = cmd.ExecuteReader();
-            List<string> avatars = new List<string>();
+            List<string> avatars = new List<string>
+            {
+                "D878FECaB9BA72938219e73e04f09d3212e7d751",
+                "d87912518877055dC752b8Fce21C04Be7187357a",
+                "D8795D439a327860a490D0e22Afa7a94ecaE34F2",
+                "D879899b3359Bc802133A6fE75c851c3f5155F1d",
+                "d8798af89B10D9daDFfa42d404F653786c274552",
+                "d8798f1444Fb91D9C18F7C651FBc0AF198376c25",
+                "D879C038b56B7708E97D96f30c4297f0fBf53Ec3",
+                "d879FD6B64AE35941c87A2e56eaC3b133995fcde",
+                "d87A359AD0026BD843Bb6bFb92BA3a09c8fbcDAA",
+                "D87A36E3C5D1bA6B66C87981623286a83A855D93",
+                "d87A4068BEfcf1B862fB4e4121637b8c60793781",
+                "d87A6a0E2D9F4326783882B3a2CDEF2bd5059C31",
+                "d87a6E9D5c34404b2AB327343D3f9B977918175C",
+                "d87A8d8C99aBaa493431F86784a223581BbbaCE2"
+            };
             List<string> agents = new List<string>();
 
             while (rdr.Read())
             {
+                // avatars.Add(rdr.GetString(0).Replace("0x", string.Empty));
                 Console.WriteLine("{0}", rdr.GetString(0));
-                avatars.Add(rdr.GetString(0).Replace("0x", string.Empty));
             }
 
             connection.Close();
