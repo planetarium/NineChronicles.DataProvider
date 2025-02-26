@@ -34,6 +34,8 @@ namespace NineChronicles.DataProvider
 
         public bool RpcServer { get; set; }
 
+        public bool RpcRemoteServer { get; set; }
+
         public string? RpcListenHost { get; set; }
 
         public int? RpcListenPort { get; set; }

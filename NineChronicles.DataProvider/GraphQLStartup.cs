@@ -73,8 +73,8 @@
                 endpoints.MapHealthChecks("/health-check");
             });
 
-            app.UseGraphQL<NineChroniclesSummarySchema>();
-            app.UseGraphQL<StandaloneSchema>("/graphql_headless");
+            app.UseGraphQL<NineChroniclesSummarySchema>("/graphql_dp");
+            app.UseGraphQL<StandaloneSchema>("/graphql");
             app.UseGraphQLPlayground();
         }
     }

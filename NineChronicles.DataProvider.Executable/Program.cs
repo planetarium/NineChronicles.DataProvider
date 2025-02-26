@@ -177,6 +177,16 @@ namespace NineChronicles.DataProvider.Executable
             };
             NineChroniclesNodeService service =
                 NineChroniclesNodeService.Create(nineChroniclesProperties, context);
+            var rpcContext = new RpcContext
+            {
+                RpcRemoteSever = true
+            };
+            var rpcProperties = NineChroniclesNodeServiceProperties
+                .GenerateRpcNodeServiceProperties(
+                    headlessConfig.RpcListenHost ?? "0.0.0.0",
+                    headlessConfig.RpcListenPort,
+                    headlessConfig.RpcRemoteServer
+                );
             ActionEvaluationPublisher publisher = new ActionEvaluationPublisher(
                 context.NineChroniclesNodeService!.BlockRenderer,
                 context.NineChroniclesNodeService!.ActionRenderer,
@@ -184,11 +194,8 @@ namespace NineChronicles.DataProvider.Executable
                 context.NineChroniclesNodeService!.NodeStatusRenderer,
                 context.NineChroniclesNodeService!.BlockChain,
                 IPAddress.Loopback.ToString(),
-                0,
-                new RpcContext
-                {
-                    RpcRemoteSever = false
-                },
+                headlessConfig.RpcListenPort ?? 31238,
+                rpcContext,
                 new StateMemoryCache()
             );
 
@@ -204,6 +211,12 @@ namespace NineChronicles.DataProvider.Executable
             });
 
             hostBuilder.UseNineChroniclesNode(nineChroniclesProperties, context, publisher, service);
+            hostBuilder.UseNineChroniclesRPC(
+                rpcProperties,
+                publisher,
+                context,
+                config
+            );
 
             var stateContext = new StateContext(
                 context.BlockChain!.GetWorldState(context.BlockChain!.Tip.Hash),
