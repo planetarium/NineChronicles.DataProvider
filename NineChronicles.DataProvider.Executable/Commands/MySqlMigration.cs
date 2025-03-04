@@ -1521,7 +1521,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine(ex.Message, ex.StackTrace);
+                            Console.WriteLine(ex.Message);
+                            Console.WriteLine(ex.StackTrace);
                         }
                     }
                 }
