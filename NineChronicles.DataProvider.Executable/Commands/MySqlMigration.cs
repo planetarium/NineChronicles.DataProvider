@@ -1,12 +1,15 @@
 using Nekoyume.Action.AdventureBoss;
 using Nekoyume.Action.CustomEquipmentCraft;
 using Nekoyume.Model.EnumType;
+using Nekoyume.TableData.Summon;
 using NineChronicles.DataProvider.DataRendering.AdventureBoss;
 using NineChronicles.DataProvider.DataRendering.Crafting;
 using NineChronicles.DataProvider.DataRendering.Grinding;
+using NineChronicles.DataProvider.DataRendering.Summon;
 using NineChronicles.DataProvider.Store.Models.AdventureBoss;
 using NineChronicles.DataProvider.Store.Models.Crafting;
 using NineChronicles.DataProvider.Store.Models.Grinding;
+using NineChronicles.DataProvider.Store.Models.Summon;
 
 namespace NineChronicles.DataProvider.Executable.Commands
 {
@@ -106,6 +109,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private List<PetEnhancementModel> _petEnhancementList;
         private List<TransferAssetModel> _transferAssetList;
         private List<RequestPledgeModel> _requestPledgeList;
+        private List<AuraSummonModel> _auraSummonList;
+        private List<RuneSummonModel> _runeSummonList;
 
         [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
         public async Task Migration(
@@ -266,6 +271,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
             _petEnhancementList = new List<PetEnhancementModel>();
             _transferAssetList = new List<TransferAssetModel>();
             _requestPledgeList = new List<RequestPledgeModel>();
+            _auraSummonList = new List<AuraSummonModel>();
+            _runeSummonList = new List<RuneSummonModel>();
 
             try
             {
@@ -389,6 +396,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _mySqlStore.StorePetEnhancementList(_petEnhancementList);
                 _mySqlStore.StoreTransferAssetList(_transferAssetList);
                 _mySqlStore.StoreRequestPledgeList(_requestPledgeList);
+                await _mySqlStore.StoreRuneSummonList(_runeSummonList);
+                await _mySqlStore.StoreAuraSummonList(_auraSummonList);
                 await Task.Run(async () =>
                 {
                     Console.WriteLine($"[Adventure Boss] {_adventureBossSeasonDict.Count} Season");
@@ -474,6 +483,47 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                         if (actionLoader.LoadAction(_blockIndex, ae.Action) is ActionBase action)
                         {
+                            if (action is AuraSummon auraSummon)
+                            {
+                                _auraSummonList.Add(AuraSummonData
+                                    .GetAuraSummonInfo(
+                                        inputState,
+                                        outputState,
+                                        ae.InputContext.Signer,
+                                        auraSummon.AvatarAddress,
+                                        auraSummon.GroupId,
+                                        auraSummon.SummonCount,
+                                        auraSummon.Id,
+                                        ae.InputContext.BlockIndex,
+                                        _blockTimeOffset
+                                    ));
+                            }
+
+                            if (action is RuneSummon runeSummon)
+                            {
+                                var sheets = outputState.GetSheets(
+                                    sheetTypes: new[]
+                                    {
+                                        typeof(RuneSheet),
+                                        typeof(RuneSummonSheet),
+                                    });
+                                var runeSheet = sheets.GetSheet<RuneSheet>();
+                                var summonSheet = sheets.GetSheet<RuneSummonSheet>();
+                                _runeSummonList.Add(RuneSummonData
+                                    .GetRuneSummonInfo(
+                                        ae.InputContext.Signer,
+                                        runeSummon.AvatarAddress,
+                                        runeSummon.GroupId,
+                                        runeSummon.SummonCount,
+                                        runeSummon.Id,
+                                        ae.InputContext.BlockIndex,
+                                        runeSheet,
+                                        summonSheet,
+                                        new ReplayRandom(ae.InputContext.RandomSeed),
+                                        _blockTimeOffset
+                                    ));
+                            }
+
                             // avatarNames will be stored as "N/A" for optimization
                             if (action is HackAndSlash hasAction)
                             {
