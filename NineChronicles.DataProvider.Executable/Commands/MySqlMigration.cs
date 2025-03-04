@@ -137,6 +137,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 Description = "The name of MySQL database to use.")]
             string mysqlDatabase,
             [Option(
+                "date",
+                Description = "Date to migrate")]
+            string date,
+            [Option(
                 "offset",
                 Description = "offset of block index (no entry will migrate from the genesis block).")]
             int? offset = null,
@@ -214,6 +218,51 @@ namespace NineChronicles.DataProvider.Executable.Commands
             _baseChain = new BlockChain(
                 blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, actionEvaluator
             );
+
+            using MySqlConnection connection = new MySqlConnection(_connectionString);
+            offset = 0;
+            var offsetQuery =
+                $"SELECT Min(`Index`) FROM Blocks where Date = '{date}'";
+            connection.Open();
+            var offsetCommand = new MySqlCommand(offsetQuery, connection);
+            offsetCommand.CommandTimeout = 3600;
+            var offsetReader = offsetCommand.ExecuteReader();
+            while (offsetReader.Read())
+            {
+                if (!offsetReader.IsDBNull(0))
+                {
+                    Console.WriteLine("offset: {0}", offsetReader.GetInt32(0));
+                    offset = offsetReader.GetInt32(0);
+                }
+                else
+                {
+                    Console.WriteLine("offset is null");
+                }
+            }
+
+            var maxIndex = 0;
+            var maxIndexQuery =
+                $"SELECT Max(`Index`) FROM Blocks where Date = '{date}'";
+            connection.Open();
+            var maxIndexCommand = new MySqlCommand(maxIndexQuery, connection);
+            maxIndexCommand.CommandTimeout = 3600;
+            var maxIndexReader = maxIndexCommand.ExecuteReader();
+            while (maxIndexReader.Read())
+            {
+                if (!maxIndexReader.IsDBNull(0))
+                {
+                    Console.WriteLine("maxIndex: {0}", maxIndexReader.GetInt32(0));
+                    maxIndex = maxIndexReader.GetInt32(0);
+                }
+                else
+                {
+                    Console.WriteLine("maxIndex is null");
+                }
+            }
+
+            limit = maxIndex - offset;
+
+            connection.Close();
 
             // Check offset and limit value based on chain height
             long height = _baseChain.Tip.Index;
