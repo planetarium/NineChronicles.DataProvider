@@ -244,6 +244,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 }
             }
 
+            connection.Close();
+
             var maxIndex = 0;
             var maxIndexQuery =
                 $"SELECT Max(`Index`) FROM Blocks where Date = '{date}'";
