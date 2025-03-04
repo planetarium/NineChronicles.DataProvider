@@ -219,10 +219,9 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, actionEvaluator
             );
 
-
             // Check offset and limit value based on chain height
             long height = _baseChain.Tip.Index;
-            
+
             using MySqlConnection connection = new MySqlConnection(_connectionString);
             offset = 0;
             var offsetQuery =
@@ -240,7 +239,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 }
                 else
                 {
-                    offset = (int) height - (86400 / 7);
+                    offset = (int)height - (86400 / 7);
                     Console.WriteLine($"offset is null. Use default offset: #{offset}");
                 }
             }
@@ -261,7 +260,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 }
                 else
                 {
-                    maxIndex = (int) height;
+                    maxIndex = (int)height;
                     Console.WriteLine($"maxIndex is null. Use default maxIndex: #{maxIndex}");
                 }
             }
