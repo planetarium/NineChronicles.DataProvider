@@ -79,7 +79,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private StreamWriter _urBulkFile;
         private StreamWriter _agentBulkFile;
         private StreamWriter _avatarBulkFile;
-        private StreamWriter _dailyMetricsBulkFile;
         private List<string> _hourGlassAgentList;
         private List<string> _apStoneAgentList;
         private List<string> _ccFiles;
@@ -1275,7 +1274,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
             _urBulkFile = new StreamWriter(GetFilePath("UrBulk.csv"));
             _fbBarBulkFile = new StreamWriter(GetFilePath("FbBarBulk.csv"));
             _fbUsBulkFile = new StreamWriter(GetFilePath("FbUsBulk.csv"));
-            _dailyMetricsBulkFile = new StreamWriter(GetFilePath("DailyMetricsBulk.csv"));
 
             // Update file paths in the tracking lists
             _agentFiles.Add(GetFilePath("AgentBulk.csv"));
