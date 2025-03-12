@@ -541,6 +541,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             {
                                 if (action is AuraSummon auraSummon)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(auraSummon.AvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            auraSummon.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(auraSummon.AvatarAddress.ToString());
+                                    }
+
                                     _auraSummonList.Add(AuraSummonData
                                         .GetAuraSummonInfo(
                                             inputState,
@@ -557,6 +565,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is RuneSummon runeSummon)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(runeSummon.AvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            runeSummon.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(runeSummon.AvatarAddress.ToString());
+                                    }
+
                                     var sheets = outputState.GetSheets(
                                         sheetTypes: new[]
                                         {
@@ -645,6 +661,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is EventDungeonBattle eventDungeonBattle)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(eventDungeonBattle.AvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            eventDungeonBattle.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(eventDungeonBattle.AvatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     var actionType = eventDungeonBattle.ToString()!.Split('.').LastOrDefault()
                                         ?.Replace(">", string.Empty);
@@ -671,6 +695,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is EventConsumableItemCrafts eventConsumableItemCrafts)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(eventConsumableItemCrafts.AvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            eventConsumableItemCrafts.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(eventConsumableItemCrafts.AvatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     _eventConsumableItemCraftsList.Add(
                                         EventConsumableItemCraftsData.GetEventConsumableItemCraftsInfo(
@@ -684,6 +716,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is HackAndSlashSweep hasSweep)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(hasSweep.avatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            hasSweep.avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(hasSweep.avatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
                                         hasSweep.avatarAddress, _blockTimeOffset, BattleType.Adventure));
@@ -709,6 +749,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is CombinationConsumable combinationConsumable)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(combinationConsumable.avatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            combinationConsumable.avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(combinationConsumable.avatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     _combinationConsumableList.Add(
                                         CombinationConsumableData.GetCombinationConsumableInfo(
@@ -729,6 +777,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is CombinationEquipment combinationEquipment)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(combinationEquipment.avatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            combinationEquipment.avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(combinationEquipment.avatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     if (combinationEquipment.payByCrystal)
                                     {
@@ -802,6 +858,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is ItemEnhancement itemEnhancement)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(itemEnhancement.avatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            itemEnhancement.avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(itemEnhancement.avatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     if (ItemEnhancementFailData.GetItemEnhancementFailInfo(
                                             inputState,
@@ -859,6 +923,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is Buy buy)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(buy.buyerAvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            buy.buyerAvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(buy.buyerAvatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     AvatarState avatarState = outputState.GetAvatarState(buy.buyerAvatarAddress);
                                     var buyerInventory = avatarState.inventory;
@@ -978,6 +1050,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is MigrateMonsterCollection migrateMonsterCollection)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(migrateMonsterCollection.AvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            migrateMonsterCollection.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(migrateMonsterCollection.AvatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     _migrateMonsterCollectionList.Add(
                                         MigrateMonsterCollectionData.GetMigrateMonsterCollectionInfo(inputState,
@@ -991,6 +1071,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is Grinding grinding)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(grinding.AvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            grinding.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(grinding.AvatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
 
                                     var grindList = GrindingData.GetGrindingInfo(inputState, ae.InputContext.Signer,
@@ -1009,6 +1097,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is UnlockEquipmentRecipe unlockEquipmentRecipe)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(unlockEquipmentRecipe.AvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            unlockEquipmentRecipe.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(unlockEquipmentRecipe.AvatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     var unlockEquipmentRecipeList =
                                         UnlockEquipmentRecipeData.GetUnlockEquipmentRecipeInfo(inputState, outputState,
@@ -1028,6 +1124,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is UnlockWorld unlockWorld)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(unlockWorld.AvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            unlockWorld.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(unlockWorld.AvatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     var unlockWorldList = UnlockWorldData.GetUnlockWorldInfo(inputState, outputState,
                                         ae.InputContext.Signer, unlockWorld.AvatarAddress, unlockWorld.WorldIds,
@@ -1044,6 +1148,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is HackAndSlashRandomBuff hasRandomBuff)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(hasRandomBuff.AvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            hasRandomBuff.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(hasRandomBuff.AvatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     _hasRandomBuffList.Add(HackAndSlashRandomBuffData.GetHasRandomBuffInfo(inputState,
                                         outputState, ae.InputContext.Signer, hasRandomBuff.AvatarAddress,
@@ -1056,6 +1168,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is JoinArena joinArena)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(joinArena.avatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            joinArena.avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(joinArena.avatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     _joinArenaList.Add(JoinArenaData.GetJoinArenaInfo(inputState, outputState,
                                         ae.InputContext.Signer, joinArena.avatarAddress, joinArena.round,
@@ -1068,6 +1188,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is BattleArena battleArena)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(battleArena.myAvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            battleArena.myAvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(battleArena.myAvatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
                                         battleArena.myAvatarAddress, _blockTimeOffset, BattleType.Adventure));
@@ -1090,6 +1218,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is EventMaterialItemCrafts eventMaterialItemCrafts)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(eventMaterialItemCrafts.AvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            eventMaterialItemCrafts.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(eventMaterialItemCrafts.AvatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     _eventMaterialItemCraftsList.Add(
                                         EventMaterialItemCraftsData.GetEventMaterialItemCraftsInfo(
@@ -1111,6 +1247,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is RuneEnhancement runeEnhancement)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(runeEnhancement.AvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            runeEnhancement.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(runeEnhancement.AvatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     _runeEnhancementList.Add(RuneEnhancementData.GetRuneEnhancementInfo(
                                         inputState,
@@ -1170,6 +1314,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is DailyReward dailyReward)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(dailyReward.avatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            dailyReward.avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(dailyReward.avatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
 #pragma warning disable CS0618
                                     var runeCurrency = Currency.Legacy(RuneHelper.DailyRewardRune.Ticker, 0,
@@ -1200,6 +1352,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is ClaimRaidReward claimRaidReward)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(claimRaidReward.AvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            claimRaidReward.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(claimRaidReward.AvatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     var sheets = outputState.GetSheets(
                                         sheetTypes: new[]
@@ -1243,6 +1403,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is UnlockRuneSlot unlockRuneSlot)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(unlockRuneSlot.AvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            unlockRuneSlot.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(unlockRuneSlot.AvatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     _unlockRuneSlotList.Add(UnlockRuneSlotData.GetUnlockRuneSlotInfo(
                                         inputState,
@@ -1261,6 +1429,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is RapidCombination rapidCombination)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(rapidCombination.avatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            rapidCombination.avatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(rapidCombination.avatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     _rapidCombinationList = _rapidCombinationList.Concat(
                                         RapidCombinationData.GetRapidCombinationInfo(
@@ -1280,6 +1456,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is Raid raid)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(raid.AvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            raid.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(raid.AvatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     var sheets = outputState.GetSheets(
                                         sheetTypes: new[]
@@ -1335,6 +1519,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is PetEnhancement petEnhancement)
                                 {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(petEnhancement.AvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            petEnhancement.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(petEnhancement.AvatarAddress.ToString());
+                                    }
+
                                     var start = DateTimeOffset.UtcNow;
                                     _petEnhancementList.Add(PetEnhancementData.GetPetEnhancementInfo(
                                         inputState,
@@ -1396,6 +1588,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 {
                                     // avatarNames will be stored as "N/A" for optimization
                                     case Wanted wanted:
+                                        // check if address is already in _avatarCheck
+                                        if (!_avatarCheck.Contains(wanted.AvatarAddress.ToString()))
+                                        {
+                                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                                wanted.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                            _avatarCheck.Add(wanted.AvatarAddress.ToString());
+                                        }
+
                                         _avatarList.Add(AvatarData.GetAvatarInfo(
                                             outputState,
                                             ae.InputContext.Signer,
@@ -1418,6 +1618,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             $"[Adventure Boss] Season added : {_adventureBossSeasonDict.Count}");
                                         break;
                                     case ExploreAdventureBoss challenge:
+                                        // check if address is already in _avatarCheck
+                                        if (!_avatarCheck.Contains(challenge.AvatarAddress.ToString()))
+                                        {
+                                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                                challenge.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                            _avatarCheck.Add(challenge.AvatarAddress.ToString());
+                                        }
+
                                         _avatarList.Add(AvatarData.GetAvatarInfo(
                                             outputState,
                                             ae.InputContext.Signer,
@@ -1432,6 +1640,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             $"[Adventure Boss] Challenge added : {_adventureBossChallengeList.Count}");
                                         break;
                                     case SweepAdventureBoss rush:
+                                        // check if address is already in _avatarCheck
+                                        if (!_avatarCheck.Contains(rush.AvatarAddress.ToString()))
+                                        {
+                                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                                rush.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                            _avatarCheck.Add(rush.AvatarAddress.ToString());
+                                        }
+
                                         _avatarList.Add(AvatarData.GetAvatarInfo(
                                             outputState,
                                             ae.InputContext.Signer,
@@ -1446,6 +1662,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             $"[Adventure Boss] Rush added : {_adventureBossRushList.Count}");
                                         break;
                                     case UnlockFloor unlock:
+                                        // check if address is already in _avatarCheck
+                                        if (!_avatarCheck.Contains(unlock.AvatarAddress.ToString()))
+                                        {
+                                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                                unlock.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                            _avatarCheck.Add(unlock.AvatarAddress.ToString());
+                                        }
+
                                         _avatarList.Add(AvatarData.GetAvatarInfo(
                                             outputState,
                                             ae.InputContext.Signer,
@@ -1461,6 +1685,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         break;
                                     case ClaimAdventureBossReward claim:
                                     {
+                                        // check if address is already in _avatarCheck
+                                        if (!_avatarCheck.Contains(claim.AvatarAddress.ToString()))
+                                        {
+                                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                                claim.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                            _avatarCheck.Add(claim.AvatarAddress.ToString());
+                                        }
+
                                         _avatarList.Add(AvatarData.GetAvatarInfo(
                                             outputState,
                                             ae.InputContext.Signer,
@@ -1490,6 +1722,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                     case CustomEquipmentCraft cec:
                                     {
+                                        // check if address is already in _avatarCheck
+                                        if (!_avatarCheck.Contains(cec.AvatarAddress.ToString()))
+                                        {
+                                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                                cec.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                            _avatarCheck.Add(cec.AvatarAddress.ToString());
+                                        }
+
                                         var cecList = CustomEquipmentCraftData.GetCustomEquipmentCraftInfo(
                                             inputState,
                                             outputState,
@@ -1506,6 +1746,14 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                     case UnlockCombinationSlot ucs:
                                     {
+                                        // check if address is already in _avatarCheck
+                                        if (!_avatarCheck.Contains(ucs.AvatarAddress.ToString()))
+                                        {
+                                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                                ucs.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                            _avatarCheck.Add(ucs.AvatarAddress.ToString());
+                                        }
+
                                         _unlockCombinationSlotList.Add(
                                             UnlockCombinationSlotData.GetUnlockCombinationSlotInfo(
                                                 inputState,
