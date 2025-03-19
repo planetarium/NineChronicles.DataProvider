@@ -224,8 +224,18 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
             using MySqlConnection connection = new MySqlConnection(_connectionString);
             offset = 0;
-            var offsetQuery =
-                $"SELECT Min(`Index`) FROM Blocks where Date = '{date}'";
+            // Parse the input date string into a DateTime object
+            DateTime inputDate = DateTime.Parse(date);
+
+            // Subtract 2 days
+            DateTime newDate = inputDate.AddDays(-2);
+
+            // Format the date as a string in YYYY-MM-DD format for SQL
+            string formattedDate = newDate.ToString("yyyy-MM-dd");
+
+            // Use the new formatted date in your SQL query
+            var offsetQuery = $"SELECT Min(`Index`) FROM Blocks WHERE Date = '{formattedDate}'";
+
             connection.Open();
             var offsetCommand = new MySqlCommand(offsetQuery, connection);
             offsetCommand.CommandTimeout = 3600;
