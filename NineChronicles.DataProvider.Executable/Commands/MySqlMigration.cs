@@ -224,6 +224,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
             using MySqlConnection connection = new MySqlConnection(_connectionString);
             offset = 0;
+
             // Parse the input date string into a DateTime object
             DateTime inputDate = DateTime.Parse(date);
 
