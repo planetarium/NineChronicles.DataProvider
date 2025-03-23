@@ -226,16 +226,13 @@ namespace NineChronicles.DataProvider.Executable.Commands
             offset = 0;
 
             // Parse the input date string into a DateTime object
-            DateTime inputDate = DateTime.Parse(date);
-
+            // DateTime inputDate = DateTime.Parse(date);
             // Subtract 2 days
-            DateTime newDate = inputDate.AddDays(-2);
-
+            // DateTime newDate = inputDate.AddDays(-2);
             // Format the date as a string in YYYY-MM-DD format for SQL
-            string formattedDate = newDate.ToString("yyyy-MM-dd");
-
+            // string formattedDate = newDate.ToString("yyyy-MM-dd");
             // Use the new formatted date in your SQL query
-            var offsetQuery = $"SELECT Min(`Index`) FROM Blocks WHERE Date = '{formattedDate}'";
+            var offsetQuery = "SELECT MAX(`Index`) FROM Blocks";
 
             connection.Open();
             var offsetCommand = new MySqlCommand(offsetQuery, connection);
@@ -414,114 +411,10 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                     Task.WaitAll(taskArray);
                     ProcessTasks(taskArray, blockChainStates);
+                    await FlushAndClear();
                 }
 
-                DateTimeOffset postDataPrep = _blockTimeOffset;
-                Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
-                Console.WriteLine("Start Data Migration...");
-                _mySqlStore.StoreBlockList(_blockList);
-                _mySqlStore.StoreTransactionList(_txList);
-                _mySqlStore.StoreAgentList(_agentList);
-                _mySqlStore.StoreAvatarList(_avatarList);
-                _mySqlStore.StoreHackAndSlashList(_hackAndSlashList);
-                _mySqlStore.StoreHasWithRandomBuffList(_hasWithRandomBuffList);
-                _mySqlStore.StoreClaimStakeRewardList(_claimStakeRewardList);
-                _mySqlStore.StoreRunesAcquiredList(_runesAcquiredList);
-                _mySqlStore.StoreEventDungeonBattleList(_eventDungeonBattleList);
-                _mySqlStore.StoreEventConsumableItemCraftsList(_eventConsumableItemCraftsList);
-                _mySqlStore.StoreHackAndSlashSweepList(_hackAndSlashSweepList);
-                _mySqlStore.StoreCombinationConsumableList(_combinationConsumableList);
-                _mySqlStore.StoreCombinationEquipmentList(_combinationEquipmentList);
-                _mySqlStore.StoreItemEnhancementList(_itemEnhancementList);
-                _mySqlStore.StoreShopHistoryEquipmentList(_buyShopEquipmentsList);
-                _mySqlStore.StoreShopHistoryCostumeList(_buyShopCostumesList);
-                _mySqlStore.StoreShopHistoryMaterialList(_buyShopMaterialsList);
-                _mySqlStore.StoreShopHistoryConsumableList(_buyShopConsumablesList);
-                _mySqlStore.ProcessEquipmentList(_equipmentList);
-                _mySqlStore.StoreStakingList(_stakeList);
-                _mySqlStore.StoreClaimStakeRewardList(_claimStakeList);
-                _mySqlStore.StoreMigrateMonsterCollectionList(_migrateMonsterCollectionList);
-                _mySqlStore.StoreItemEnhancementFailList(_itemEnhancementFailList);
-                _mySqlStore.StoreUnlockEquipmentRecipeList(_unlockEquipmentRecipeList);
-                _mySqlStore.StoreUnlockWorldList(_unlockWorldList);
-                _mySqlStore.StoreReplaceCombinationEquipmentMaterialList(_replaceCombinationEquipmentMaterialList);
-                _mySqlStore.StoreHasRandomBuffList(_hasRandomBuffList);
-                _mySqlStore.StoreHasWithRandomBuffList(_hasWithRandomBuffList);
-                _mySqlStore.StoreJoinArenaList(_joinArenaList);
-                _mySqlStore.StoreBattleArenaList(_battleArenaList);
-                _mySqlStore.StoreBlockList(_blockList);
-                _mySqlStore.StoreEventDungeonBattleList(_eventDungeonBattleList);
-                _mySqlStore.StoreEventConsumableItemCraftsList(_eventConsumableItemCraftsList);
-                _mySqlStore.StoreRaiderList(_raiderList);
-                _mySqlStore.StoreBattleGrandFinaleList(_battleGrandFinaleList);
-                _mySqlStore.StoreEventMaterialItemCraftsList(_eventMaterialItemCraftsList);
-                _mySqlStore.StoreRuneEnhancementList(_runeEnhancementList);
-                _mySqlStore.StoreRunesAcquiredList(_runesAcquiredList);
-                _mySqlStore.StoreUnlockRuneSlotList(_unlockRuneSlotList);
-                _mySqlStore.StorePetEnhancementList(_petEnhancementList);
-                _mySqlStore.StoreTransferAssetList(_transferAssetList);
-                _mySqlStore.StoreRequestPledgeList(_requestPledgeList);
-                await _mySqlStore.StoreRuneSummonList(_runeSummonList);
-                await _mySqlStore.StoreAuraSummonList(_auraSummonList);
-                await Task.Run(async () =>
-                {
-                    Console.WriteLine($"[Adventure Boss] {_adventureBossSeasonDict.Count} Season");
-                    await _mySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonDict.Values.ToList());
-                });
-
-                await Task.Run(async () =>
-                {
-                    Console.WriteLine($"[Adventure Boss] {_adventureBossWantedList.Count} Wanted");
-                    await _mySqlStore.StoreAdventureBossWantedList(_adventureBossWantedList);
-                });
-
-                await Task.Run(async () =>
-                {
-                    Console.WriteLine($"[Adventure Boss] {_adventureBossChallengeList.Count} Challenge");
-                    await _mySqlStore.StoreAdventureBossChallengeList(_adventureBossChallengeList);
-                });
-
-                await Task.Run(async () =>
-                {
-                    Console.WriteLine($"[Adventure Boss] {_adventureBossRushList.Count} Rush");
-                    await _mySqlStore.StoreAdventureBossRushList(_adventureBossRushList);
-                });
-
-                await Task.Run(async () =>
-                {
-                    Console.WriteLine($"[Adventure Boss] {_adventureBossUnlockFloorList.Count} Unlock");
-                    await _mySqlStore.StoreAdventureBossUnlockFloorList(_adventureBossUnlockFloorList);
-                });
-
-                await Task.Run(async () =>
-                {
-                    Console.WriteLine($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
-                    await _mySqlStore.StoreAdventureBossClaimRewardList(_adventureBossClaimRewardList);
-                });
-
-                await Task.Run(async () =>
-                {
-                    Console.WriteLine($"[RapidCombination] {_rapidCombinationList.Count}");
-                    await _mySqlStore.StoreRapidCombinationList(_rapidCombinationList);
-                });
-
-                await Task.Run(async () =>
-                {
-                    Console.WriteLine($"[Grinding] {_grindList.Count} grinding");
-                    await _mySqlStore.StoreGrindList(_grindList);
-                });
-
-                await Task.Run(async () =>
-                {
-                    Console.WriteLine($"[CustomEquipmentCraft] {_customEquipmentCraftList} Custom Equipment Craft");
-                    await _mySqlStore.StoreCustomEquipmentCraftList(_customEquipmentCraftList);
-                });
-
-                await Task.Run(async () =>
-                {
-                    Console.WriteLine($"[UnlockCombinationSlot] {_unlockCombinationSlotList} unlock combination slot");
-                    await _mySqlStore.StoreUnlockCombinationSlotList(_unlockCombinationSlotList);
-                });
+                await FlushAndClear();
             }
             catch (Exception e)
             {
@@ -533,7 +426,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
         }
 
-        private void ProcessTasks(Task<List<ICommittedActionEvaluation>>[] taskArray, IBlockChainStates blockChainStates)
+        public void ProcessTasks(Task<List<ICommittedActionEvaluation>>[] taskArray, IBlockChainStates blockChainStates)
         {
             foreach (var task in taskArray)
             {
@@ -1788,10 +1681,170 @@ namespace NineChronicles.DataProvider.Executable.Commands
             }
         }
 
-        private List<ICommittedActionEvaluation> EvaluateBlock(Block block)
+        public List<ICommittedActionEvaluation> EvaluateBlock(Block block)
         {
             var evList = _baseChain.EvaluateBlock(block).ToList();
             return evList;
+        }
+
+        public async Task FlushAndClear()
+        {
+            try
+            {
+                DateTimeOffset start = DateTimeOffset.Now;
+                Console.WriteLine("Start Data Interval Migration...");
+                _mySqlStore.StoreBlockList(_blockList);
+                _mySqlStore.StoreTransactionList(_txList);
+                _mySqlStore.StoreAgentList(_agentList);
+                _mySqlStore.StoreAvatarList(_avatarList);
+                _mySqlStore.StoreHackAndSlashList(_hackAndSlashList);
+                _mySqlStore.StoreHasWithRandomBuffList(_hasWithRandomBuffList);
+                _mySqlStore.StoreClaimStakeRewardList(_claimStakeRewardList);
+                _mySqlStore.StoreRunesAcquiredList(_runesAcquiredList);
+                _mySqlStore.StoreEventDungeonBattleList(_eventDungeonBattleList);
+                _mySqlStore.StoreEventConsumableItemCraftsList(_eventConsumableItemCraftsList);
+                _mySqlStore.StoreHackAndSlashSweepList(_hackAndSlashSweepList);
+                _mySqlStore.StoreCombinationConsumableList(_combinationConsumableList);
+                _mySqlStore.StoreCombinationEquipmentList(_combinationEquipmentList);
+                _mySqlStore.StoreItemEnhancementList(_itemEnhancementList);
+                _mySqlStore.StoreShopHistoryEquipmentList(_buyShopEquipmentsList);
+                _mySqlStore.StoreShopHistoryCostumeList(_buyShopCostumesList);
+                _mySqlStore.StoreShopHistoryMaterialList(_buyShopMaterialsList);
+                _mySqlStore.StoreShopHistoryConsumableList(_buyShopConsumablesList);
+                _mySqlStore.ProcessEquipmentList(_equipmentList);
+                _mySqlStore.StoreStakingList(_stakeList);
+                _mySqlStore.StoreClaimStakeRewardList(_claimStakeList);
+                _mySqlStore.StoreMigrateMonsterCollectionList(_migrateMonsterCollectionList);
+                _mySqlStore.StoreItemEnhancementFailList(_itemEnhancementFailList);
+                _mySqlStore.StoreUnlockEquipmentRecipeList(_unlockEquipmentRecipeList);
+                _mySqlStore.StoreUnlockWorldList(_unlockWorldList);
+                _mySqlStore.StoreReplaceCombinationEquipmentMaterialList(_replaceCombinationEquipmentMaterialList);
+                _mySqlStore.StoreHasRandomBuffList(_hasRandomBuffList);
+                _mySqlStore.StoreHasWithRandomBuffList(_hasWithRandomBuffList);
+                _mySqlStore.StoreJoinArenaList(_joinArenaList);
+                _mySqlStore.StoreBattleArenaList(_battleArenaList);
+                _mySqlStore.StoreBlockList(_blockList);
+                _mySqlStore.StoreEventDungeonBattleList(_eventDungeonBattleList);
+                _mySqlStore.StoreEventConsumableItemCraftsList(_eventConsumableItemCraftsList);
+                _mySqlStore.StoreRaiderList(_raiderList);
+                _mySqlStore.StoreBattleGrandFinaleList(_battleGrandFinaleList);
+                _mySqlStore.StoreEventMaterialItemCraftsList(_eventMaterialItemCraftsList);
+                _mySqlStore.StoreRuneEnhancementList(_runeEnhancementList);
+                _mySqlStore.StoreRunesAcquiredList(_runesAcquiredList);
+                _mySqlStore.StoreUnlockRuneSlotList(_unlockRuneSlotList);
+                _mySqlStore.StorePetEnhancementList(_petEnhancementList);
+                _mySqlStore.StoreTransferAssetList(_transferAssetList);
+                _mySqlStore.StoreRequestPledgeList(_requestPledgeList);
+                await _mySqlStore.StoreRuneSummonList(_runeSummonList);
+                await _mySqlStore.StoreAuraSummonList(_auraSummonList);
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossSeasonDict.Count} Season");
+                    await _mySqlStore.StoreAdventureBossSeasonList(_adventureBossSeasonDict.Values.ToList());
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossWantedList.Count} Wanted");
+                    await _mySqlStore.StoreAdventureBossWantedList(_adventureBossWantedList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossChallengeList.Count} Challenge");
+                    await _mySqlStore.StoreAdventureBossChallengeList(_adventureBossChallengeList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossRushList.Count} Rush");
+                    await _mySqlStore.StoreAdventureBossRushList(_adventureBossRushList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossUnlockFloorList.Count} Unlock");
+                    await _mySqlStore.StoreAdventureBossUnlockFloorList(_adventureBossUnlockFloorList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Adventure Boss] {_adventureBossClaimRewardList.Count} claim");
+                    await _mySqlStore.StoreAdventureBossClaimRewardList(_adventureBossClaimRewardList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[RapidCombination] {_rapidCombinationList.Count}");
+                    await _mySqlStore.StoreRapidCombinationList(_rapidCombinationList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[Grinding] {_grindList.Count} grinding");
+                    await _mySqlStore.StoreGrindList(_grindList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[CustomEquipmentCraft] {_customEquipmentCraftList} Custom Equipment Craft");
+                    await _mySqlStore.StoreCustomEquipmentCraftList(_customEquipmentCraftList);
+                });
+
+                await Task.Run(async () =>
+                {
+                    Console.WriteLine($"[UnlockCombinationSlot] {_unlockCombinationSlotList} unlock combination slot");
+                    await _mySqlStore.StoreUnlockCombinationSlotList(_unlockCombinationSlotList);
+                });
+                _blockList.Clear();
+                _txList.Clear();
+                _agentList.Clear();
+                _avatarList.Clear();
+                _hackAndSlashList.Clear();
+                _hasWithRandomBuffList.Clear();
+                _claimStakeRewardList.Clear();
+                _runesAcquiredList.Clear();
+                _eventDungeonBattleList.Clear();
+                _eventConsumableItemCraftsList.Clear();
+                _hackAndSlashSweepList.Clear();
+                _combinationConsumableList.Clear();
+                _combinationEquipmentList.Clear();
+                _equipmentList.Clear();
+                _itemEnhancementList.Clear();
+                _buyShopEquipmentsList.Clear();
+                _buyShopCostumesList.Clear();
+                _buyShopMaterialsList.Clear();
+                _buyShopConsumablesList.Clear();
+                _stakeList.Clear();
+                _claimStakeList.Clear();
+                _migrateMonsterCollectionList.Clear();
+                _grindList.Clear();
+                _itemEnhancementFailList.Clear();
+                _unlockEquipmentRecipeList.Clear();
+                _unlockWorldList.Clear();
+                _replaceCombinationEquipmentMaterialList.Clear();
+                _hasRandomBuffList.Clear();
+                _joinArenaList.Clear();
+                _battleArenaList.Clear();
+                _raiderList.Clear();
+                _battleGrandFinaleList.Clear();
+                _eventMaterialItemCraftsList.Clear();
+                _runeEnhancementList.Clear();
+                _unlockRuneSlotList.Clear();
+                _rapidCombinationList.Clear();
+                _petEnhancementList.Clear();
+                _transferAssetList.Clear();
+                _requestPledgeList.Clear();
+                _auraSummonList.Clear();
+                _runeSummonList.Clear();
+                DateTimeOffset end = DateTimeOffset.Now;
+                Console.WriteLine("Data Interval Migration Complete! Time Elapsed: {0}", end - start);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+            }
         }
     }
 }
