@@ -232,6 +232,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
             // Format the date as a string in YYYY-MM-DD format for SQL
             // string formattedDate = newDate.ToString("yyyy-MM-dd");
             // Use the new formatted date in your SQL query
+            var maxIndex = (int)height;
+            Console.WriteLine($"maxIndex: #{maxIndex}");
             var offsetQuery = "SELECT MAX(`Index`) FROM Blocks";
 
             connection.Open();
@@ -253,27 +255,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
             }
 
             connection.Close();
-
-            var maxIndex = 0;
-            var maxIndexQuery =
-                $"SELECT Max(`Index`) FROM Blocks where Date = '{date}'";
-            connection.Open();
-            var maxIndexCommand = new MySqlCommand(maxIndexQuery, connection);
-            maxIndexCommand.CommandTimeout = 3600;
-            var maxIndexReader = maxIndexCommand.ExecuteReader();
-            while (maxIndexReader.Read())
-            {
-                if (!maxIndexReader.IsDBNull(0))
-                {
-                    Console.WriteLine("maxIndex: {0}", maxIndexReader.GetInt32(0));
-                    maxIndex = maxIndexReader.GetInt32(0);
-                }
-                else
-                {
-                    maxIndex = (int)height;
-                    Console.WriteLine($"maxIndex is null. Use default maxIndex: #{maxIndex}");
-                }
-            }
 
             limit = maxIndex - offset;
 
