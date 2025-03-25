@@ -246,18 +246,18 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 if (!offsetReader.IsDBNull(0))
                 {
                     Console.WriteLine("offset: {0}", offsetReader.GetInt32(0));
-                    offset = offsetReader.GetInt32(0);
+                    offset = 13757544;
                 }
                 else
                 {
-                    offset = (int)height - (86400 / 7);
+                    offset = 13757544;
                     Console.WriteLine($"offset is null. Use default offset: #{offset}");
                 }
             }
 
             connection.Close();
 
-            limit = maxIndex - 13757544;
+            limit = maxIndex - offset;
 
             connection.Close();
 
