@@ -257,7 +257,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
             connection.Close();
 
-            limit = maxIndex - 13757544;
+            limit = maxIndex - 5282454;
 
             connection.Close();
 
