@@ -111,6 +111,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private List<RequestPledgeModel> _requestPledgeList;
         private List<AuraSummonModel> _auraSummonList;
         private List<RuneSummonModel> _runeSummonList;
+        private List<CostumeSummonModel> _costumeSummonList;
 
         [Command(Description = "Migrate action data in rocksdb store to mysql db.")]
         public async Task Migration(
@@ -256,7 +257,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
             connection.Close();
 
-            limit = maxIndex - offset;
+            limit = maxIndex - 13757544;
 
             connection.Close();
 
@@ -316,6 +317,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             _requestPledgeList = new List<RequestPledgeModel>();
             _auraSummonList = new List<AuraSummonModel>();
             _runeSummonList = new List<RuneSummonModel>();
+            _costumeSummonList = new List<CostumeSummonModel>();
 
             try
             {
@@ -479,6 +481,37 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             new ReplayRandom(ae.InputContext.RandomSeed),
                                             _blockTimeOffset
                                         ));
+                                }
+
+                                if (action is CostumeSummon customeSummon)
+                                {
+                                    // check if address is already in _avatarCheck
+                                    if (!_avatarCheck.Contains(customeSummon.AvatarAddress.ToString()))
+                                    {
+                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
+                                            customeSummon.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                        _avatarCheck.Add(customeSummon.AvatarAddress.ToString());
+                                    }
+
+                                    var sheets = outputState.GetSheets(
+                                        sheetTypes: new[]
+                                        {
+                                            typeof(CostumeItemSheet),
+                                            typeof(CostumeSummonSheet),
+                                        });
+                                    var costumeSheet = sheets.GetSheet<CostumeItemSheet>();
+                                    var summonSheet = sheets.GetSheet<CostumeSummonSheet>();
+                                    var summonRow = summonSheet.OrderedList!.FirstOrDefault(row => row.GroupId == customeSummon.GroupId);
+
+                                    _costumeSummonList.Add(CostumeSummonData.GetSummonInfo(
+                                        ae.InputContext.Signer,
+                                        ae.InputContext.BlockIndex,
+                                        _blockTimeOffset,
+                                        costumeSheet,
+                                        summonRow!,
+                                        new ReplayRandom(ae.InputContext.RandomSeed),
+                                        customeSummon
+                                    ));
                                 }
 
                                 // avatarNames will be stored as "N/A" for optimization
@@ -1718,6 +1751,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _mySqlStore.StoreRequestPledgeList(_requestPledgeList);
                 await _mySqlStore.StoreRuneSummonList(_runeSummonList);
                 await _mySqlStore.StoreAuraSummonList(_auraSummonList);
+                await _mySqlStore.StoreCostumeSummonList(_costumeSummonList);
                 await Task.Run(async () =>
                 {
                     Console.WriteLine($"[Adventure Boss] {_adventureBossSeasonDict.Count} Season");
@@ -1818,6 +1852,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 _requestPledgeList.Clear();
                 _auraSummonList.Clear();
                 _runeSummonList.Clear();
+                _costumeSummonList.Clear();
                 DateTimeOffset end = DateTimeOffset.Now;
                 Console.WriteLine("Data Interval Migration Complete! Time Elapsed: {0}", end - start);
             }
