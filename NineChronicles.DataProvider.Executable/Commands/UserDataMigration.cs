@@ -346,7 +346,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         try
                         {
                             Console.WriteLine($"Finalize {fbBARDbName} Table!");
-                            var fbTipHash = _baseStore.IndexBlockHash(_baseChain.Id, 5436220);
+                            var fbTipHash = _baseStore.IndexBlockHash(_baseChain.Id, 13905103);
                             var fbTip = _baseStore.GetBlock((BlockHash)fbTipHash!);
                             var fbExec = _baseChain.EvaluateBlock(fbTip);
                             var fbEv = fbExec.Last();
