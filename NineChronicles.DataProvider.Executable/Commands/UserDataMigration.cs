@@ -310,6 +310,12 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     var prevArenaData = arenaSheet.GetRoundByBlockIndex(prevArenaEndIndex);
                     var finalizeBarankingTip = prevArenaEndIndex;
                     fbBARDbName = $"{fbBARDbName}_{prevArenaData.ChampionshipId}_{prevArenaData.Round}";
+                    Console.WriteLine($"[Debug] ArenaData.StartBlockIndex: {arenaData.StartBlockIndex}");
+                    Console.WriteLine($"[Debug] PrevArenaEndIndex: {prevArenaEndIndex}");
+                    Console.WriteLine($"[Debug] PrevArenaData.ChampionshipId: {prevArenaData.ChampionshipId}");
+                    Console.WriteLine($"[Debug] PrevArenaData.Round: {prevArenaData.Round}");
+                    Console.WriteLine($"[Debug] FinalizeBarankingTip: {finalizeBarankingTip}");
+                    Console.WriteLine($"[Debug] fbBARDbName: {fbBARDbName}");
 
                     connection.Open();
                     var preBarQuery = $"SELECT `BlockIndex` FROM {fbBARDbName} limit 1";
@@ -322,21 +328,25 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     {
                         Console.WriteLine("{0}", dataReader.GetInt64(0));
                         prevBarDbTip = dataReader.GetInt64(0);
+                        Console.WriteLine($"[Debug] Fetched prevBarDbTip: {prevBarDbTip}");
                     }
 
                     connection.Close();
                     Console.WriteLine("4");
+                    Console.WriteLine($"[Debug] Comparison: prevBarDbTip ({prevBarDbTip}) < finalizeBarankingTip ({finalizeBarankingTip})");
                     if (prevBarDbTip != 0 && prevBarDbTip < finalizeBarankingTip)
                     {
                         finalizeBaranking = true;
                     }
+
+                    Console.WriteLine($"[Debug] finalizeBaranking set to: {finalizeBaranking}");
 
                     if (finalizeBaranking)
                     {
                         try
                         {
                             Console.WriteLine($"Finalize {fbBARDbName} Table!");
-                            var fbTipHash = _baseStore.IndexBlockHash(_baseChain.Id, finalizeBarankingTip);
+                            var fbTipHash = _baseStore.IndexBlockHash(_baseChain.Id, 5436220);
                             var fbTip = _baseStore.GetBlock((BlockHash)fbTipHash!);
                             var fbExec = _baseChain.EvaluateBlock(fbTip);
                             var fbEv = fbExec.Last();
