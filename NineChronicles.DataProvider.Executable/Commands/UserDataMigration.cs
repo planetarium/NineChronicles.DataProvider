@@ -340,7 +340,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     }
 
                     Console.WriteLine($"[Debug] finalizeBaranking set to: {finalizeBaranking}");
-
+                    finalizeBaranking = true;
                     if (finalizeBaranking)
                     {
                         try
