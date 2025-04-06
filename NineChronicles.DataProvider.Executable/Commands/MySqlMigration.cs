@@ -229,7 +229,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             }
 
             long height = _baseChain.Tip.Index;
-            if (offset != 0)
+            if (offset == 0)
             {
                 var offsetQuery = "SELECT Max(`Index`) FROM Blocks";
                 var offsetCommand = new MySqlCommand(offsetQuery, connection);
