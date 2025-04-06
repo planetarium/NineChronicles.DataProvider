@@ -220,56 +220,54 @@ namespace NineChronicles.DataProvider.Executable.Commands
             );
 
             // Check offset and limit value based on chain height
-            long height = _baseChain.Tip.Index;
-
             using MySqlConnection connection = new MySqlConnection(_connectionString);
-            offset = 0;
-            var offsetQuery =
-                $"SELECT Min(`Index`) FROM Blocks where Date = '{date}'";
             connection.Open();
-            var offsetCommand = new MySqlCommand(offsetQuery, connection);
-            offsetCommand.CommandTimeout = 3600;
-            var offsetReader = offsetCommand.ExecuteReader();
-            while (offsetReader.Read())
+
+            if (offset == null)
             {
-                if (!offsetReader.IsDBNull(0))
-                {
-                    Console.WriteLine("offset: {0}", offsetReader.GetInt32(0));
-                    offset = offsetReader.GetInt32(0);
-                }
-                else
-                {
-                    offset = (int)height - (86400 / 7);
-                    Console.WriteLine($"offset is null. Use default offset: #{offset}");
-                }
+                offset = 0;
             }
 
-            connection.Close();
-
-            var maxIndex = 0;
-            var maxIndexQuery =
-                $"SELECT Max(`Index`) FROM Blocks where Date = '{date}'";
-            connection.Open();
-            var maxIndexCommand = new MySqlCommand(maxIndexQuery, connection);
-            maxIndexCommand.CommandTimeout = 3600;
-            var maxIndexReader = maxIndexCommand.ExecuteReader();
-            while (maxIndexReader.Read())
+            long height = _baseChain.Tip.Index;
+            if (offset != 0)
             {
-                if (!maxIndexReader.IsDBNull(0))
+                var offsetQuery = "SELECT Max(`Index`) FROM Blocks";
+                var offsetCommand = new MySqlCommand(offsetQuery, connection);
+                offsetCommand.CommandTimeout = 3600;
+
+                var offsetReader = offsetCommand.ExecuteReader();
+                if (offsetReader.Read())
                 {
-                    Console.WriteLine("maxIndex: {0}", maxIndexReader.GetInt32(0));
-                    maxIndex = maxIndexReader.GetInt32(0);
+                    if (!offsetReader.IsDBNull(0))
+                    {
+                        offset = offsetReader.GetInt32(0);
+                        Console.WriteLine($"offset (max index from DB): {offset}");
+                    }
+                    else
+                    {
+                        offset = (int)height - (86400 / 7);
+                        Console.WriteLine($"offset is null. Use fallback offset: #{offset}");
+                    }
                 }
-                else
-                {
-                    maxIndex = (int)height;
-                    Console.WriteLine($"maxIndex is null. Use default maxIndex: #{maxIndex}");
-                }
+
+                offsetReader.Close();
+                connection.Close();
             }
 
+            // Chain tip
+            var maxIndex = (int)height;
+            Console.WriteLine($"maxIndex (chain tip): {maxIndex}");
+
+            // Calculate limit
             limit = maxIndex - offset;
+            Console.WriteLine($"limit (blocks to migrate): {limit}");
 
-            connection.Close();
+            // Optional safety check
+            if (limit <= 0)
+            {
+                Console.WriteLine("No new blocks to migrate. Exiting.");
+                return;
+            }
 
             if (offset + limit > (int)height)
             {
