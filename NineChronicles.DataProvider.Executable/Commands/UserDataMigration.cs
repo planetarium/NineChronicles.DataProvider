@@ -50,7 +50,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private const string SCTDbName = "ShopCostumes";
         private const string SMDbName = "ShopMaterials";
         private readonly string uRDbName = "UserRunes";
-        private string bARDbName = "BattleArenaRanking";
+        private readonly string bARDbName = "BattleArenaRanking";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain _baseChain;
