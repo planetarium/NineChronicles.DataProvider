@@ -50,7 +50,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private const string SCTDbName = "ShopCostumes";
         private const string SMDbName = "ShopMaterials";
         private readonly string uRDbName = "UserRunes";
-        private readonly string bARDbName = "BattleArenaRanking";
         private string _connectionString;
         private IStore _baseStore;
         private BlockChain _baseChain;
@@ -71,7 +70,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private StreamWriter _seBulkFile;
         private StreamWriter _sctBulkFile;
         private StreamWriter _smBulkFile;
-        private StreamWriter _barBulkFile;
         private StreamWriter _urBulkFile;
         private StreamWriter _agentBulkFile;
         private StreamWriter _avatarBulkFile;
@@ -95,7 +93,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private List<string> _seFiles;
         private List<string> _sctFiles;
         private List<string> _smFiles;
-        private List<string> _barFiles;
         private List<string> _fbBarFiles;
         private List<string> _urFiles;
         private List<string> _agentFiles;
@@ -233,7 +230,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
             _seFiles = new List<string>();
             _sctFiles = new List<string>();
             _smFiles = new List<string>();
-            _barFiles = new List<string>();
             _fbBarFiles = new List<string>();
             _urFiles = new List<string>();
             _agentFiles = new List<string>();
@@ -294,8 +290,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     {
                         typeof(RuneSheet),
                     });
-                var arenaSheet = outputState.GetSheet<ArenaSheet>();
-                var arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
 
                 Console.WriteLine("2");
 
@@ -309,8 +303,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         Console.WriteLine("Migrating {0}/{1}", avatarCount, avatars.Count);
                         var avatarAddress = new Address(avatar);
                         avatarState = outputState.GetAvatarState(avatarAddress);
-
-                        var avatarLevel = avatarState.level;
 
                         var runeSheet = sheets.GetSheet<RuneSheet>();
                         foreach (var ticker in runeSheet.Values.Select(x => x.Ticker))
@@ -332,40 +324,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     $"{tip.Timestamp.UtcDateTime:yyyy-MM-dd}"
                                 );
                             }
-                        }
-
-                        var arenaScoreAdr =
-                            ArenaScore.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
-                        var arenaInformationAdr =
-                            ArenaInformation.DeriveAddress(avatarAddress, arenaData.ChampionshipId, arenaData.Round);
-                        outputState.TryGetArenaInformation(arenaInformationAdr, out var currentArenaInformation);
-                        outputState.TryGetArenaScore(arenaScoreAdr, out var outputArenaScore);
-                        if (currentArenaInformation != null && outputArenaScore != null)
-                        {
-                            _barBulkFile.WriteLine(
-                                $"{tip.Index};" +
-                                $"{avatarState.agentAddress.ToString()};" +
-                                $"{avatarAddress.ToString()};" +
-                                $"{avatarLevel};" +
-                                $"{arenaData.ChampionshipId};" +
-                                $"{arenaData.Round};" +
-                                $"{arenaData.ArenaType.ToString()};" +
-                                $"{outputArenaScore.Score};" +
-                                $"{currentArenaInformation.Win};" +
-                                $"{currentArenaInformation.Win};" +
-                                $"{currentArenaInformation.Lose};" +
-                                $"{currentArenaInformation.Ticket};" +
-                                $"{currentArenaInformation.PurchasedTicketCount};" +
-                                $"{currentArenaInformation.TicketResetCount};" +
-                                $"{arenaData.EntranceFee};" +
-                                $"{arenaData.TicketPrice};" +
-                                $"{arenaData.AdditionalTicketPrice};" +
-                                $"{arenaData.RequiredMedalCount};" +
-                                $"{arenaData.StartBlockIndex};" +
-                                $"{arenaData.EndBlockIndex};" +
-                                $"{0};" +
-                                $"{tip.Timestamp.UtcDateTime:yyyy-MM-dd}"
-                            );
                         }
 
                         Address orderReceiptAddress = OrderDigestListState.DeriveAddress(avatarAddress);
@@ -726,11 +684,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             BulkInsert(SMDbName, path);
                         }
 
-                        foreach (var path in _barFiles)
-                        {
-                            BulkInsert(bARDbName, path);
-                        }
-
                         foreach (var path in _urFiles)
                         {
                             BulkInsert(uRDbName, path);
@@ -751,7 +704,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         _seFiles.RemoveAt(0);
                         _sctFiles.RemoveAt(0);
                         _smFiles.RemoveAt(0);
-                        _barFiles.RemoveAt(0);
                         _urFiles.RemoveAt(0);
                         CreateBulkFiles(bulkFilesFolder);
                         intervalCount = 0;
@@ -764,9 +716,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 DateTimeOffset postDataPrep = DateTimeOffset.Now;
                 Console.WriteLine("Data Preparation Complete! Time Elapsed: {0}", postDataPrep - start);
                 var stm6 = $"RENAME TABLE {EDbName} TO {EDbName}_Dump; CREATE TABLE {EDbName} LIKE {EDbName}_Dump;";
-                var stm23 = $"RENAME TABLE {bARDbName} TO {bARDbName}_Dump; CREATE TABLE {bARDbName} LIKE {bARDbName}_Dump;";
                 var cmd6 = new MySqlCommand(stm6, connection);
-                var cmd23 = new MySqlCommand(stm23, connection);
                 foreach (var path in _agentFiles)
                 {
                     BulkInsert(AgentDbName, path);
@@ -851,18 +801,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     BulkInsert(SMDbName, path);
                 }
 
-                startMove = DateTimeOffset.Now;
-                connection.Open();
-                cmd23.CommandTimeout = 300;
-                cmd23.ExecuteScalar();
-                connection.Close();
-                endMove = DateTimeOffset.Now;
-                Console.WriteLine("Move BattleArenaRanking Complete! Time Elapsed: {0}", endMove - startMove);
-                foreach (var path in _barFiles)
-                {
-                    BulkInsert(bARDbName, path);
-                }
-
                 foreach (var path in _urFiles)
                 {
                     BulkInsert(uRDbName, path);
@@ -875,9 +813,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             }
 
             var stm11 = $"DROP TABLE {EDbName}_Dump;";
-            var stm34 = $"DROP TABLE {bARDbName}_Dump;";
             var cmd11 = new MySqlCommand(stm11, connection);
-            var cmd34 = new MySqlCommand(stm34, connection);
             DateTimeOffset startDelete;
             DateTimeOffset endDelete;
             startDelete = DateTimeOffset.Now;
@@ -887,13 +823,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
             connection.Close();
             endDelete = DateTimeOffset.Now;
             Console.WriteLine("Delete Equipments_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
-            startDelete = DateTimeOffset.Now;
-            connection.Open();
-            cmd34.CommandTimeout = 300;
-            cmd34.ExecuteScalar();
-            connection.Close();
-            endDelete = DateTimeOffset.Now;
-            Console.WriteLine("Delete BattleArenaRanking_Dump Complete! Time Elapsed: {0}", endDelete - startDelete);
             DateTimeOffset end = DateTimeOffset.UtcNow;
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
             Console.WriteLine("Shop Count for {0} avatars: {1}", avatars.Count, shopOrderCount);
@@ -978,9 +907,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
             _smBulkFile.Flush();
             _smBulkFile.Close();
 
-            _barBulkFile.Flush();
-            _barBulkFile.Close();
-
             _urBulkFile.Flush();
             _urBulkFile.Close();
         }
@@ -1008,7 +934,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
             _seBulkFile = new StreamWriter(GetFilePath("SeBulk.csv"));
             _sctBulkFile = new StreamWriter(GetFilePath("SctBulk.csv"));
             _smBulkFile = new StreamWriter(GetFilePath("SmBulk.csv"));
-            _barBulkFile = new StreamWriter(GetFilePath("BarBulk.csv"));
             _urBulkFile = new StreamWriter(GetFilePath("UrBulk.csv"));
 
             // Update file paths in the tracking lists
@@ -1031,7 +956,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
             _seFiles.Add(GetFilePath("SeBulk.csv"));
             _sctFiles.Add(GetFilePath("SctBulk.csv"));
             _smFiles.Add(GetFilePath("SmBulk.csv"));
-            _barFiles.Add(GetFilePath("BarBulk.csv"));
             _urFiles.Add(GetFilePath("UrBulk.csv"));
             _fbBarFiles.Add(GetFilePath("FbBarBulk.csv"));
             _fbUsFiles.Add(GetFilePath("FbUsBulk.csv"));
