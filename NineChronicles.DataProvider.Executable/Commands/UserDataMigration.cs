@@ -162,7 +162,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             {
                 _baseStore = new RocksDBStore(
                     storePath,
-                    dbConnectionCacheSize: 10000);
+                    dbConnectionCacheSize: 100);
             }
             else
             {
@@ -827,25 +827,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
             Console.WriteLine("Migration Complete! Time Elapsed: {0}", end - start);
             Console.WriteLine("Shop Count for {0} avatars: {1}", avatars.Count, shopOrderCount);
             DeleteAllFiles(bulkFilesFolder);
-        }
-
-        private async Task SendMessageAsync(string token, string channel, string message)
-        {
-            using (HttpClient client = new HttpClient())
-            {
-                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-
-                var content = new FormUrlEncodedContent(new[]
-                {
-                    new KeyValuePair<string, string>("channel", channel),
-                    new KeyValuePair<string, string>("text", message)
-                });
-
-                var url = "https://slack.com/api/chat.postMessage";
-                var response = await client.PostAsync(url, content);
-                var responseJson = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(responseJson);
-            }
         }
 
         private void FlushBulkFiles()
