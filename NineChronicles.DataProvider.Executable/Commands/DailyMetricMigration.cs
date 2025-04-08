@@ -47,37 +47,37 @@ namespace NineChronicles.DataProvider.Executable.Commands
             using (var connection = new MySqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
-                metrics = (await connection.QueryFirstAsync<Dictionary<string, object>>(@$"
-                    SELECT
-                        (SELECT COUNT(DISTINCT Signer) FROM Transactions WHERE Date = @date) AS dau,
-                        (SELECT COUNT(TxId) FROM Transactions WHERE Date = @date) AS txCount,
-                        (SELECT COUNT(Signer) FROM Transactions WHERE ActionType = 'ApprovePledge' AND Date = @date) AS newDau,
-                        (SELECT COUNT(Id) FROM HackAndSlashes WHERE Date = @date) AS hasCount,
-                        (SELECT COUNT(DISTINCT AgentAddress) FROM HackAndSlashes WHERE Date = @date) AS hasUsers,
-                        (SELECT COUNT(Id) FROM HackAndSlashSweeps WHERE Date = @date) AS sweepCount,
-                        (SELECT COUNT(DISTINCT AgentAddress) FROM HackAndSlashSweeps WHERE Date = @date) AS sweepUsers,
-                        (SELECT COUNT(Id) FROM CombinationEquipments WHERE Date = @date) AS combinationEquipmentCount,
-                        (SELECT COUNT(DISTINCT AgentAddress) FROM CombinationEquipments WHERE Date = @date) AS combinationEquipmentUsers,
-                        (SELECT COUNT(Id) FROM CombinationConsumables WHERE Date = @date) AS combinationConsumableCount,
-                        (SELECT COUNT(DISTINCT AgentAddress) FROM CombinationConsumables WHERE Date = @date) AS combinationConsumableUsers,
-                        (SELECT COUNT(Id) FROM ItemEnhancements WHERE Date = @date) AS itemEnhancementCount,
-                        (SELECT COUNT(DISTINCT AgentAddress) FROM ItemEnhancements WHERE Date = @date) AS itemEnhancementUsers,
-                        (SELECT IFNULL(SUM(SummonCount), 0) FROM AuraSummons WHERE GroupId = '10002' AND Date = @date) AS auraSummon,
-                        (SELECT IFNULL(SUM(SummonCount), 0) FROM RuneSummons WHERE Date = @date) AS runeSummon,
-                        (SELECT IFNULL(SUM(ApStoneCount), 0) FROM HackAndSlashSweeps WHERE Date = @date) AS apUsage,
-                        (SELECT IFNULL(SUM(HourglassCount), 0) FROM RapidCombinations WHERE Date = @date) AS hourglassUsage,
-                        (SELECT IFNULL(SUM(price), 0) FROM (
-                            SELECT Price FROM ShopHistoryConsumables WHERE Date = @date
-                            UNION ALL SELECT Price FROM ShopHistoryCostumes WHERE Date = @date
-                            UNION ALL SELECT Price FROM ShopHistoryEquipments WHERE Date = @date
-                            UNION ALL SELECT Price FROM ShopHistoryMaterials WHERE Date = @date
-                        ) a) AS ncgTrade,
-                        (SELECT IFNULL(SUM(BurntNCG), 0) FROM ItemEnhancements WHERE Date = @date) AS enhanceNcg,
-                        (SELECT IFNULL(SUM(BurntNCG), 0) FROM RuneEnhancements WHERE Date = @date) AS runeNcg,
-                        (SELECT IFNULL(SUM(BurntNCG), 0) FROM UnlockRuneSlots WHERE Date = @date) AS runeSlotNcg,
-                        (SELECT IFNULL(SUM(BurntNCG), 0) FROM BattleArenas WHERE Date = @date) AS arenaNcg,
-                        (SELECT IFNULL(SUM(BurntNCG), 0) FROM EventDungeonBattles WHERE Date = @date) AS eventTicketNcg
-                    ", new { date })).ToDictionary(kv => kv.Key, kv => kv.Value ?? 0);
+                metrics = new Dictionary<string, object>();
+
+                metrics["dau"] = await connection.ExecuteScalarAsync<int>("SELECT COUNT(DISTINCT Signer) FROM Transactions WHERE Date = @date", new { date });
+                metrics["txCount"] = await connection.ExecuteScalarAsync<int>("SELECT COUNT(TxId) FROM Transactions WHERE Date = @date", new { date });
+                metrics["newDau"] = await connection.ExecuteScalarAsync<int>("SELECT COUNT(Signer) FROM Transactions WHERE ActionType = 'ApprovePledge' AND Date = @date", new { date });
+                metrics["hasCount"] = await connection.ExecuteScalarAsync<int>("SELECT COUNT(Id) FROM HackAndSlashes WHERE Date = @date", new { date });
+                metrics["hasUsers"] = await connection.ExecuteScalarAsync<int>("SELECT COUNT(DISTINCT AgentAddress) FROM HackAndSlashes WHERE Date = @date", new { date });
+                metrics["sweepCount"] = await connection.ExecuteScalarAsync<int>("SELECT COUNT(Id) FROM HackAndSlashSweeps WHERE Date = @date", new { date });
+                metrics["sweepUsers"] = await connection.ExecuteScalarAsync<int>("SELECT COUNT(DISTINCT AgentAddress) FROM HackAndSlashSweeps WHERE Date = @date", new { date });
+                metrics["combinationEquipmentCount"] = await connection.ExecuteScalarAsync<int>("SELECT COUNT(Id) FROM CombinationEquipments WHERE Date = @date", new { date });
+                metrics["combinationEquipmentUsers"] = await connection.ExecuteScalarAsync<int>("SELECT COUNT(DISTINCT AgentAddress) FROM CombinationEquipments WHERE Date = @date", new { date });
+                metrics["combinationConsumableCount"] = await connection.ExecuteScalarAsync<int>("SELECT COUNT(Id) FROM CombinationConsumables WHERE Date = @date", new { date });
+                metrics["combinationConsumableUsers"] = await connection.ExecuteScalarAsync<int>("SELECT COUNT(DISTINCT AgentAddress) FROM CombinationConsumables WHERE Date = @date", new { date });
+                metrics["itemEnhancementCount"] = await connection.ExecuteScalarAsync<int>("SELECT COUNT(Id) FROM ItemEnhancements WHERE Date = @date", new { date });
+                metrics["itemEnhancementUsers"] = await connection.ExecuteScalarAsync<int>("SELECT COUNT(DISTINCT AgentAddress) FROM ItemEnhancements WHERE Date = @date", new { date });
+                metrics["auraSummon"] = await connection.ExecuteScalarAsync<long?>("SELECT IFNULL(SUM(SummonCount), 0) FROM AuraSummons WHERE GroupId = '10002' AND Date = @date", new { date }) ?? 0;
+                metrics["runeSummon"] = await connection.ExecuteScalarAsync<long?>("SELECT IFNULL(SUM(SummonCount), 0) FROM RuneSummons WHERE Date = @date", new { date }) ?? 0;
+                metrics["apUsage"] = await connection.ExecuteScalarAsync<long?>("SELECT IFNULL(SUM(ApStoneCount), 0) FROM HackAndSlashSweeps WHERE Date = @date", new { date }) ?? 0;
+                metrics["hourglassUsage"] = await connection.ExecuteScalarAsync<long?>("SELECT IFNULL(SUM(HourglassCount), 0) FROM RapidCombinations WHERE Date = @date", new { date }) ?? 0;
+                metrics["ncgTrade"] = await connection.ExecuteScalarAsync<decimal?>(@"
+                    SELECT IFNULL(SUM(price), 0) FROM (
+                        SELECT Price FROM ShopHistoryConsumables WHERE Date = @date
+                        UNION ALL SELECT Price FROM ShopHistoryCostumes WHERE Date = @date
+                        UNION ALL SELECT Price FROM ShopHistoryEquipments WHERE Date = @date
+                        UNION ALL SELECT Price FROM ShopHistoryMaterials WHERE Date = @date
+                    ) a", new { date }) ?? 0;
+                metrics["enhanceNcg"] = await connection.ExecuteScalarAsync<long?>("SELECT IFNULL(SUM(BurntNCG), 0) FROM ItemEnhancements WHERE Date = @date", new { date }) ?? 0;
+                metrics["runeNcg"] = await connection.ExecuteScalarAsync<long?>("SELECT IFNULL(SUM(BurntNCG), 0) FROM RuneEnhancements WHERE Date = @date", new { date }) ?? 0;
+                metrics["runeSlotNcg"] = await connection.ExecuteScalarAsync<long?>("SELECT IFNULL(SUM(BurntNCG), 0) FROM UnlockRuneSlots WHERE Date = @date", new { date }) ?? 0;
+                metrics["arenaNcg"] = await connection.ExecuteScalarAsync<long?>("SELECT IFNULL(SUM(BurntNCG), 0) FROM BattleArenas WHERE Date = @date", new { date }) ?? 0;
+                metrics["eventTicketNcg"] = await connection.ExecuteScalarAsync<long?>("SELECT IFNULL(SUM(BurntNCG), 0) FROM EventDungeonBattles WHERE Date = @date", new { date }) ?? 0;
 
                 await connection.CloseAsync();
             }
