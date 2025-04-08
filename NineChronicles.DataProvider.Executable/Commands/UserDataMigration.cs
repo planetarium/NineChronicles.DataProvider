@@ -290,8 +290,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     {
                         typeof(RuneSheet),
                     });
-                var arenaSheet = outputState.GetSheet<ArenaSheet>();
-                var arenaData = arenaSheet.GetRoundByBlockIndex(tip.Index);
 
                 Console.WriteLine("2");
 
@@ -305,8 +303,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         Console.WriteLine("Migrating {0}/{1}", avatarCount, avatars.Count);
                         var avatarAddress = new Address(avatar);
                         avatarState = outputState.GetAvatarState(avatarAddress);
-
-                        var avatarLevel = avatarState.level;
 
                         var runeSheet = sheets.GetSheet<RuneSheet>();
                         foreach (var ticker in runeSheet.Values.Select(x => x.Ticker))
