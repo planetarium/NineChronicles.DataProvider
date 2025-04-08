@@ -832,64 +832,64 @@ namespace NineChronicles.DataProvider.Executable.Commands
         private void FlushBulkFiles()
         {
             _agentBulkFile.Flush();
-            _agentBulkFile.Close();
+            _agentBulkFile.Dispose();
 
             _avatarBulkFile.Flush();
-            _avatarBulkFile.Close();
+            _avatarBulkFile.Dispose();
 
             _ccBulkFile.Flush();
-            _ccBulkFile.Close();
+            _ccBulkFile.Dispose();
 
             _ceBulkFile.Flush();
-            _ceBulkFile.Close();
+            _ceBulkFile.Dispose();
 
             _ieBulkFile.Flush();
-            _ieBulkFile.Close();
+            _ieBulkFile.Dispose();
 
             _ueBulkFile.Flush();
-            _ueBulkFile.Close();
+            _ueBulkFile.Dispose();
 
             _uctBulkFile.Flush();
-            _uctBulkFile.Close();
+            _uctBulkFile.Dispose();
 
             _uiBulkFile.Flush();
-            _uiBulkFile.Close();
+            _uiBulkFile.Dispose();
 
             _umBulkFile.Flush();
-            _umBulkFile.Close();
+            _umBulkFile.Dispose();
 
             _ucBulkFile.Flush();
-            _ucBulkFile.Close();
+            _ucBulkFile.Dispose();
 
             _eBulkFile.Flush();
-            _eBulkFile.Close();
+            _eBulkFile.Dispose();
 
             _usBulkFile.Flush();
-            _usBulkFile.Close();
+            _usBulkFile.Dispose();
 
             _umcBulkFile.Flush();
-            _umcBulkFile.Close();
+            _umcBulkFile.Dispose();
 
             _uncgBulkFile.Flush();
-            _uncgBulkFile.Close();
+            _uncgBulkFile.Dispose();
 
             _ucyBulkFile.Flush();
-            _ucyBulkFile.Close();
+            _ucyBulkFile.Dispose();
 
             _scBulkFile.Flush();
-            _scBulkFile.Close();
+            _scBulkFile.Dispose();
 
             _seBulkFile.Flush();
-            _seBulkFile.Close();
+            _seBulkFile.Dispose();
 
             _sctBulkFile.Flush();
-            _sctBulkFile.Close();
+            _sctBulkFile.Dispose();
 
             _smBulkFile.Flush();
-            _smBulkFile.Close();
+            _smBulkFile.Dispose();
 
             _urBulkFile.Flush();
-            _urBulkFile.Close();
+            _urBulkFile.Dispose();
         }
 
         private void CreateBulkFiles(string bulkFilesFolder)
