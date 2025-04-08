@@ -280,7 +280,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var tip = _baseStore.GetBlock((BlockHash)tipHash);
                 var exec = _baseChain.EvaluateBlock(tip);
                 var ev = exec.Last();
-                var outputState = new World(blockChainStates.GetWorldState(ev.OutputState));
+                var outputState = blockChainStates.GetWorldState(ev.OutputState);
                 var avatarCount = 0;
                 AvatarState avatarState;
                 int interval = 1000;
@@ -490,7 +490,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             {
                                 if (!_hourGlassAgentList.Contains(avatarState.agentAddress.ToString()))
                                 {
-                                     var inventoryState = new Inventory((List)avatarState.inventory.Serialize());
+                                     var inventoryState = avatarState.inventory;
                                      inventoryState.TryGetFungibleItems(hourglassRow.ItemId, out var hourglasses);
                                      var hourglassesCount = hourglasses.Sum(e => e.count);
                                      WriteMaterial(tip.Index, material, hourglassesCount, avatarState.agentAddress, avatarAddress);
@@ -501,7 +501,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             {
                                 if (!_apStoneAgentList.Contains(avatarState.agentAddress.ToString()))
                                 {
-                                    var inventoryState = new Inventory((List)avatarState.inventory.Serialize());
+                                    var inventoryState = avatarState.inventory;
                                     inventoryState.TryGetFungibleItems(apStoneRow.ItemId, out var apStones);
                                     var apStonesCount = apStones.Sum(e => e.count);
                                     WriteMaterial(tip.Index, material, apStonesCount, avatarState.agentAddress, avatarAddress);
@@ -510,7 +510,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             }
                             else
                             {
-                                var inventoryState = new Inventory((List)avatarState.inventory.Serialize());
+                                var inventoryState = avatarState.inventory;
                                 inventoryState.TryGetFungibleItems(material.ItemId, out var materialItem);
                                 var materialCount = materialItem.Sum(e => e.count);
                                 WriteMaterial(tip.Index, material, materialCount, avatarState.agentAddress, avatarAddress);
