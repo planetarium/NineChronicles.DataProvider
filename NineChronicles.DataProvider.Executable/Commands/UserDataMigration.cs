@@ -162,7 +162,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             {
                 _baseStore = new RocksDBStore(
                     storePath,
-                    dbConnectionCacheSize: 100);
+                    dbConnectionCacheSize: 2000000000);
             }
             else
             {
