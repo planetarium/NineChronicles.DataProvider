@@ -282,8 +282,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 var ev = exec.Last();
                 var outputState = blockChainStates.GetWorldState(ev.OutputState);
                 var avatarCount = 0;
-                AvatarState avatarState;
-                int interval = 1000;
                 int intervalCount = 0;
                 var sheets = outputState.GetSheets(
                     sheetTypes: new[]
@@ -293,295 +291,289 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                 Console.WriteLine("2");
 
-                foreach (var avatar in avatars)
+                int batchSize = 1000;
+                int interval = 100;
+                for (int i = 0; i < avatars.Count; i += batchSize)
                 {
-                    try
+                    var batch = avatars.Skip(i).Take(batchSize).ToList();
+                    foreach (var avatar in avatars)
                     {
-                        intervalCount++;
-                        avatarCount++;
-                        Console.WriteLine("Interval Count {0}", intervalCount);
-                        Console.WriteLine("Migrating {0}/{1}", avatarCount, avatars.Count);
-                        var avatarAddress = new Address(avatar);
-                        avatarState = outputState.GetAvatarState(avatarAddress);
-
-                        var runeSheet = sheets.GetSheet<RuneSheet>();
-                        foreach (var ticker in runeSheet.Values.Select(x => x.Ticker))
+                        try
                         {
+                            intervalCount++;
+                            avatarCount++;
+                            Console.WriteLine("Interval Count {0}", intervalCount);
+                            Console.WriteLine("Migrating {0}/{1}", avatarCount, avatars.Count);
+                            var avatarAddress = new Address(avatar);
+                            AvatarState avatarState = outputState.GetAvatarState(avatarAddress);
+
+                            var runeSheet = sheets.GetSheet<RuneSheet>();
+                            foreach (var ticker in runeSheet.Values.Select(x => x.Ticker))
+                            {
 #pragma warning disable CS0618
-                            var runeCurrency = Currency.Legacy(ticker, 0, minters: null);
+                                var runeCurrency = Currency.Legacy(ticker, 0, minters: null);
 #pragma warning restore CS0618
-                            var outputRuneBalance = outputState.GetBalance(
-                                avatarAddress,
-                                runeCurrency);
-                            if (Convert.ToDecimal(outputRuneBalance.GetQuantityString()) > 0)
-                            {
-                                _urBulkFile.WriteLine(
-                                    $"{tip.Index};" +
-                                    $"{avatarState.agentAddress.ToString()};" +
-                                    $"{avatarAddress.ToString()};" +
-                                    $"{ticker};" +
-                                    $"{Convert.ToDecimal(outputRuneBalance.GetQuantityString())};" +
-                                    $"{tip.Timestamp.UtcDateTime:yyyy-MM-dd}"
-                                );
-                            }
-                        }
-
-                        Address orderReceiptAddress = OrderDigestListState.DeriveAddress(avatarAddress);
-                        var orderReceiptList = outputState.TryGetLegacyState(orderReceiptAddress, out Dictionary receiptDict)
-                            ? new OrderDigestListState(receiptDict)
-                            : new OrderDigestListState(orderReceiptAddress);
-                        foreach (var orderReceipt in orderReceiptList.OrderDigestList)
-                        {
-                            if (orderReceipt.ExpiredBlockIndex >= tip.Index)
-                            {
-                                var state = outputState.GetLegacyState(
-                                    Addresses.GetItemAddress(orderReceipt.TradableId));
-                                ITradableItem orderItem =
-                                    (ITradableItem)ItemFactory.Deserialize((Dictionary)state);
-                                if (orderItem.ItemType == ItemType.Equipment)
+                                var outputRuneBalance = outputState.GetBalance(
+                                    avatarAddress,
+                                    runeCurrency);
+                                if (Convert.ToDecimal(outputRuneBalance.GetQuantityString()) > 0)
                                 {
-                                    var equipment = (Equipment)orderItem;
-                                    Console.WriteLine(equipment.ItemId);
-                                    _seBulkFile.WriteLine(
-                                        $"{equipment.ItemId.ToString()};" +
+                                    _urBulkFile.WriteLine(
                                         $"{tip.Index};" +
-                                        $"{orderReceipt.SellerAgentAddress.ToString()};" +
+                                        $"{avatarState.agentAddress.ToString()};" +
                                         $"{avatarAddress.ToString()};" +
-                                        $"{equipment.ItemType.ToString()};" +
-                                        $"{equipment.ItemSubType.ToString()};" +
-                                        $"{equipment.Id};" +
-                                        $"{equipment.BuffSkills.Count};" +
-                                        $"{equipment.ElementalType.ToString()};" +
-                                        $"{equipment.Grade};" +
-                                        $"{equipment.level};" +
-                                        $"{equipment.SetId};" +
-                                        $"{equipment.Skills.Count};" +
-                                        $"{equipment.SpineResourcePath};" +
-                                        $"{equipment.RequiredBlockIndex};" +
-                                        $"{equipment.NonFungibleId.ToString()};" +
-                                        $"{equipment.NonFungibleId.ToString()};" +
-                                        $"{equipment.UniqueStatType.ToString()};" +
-                                        $"{Convert.ToDecimal(orderReceipt.Price.GetQuantityString())};" +
-                                        $"{orderReceipt.OrderId};" +
-                                        $"{orderReceipt.CombatPoint};" +
-                                        $"{orderReceipt.ItemCount};" +
-                                        $"{orderReceipt.StartedBlockIndex};" +
-                                        $"{orderReceipt.ExpiredBlockIndex}"
+                                        $"{ticker};" +
+                                        $"{Convert.ToDecimal(outputRuneBalance.GetQuantityString())};" +
+                                        $"{tip.Timestamp.UtcDateTime:yyyy-MM-dd}"
                                     );
-                                    shopOrderCount += 1;
-                                }
-
-                                if (orderItem.ItemType == ItemType.Costume)
-                                {
-                                    var costume = (Costume)orderItem;
-                                    Console.WriteLine(costume.ItemId);
-                                    _sctBulkFile.WriteLine(
-                                        $"{costume.ItemId.ToString()};" +
-                                        $"{tip.Index};" +
-                                        $"{orderReceipt.SellerAgentAddress.ToString()};" +
-                                        $"{avatarAddress.ToString()};" +
-                                        $"{costume.ItemType.ToString()};" +
-                                        $"{costume.ItemSubType.ToString()};" +
-                                        $"{costume.Id};" +
-                                        $"{costume.ElementalType.ToString()};" +
-                                        $"{costume.Grade};" +
-                                        $"{costume.Equipped};" +
-                                        $"{costume.SpineResourcePath};" +
-                                        $"{costume.RequiredBlockIndex};" +
-                                        $"{costume.NonFungibleId.ToString()};" +
-                                        $"{costume.TradableId.ToString()};" +
-                                        $"{Convert.ToDecimal(orderReceipt.Price.GetQuantityString())};" +
-                                        $"{orderReceipt.OrderId};" +
-                                        $"{orderReceipt.CombatPoint};" +
-                                        $"{orderReceipt.ItemCount};" +
-                                        $"{orderReceipt.StartedBlockIndex};" +
-                                        $"{orderReceipt.ExpiredBlockIndex}"
-                                    );
-                                    shopOrderCount += 1;
-                                }
-
-                                if (orderItem.ItemType == ItemType.Material)
-                                {
-                                    var material = (Material)orderItem;
-                                    Console.WriteLine(material.ItemId);
-                                    _smBulkFile.WriteLine(
-                                        $"{material.ItemId.ToString()};" +
-                                        $"{tip.Index};" +
-                                        $"{orderReceipt.SellerAgentAddress.ToString()};" +
-                                        $"{avatarAddress.ToString()};" +
-                                        $"{material.ItemType.ToString()};" +
-                                        $"{material.ItemSubType.ToString()};" +
-                                        $"{material.Id};" +
-                                        $"{material.ElementalType.ToString()};" +
-                                        $"{material.Grade};" +
-                                        $"{orderReceipt.TradableId};" +
-                                        $"{Convert.ToDecimal(orderReceipt.Price.GetQuantityString())};" +
-                                        $"{orderReceipt.OrderId};" +
-                                        $"{orderReceipt.CombatPoint};" +
-                                        $"{orderReceipt.ItemCount};" +
-                                        $"{orderReceipt.StartedBlockIndex};" +
-                                        $"{orderReceipt.ExpiredBlockIndex}"
-                                    );
-                                    shopOrderCount += 1;
-                                }
-
-                                if (orderItem.ItemType == ItemType.Consumable)
-                                {
-                                    var consumable = (Consumable)orderItem;
-                                    Console.WriteLine(consumable.ItemId);
-                                    _scBulkFile.WriteLine(
-                                        $"{consumable.ItemId.ToString()};" +
-                                        $"{tip.Index};" +
-                                        $"{orderReceipt.SellerAgentAddress.ToString()};" +
-                                        $"{avatarAddress.ToString()};" +
-                                        $"{consumable.ItemType.ToString()};" +
-                                        $"{consumable.ItemSubType.ToString()};" +
-                                        $"{consumable.Id};" +
-                                        $"{consumable.BuffSkills.Count};" +
-                                        $"{consumable.ElementalType.ToString()};" +
-                                        $"{consumable.Grade};" +
-                                        $"{consumable.Skills.Count};" +
-                                        $"{consumable.RequiredBlockIndex};" +
-                                        $"{consumable.NonFungibleId.ToString()};" +
-                                        $"{consumable.TradableId.ToString()};" +
-                                        $"{consumable.MainStat.ToString()};" +
-                                        $"{Convert.ToDecimal(orderReceipt.Price.GetQuantityString())};" +
-                                        $"{orderReceipt.OrderId};" +
-                                        $"{orderReceipt.CombatPoint};" +
-                                        $"{orderReceipt.ItemCount};" +
-                                        $"{orderReceipt.StartedBlockIndex};" +
-                                        $"{orderReceipt.ExpiredBlockIndex}"
-                                    );
-                                    shopOrderCount += 1;
-                                }
-
-                                Console.WriteLine(orderReceipt.OrderId);
-                                Console.WriteLine(orderItem.ItemType);
-                            }
-                        }
-
-                        var userEquipments = avatarState.inventory.Equipments;
-                        var userCostumes = avatarState.inventory.Costumes;
-                        var userMaterials = avatarState.inventory.Materials;
-                        var materialItemSheet = outputState.GetSheet<MaterialItemSheet>();
-                        var hourglassRow = materialItemSheet
-                            .First(pair => pair.Value.ItemSubType == ItemSubType.Hourglass)
-                            .Value;
-                        var apStoneRow = materialItemSheet
-                            .First(pair => pair.Value.ItemSubType == ItemSubType.ApStone)
-                            .Value;
-                        var userConsumables = avatarState.inventory.Consumables;
-
-                        foreach (var equipment in userEquipments)
-                        {
-                            var equipmentCp = CPHelper.GetCP(equipment);
-                            WriteEquipment(tip.Index, equipment, avatarState.agentAddress, avatarAddress);
-                            WriteRankingEquipment(equipment, avatarState.agentAddress, avatarAddress, equipmentCp);
-                        }
-
-                        foreach (var costume in userCostumes)
-                        {
-                            WriteCostume(tip.Index, costume, avatarState.agentAddress, avatarAddress);
-                        }
-
-                        foreach (var material in userMaterials)
-                        {
-                            if (material.ItemId.ToString() == hourglassRow.ItemId.ToString())
-                            {
-                                if (!_hourGlassAgentList.Contains(avatarState.agentAddress.ToString()))
-                                {
-                                     var inventoryState = avatarState.inventory;
-                                     inventoryState.TryGetFungibleItems(hourglassRow.ItemId, out var hourglasses);
-                                     var hourglassesCount = hourglasses.Sum(e => e.count);
-                                     WriteMaterial(tip.Index, material, hourglassesCount, avatarState.agentAddress, avatarAddress);
-                                     _hourGlassAgentList.Add(avatarState.agentAddress.ToString());
                                 }
                             }
-                            else if (material.ItemId.ToString() == apStoneRow.ItemId.ToString())
+
+                            Address orderReceiptAddress = OrderDigestListState.DeriveAddress(avatarAddress);
+                            var orderReceiptList =
+                                outputState.TryGetLegacyState(orderReceiptAddress, out Dictionary receiptDict)
+                                    ? new OrderDigestListState(receiptDict)
+                                    : new OrderDigestListState(orderReceiptAddress);
+                            foreach (var orderReceipt in orderReceiptList.OrderDigestList)
                             {
-                                if (!_apStoneAgentList.Contains(avatarState.agentAddress.ToString()))
+                                if (orderReceipt.ExpiredBlockIndex >= tip.Index)
+                                {
+                                    var state = outputState.GetLegacyState(
+                                        Addresses.GetItemAddress(orderReceipt.TradableId));
+                                    ITradableItem orderItem =
+                                        (ITradableItem) ItemFactory.Deserialize((Dictionary) state);
+                                    if (orderItem.ItemType == ItemType.Equipment)
+                                    {
+                                        var equipment = (Equipment) orderItem;
+                                        Console.WriteLine(equipment.ItemId);
+                                        _seBulkFile.WriteLine(
+                                            $"{equipment.ItemId.ToString()};" +
+                                            $"{tip.Index};" +
+                                            $"{orderReceipt.SellerAgentAddress.ToString()};" +
+                                            $"{avatarAddress.ToString()};" +
+                                            $"{equipment.ItemType.ToString()};" +
+                                            $"{equipment.ItemSubType.ToString()};" +
+                                            $"{equipment.Id};" +
+                                            $"{equipment.BuffSkills.Count};" +
+                                            $"{equipment.ElementalType.ToString()};" +
+                                            $"{equipment.Grade};" +
+                                            $"{equipment.level};" +
+                                            $"{equipment.SetId};" +
+                                            $"{equipment.Skills.Count};" +
+                                            $"{equipment.SpineResourcePath};" +
+                                            $"{equipment.RequiredBlockIndex};" +
+                                            $"{equipment.NonFungibleId.ToString()};" +
+                                            $"{equipment.NonFungibleId.ToString()};" +
+                                            $"{equipment.UniqueStatType.ToString()};" +
+                                            $"{Convert.ToDecimal(orderReceipt.Price.GetQuantityString())};" +
+                                            $"{orderReceipt.OrderId};" +
+                                            $"{orderReceipt.CombatPoint};" +
+                                            $"{orderReceipt.ItemCount};" +
+                                            $"{orderReceipt.StartedBlockIndex};" +
+                                            $"{orderReceipt.ExpiredBlockIndex}"
+                                        );
+                                        shopOrderCount += 1;
+                                    }
+
+                                    if (orderItem.ItemType == ItemType.Costume)
+                                    {
+                                        var costume = (Costume) orderItem;
+                                        Console.WriteLine(costume.ItemId);
+                                        _sctBulkFile.WriteLine(
+                                            $"{costume.ItemId.ToString()};" +
+                                            $"{tip.Index};" +
+                                            $"{orderReceipt.SellerAgentAddress.ToString()};" +
+                                            $"{avatarAddress.ToString()};" +
+                                            $"{costume.ItemType.ToString()};" +
+                                            $"{costume.ItemSubType.ToString()};" +
+                                            $"{costume.Id};" +
+                                            $"{costume.ElementalType.ToString()};" +
+                                            $"{costume.Grade};" +
+                                            $"{costume.Equipped};" +
+                                            $"{costume.SpineResourcePath};" +
+                                            $"{costume.RequiredBlockIndex};" +
+                                            $"{costume.NonFungibleId.ToString()};" +
+                                            $"{costume.TradableId.ToString()};" +
+                                            $"{Convert.ToDecimal(orderReceipt.Price.GetQuantityString())};" +
+                                            $"{orderReceipt.OrderId};" +
+                                            $"{orderReceipt.CombatPoint};" +
+                                            $"{orderReceipt.ItemCount};" +
+                                            $"{orderReceipt.StartedBlockIndex};" +
+                                            $"{orderReceipt.ExpiredBlockIndex}"
+                                        );
+                                        shopOrderCount += 1;
+                                    }
+
+                                    if (orderItem.ItemType == ItemType.Material)
+                                    {
+                                        var material = (Material) orderItem;
+                                        Console.WriteLine(material.ItemId);
+                                        _smBulkFile.WriteLine(
+                                            $"{material.ItemId.ToString()};" +
+                                            $"{tip.Index};" +
+                                            $"{orderReceipt.SellerAgentAddress.ToString()};" +
+                                            $"{avatarAddress.ToString()};" +
+                                            $"{material.ItemType.ToString()};" +
+                                            $"{material.ItemSubType.ToString()};" +
+                                            $"{material.Id};" +
+                                            $"{material.ElementalType.ToString()};" +
+                                            $"{material.Grade};" +
+                                            $"{orderReceipt.TradableId};" +
+                                            $"{Convert.ToDecimal(orderReceipt.Price.GetQuantityString())};" +
+                                            $"{orderReceipt.OrderId};" +
+                                            $"{orderReceipt.CombatPoint};" +
+                                            $"{orderReceipt.ItemCount};" +
+                                            $"{orderReceipt.StartedBlockIndex};" +
+                                            $"{orderReceipt.ExpiredBlockIndex}"
+                                        );
+                                        shopOrderCount += 1;
+                                    }
+
+                                    if (orderItem.ItemType == ItemType.Consumable)
+                                    {
+                                        var consumable = (Consumable) orderItem;
+                                        Console.WriteLine(consumable.ItemId);
+                                        _scBulkFile.WriteLine(
+                                            $"{consumable.ItemId.ToString()};" +
+                                            $"{tip.Index};" +
+                                            $"{orderReceipt.SellerAgentAddress.ToString()};" +
+                                            $"{avatarAddress.ToString()};" +
+                                            $"{consumable.ItemType.ToString()};" +
+                                            $"{consumable.ItemSubType.ToString()};" +
+                                            $"{consumable.Id};" +
+                                            $"{consumable.BuffSkills.Count};" +
+                                            $"{consumable.ElementalType.ToString()};" +
+                                            $"{consumable.Grade};" +
+                                            $"{consumable.Skills.Count};" +
+                                            $"{consumable.RequiredBlockIndex};" +
+                                            $"{consumable.NonFungibleId.ToString()};" +
+                                            $"{consumable.TradableId.ToString()};" +
+                                            $"{consumable.MainStat.ToString()};" +
+                                            $"{Convert.ToDecimal(orderReceipt.Price.GetQuantityString())};" +
+                                            $"{orderReceipt.OrderId};" +
+                                            $"{orderReceipt.CombatPoint};" +
+                                            $"{orderReceipt.ItemCount};" +
+                                            $"{orderReceipt.StartedBlockIndex};" +
+                                            $"{orderReceipt.ExpiredBlockIndex}"
+                                        );
+                                        shopOrderCount += 1;
+                                    }
+
+                                    Console.WriteLine(orderReceipt.OrderId);
+                                    Console.WriteLine(orderItem.ItemType);
+                                }
+                            }
+
+                            var userEquipments = avatarState.inventory.Equipments;
+                            var userCostumes = avatarState.inventory.Costumes;
+                            var userMaterials = avatarState.inventory.Materials;
+                            var materialItemSheet = outputState.GetSheet<MaterialItemSheet>();
+                            var hourglassRow = materialItemSheet
+                                .First(pair => pair.Value.ItemSubType == ItemSubType.Hourglass)
+                                .Value;
+                            var apStoneRow = materialItemSheet
+                                .First(pair => pair.Value.ItemSubType == ItemSubType.ApStone)
+                                .Value;
+                            var userConsumables = avatarState.inventory.Consumables;
+
+                            foreach (var equipment in userEquipments)
+                            {
+                                var equipmentCp = CPHelper.GetCP(equipment);
+                                WriteEquipment(tip.Index, equipment, avatarState.agentAddress, avatarAddress);
+                                WriteRankingEquipment(equipment, avatarState.agentAddress, avatarAddress, equipmentCp);
+                            }
+
+                            foreach (var costume in userCostumes)
+                            {
+                                WriteCostume(tip.Index, costume, avatarState.agentAddress, avatarAddress);
+                            }
+
+                            foreach (var material in userMaterials)
+                            {
+                                if (material.ItemId.ToString() == hourglassRow.ItemId.ToString())
+                                {
+                                    if (!_hourGlassAgentList.Contains(avatarState.agentAddress.ToString()))
+                                    {
+                                        var inventoryState = avatarState.inventory;
+                                        inventoryState.TryGetFungibleItems(hourglassRow.ItemId, out var hourglasses);
+                                        var hourglassesCount = hourglasses.Sum(e => e.count);
+                                        WriteMaterial(tip.Index, material, hourglassesCount, avatarState.agentAddress,
+                                            avatarAddress);
+                                        _hourGlassAgentList.Add(avatarState.agentAddress.ToString());
+                                    }
+                                }
+                                else if (material.ItemId.ToString() == apStoneRow.ItemId.ToString())
+                                {
+                                    if (!_apStoneAgentList.Contains(avatarState.agentAddress.ToString()))
+                                    {
+                                        var inventoryState = avatarState.inventory;
+                                        inventoryState.TryGetFungibleItems(apStoneRow.ItemId, out var apStones);
+                                        var apStonesCount = apStones.Sum(e => e.count);
+                                        WriteMaterial(tip.Index, material, apStonesCount, avatarState.agentAddress,
+                                            avatarAddress);
+                                        _apStoneAgentList.Add(avatarState.agentAddress.ToString());
+                                    }
+                                }
+                                else
                                 {
                                     var inventoryState = avatarState.inventory;
-                                    inventoryState.TryGetFungibleItems(apStoneRow.ItemId, out var apStones);
-                                    var apStonesCount = apStones.Sum(e => e.count);
-                                    WriteMaterial(tip.Index, material, apStonesCount, avatarState.agentAddress, avatarAddress);
-                                    _apStoneAgentList.Add(avatarState.agentAddress.ToString());
+                                    inventoryState.TryGetFungibleItems(material.ItemId, out var materialItem);
+                                    var materialCount = materialItem.Sum(e => e.count);
+                                    WriteMaterial(tip.Index, material, materialCount, avatarState.agentAddress,
+                                        avatarAddress);
                                 }
                             }
-                            else
+
+                            foreach (var consumable in userConsumables)
                             {
-                                var inventoryState = avatarState.inventory;
-                                inventoryState.TryGetFungibleItems(material.ItemId, out var materialItem);
-                                var materialCount = materialItem.Sum(e => e.count);
-                                WriteMaterial(tip.Index, material, materialCount, avatarState.agentAddress, avatarAddress);
+                                WriteConsumable(tip.Index, consumable, avatarState.agentAddress, avatarAddress);
                             }
-                        }
 
-                        foreach (var consumable in userConsumables)
-                        {
-                            WriteConsumable(tip.Index, consumable, avatarState.agentAddress, avatarAddress);
-                        }
-
-                        if (!agents.Contains(avatarState.agentAddress.ToString()))
-                        {
-                            agents.Add(avatarState.agentAddress.ToString());
-                            Currency ncgCurrency = outputState.GetGoldCurrency();
-                            var ncgBalance = outputState.GetBalance(
-                                avatarState.agentAddress,
-                                ncgCurrency);
-                            _uncgBulkFile.WriteLine(
-                                $"{tip.Index};" +
-                                $"{avatarState.agentAddress.ToString()};" +
-                                $"{Convert.ToDecimal(ncgBalance.GetQuantityString())}"
-                            );
-                            Currency crystalCurrency = CrystalCalculator.CRYSTAL;
-                            var crystalBalance = outputState.GetBalance(
-                                avatarState.agentAddress,
-                                crystalCurrency);
-                            _ucyBulkFile.WriteLine(
-                                $"{tip.Index};" +
-                                $"{avatarState.agentAddress.ToString()};" +
-                                $"{Convert.ToDecimal(crystalBalance.GetQuantityString())}"
-                            );
-                            var agentState = outputState.GetAgentState(avatarState.agentAddress);
-                            Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
-                                avatarState.agentAddress,
-                                agentState.MonsterCollectionRound
-                            );
-                            if (outputState.TryGetLegacyState(monsterCollectionAddress, out Dictionary stateDict))
+                            if (!agents.Contains(avatarState.agentAddress.ToString()))
                             {
-                                var mcStates = new MonsterCollectionState(stateDict);
-                                var currency = outputState.GetGoldCurrency();
-                                FungibleAssetValue mcBalance = outputState.GetBalance(monsterCollectionAddress, currency);
-                                _umcBulkFile.WriteLine(
+                                agents.Add(avatarState.agentAddress.ToString());
+                                Currency ncgCurrency = outputState.GetGoldCurrency();
+                                var ncgBalance = outputState.GetBalance(
+                                    avatarState.agentAddress,
+                                    ncgCurrency);
+                                _uncgBulkFile.WriteLine(
                                     $"{tip.Index};" +
                                     $"{avatarState.agentAddress.ToString()};" +
-                                    $"{Convert.ToDecimal(mcBalance.GetQuantityString())};" +
-                                    $"{mcStates.Level};" +
-                                    $"{mcStates.RewardLevel};" +
-                                    $"{mcStates.StartedBlockIndex};" +
-                                    $"{mcStates.ReceivedBlockIndex};" +
-                                    $"{mcStates.ExpiredBlockIndex}"
+                                    $"{Convert.ToDecimal(ncgBalance.GetQuantityString())}"
                                 );
-                            }
-
-                            if (outputState.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
-                            {
-                                var stakeStateAddress = StakeState.DeriveAddress(avatarState.agentAddress);
-                                var currency = outputState.GetGoldCurrency();
-                                var stakedBalance = outputState.GetBalance(stakeStateAddress, currency);
-                                _usBulkFile.WriteLine(
+                                Currency crystalCurrency = CrystalCalculator.CRYSTAL;
+                                var crystalBalance = outputState.GetBalance(
+                                    avatarState.agentAddress,
+                                    crystalCurrency);
+                                _ucyBulkFile.WriteLine(
                                     $"{tip.Index};" +
                                     $"{avatarState.agentAddress.ToString()};" +
-                                    $"{Convert.ToDecimal(stakedBalance.GetQuantityString())};" +
-                                    $"{stakeState.StartedBlockIndex};" +
-                                    $"{stakeState.ReceivedBlockIndex};" +
-                                    $"{stakeState.CancellableBlockIndex}"
+                                    $"{Convert.ToDecimal(crystalBalance.GetQuantityString())}"
                                 );
-                            }
-                            else
-                            {
-                                if (outputState.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState2))
+                                var agentState = outputState.GetAgentState(avatarState.agentAddress);
+                                Address monsterCollectionAddress = MonsterCollectionState.DeriveAddress(
+                                    avatarState.agentAddress,
+                                    agentState.MonsterCollectionRound
+                                );
+                                if (outputState.TryGetLegacyState(monsterCollectionAddress, out Dictionary stateDict))
+                                {
+                                    var mcStates = new MonsterCollectionState(stateDict);
+                                    var currency = outputState.GetGoldCurrency();
+                                    FungibleAssetValue mcBalance =
+                                        outputState.GetBalance(monsterCollectionAddress, currency);
+                                    _umcBulkFile.WriteLine(
+                                        $"{tip.Index};" +
+                                        $"{avatarState.agentAddress.ToString()};" +
+                                        $"{Convert.ToDecimal(mcBalance.GetQuantityString())};" +
+                                        $"{mcStates.Level};" +
+                                        $"{mcStates.RewardLevel};" +
+                                        $"{mcStates.StartedBlockIndex};" +
+                                        $"{mcStates.ReceivedBlockIndex};" +
+                                        $"{mcStates.ExpiredBlockIndex}"
+                                    );
+                                }
+
+                                if (outputState.TryGetStakeState(avatarState.agentAddress, out StakeState stakeState))
                                 {
                                     var stakeStateAddress = StakeState.DeriveAddress(avatarState.agentAddress);
                                     var currency = outputState.GetGoldCurrency();
@@ -590,141 +582,160 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         $"{tip.Index};" +
                                         $"{avatarState.agentAddress.ToString()};" +
                                         $"{Convert.ToDecimal(stakedBalance.GetQuantityString())};" +
-                                        $"{stakeState2.StartedBlockIndex};" +
-                                        $"{stakeState2.ReceivedBlockIndex};" +
-                                        $"{stakeState2.CancellableBlockIndex}"
+                                        $"{stakeState.StartedBlockIndex};" +
+                                        $"{stakeState.ReceivedBlockIndex};" +
+                                        $"{stakeState.CancellableBlockIndex}"
                                     );
                                 }
+                                else
+                                {
+                                    if (outputState.TryGetStakeState(avatarState.agentAddress,
+                                            out StakeState stakeState2))
+                                    {
+                                        var stakeStateAddress = StakeState.DeriveAddress(avatarState.agentAddress);
+                                        var currency = outputState.GetGoldCurrency();
+                                        var stakedBalance = outputState.GetBalance(stakeStateAddress, currency);
+                                        _usBulkFile.WriteLine(
+                                            $"{tip.Index};" +
+                                            $"{avatarState.agentAddress.ToString()};" +
+                                            $"{Convert.ToDecimal(stakedBalance.GetQuantityString())};" +
+                                            $"{stakeState2.StartedBlockIndex};" +
+                                            $"{stakeState2.ReceivedBlockIndex};" +
+                                            $"{stakeState2.CancellableBlockIndex}"
+                                        );
+                                    }
+                                }
                             }
+
+                            Console.WriteLine("Migrating Complete {0}/{1}", avatarCount, avatars.Count);
                         }
-
-                        Console.WriteLine("Migrating Complete {0}/{1}", avatarCount, avatars.Count);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                        Console.WriteLine(ex.StackTrace);
-                    }
-
-                    if (intervalCount == interval)
-                    {
-                        FlushBulkFiles();
-                        foreach (var path in _agentFiles)
+                        catch (Exception ex)
                         {
-                            BulkInsert(AgentDbName, path);
+                            Console.WriteLine(ex.Message);
+                            Console.WriteLine(ex.StackTrace);
                         }
 
-                        foreach (var path in _avatarFiles)
+                        if (intervalCount == interval)
                         {
-                            BulkInsert(AvatarDbName, path);
-                        }
+                            FlushBulkFiles();
+                            foreach (var path in _agentFiles)
+                            {
+                                BulkInsert(AgentDbName, path);
+                            }
 
-                        foreach (var path in _ueFiles)
-                        {
-                            BulkInsert(UEDbName, path);
-                        }
+                            foreach (var path in _avatarFiles)
+                            {
+                                BulkInsert(AvatarDbName, path);
+                            }
 
-                        foreach (var path in _uctFiles)
-                        {
-                            BulkInsert(UCTDbName, path);
-                        }
+                            foreach (var path in _ueFiles)
+                            {
+                                BulkInsert(UEDbName, path);
+                            }
 
-                        foreach (var path in _umFiles)
-                        {
-                            BulkInsert(UMDbName, path);
-                        }
+                            foreach (var path in _uctFiles)
+                            {
+                                BulkInsert(UCTDbName, path);
+                            }
 
-                        foreach (var path in _ucFiles)
-                        {
-                            BulkInsert(UCDbName, path);
-                        }
+                            foreach (var path in _umFiles)
+                            {
+                                BulkInsert(UMDbName, path);
+                            }
 
-                        foreach (var path in _eFiles)
-                        {
-                            BulkInsert(EDbName, path);
-                        }
+                            foreach (var path in _ucFiles)
+                            {
+                                BulkInsert(UCDbName, path);
+                            }
 
-                        foreach (var path in _usFiles)
-                        {
-                            BulkInsert(USDbName, path);
-                        }
+                            foreach (var path in _eFiles)
+                            {
+                                BulkInsert(EDbName, path);
+                            }
 
-                        foreach (var path in _umcFiles)
-                        {
-                            BulkInsert(UMCDbName, path);
-                        }
+                            foreach (var path in _usFiles)
+                            {
+                                BulkInsert(USDbName, path);
+                            }
 
-                        foreach (var path in _uncgFiles)
-                        {
-                            BulkInsert(UNCGDbName, path);
-                        }
+                            foreach (var path in _umcFiles)
+                            {
+                                BulkInsert(UMCDbName, path);
+                            }
 
-                        foreach (var path in _ucyFiles)
-                        {
-                            BulkInsert(UCYDbName, path);
-                        }
+                            foreach (var path in _uncgFiles)
+                            {
+                                BulkInsert(UNCGDbName, path);
+                            }
 
-                        foreach (var path in _scFiles)
-                        {
-                            BulkInsert(SCDbName, path);
-                        }
+                            foreach (var path in _ucyFiles)
+                            {
+                                BulkInsert(UCYDbName, path);
+                            }
 
-                        foreach (var path in _seFiles)
-                        {
-                            BulkInsert(SEDbName, path);
-                        }
+                            foreach (var path in _scFiles)
+                            {
+                                BulkInsert(SCDbName, path);
+                            }
 
-                        foreach (var path in _sctFiles)
-                        {
-                            BulkInsert(SCTDbName, path);
-                        }
+                            foreach (var path in _seFiles)
+                            {
+                                BulkInsert(SEDbName, path);
+                            }
 
-                        foreach (var path in _smFiles)
-                        {
-                            BulkInsert(SMDbName, path);
-                        }
+                            foreach (var path in _sctFiles)
+                            {
+                                BulkInsert(SCTDbName, path);
+                            }
 
-                        foreach (var path in _urFiles)
-                        {
-                            BulkInsert(uRDbName, path);
-                        }
+                            foreach (var path in _smFiles)
+                            {
+                                BulkInsert(SMDbName, path);
+                            }
 
-                        _agentFiles.RemoveAt(0);
-                        _avatarFiles.RemoveAt(0);
-                        _ueFiles.RemoveAt(0);
-                        _uctFiles.RemoveAt(0);
-                        _umFiles.RemoveAt(0);
-                        _ucFiles.RemoveAt(0);
-                        _eFiles.RemoveAt(0);
-                        _usFiles.RemoveAt(0);
-                        _umcFiles.RemoveAt(0);
-                        _uncgFiles.RemoveAt(0);
-                        _ucyFiles.RemoveAt(0);
-                        _scFiles.RemoveAt(0);
-                        _seFiles.RemoveAt(0);
-                        _sctFiles.RemoveAt(0);
-                        _smFiles.RemoveAt(0);
-                        _urFiles.RemoveAt(0);
-                        _agentFiles.Clear();
-                        _avatarFiles.Clear();
-                        _ueFiles.Clear();
-                        _uctFiles.Clear();
-                        _umFiles.Clear();
-                        _ucFiles.Clear();
-                        _eFiles.Clear();
-                        _usFiles.Clear();
-                        _umcFiles.Clear();
-                        _uncgFiles.Clear();
-                        _ucyFiles.Clear();
-                        _scFiles.Clear();
-                        _seFiles.Clear();
-                        _sctFiles.Clear();
-                        _smFiles.Clear();
-                        _urFiles.Clear();
-                        CreateBulkFiles(bulkFilesFolder);
-                        intervalCount = 0;
-                        GC.Collect();
-                        GC.WaitForPendingFinalizers();
+                            foreach (var path in _urFiles)
+                            {
+                                BulkInsert(uRDbName, path);
+                            }
+
+                            _agentFiles.RemoveAt(0);
+                            _avatarFiles.RemoveAt(0);
+                            _ueFiles.RemoveAt(0);
+                            _uctFiles.RemoveAt(0);
+                            _umFiles.RemoveAt(0);
+                            _ucFiles.RemoveAt(0);
+                            _eFiles.RemoveAt(0);
+                            _usFiles.RemoveAt(0);
+                            _umcFiles.RemoveAt(0);
+                            _uncgFiles.RemoveAt(0);
+                            _ucyFiles.RemoveAt(0);
+                            _scFiles.RemoveAt(0);
+                            _seFiles.RemoveAt(0);
+                            _sctFiles.RemoveAt(0);
+                            _smFiles.RemoveAt(0);
+                            _urFiles.RemoveAt(0);
+                            _agentFiles.Clear();
+                            _avatarFiles.Clear();
+                            _ueFiles.Clear();
+                            _uctFiles.Clear();
+                            _umFiles.Clear();
+                            _ucFiles.Clear();
+                            _eFiles.Clear();
+                            _usFiles.Clear();
+                            _umcFiles.Clear();
+                            _uncgFiles.Clear();
+                            _ucyFiles.Clear();
+                            _scFiles.Clear();
+                            _seFiles.Clear();
+                            _sctFiles.Clear();
+                            _smFiles.Clear();
+                            _urFiles.Clear();
+                            CreateBulkFiles(bulkFilesFolder);
+                            intervalCount = 0;
+                            GC.Collect();
+                            GC.WaitForPendingFinalizers();
+                            Console.WriteLine($"Memory usage: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
+                        }
                     }
                 }
 
