@@ -296,7 +296,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 for (int i = 0; i < avatars.Count; i += batchSize)
                 {
                     var batch = avatars.Skip(i).Take(batchSize).ToList();
-                    foreach (var avatar in avatars)
+                    foreach (var avatar in batch)
                     {
                         try
                         {
