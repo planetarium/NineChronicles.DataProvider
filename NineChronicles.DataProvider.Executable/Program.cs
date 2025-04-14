@@ -35,6 +35,7 @@ namespace NineChronicles.DataProvider.Executable
     [HasSubCommands(typeof(UserStakingMigration), "user-staking-migration")]
     [HasSubCommands(typeof(UserDataMigration), "user-data-migration")]
     [HasSubCommands(typeof(DailyMetricMigration), "daily-metric-migration")]
+    [HasSubCommands(typeof(MigrateAgentsAvatars), "migrate-agents-avatars")]
     public class Program : CoconaLiteConsoleAppBase
     {
         public static async Task Main(string[] args)
