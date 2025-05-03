@@ -970,9 +970,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is BuyProduct buyProduct)
                                 {
-                                    var start = DateTimeOffset.UtcNow;
-                  
                                     // check if address is already in _avatarCheck
+                                    var start = DateTimeOffset.UtcNow;
                                     if (!_avatarCheck.Contains(buyProduct.AvatarAddress.ToString()))
                                     {
                                         _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
