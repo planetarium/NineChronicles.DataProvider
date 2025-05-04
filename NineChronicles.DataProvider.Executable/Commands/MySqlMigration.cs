@@ -973,6 +973,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                     try
                                     {
                                         Console.WriteLine("BuyProduct1");
+
                                         // check if address is already in _avatarCheck
                                         var start = DateTimeOffset.UtcNow;
                                         if (!_avatarCheck.Contains(buyProduct.AvatarAddress.ToString()))
