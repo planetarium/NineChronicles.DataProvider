@@ -970,113 +970,131 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                                 if (action is BuyProduct buyProduct)
                                 {
-                                    // check if address is already in _avatarCheck
-                                    var start = DateTimeOffset.UtcNow;
-                                    if (!_avatarCheck.Contains(buyProduct.AvatarAddress.ToString()))
+                                    try
                                     {
-                                        _avatarList.Add(AvatarData.GetAvatarInfo(outputState, ae.InputContext.Signer,
-                                            buyProduct.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
-                                        _avatarCheck.Add(buyProduct.AvatarAddress.ToString());
-                                    }
-
-                                    foreach (var productInfo in buyProduct.ProductInfos)
-                                    {
-                                        switch (productInfo)
+                                        Console.WriteLine("BuyProduct1");
+                                        // check if address is already in _avatarCheck
+                                        var start = DateTimeOffset.UtcNow;
+                                        if (!_avatarCheck.Contains(buyProduct.AvatarAddress.ToString()))
                                         {
-                                            case FavProductInfo _:
-                                                // Check previous product state. because Set Bencodex.Types.Null in BuyProduct.
-                                                if (inputState.TryGetLegacyState(
-                                                        Product.DeriveAddress(productInfo.ProductId),
-                                                        out List productState))
-                                                {
-                                                    var favProduct =
-                                                        (FavProduct) ProductFactory.DeserializeProduct(productState);
-                                                    _buyShopFavList.Add(new ShopHistoryFungibleAssetValueModel
-                                                    {
-                                                        OrderId = productInfo.ProductId.ToString(),
-                                                        TxId = ae.InputContext.TxId.ToString(),
-                                                        BlockIndex = ae.InputContext.BlockIndex,
-                                                        BlockHash = _blockHash.ToString(),
-                                                        SellerAvatarAddress = productInfo.AvatarAddress.ToString(),
-                                                        BuyerAvatarAddress = buyProduct.AvatarAddress.ToString(),
-                                                        Price = decimal.Parse(productInfo.Price.GetQuantityString()),
-                                                        Quantity = decimal.Parse(favProduct.Asset.GetQuantityString()),
-                                                        Ticker = favProduct.Asset.Currency.Ticker,
-                                                        TimeStamp = _blockTimeOffset,
-                                                    });
-                                                }
+                                            _avatarList.Add(AvatarData.GetAvatarInfo(outputState,
+                                                ae.InputContext.Signer,
+                                                buyProduct.AvatarAddress, _blockTimeOffset, BattleType.Adventure));
+                                            _avatarCheck.Add(buyProduct.AvatarAddress.ToString());
+                                        }
 
-                                                break;
-                                            case ItemProductInfo itemProductInfo:
+                                        foreach (var productInfo in buyProduct.ProductInfos)
+                                        {
+                                            switch (productInfo)
                                             {
-                                                ITradableItem orderItem;
-                                                int itemCount = 1;
-
-                                                // backward compatibility for order.
-                                                if (itemProductInfo.Legacy)
-                                                {
-                                                    var state = outputState.GetLegacyState(
-                                                        Addresses.GetItemAddress(itemProductInfo.TradableId));
-                                                    orderItem =
-                                                        (ITradableItem) ItemFactory.Deserialize((Dictionary) state!);
-                                                    Order order =
-                                                        OrderFactory.Deserialize(
-                                                            (Dictionary) outputState.GetLegacyState(
-                                                                Order.DeriveAddress(itemProductInfo.ProductId))!);
-                                                    itemCount = order is FungibleOrder fungibleOrder
-                                                        ? fungibleOrder.ItemCount
-                                                        : 1;
-                                                }
-                                                else
-                                                {
+                                                case FavProductInfo _:
                                                     // Check previous product state. because Set Bencodex.Types.Null in BuyProduct.
                                                     if (inputState.TryGetLegacyState(
                                                             Product.DeriveAddress(productInfo.ProductId),
-                                                            out List state))
+                                                            out List productState))
                                                     {
-                                                        var product =
-                                                            (ItemProduct) ProductFactory.DeserializeProduct(state);
-                                                        orderItem = product.TradableItem;
-                                                        itemCount = product.ItemCount;
+                                                        Console.WriteLine("BuyProduct2");
+                                                        var favProduct =
+                                                            (FavProduct) ProductFactory
+                                                                .DeserializeProduct(productState);
+                                                        _buyShopFavList.Add(new ShopHistoryFungibleAssetValueModel
+                                                        {
+                                                            OrderId = productInfo.ProductId.ToString(),
+                                                            TxId = ae.InputContext.TxId.ToString(),
+                                                            BlockIndex = ae.InputContext.BlockIndex,
+                                                            BlockHash = _blockHash.ToString(),
+                                                            SellerAvatarAddress = productInfo.AvatarAddress.ToString(),
+                                                            BuyerAvatarAddress = buyProduct.AvatarAddress.ToString(),
+                                                            Price =
+                                                                decimal.Parse(productInfo.Price.GetQuantityString()),
+                                                            Quantity = decimal.Parse(
+                                                                favProduct.Asset.GetQuantityString()),
+                                                            Ticker = favProduct.Asset.Currency.Ticker,
+                                                            TimeStamp = _blockTimeOffset,
+                                                        });
+                                                    }
+
+                                                    break;
+                                                case ItemProductInfo itemProductInfo:
+                                                {
+                                                    ITradableItem orderItem;
+                                                    int itemCount = 1;
+
+                                                    // backward compatibility for order.
+                                                    if (itemProductInfo.Legacy)
+                                                    {
+                                                        Console.WriteLine("BuyProduct3");
+                                                        var state = outputState.GetLegacyState(
+                                                            Addresses.GetItemAddress(itemProductInfo.TradableId));
+                                                        orderItem =
+                                                            (ITradableItem) ItemFactory.Deserialize(
+                                                                (Dictionary) state!);
+                                                        Order order =
+                                                            OrderFactory.Deserialize(
+                                                                (Dictionary) outputState.GetLegacyState(
+                                                                    Order.DeriveAddress(itemProductInfo.ProductId))!);
+                                                        itemCount = order is FungibleOrder fungibleOrder
+                                                            ? fungibleOrder.ItemCount
+                                                            : 1;
                                                     }
                                                     else
                                                     {
-                                                        continue;
+                                                        // Check previous product state. because Set Bencodex.Types.Null in BuyProduct.
+                                                        if (inputState.TryGetLegacyState(
+                                                                Product.DeriveAddress(productInfo.ProductId),
+                                                                out List state))
+                                                        {
+                                                            Console.WriteLine("BuyProduct4");
+                                                            var product =
+                                                                (ItemProduct) ProductFactory.DeserializeProduct(state);
+                                                            orderItem = product.TradableItem;
+                                                            itemCount = product.ItemCount;
+                                                        }
+                                                        else
+                                                        {
+                                                            continue;
+                                                        }
                                                     }
-                                                }
 
-                                                var purchaseInfo = new PurchaseInfo(
-                                                    productInfo.ProductId,
-                                                    itemProductInfo.TradableId,
-                                                    productInfo.AgentAddress,
-                                                    productInfo.AvatarAddress,
-                                                    itemProductInfo.ItemSubType,
-                                                    productInfo.Price
-                                                );
-                                                AddShopHistoryItem(orderItem, buyProduct.AvatarAddress, purchaseInfo,
-                                                    itemCount,
-                                                    ae.InputContext.BlockIndex);
-                                                if (orderItem.ItemType == ItemType.Equipment)
-                                                {
-                                                    var equipment = (Equipment) orderItem;
-                                                    _equipmentList.Add(EquipmentData.GetEquipmentInfo(
-                                                        ae.InputContext.Signer,
-                                                        buyProduct.AvatarAddress,
-                                                        equipment,
-                                                        _blockTimeOffset));
-                                                }
+                                                    var purchaseInfo = new PurchaseInfo(
+                                                        productInfo.ProductId,
+                                                        itemProductInfo.TradableId,
+                                                        productInfo.AgentAddress,
+                                                        productInfo.AvatarAddress,
+                                                        itemProductInfo.ItemSubType,
+                                                        productInfo.Price
+                                                    );
+                                                    Console.WriteLine("BuyProduct5");
+                                                    AddShopHistoryItem(orderItem, buyProduct.AvatarAddress,
+                                                        purchaseInfo,
+                                                        itemCount,
+                                                        ae.InputContext.BlockIndex);
+                                                    if (orderItem.ItemType == ItemType.Equipment)
+                                                    {
+                                                        var equipment = (Equipment) orderItem;
+                                                        _equipmentList.Add(EquipmentData.GetEquipmentInfo(
+                                                            ae.InputContext.Signer,
+                                                            buyProduct.AvatarAddress,
+                                                            equipment,
+                                                            _blockTimeOffset));
+                                                    }
 
-                                                break;
+                                                    break;
+                                                }
                                             }
                                         }
-                                    }
 
-                                    var end = DateTimeOffset.UtcNow;
-                                    Console.WriteLine(
-                                        "Stored avatar {0}'s equipment in block #{1}. Time Taken: {2} ms.",
-                                        buyProduct.AvatarAddress,
-                                        ae.InputContext.BlockIndex,
-                                        (end - start).Milliseconds);
+                                        var end = DateTimeOffset.UtcNow;
+                                        Console.WriteLine(
+                                            "Stored avatar {0}'s equipment in block #{1}. Time Taken: {2} ms.",
+                                            buyProduct.AvatarAddress,
+                                            ae.InputContext.BlockIndex,
+                                            (end - start).Milliseconds);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine(ex.Message, ex.StackTrace);
+                                    }
                                 }
 
                                 if (action is Stake stake)
