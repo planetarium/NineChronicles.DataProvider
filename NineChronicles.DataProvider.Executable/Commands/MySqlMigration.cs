@@ -249,7 +249,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                     }
                     else
                     {
-                        offset = (int)height - (86400 / 7);
+                        offset = (int)height - (86400 / 10);
                         Console.WriteLine($"offset is null. Use fallback offset: #{offset}");
                     }
                 }
