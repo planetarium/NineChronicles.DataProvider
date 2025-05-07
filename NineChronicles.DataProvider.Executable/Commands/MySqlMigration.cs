@@ -337,40 +337,28 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 int totalCount = limit ?? (int)_baseStore.CountBlocks();
                 int remainingCount = totalCount;
                 int offsetIdx = 0;
+                int interval = 100;
 
                 while (remainingCount > 0)
                 {
-                    int interval = 100;
-                    int limitInterval;
-                    Task<List<ICommittedActionEvaluation>>[] taskArray;
-                    if (interval < remainingCount)
-                    {
-                        taskArray = new Task<List<ICommittedActionEvaluation>>[interval];
-                        limitInterval = interval;
-                    }
-                    else
-                    {
-                        taskArray = new Task<List<ICommittedActionEvaluation>>[remainingCount];
-                        limitInterval = remainingCount;
-                    }
+                    int limitInterval = Math.Min(interval, remainingCount);
+                    var taskList = new List<Task<List<ICommittedActionEvaluation>>>();
 
-                    foreach (var item in
-                             _baseStore.IterateIndexes(
-                                 _baseChain.Id,
-                                 offset + offsetIdx ?? 0 + offsetIdx,
-                                 limitInterval
-                             ).Select((value, i) => new { i, value }))
+                    foreach (var item in _baseStore.IterateIndexes(
+                        _baseChain.Id,
+                        (offset ?? 0) + offsetIdx,
+                        limitInterval
+                    ))
                     {
-                        var block = _baseStore.GetBlock(item.value);
+                        var block = _baseStore.GetBlock(item);
                         _blockList.Add(BlockData.GetBlockInfo(block));
                         _blockHash = block.Hash;
                         _blockIndex = block.Index;
                         _blockTimeOffset = block.Timestamp;
+
                         foreach (var tx in block.Transactions)
                         {
                             _txList.Add(TransactionData.GetTransactionInfo(block, tx));
-
-                            // check if address is already in _agentCheck
                             if (!_agentCheck.Contains(tx.Signer.ToString()))
                             {
                                 _agentList.Add(AgentData.GetAgentInfo(tx.Signer));
@@ -380,41 +368,41 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                         try
                         {
-                            taskArray[item.i] = Task.Factory.StartNew(() =>
+                            taskList.Add(Task.Factory.StartNew(() =>
                             {
-                                List<ICommittedActionEvaluation> actionEvaluations = EvaluateBlock(block);
-                                Console.WriteLine($"Block progress: #{block.Index}/{remainingCount}");
+                                var actionEvaluations = EvaluateBlock(block);
+                                Console.WriteLine($"Block progress: #{block.Index}/{totalCount}");
                                 return actionEvaluations;
-                            });
+                            }));
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine(e.Message);
+                            Console.WriteLine($"⚠ Task creation error: {e.Message}");
                             Console.WriteLine(e.StackTrace);
                         }
                     }
 
-                    if (interval < remainingCount)
-                    {
-                        remainingCount -= interval;
-                        offsetIdx += interval;
-                    }
-                    else
-                    {
-                        remainingCount = 0;
-                        offsetIdx += remainingCount;
-                    }
+                    remainingCount -= limitInterval;
+                    offsetIdx += limitInterval;
 
-                    Task.WaitAll(taskArray);
-                    ProcessTasks(taskArray, blockChainStates);
-                    await FlushAndClear();
+                    try
+                    {
+                        await Task.WhenAll(taskList);
+                        ProcessTasks(taskList.ToArray(), blockChainStates);
+                        await FlushAndClear();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"⚠ Error while awaiting tasks or processing: {e.Message}");
+                        Console.WriteLine(e.StackTrace);
+                    }
                 }
 
                 await FlushAndClear();
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine($"Migration failed: {e.Message}");
                 Console.WriteLine(e.StackTrace);
             }
 
