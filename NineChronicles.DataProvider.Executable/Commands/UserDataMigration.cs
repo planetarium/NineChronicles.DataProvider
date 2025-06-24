@@ -619,11 +619,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
                             BulkInsert(AvatarDbName, path);
                         }
 
-                        foreach (var path in _ueFiles)
-                        {
-                            BulkInsert(UEDbName, path);
-                        }
-
                         foreach (var path in _uctFiles)
                         {
                             BulkInsert(UCTDbName, path);
@@ -729,10 +724,6 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
                 DateTimeOffset startMove;
                 DateTimeOffset endMove;
-                foreach (var path in _ueFiles)
-                {
-                    BulkInsert(UEDbName, path);
-                }
 
                 foreach (var path in _uctFiles)
                 {
