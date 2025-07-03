@@ -167,6 +167,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
         )
         {
             // Get configuration
+            Console.WriteLine($"config path: {configPath}");
             var configurationBuilder = new ConfigurationBuilder();
             if (configPath != null && Uri.IsWellFormedUriString(configPath, UriKind.Absolute))
             {
@@ -177,6 +178,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 configurationBuilder.AddJsonStream(body)
                     .AddJsonFile("appsettings.json")
                     .AddEnvironmentVariables("NC_");
+                Console.WriteLine("config downloaded");
             }
             else
             {
@@ -247,6 +249,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
 
             var actionEvaluatorConfiguration =
                 GetActionEvaluatorConfiguration(config.GetSection("Headless").GetSection("ActionEvaluator"));
+            Console.WriteLine($"aev type: {actionEvaluatorConfiguration.Type}");
 
             IActionEvaluator actionEvaluator = BuildActionEvaluator(
                 actionEvaluatorConfiguration,
@@ -407,6 +410,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                         _blockTimeOffset = block.Timestamp;
                         foreach (var tx in block.Transactions)
                         {
+                            Console.WriteLine($"txid: {tx.Id}");
                             _txList.Add(TransactionData.GetTransactionInfo(block, tx));
 
                             // check if address is already in _agentCheck
@@ -1954,6 +1958,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             IStateStore stateStore = null
             )
         {
+            Console.WriteLine($"config type: {actionEvaluatorConfiguration.Type}");
             return actionEvaluatorConfiguration switch
             {
                 PluggedActionEvaluatorConfiguration pluginActionEvaluatorConfiguration =>
@@ -1995,33 +2000,32 @@ namespace NineChronicles.DataProvider.Executable.Commands
             var path = Path.Combine(basePath, "plugins");
             Directory.CreateDirectory(path);
             var hashed = CreateSha256Hash(url);
-            var logger = Log.ForContext("LibplanetNodeService", hashed);
             using var httpClient = new HttpClient();
             var downloadPath = Path.Join(path, hashed + ".zip");
             var extractPath = Path.Join(path, hashed);
             var checksumPath = Path.Join(extractPath, "checksum.txt");
 
-            logger.Debug("Download Path: {downloadPath}", downloadPath);
-            logger.Debug("Extract Path: {extractPath}", extractPath);
+            Console.WriteLine($"Download Path: {downloadPath}");
+            Console.WriteLine($"Extract Path: {extractPath}");
 
             if (!File.Exists(downloadPath))
             {
-                logger.Debug("Downloading...");
+                Console.WriteLine("Downloading...");
                 var content = await httpClient.GetByteArrayAsync(url);
                 await File.WriteAllBytesAsync(downloadPath, content);
-                logger.Debug("Finished downloading.");
+                Console.WriteLine("Finished downloading.");
             }
             else
             {
-                logger.Debug("Download skipped, file already exists.");
+                Console.WriteLine("Download skipped, file already exists.");
             }
 
             if (!Directory.Exists(extractPath) || (File.Exists(checksumPath) && CalculateDirectoryChecksum(extractPath) != await File.ReadAllTextAsync(checksumPath)))
             {
                 Directory.CreateDirectory(extractPath);
-                logger.Debug("Extracting...");
+                Console.WriteLine("Extracting...");
                 ZipFile.ExtractToDirectory(downloadPath, extractPath, true);
-                logger.Debug("Finished extracting.");
+                Console.WriteLine("Finished extracting.");
 
                 // Calculate checksum of extracted files and save it
                 var checksum = CalculateDirectoryChecksum(extractPath);
@@ -2029,7 +2033,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             }
             else
             {
-                logger.Debug("Extraction skipped, folder already exists and is verified.");
+                Console.WriteLine("Extraction skipped, folder already exists and is verified.");
             }
 
             return Path.Combine(extractPath, "Lib9c.Plugin.dll");
