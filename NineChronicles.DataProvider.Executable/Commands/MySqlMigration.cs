@@ -1,3 +1,13 @@
+using System.Collections.Immutable;
+using System.IO.Compression;
+using System.Net.Http;
+using System.Security.Cryptography;
+using Libplanet.Action.Loader;
+using Libplanet.Extensions.ForkableActionEvaluator;
+using Libplanet.Extensions.PluggedActionEvaluator;
+using Libplanet.Headless.Hosting;
+using Libplanet.Store.Trie;
+using Microsoft.Extensions.Configuration;
 using Nekoyume.Action.AdventureBoss;
 using Nekoyume.Action.CustomEquipmentCraft;
 using Nekoyume.Model.EnumType;
@@ -10,6 +20,7 @@ using NineChronicles.DataProvider.Store.Models.AdventureBoss;
 using NineChronicles.DataProvider.Store.Models.Crafting;
 using NineChronicles.DataProvider.Store.Models.Grinding;
 using NineChronicles.DataProvider.Store.Models.Summon;
+using Serilog;
 
 namespace NineChronicles.DataProvider.Executable.Commands
 {
@@ -148,9 +159,34 @@ namespace NineChronicles.DataProvider.Executable.Commands
             [Option(
                 "limit",
                 Description = "limit of block count (no entry will migrate to the chain tip).")]
-            int? limit = null
+            int? limit = null,
+            [Option(
+                "config",
+                Description = "The path of the appsettings JSON file.")]
+            string configPath = null
         )
         {
+            // Get configuration
+            var configurationBuilder = new ConfigurationBuilder();
+            if (configPath != null && Uri.IsWellFormedUriString(configPath, UriKind.Absolute))
+            {
+                HttpClient client = new HttpClient();
+                HttpResponseMessage resp = await client.GetAsync(configPath);
+                resp.EnsureSuccessStatusCode();
+                Stream body = await resp.Content.ReadAsStreamAsync();
+                configurationBuilder.AddJsonStream(body)
+                    .AddJsonFile("appsettings.json")
+                    .AddEnvironmentVariables("NC_");
+            }
+            else
+            {
+                configurationBuilder
+                    .AddJsonFile("appsettings.json")
+                    .AddEnvironmentVariables("NC_");
+            }
+
+            IConfiguration config = configurationBuilder.Build();
+
             DateTimeOffset start = DateTimeOffset.UtcNow;
             var builder = new MySqlConnectionStringBuilder
             {
@@ -209,13 +245,20 @@ namespace NineChronicles.DataProvider.Executable.Commands
             var blockPolicySource = new BlockPolicySource();
             IBlockPolicy blockPolicy = blockPolicySource.GetPolicy();
 
+            var actionEvaluatorConfiguration =
+                GetActionEvaluatorConfiguration(config.GetSection("Headless").GetSection("ActionEvaluator"));
+
+            IActionEvaluator actionEvaluator = BuildActionEvaluator(
+                actionEvaluatorConfiguration,
+                new NCActionLoader(),
+                blockPolicy,
+                baseStateKeyValueStore,
+                baseStateStore
+                );
+
             // Setup base chain & new chain
             Block genesis = _baseStore.GetBlock(gHash);
             var blockChainStates = new BlockChainStates(_baseStore, baseStateStore);
-            var actionEvaluator = new ActionEvaluator(
-                blockPolicy.PolicyActionsRegistry,
-                baseStateStore,
-                new NCActionLoader());
             _baseChain = new BlockChain(
                 blockPolicy, stagePolicy, _baseStore, baseStateStore, genesis, blockChainStates, actionEvaluator
             );
@@ -1870,6 +1913,165 @@ namespace NineChronicles.DataProvider.Executable.Commands
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.StackTrace);
             }
+        }
+
+        public IActionEvaluatorConfiguration GetActionEvaluatorConfiguration(IConfiguration configuration)
+        {
+            if (!(configuration.GetValue<ActionEvaluatorType>("Type") is { } actionEvaluatorType))
+            {
+                return null;
+            }
+
+            return actionEvaluatorType switch
+            {
+                ActionEvaluatorType.Default => new DefaultActionEvaluatorConfiguration(),
+                ActionEvaluatorType.ForkableActionEvaluator => new ForkableActionEvaluatorConfiguration
+                {
+                    Pairs = (configuration.GetSection("Pairs") ??
+                             throw new KeyNotFoundException()).GetChildren().Select(pair =>
+                    {
+                        var range = new ForkableActionEvaluatorRange();
+                        pair.Bind("Range", range);
+                        var actionEvaluatorConfiguration =
+                            GetActionEvaluatorConfiguration(pair.GetSection("ActionEvaluator")) ??
+                            throw new KeyNotFoundException();
+                        return (range, actionEvaluatorConfiguration);
+                    }).ToImmutableArray()
+                },
+                ActionEvaluatorType.PluggedActionEvaluator => new PluggedActionEvaluatorConfiguration
+                {
+                    PluginPath = configuration.GetValue<string>("PluginPath"),
+                },
+                _ => throw new InvalidOperationException("Unexpected type."),
+            };
+        }
+
+        public IActionEvaluator BuildActionEvaluator(
+            IActionEvaluatorConfiguration actionEvaluatorConfiguration,
+            IActionLoader actionLoader,
+            IBlockPolicy blockPolicy,
+            IKeyValueStore keyValueStore = null,
+            IStateStore stateStore = null
+            )
+        {
+            return actionEvaluatorConfiguration switch
+            {
+                PluggedActionEvaluatorConfiguration pluginActionEvaluatorConfiguration =>
+                    new PluggedActionEvaluator(
+                        ResolvePluginPath(pluginActionEvaluatorConfiguration.PluginPath),
+                        pluginActionEvaluatorConfiguration.TypeName,
+                        keyValueStore,
+                        actionLoader),
+                DefaultActionEvaluatorConfiguration _ =>
+                    new ActionEvaluator(
+                        policyActionsRegistry: blockPolicy.PolicyActionsRegistry,
+                        stateStore: stateStore,
+                        actionTypeLoader: actionLoader),
+                ForkableActionEvaluatorConfiguration forkableActionEvaluatorConfiguration =>
+                    new ForkableActionEvaluator(
+                        forkableActionEvaluatorConfiguration.Pairs.Select(
+                            pair => (
+                                (pair.Item1.Start, pair.Item1.End),
+                                BuildActionEvaluator(pair.Item2, actionLoader, blockPolicy, keyValueStore, stateStore))),
+                        actionLoader),
+                _ => throw new InvalidOperationException("Unexpected type."),
+            };
+        }
+
+        private string ResolvePluginPath(string path)
+        {
+            if (Uri.IsWellFormedUriString(path, UriKind.Absolute))
+            {
+                // Run the download on a background thread
+                return Task.Run(() => DownloadPlugin(path)).GetAwaiter().GetResult();
+            }
+
+            return path;
+        }
+
+        private async Task<string> DownloadPlugin(string url)
+        {
+            var basePath = Environment.GetEnvironmentVariable("PLUGIN_PATH") ?? Environment.CurrentDirectory;
+            var path = Path.Combine(basePath, "plugins");
+            Directory.CreateDirectory(path);
+            var hashed = CreateSha256Hash(url);
+            var logger = Log.ForContext("LibplanetNodeService", hashed);
+            using var httpClient = new HttpClient();
+            var downloadPath = Path.Join(path, hashed + ".zip");
+            var extractPath = Path.Join(path, hashed);
+            var checksumPath = Path.Join(extractPath, "checksum.txt");
+
+            logger.Debug("Download Path: {downloadPath}", downloadPath);
+            logger.Debug("Extract Path: {extractPath}", extractPath);
+
+            if (!File.Exists(downloadPath))
+            {
+                logger.Debug("Downloading...");
+                var content = await httpClient.GetByteArrayAsync(url);
+                await File.WriteAllBytesAsync(downloadPath, content);
+                logger.Debug("Finished downloading.");
+            }
+            else
+            {
+                logger.Debug("Download skipped, file already exists.");
+            }
+
+            if (!Directory.Exists(extractPath) || (File.Exists(checksumPath) && CalculateDirectoryChecksum(extractPath) != await File.ReadAllTextAsync(checksumPath)))
+            {
+                Directory.CreateDirectory(extractPath);
+                logger.Debug("Extracting...");
+                ZipFile.ExtractToDirectory(downloadPath, extractPath, true);
+                logger.Debug("Finished extracting.");
+
+                // Calculate checksum of extracted files and save it
+                var checksum = CalculateDirectoryChecksum(extractPath);
+                await File.WriteAllTextAsync(checksumPath, checksum);
+            }
+            else
+            {
+                logger.Debug("Extraction skipped, folder already exists and is verified.");
+            }
+
+            return Path.Combine(extractPath, "Lib9c.Plugin.dll");
+        }
+
+        private string CalculateDirectoryChecksum(string directoryPath)
+        {
+            using var md5 = MD5.Create();
+            var files = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories)
+                .OrderBy(p => p).ToArray();
+
+            foreach (var file in files)
+            {
+                // hash path
+                var pathBytes = Encoding.UTF8.GetBytes(file.Substring(directoryPath.Length));
+                md5.TransformBlock(pathBytes, 0, pathBytes.Length, pathBytes, 0);
+
+                // hash contents
+                var contentBytes = File.ReadAllBytes(file);
+                md5.TransformBlock(contentBytes, 0, contentBytes.Length, contentBytes, 0);
+            }
+
+            // Handles empty content.
+            md5.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+            return BitConverter.ToString(md5.Hash!).Replace("-", string.Empty).ToLowerInvariant();
+        }
+
+        private string CreateSha256Hash(string input)
+        {
+            using SHA256 sha256Hash = SHA256.Create();
+
+            // ComputeHash - returns byte array
+            byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
+
+            // Convert byte array to a string
+            StringBuilder builder = new StringBuilder();
+            foreach (var t in bytes)
+            {
+                builder.Append(t.ToString("x2"));
+            }
+
+            return builder.ToString();
         }
     }
 }
