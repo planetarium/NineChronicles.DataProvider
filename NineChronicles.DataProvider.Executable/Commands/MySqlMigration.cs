@@ -909,7 +909,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         var state = outputState.GetLegacyState(
                                             Addresses.GetItemAddress(purchaseInfo.TradableId));
                                         ITradableItem orderItem =
-                                            (ITradableItem) ItemFactory.Deserialize((Dictionary) state!);
+                                            (ITradableItem) ItemFactory.Deserialize(state!);
                                         Order order =
                                             OrderFactory.Deserialize(
                                                 (Dictionary) outputState.GetLegacyState(
