@@ -337,7 +337,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                 var state = outputState.GetLegacyState(
                                     Addresses.GetItemAddress(orderReceipt.TradableId));
                                 ITradableItem orderItem =
-                                    (ITradableItem)ItemFactory.Deserialize((Dictionary)state);
+                                    (ITradableItem)ItemFactory.Deserialize(state);
                                 if (orderItem.ItemType == ItemType.Equipment)
                                 {
                                     var equipment = (Equipment)orderItem;
