@@ -41,8 +41,8 @@
 
         public DateTimeOffset TimeStamp { get; set; }
 
-        public int Cp { get; set; }
+        public long Cp { get; set; }
 
-        public int EnemyCp { get; set; }
+        public long EnemyCp { get; set; }
     }
 }
