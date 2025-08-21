@@ -14,7 +14,7 @@
 
         public int EquipmentId { get; set; }
 
-        public int Cp { get; set; }
+        public long Cp { get; set; }
 
         public int Level { get; set; }
 

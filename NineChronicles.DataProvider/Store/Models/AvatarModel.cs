@@ -21,7 +21,7 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public int? ArmorId { get; set; }
 
-        public int? Cp { get; set; }
+        public long? Cp { get; set; }
 
         public DateTimeOffset? Timestamp { get; set; }
 

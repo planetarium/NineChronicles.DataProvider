@@ -13,7 +13,7 @@ namespace NineChronicles.DataProvider.Store.Models
             string avatarName,
             long highScore,
             long totalScore,
-            int cp,
+            long cp,
             int iconId,
             int level,
             string address,
@@ -46,7 +46,7 @@ namespace NineChronicles.DataProvider.Store.Models
         public long TotalScore { get; set; }
 
         [Required]
-        public int Cp { get; set; }
+        public long Cp { get; set; }
 
         [Required]
         public int Level { get; set; }
