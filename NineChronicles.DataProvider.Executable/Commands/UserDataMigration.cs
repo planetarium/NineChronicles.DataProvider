@@ -1041,7 +1041,7 @@ namespace NineChronicles.DataProvider.Executable.Commands
             Equipment equipment,
             Address agentAddress,
             Address avatarAddress,
-            int equipmentCp)
+            long equipmentCp)
         {
             try
             {

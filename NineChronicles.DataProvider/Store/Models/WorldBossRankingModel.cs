@@ -10,7 +10,7 @@ namespace NineChronicles.DataProvider.Store.Models
 
         public long TotalScore { get; set; }
 
-        public int Cp { get; set; }
+        public long Cp { get; set; }
 
         public int Level { get; set; }
 
