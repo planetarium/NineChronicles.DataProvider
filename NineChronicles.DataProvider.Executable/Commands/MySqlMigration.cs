@@ -517,9 +517,11 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                         {
                                             typeof(RuneSheet),
                                             typeof(RuneSummonSheet),
+                                            typeof(RuneListSheet),
                                         });
                                     var runeSheet = sheets.GetSheet<RuneSheet>();
                                     var summonSheet = sheets.GetSheet<RuneSummonSheet>();
+                                    var runeListSheet = sheets.GetSheet<RuneListSheet>();
                                     _runeSummonList.Add(RuneSummonData
                                         .GetRuneSummonInfo(
                                             ae.InputContext.Signer,
@@ -531,7 +533,8 @@ namespace NineChronicles.DataProvider.Executable.Commands
                                             runeSheet,
                                             summonSheet,
                                             new ReplayRandom(ae.InputContext.RandomSeed),
-                                            _blockTimeOffset
+                                            _blockTimeOffset,
+                                            runeListSheet
                                         ));
                                 }
 
