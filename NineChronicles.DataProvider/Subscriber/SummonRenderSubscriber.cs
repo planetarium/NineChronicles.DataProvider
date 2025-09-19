@@ -11,6 +11,7 @@ namespace NineChronicles.DataProvider
     using Nekoyume.Model.EnumType;
     using Nekoyume.Module;
     using Nekoyume.TableData;
+    using Nekoyume.TableData.Rune;
     using Nekoyume.TableData.Summon;
     using NineChronicles.DataProvider.DataRendering;
     using NineChronicles.DataProvider.DataRendering.Summon;
@@ -168,9 +169,11 @@ namespace NineChronicles.DataProvider
                             {
                                 typeof(RuneSheet),
                                 typeof(RuneSummonSheet),
+                                typeof(RuneListSheet),
                             });
                         var runeSheet = sheets.GetSheet<RuneSheet>();
                         var summonSheet = sheets.GetSheet<RuneSummonSheet>();
+                        var runeListSheet = sheets.GetSheet<RuneListSheet>();
                         _runeSummonList.Add(RuneSummonData
                             .GetRuneSummonInfo(
                                 evt.Signer,
@@ -182,7 +185,8 @@ namespace NineChronicles.DataProvider
                                 runeSheet,
                                 summonSheet,
                                 new ReplayRandom(evt.RandomSeed),
-                                _blockTimeOffset
+                                _blockTimeOffset,
+                                runeListSheet
                             ));
                     }
                     else

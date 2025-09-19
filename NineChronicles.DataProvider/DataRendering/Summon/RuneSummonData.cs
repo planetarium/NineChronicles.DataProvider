@@ -8,6 +8,7 @@ namespace NineChronicles.DataProvider.DataRendering.Summon
     using Libplanet.Types.Assets;
     using Nekoyume.Action;
     using Nekoyume.TableData;
+    using Nekoyume.TableData.Rune;
     using Nekoyume.TableData.Summon;
     using NineChronicles.DataProvider.Store.Models.Summon;
 
@@ -23,10 +24,11 @@ namespace NineChronicles.DataProvider.DataRendering.Summon
             RuneSheet runeSheet,
             SummonSheet summonSheet,
             IRandom random,
-            DateTimeOffset blockTime
+            DateTimeOffset blockTime,
+            RuneListSheet runeListSheet
         )
         {
-            var simulateResult = RuneSummon.SimulateSummon(runeSheet, summonSheet[groupId], summonCount, random);
+            var simulateResult = RuneSummon.SimulateSummon(runeSheet, summonSheet[groupId], summonCount, random, runeListSheet);
             var gainedRunes = new List<FungibleAssetValue>();
             foreach (var pair in simulateResult)
             {
